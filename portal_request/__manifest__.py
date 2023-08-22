@@ -1,0 +1,24 @@
+{
+    'name': 'Employee Portal Request',
+    'version': '16.0.1',
+    'author': "Maduka Sopulu",
+    'category': 'ERP',
+    'summary': 'ODOO Base Extension to customize modules for portal users',
+    'depends': ['base', 'website', 'company_memo', 'portal'],
+    'description': "ODOO Base Extension to customize modules for portal users",
+    "data": [
+        # 'security/ir.model.access.csv',
+        'static/templates/request.xml',
+        'static/templates/request_tree.xml',
+        'static/templates/request_form.xml',
+        'views/menu_view.xml',
+        'views/product_inherit_view.xml',
+    ],
+    # 'qweb': [
+    #     'static/xml/partials.xml',
+    # ],
+    'assets': {
+        'web.assets_frontend': [
+        '/portal_request/static/src/js/request.js',
+    ]},
+}

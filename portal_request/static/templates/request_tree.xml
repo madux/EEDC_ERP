@@ -1,0 +1,144 @@
+<odoo>
+    <data>
+        <template id="my_portal_request" name="My Requests">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+                <!-- <t t-call="portal.portal_searchbar">
+                    <t t-set="title">Requests</t>
+                </t> -->
+                <nav t-attf-class="navbar navbar-light navbar-expand-lg border py-0 mb-2 o_portal_navbar {{classes if classes else ''}} {{'mt-3 rounded' if breadcrumbs_searchbar else 'border-top-0' }}">
+                    <!-- <t t-if="breadcrumbs_searchbar">
+                        <t t-call="portal.portal_breadcrumbs"/>
+                    </t> -->
+                    <!-- <span class="navbar-brand mb-0 h1 me-auto" t-esc="title or 'No title'"/>
+                     -->
+                     <t t-set="title">Requests</t>
+                    <!--  Collapse button -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#o_portal_navbar_content" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle filters">
+                        <span class="navbar-toggler-icon small"/>
+                    </button>
+
+                    <!--  Collapsable content  -->
+                    <div class="collapse navbar-collapse" id="o_portal_navbar_content">
+                        <div class="nav flex-column flex-lg-row ms-auto p-0 mb-3 mb-lg-0 mt-1 mt-lg-0">
+                            <div>
+                                <span class="small me-1 navbar-text">Sort By:</span>
+                                <div class="btn-group">
+                                    <button id="portal_searchbar_sortby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
+                                        Sort by<!-- <t t-esc="searchbar_sortings[sortby].get('label', 'Newest')"/> -->
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="portal_searchbar_sortby">
+                                        <!-- <t t-foreach="searchbar_sortings" t-as="option">
+                                            <a t-att-href="request.httprequest.path + '?' + keep_query('*', sortby=option)"
+                                            t-attf-class="dropdown-item#{sortby == option and ' active' or ''}">
+                                                <span t-esc="searchbar_sortings[option].get('label')"/>
+                                            </a>
+                                        </t> -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ms-lg-2">
+                                <span class="small me-1 navbar-text">Filter By:</span>
+                                <div class="btn-group">
+                                    <button id="portal_searchbar_filters" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
+                                        Filter<!-- <t t-esc="searchbar_filters.get(filterby,searchbar_filters.get('all')).get('label', 'All')"/> -->
+                                    </button>
+                                    <!-- <div class="dropdown-menu" aria-labelledby="portal_searchbar_filters">
+                                        <t t-foreach="searchbar_filters" t-as="option">
+                                            <a t-att-href="default_url + '?' + keep_query('*', filterby=option)"
+                                            t-attf-class="dropdown-item#{filterby == option and ' active' or ''}">
+                                                <span t-esc="searchbar_filters[option].get('label')"/>
+                                            </a>
+                                        </t>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="ms-lg-2">
+                                <span class="small me-1 navbar-text">Group By:</span>
+                                <div class="btn-group">
+                                    <button id="portal_searchbar_groupby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
+                                        Group<!-- <t t-esc="searchbar_groupby[groupby].get('label', 'None')"/> -->
+                                    </button>
+                                    <!-- <div class="dropdown-menu" aria-labelledby="portal_searchbar_groupby">
+                                        <t t-foreach="searchbar_groupby" t-as="option">
+                                            <a t-att-href="default_url + '?' + keep_query('*', groupby=option)"
+                                            t-attf-class="dropdown-item#{groupby == option and ' active' or ''}">
+                                                <span t-esc="searchbar_groupby[option].get('label')"/>
+                                            </a>
+                                        </t>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="ms-lg-2">
+                                <div class="btn-group">
+                                    <a id="previous" href="/my/requests/page/prev" class="btn btn-secondary btn-sm">
+                                        Prev
+                                    </a>
+                                </div>
+                                <div class="btn-group">
+                                    <a id="previous" href="/my/requests/page/next" class="btn btn-secondary btn-sm">
+                                        Next
+                                    </a>
+                                </div>
+                            </div>
+                            <t t-out="0"/>
+                        </div>
+                        <form class="o_portal_search_panel ms-lg-4 col-xl-4 col-md-5">
+                            <div class="input-group input-group-sm w-100">
+                                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/>
+                                <!-- <div class="dropdown-menu" role="menu">
+                                    <t t-foreach='searchbar_inputs' t-as='input'>
+                                        <a t-att-href="'#' + input_value['input']"
+                                            t-attf-class="dropdown-item#{search_in == input_value['input'] and ' active' or ''}">
+                                            <span t-out="input_value['label']"/>
+                                        </a>
+                                    </t>
+                                </div> -->
+                                <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search"/>
+                                <button class="btn btn-secondary o_wait_lazy_js" type="submit">
+                                    <span class="fa fa-search"/>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </nav>
+                <div t-if="not requests" class="alert alert-info">
+                    There are currently no Request for your account.
+                </div>
+                <t t-else="">
+                    <t t-call="portal.portal_table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Request #</th>
+                                <th class="text-end" t-if="groupby != 'create_date'">Approver</th>
+                                <th id="ticket_user_date">Request Date</th>
+                                <th id="ticket_user_header">Employee</th>
+                                <th colspan="5" class="text-end">Status</th>
+                            </tr>
+                        </thead>
+                        
+                        <t t-foreach="requests" t-as="request">
+                            <tr>
+                                <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small></small><span class="ms-2" t-field="request.name"/></a></td>
+                                <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small>#</small><span class="ms-2" t-field="request.code"/></a></td>
+                                <td class="text-start"><span class="ms-2" t-field="request.approver_id.name"/></td>
+                                <!-- <td class="text-end" t-if="groupby != 'create_date'"> -->
+                                <td class="text-start">
+                                    <span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                </td>
+                                <td id="request_user">
+                                    <img t-if="request.employee_id.user_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(request.employee_id.user_id.sudo().avatar_1024)}" alt="Contact" style="width: 20px; height: 20px;"/>
+                                    <span t-field="request.employee_id.user_id"/>
+                                </td>
+                                <td id="request_stage" class="text-end">
+                                    <span t-attf-class="badge rounded-pill #{'text-bg-info' if request.state == 'submit' else 'text-bg-light'}" t-esc="request.state"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                </t>
+            </t>
+        </template> 
+    </data>
+</odoo>
