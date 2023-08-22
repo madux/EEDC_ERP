@@ -73,7 +73,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             </span>
                         </th>
                         <th width="20%">
-                            <input type="text" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" class="productinput form-control"/> 
+                            <input type="text" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" required="required" class="productinput form-control"/> 
                         </th>
                          
                         <th width="15%">
@@ -81,7 +81,6 @@ odoo.define('portal_request.portal_request', function (require) {
                         </th>
                     </tr>`
                 )
-
                 // TriggerProductField(lastRow_count);
                 // $(`input[special_id='${lastRow_count}'`).attr('readonly', true);
                 setProductdata.push(elm.id)
@@ -122,7 +121,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     </span>
                 </th>
                 <th width="20%">
-                    <input type="text" class="productinput form-control"/>
+                    <input type="text" class="productinput form-control" required="required"/>
                 </th>
                 <th width="15%">
                     <a href="#" id="" remove_id="${lastRow_count}" class="remove_field btn btn-primary btn-sm"> Remove </a>
@@ -205,6 +204,24 @@ odoo.define('portal_request.portal_request', function (require) {
         // $('.product_section').addClass('d-none');
         }
 
+    function validate_empty_required_fields(){
+        let list_of_fields = [];
+        $('input,textarea,select').filter('[required]:visible').each(function(ev){
+            // console.log($(this).val())
+            let field = $(this); 
+            if (field.val() == ""){
+                field.addClass('is-invalid')
+                console.log($(this).val())
+                list_of_fields.push(field.text())
+            }
+            
+        })
+        if (length.list_of_fields > 0){
+            alert('Validation: Please ensure the following fields are filled.. ', list_of_fields)
+            return false 
+        }
+    }
+
     publicWidget.registry.PortalRequestWidgets = publicWidget.Widget.extend({
         selector: '#portal-request',
         start: function(){
@@ -217,7 +234,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     dateFormat: 'mm/dd/yy',
                     changeMonth: true,
                     changeYear: true,
-                    yearRange: '1920:2050',
+                    yearRange: '2022:2050',
                     maxDate: "+0d"
                 });
             });
@@ -230,14 +247,14 @@ odoo.define('portal_request.portal_request', function (require) {
             })
         },
         events: {
-            'blur input, select, textarea': function (ev) {
-                let input = $(ev.target)
-                if (input.is(":required") && input.val() !== '') {
-                    input.removeClass('is-invalid').addClass('is-valid')
-                } else if (input.is(":required") && input.val() == '') {
-                    input.addClass('is-invalid')
-                }
-            }, 
+            // 'blur input, select, textarea': function (ev) {
+            //     let input = $(ev.target)
+            //     if (input.is(":required") && input.val() !== '') {
+            //         input.removeClass('is-invalid').addClass('is-valid')
+            //     } else if (input.is(":required") && input.val() == '') {
+            //         input.addClass('is-invalid')
+            //     }
+            // }, 
 
             'change .productitemrow': function(ev){
                 let product_elm = $(ev.target);
@@ -460,6 +477,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     buildProductRow()
                 }, 
             'click .button_req_submit': function (ev) {
+                validate_empty_required_fields()
                 var current_btn = $(ev.target);
                 console.log('BUTTONMSZ is ==>', current_btn.text())
 
