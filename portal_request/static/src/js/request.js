@@ -16,6 +16,8 @@ odoo.define('portal_request.portal_request', function (require) {
     var qweb = core.qweb;
     var _t = core._t;
     const setProductdata = [];
+    let alert_modal = $('#portal_request_alert_modal');
+    let modal_message = $('#display_modal_message');
 
     function getSelectedProductItem(valueName){
         // use to compile id no of the checked options for assessors and moderators
@@ -37,24 +39,38 @@ odoo.define('portal_request.portal_request', function (require) {
             if (data.length > 0) return `${data[2]}/${data[1]}/${data[0]}`;
         }
     }
-    
-    function showAlertDialog(title, msg) {
-        // Load the XML templates
-        ajax.loadAsset('portal_request.portal_request', 'xml', '/portal_request/static/src/xml/partials.xml', {}, qweb).then(
-            function (qweb) {
-            // Templates loaded, you can now use them
-                var wizard = qweb.render('portal_request.alert_dialogs', {
-                    'msg': msg || _t('Message Body'),
-                    'title': title || _t('Title')
-                });
-                wizard.appendTo($('body')).modal({
-                    'keyboard': true
-                });
-            })
-    }
 
-    function buildProductTable(data){
-        // data: data.data.assessor_ids
+    // var FormateDateToMMDDYYYY = function(dateObject) {
+    //     var d = new Date(dateObject);
+    //     var day = d.getDate();
+    //     var month = d.getMonth() + 1;
+    //     var year = d.getFullYear();
+    //     if (day < 10) {
+    //         day = "0" + day;
+    //     }
+    //     if (month < 10) {
+    //         month = "0" + month;
+    //     }
+    //     var date = month + "/" + day + "/" + year; 
+    //     return date;
+    // };
+ 
+    // function showAlertDialog(title, msg) {
+    //     // Load the XML templates
+    //     ajax.loadAsset('portal_request.portal_request', 'xml', '/portal_request/static/src/xml/partials.xml', {}, qweb).then(
+    //         function (qweb) {
+    //         // Templates loaded, you can now use them
+    //             var wizard = qweb.render('portal_request.alert_dialogs', {
+    //                 'msg': msg || _t('Message Body'),
+    //                 'title': title || _t('Title')
+    //             });
+    //             wizard.appendTo($('body')).modal({
+    //                 'keyboard': true
+    //             });
+    //         })
+    // }
+
+    function buildProductTable(data, memo_type, require='0', hidden='d-none', readon='0'){
         $.each(data, function (k, elm) {
 
             if (elm) {
@@ -67,20 +83,36 @@ odoo.define('portal_request.portal_request', function (require) {
                                 <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" id="${elm.id}" name="${elm.qty}"/>
                             </span>
                         </th>
-                        <th width="60%">
+                        <th width="40%">
                             <span id=${elm.id}>
-                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" class="form-control productitemrow" name="product_item_id" value=${elm.name}/>
+                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" required="${memo_type == 'cash_advance' ? '': 'required'}" class="form-control productitemrow" name="product_item_id" value=${elm.name} labelfor="Product Line - ${elm.name}"/>
                             </span>
                         </th>
-                        <th width="20%">
-                            <input type="text" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" required="required" class="productinput form-control"/> 
+                        <th width="10%">
+                            <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
-                         
-                        <th width="15%">
+                        <th width="5%">
+                            <input type="text" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" required="required" class="productinput form-control" labelfor="Product Line - ${elm.name} Quantity"/> 
+                        </th>
+                        
+                        <th width="10%">
+                            <input type="number" name="${elm.amount_total}" id="${elm.id}" value="${elm.amount_total}" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Amount Total"/> 
+                        </th>
+                        <th width="5%">
+                            <input type="text" name="${elm.used_qty}" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" readonly="${readon}" class="productUsedQty form-control ${hidden}" labelfor="Product Line - ${elm.name}: Used Quantity"/> 
+                        </th>
+                        <th width="10%">
+                            <input type="text" name="${elm.used_amount}" id="${elm.used_amount-lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productUsedAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Product Line - ${elm.name}: Used Amount"/> 
+                        </th>
+                        <th width="10%">
+                            <input type="textarea" name="${elm.note}" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control ${hidden}" labelfor="Note"/> 
+                        </th>
+                        <th width="5%">
                             <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
                         </th>
                     </tr>`
                 )
+                // ${memo_type=="cash_advance" || memo_type=="soe" ? 1: 0}
                 // TriggerProductField(lastRow_count);
                 // $(`input[special_id='${lastRow_count}'`).attr('readonly', true);
                 setProductdata.push(elm.id)
@@ -105,7 +137,7 @@ odoo.define('portal_request.portal_request', function (require) {
         return lastRow_count
     }
 
-    function buildProductRow(){
+    function buildProductRow(memo_type){
         let lastRow_count = getOrAssignRowNumber()
         console.log(`lastrowcount ${lastRow_count}`)
         $(`#tbody_product`).append(
@@ -115,15 +147,31 @@ odoo.define('portal_request.portal_request', function (require) {
                         <input type="checkbox" class="productchecked"/>
                     </span>
                 </th>
-                <th width="60%">
+                <th width="40%">
                     <span>
-                        <input special_id="${lastRow_count}" class="form-control productitemrow" name="product_item_id"/>
+                        <input special_id="${lastRow_count}" class="form-control productitemrow" name="product_item_id" required="${memo_type == 'cash_advance' ? '': 'required'}" labelfor="Product Line"/>
                     </span>
                 </th>
-                <th width="20%">
-                    <input type="text" class="productinput form-control" required="required"/>
+                <th width="10%">
+                    <input type="textarea" placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Note"/> 
                 </th>
-                <th width="15%">
+                <th width="5%">
+                    <input type="text" class="productinput form-control" required="required" labelfor="Product Line - Quantity"/>
+                </th>
+                <th width="10%">
+                    <input type="number" name="Amount-${lastRow_count}" id="amountt-${lastRow_count}" amount_total="Amount-${lastRow_count}" required="${memo_type == 'cash_advance' ? 'required': ''}" readonly="${memo_type == 'cash_advance' ? '0': 'readonly'}" class="productAmt form-control" labelfor="Amount Total"/> 
+                </th>
+                <th width="5%">
+                    <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Product Line -: Used Quantity"/> 
+                </th>
+                <th width="10%">
+                    <input type="number" name="UsedAmount-${lastRow_count}" id="amounttUsed-${lastRow_count}" amount_total="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Amount Total"/> 
+                </th>
+                <th width="10%">
+                    <input type="textarea" name="noteelm_${lastRow_count}" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control" labelfor="Note"/> 
+                </th>
+                
+                <th width="5%">
                     <a href="#" id="" remove_id="${lastRow_count}" class="remove_field btn btn-primary btn-sm"> Remove </a>
                 </th>
             </tr>`
@@ -139,8 +187,6 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function TriggerProductField(lastRow_count){
-        // let SPECIAL_ID = $(`input[special_id=${lastRow_count}]`)
-        // console.log('THE SPECIAL ID', SPECIAL_ID)
         $(`input[special_id='${lastRow_count}'`).select2({
             ajax: {
               url: '/portal-request-product',
@@ -194,48 +240,123 @@ odoo.define('portal_request.portal_request', function (require) {
     allowClear: true,
     });
 
+    let checkOverlappingLeaveDate = function(thiis){
+        var message = ""
+        if ($('#selectRequestOption').val() === "leave_request"){
+            var staff_num = $('#staff_id').val();
+            if(staff_num !== "" && $('#leave_start_date').val() !== '' && $('#leave_end_datex').val() !== ""){
+                thiis._rpc({
+                    route: `/check-overlapping-leave`,
+                    params: {
+                        'data': {
+                            'staff_num': staff_num,
+                            'start_date': $('#leave_start_date').val(),
+                            'end_date': $('#leave_end_datex').val(),
+                        }
+                    },
+                }).then(function (data) { 
+                    if (!data.status) {
+                        $("#leave_start_date").val('')
+                        $("#leave_end_datex").val('') //.trigger('change')
+                        $('#leave_start_date').attr('required', true);
+                        $('#leave_start_date').addClass('is-invalid', true);
+                        message = `Validation Error! ${data.message}`
+                        console.log("not Passed for leave, ", message)
+                        // alert(message); 
+                        // return false
+                        modal_message.text(message)
+                        alert_modal.modal('show');
+
+                    }else{
+                        console.log("Passed for leave")
+                    }
+                }).guardedCatch(function (error) {
+                    let msg = error.message.message
+                    console.log(msg)
+                    $("#leave_end_datex").val('')
+                    message = `Unknown Error! ${msg}`
+                    modal_message.text(message)
+                    alert_modal.modal('show');
+                    return false;
+                });
+            }
+            // else{
+            //     message = "[Staff ID, leave start date and end date] Must all be provided";
+            //     modal_message.text(message)
+            //     alert_modal.modal('show');
+            //     return false;
+            // }
+        } 
+    }
+
     function displayNonLeaveElement() {
+        console.log("Leave set to false")
         $('#leave_section').addClass('d-none');
         $('#leave_start_date').attr("required", false);
-        $('#leave_end_date').attr("required", false);
+        $('#leave_end_datex').attr("required", false);
         $('#product_form_div').addClass('d-none');
         $('#product_ids').addClass('d-none');
         $('#product_ids').attr("required", false);
         // $('.product_section').addClass('d-none');
         }
 
-    function validate_empty_required_fields(){
-        let list_of_fields = [];
-        $('input,textarea,select').filter('[required]:visible').each(function(ev){
-            // console.log($(this).val())
-            let field = $(this); 
-            if (field.val() == ""){
-                field.addClass('is-invalid')
-                console.log($(this).val())
-                list_of_fields.push(field.text())
-            }
-            
-        })
-        if (length.list_of_fields > 0){
-            alert('Validation: Please ensure the following fields are filled.. ', list_of_fields)
-            return false 
-        }
+    // function validate_empty_required_fields(){
+    //     var list_of_fields = [];
+    //     $('input,textarea,select').filter('[required]:visible').each(function(ev){
+    //         var field = $(this); 
+    //         if (field.val() == ""){
+    //             field.addClass('is-invalid');
+    //             console.log($(this).attr('labelfor'));
+    //             list_of_fields.push(field.attr('labelfor'));
+    //         } 
+    //     });
+    //     if (list_of_fields.length > 0){
+    //         return true
+    //     }else{
+    //         return false
+    //     }
+    // }
+    $('#leave_start_date').datepicker('destroy').datepicker({
+        onSelect: function (ev) {
+            $('#leave_start_date').trigger('blur')
+        },
+        dateFormat: 'mm/dd/yy',
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '2023:2050',
+        maxDate: null,
+        minDate: new Date()
+    });
+    
+    var triggerEndDate = function(minDate, maxDate){
+        $('#leave_end_datex').datepicker('destroy').datepicker({
+            onSelect: function (ev) {
+                $('#leave_end_datex').trigger('blur')
+            },
+            dateFormat: 'mm/dd/yy',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '2023:2050',
+            maxDate: maxDate,
+            minDate: minDate, //new Date()
+        });
     }
-
+    
     publicWidget.registry.PortalRequestWidgets = publicWidget.Widget.extend({
         selector: '#portal-request',
         start: function(){
             var self = this;
             return this._super.apply(this, arguments).then(function(){
-                $('.datepicker').datepicker('destroy').datepicker({
+                $('#request_date').datepicker('destroy').datepicker({
                     onSelect: function (ev) {
-                        $('.datepicker').trigger('blur')
+                        $('#request_date').trigger('blur')
                     },
                     dateFormat: 'mm/dd/yy',
                     changeMonth: true,
                     changeYear: true,
                     yearRange: '2022:2050',
-                    maxDate: "+0d"
+                    maxDate: null,
+                    minDate: new Date()
                 });
             });
 
@@ -246,20 +367,19 @@ odoo.define('portal_request.portal_request', function (require) {
                 console.log("All events start")
             })
         },
+ 
         events: {
-            // 'blur input, select, textarea': function (ev) {
-            //     let input = $(ev.target)
-            //     if (input.is(":required") && input.val() !== '') {
-            //         input.removeClass('is-invalid').addClass('is-valid')
-            //     } else if (input.is(":required") && input.val() == '') {
-            //         input.addClass('is-invalid')
-            //     }
-            // }, 
+            'blur input, select, textarea': function (ev) {
+                let input = $(ev.target)
+                if (input.is(":required") && input.val() !== '') {
+                    input.removeClass('is-invalid').addClass('is-valid')
+                } else if (input.is(":required") && input.val() == '') {
+                    input.addClass('is-invalid')
+                }
+            }, 
 
             'change .productitemrow': function(ev){
                 let product_elm = $(ev.target);
-                // let productStorage = JSON.parse(localStorage.getItem('productStorage'));
-                // console.log('PRODUCT STORAGE ==> ', productStorage);
                 let product_val = product_elm.val();
                 console.log('Product value ==', product_val)
                 // let selectedproductId = product_val.split('-')[1] 
@@ -297,8 +417,28 @@ odoo.define('portal_request.portal_request', function (require) {
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
                 let selectedproductQty = qty_elm.val(); 
-                qty_elm.attr('name', selectedproductQty);
-                qty_elm.attr('value', selectedproductQty);
+                this._rpc({
+                    route: `/check-quantity`,
+                    params:{
+                        'product_id': qty_elm.attr('id'),
+                        'qty': selectedproductQty,
+                        'district': $("#selectDistrict").val(),
+                        'request_type': $("#selectRequestOption").val()
+                    }
+                }).then(function(data){
+                        if(!data.status){
+                            qty_elm.attr('required', true);
+                            qty_elm.val("");
+                            qty_elm.addClass("is-invalid");
+                            alert_modal.modal('show');
+                            modal_message.text(data.message)
+                        }else{
+                            qty_elm.attr('required', false);
+                            qty_elm.removeClass("is-invalid");
+                            qty_elm.attr('name', selectedproductQty);
+                            qty_elm.attr('value', selectedproductQty);
+                        }
+                })
             },
 
             'blur input[name=staff_id]': function(ev){
@@ -334,13 +474,78 @@ odoo.define('portal_request.portal_request', function (require) {
                     });
                 }
             },
+            'change select[name=leave_type_id]': function(ev){
+                let leave_id = $(ev.target).val();
+                let staff_num = $('#staff_id').val();
+                if(staff_num !== '' && leave_id !== ''){  
+                    var self = this;
+                    this._rpc({
+                        route: `/get/leave-allocation/${leave_id}/${staff_num}`,
+                        // params: {
+                        //     'type': type
+                        // },
+                    }).then(function (data) {
+                        console.log('retrieved staff leave data => '+ JSON.stringify(data))
+                        if (!data.status) {
+                            $(ev.target).val('')
+                            $("#leave_start_date").val('')//.trigger('change')
+                            $("#leave_end_datex").val('')//.trigger('change')
+                            $("#leave_remaining").val('')
+                            alert(`Validation Error! ${data.message}`)
+                        }else{
+                            var number_of_days_display = data.data.number_of_days_display; 
+                            console.log(number_of_days_display)
+                            $("#leave_remaining").val(number_of_days_display)
+                        }
+                    }).guardedCatch(function (error) {
+                        let msg = error.message.message
+                        console.log(msg)
+                        alert(`Unknown Error! ${msg}`)
+                    });
+                }
+            }, 
+
+            'blur input[name=leave_start_datex]': function(ev){
+                let leave_remaining = $('#leave_remaining').val(); 
+                let start_date = $(ev.target);
+                let remain_days = leave_remaining !== undefined ? parseInt($('#leave_remaining').val()) : 1
+                var selectStartLeaveDate = new Date(start_date.val());
+                var endDate = new Date($('#leave_start_date').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
+                var maxDate = endDate + (21 * 24 * 60 * 60 * 1000)
+                var st = `0${new Date(endDate).getMonth() + 1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
+                var end = `0${new Date(maxDate).getMonth() + 1}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
+                triggerEndDate(st, end) 
+            },
+            'blur input[name=leave_end_datex]': function(ev){
+                let leaveRemaining = $('#leave_remaining').val();
+                console.log(`leaveRemaining IS : ${leaveRemaining}`)
+                let start_date = $('#leave_start_date');
+                let endDate = $(ev.target);
+                var date1 = new Date(start_date.val());
+                var date2 = new Date(endDate.val());
+                var Difference_In_Time = date2.getTime() - date1.getTime();
+                var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
+                if (Difference_In_Days > parseInt(leaveRemaining)){
+                    $('#leave_end_datex').val("");
+                    $('#leave_end_datex').attr('required', true);
+                    alert(`You only have ${leaveRemaining} number of leave remaining for this leave type. Please Ensure the date range is within the available day allocated for you.`)
+                    return true
+                }
+                else{
+                    $('#leave_end_datex').attr('required', false);
+                }
+                checkOverlappingLeaveDate(this)
+            },
+
             'change select[name=selectRequestOption]': function(ev){
                 let selectedTarget = $(ev.target).val();
+                $('#existing_ref_label').text("Existing Ref #");
                 clearAllElement();
                 if(selectedTarget == "leave_request"){
                     $('#leave_section').removeClass('d-none');
                     $('#leave_start_date').attr('required', true);
-                    $('#leave_end_date').attr('required', true);
+                    $('#leave_end_datex').attr('required', true);
                     $('#product_form_div').addClass('d-none');
                     // $('#product_ids').addClass('d-none');
                     // $('#product_ids').attr('required', false);
@@ -354,11 +559,34 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log("request selected== ", selectedTarget);
                     displayNonLeaveElement()
                 }
+                // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                 else if(selectedTarget == "cash_advance"){
                     $('#amount_section').removeClass('d-none');
                     $('#amount_fig').attr("required", true);
                     console.log("request selected== ", selectedTarget);
                     displayNonLeaveElement()
+                    $('#product_form_div').removeClass('d-none');
+                }
+
+                else if(selectedTarget == "soe"){
+                    $('#amount_section').removeClass('d-none');
+                    $('#amount_fig').attr("required", true); 
+                    displayNonLeaveElement()
+                    $('#product_form_div').removeClass('d-none');
+                    let existing_order = $(ev.target).val();
+                    let selectTypeRequest = $('#selectTypeRequest');
+
+                    if ($('#selectTypeRequest').val() == "new"){
+                        if ($('#staff_id').val() == ""){
+                            selectedTarget.val('').trigger('change')
+                            alert("Please enter staff ID");
+                        }
+                        else{
+                            $('#existing_order').attr('required', true);
+                            $('#div_existing_order').removeClass('d-none');
+                            $('#existing_ref_label').text("Cash Advance Ref #");
+                            }
+                    }
                 }
                  
                 else{
@@ -374,7 +602,8 @@ odoo.define('portal_request.portal_request', function (require) {
 
             'blur input[name=existing_order]': function(ev){
                 let existing_order = $(ev.target).val();
-                if(!$('#selectRequestOption').val()){
+                var selectRequestOption = $('#selectRequestOption');
+                if(!selectRequestOption.val()){
                     alert('You must provide Request option!')
                     return false;
                 }
@@ -387,6 +616,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         params: {
                             'staff_num': staff_num,
                             'existing_order': existing_order,
+                            'request_type': selectRequestOption.val(),
                         },
                     }).then(function (data) {
                         console.log('retrieved existing_order data => '+ JSON.stringify(data))
@@ -433,9 +663,16 @@ odoo.define('portal_request.portal_request', function (require) {
                                 $.each(product_ids, function(k, elm){
                                     product_val.push(elm.id)
                                 })
-                                $("#product_ids").val(product_val).trigger('change');
-                                buildProductTable(product_ids);
+                                // $("#product_ids").val(product_val).trigger('change');
+                                buildProductTable(product_ids, selectRequestOption.val());
                             }
+                            if(selectRequestOption.val() == "soe"){
+                                buildProductTable(product_ids, "soe", "required", "", "");
+                            }
+                            if(selectRequestOption.val() == "cash_advance"){
+                                // make cash advance field required and displayed
+                                buildProductTable(product_ids, "cash_advance", "", "", "readonly");
+                            }  
                         }
                     }).guardedCatch(function (error) {
                         let msg = error.message.message
@@ -473,55 +710,78 @@ odoo.define('portal_request.portal_request', function (require) {
             'click .add_item_btn': function(ev){
                     ev.preventDefault();
                     $(ev.target).val()
+                    var selectRequestOption = $('#selectRequestOption');
                     console.log("Building product row with form data=> ", setProductdata)
-                    buildProductRow()
-                }, 
+                    buildProductRow(selectRequestOption.val())
+                },
+            'click .search_panel_btn': function(ev){
+                console.log("the search")
+                var get_search_query = $("#search_input_panel").val()
+                window.location.href = `/my/requests/param/${get_search_query}`
+            },
+
             'click .button_req_submit': function (ev) {
-                validate_empty_required_fields()
-                var current_btn = $(ev.target);
-                console.log('BUTTONMSZ is ==>', current_btn.text())
-
-                var form = $('#msform')[0];
-                // FormData object 
-                var formData = new FormData(form);
-                console.log('formData is ==>', formData)
-                var productItems = []
-                $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
-                    function(){
-                        let id = $(this).attr('id');
-                        let qty = $(this).val();
-                        if(setProductdata.includes(parseInt(id))){
-                            let prod_data = {'product_id': id, 'qty': qty}
-                            productItems.push(prod_data)
-                        }
-                        
+                //// main event starts
+                var list_of_fields = [];
+                $('input,textarea,select').filter('[required]:visible').each(function(ev){
+                    var field = $(this); 
+                    if (field.val() == ""){
+                        field.addClass('is-invalid');
+                        console.log($(this).attr('labelfor'));
+                        list_of_fields.push(field.attr('labelfor'));
                     }
-                )
-                console.log('formData productitem is ==>', productItems)
-                formData.append('productItems', JSON.stringify(productItems))
-                $.ajax({
-                    type: "POST",
-                    enctype: 'multipart/form-data',
-                    url: "/portal_data_process",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    cache: false,
-                    timeout: 800000,
-                }).then(function(data) {
-                    console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                    window.location.href = `/portal-success`;
-                    console.log("XMLREQUEST Successful");
-                }).catch(function(err) {
-                    console.log(err);
-                    alert(err);
-                }).then(function() {
-                    console.log("ANYTING")
-                })
+                });
+                if (list_of_fields.length > 0){
+                    alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+                    return false;
+                }else{
+                    var current_btn = $(ev.target);
+                    console.log('BUTTONMSZ is ==>', current_btn.text())
+                    var form = $('#msform')[0];
+                    // FormData object 
+                    var formData = new FormData(form);
+                    console.log('formData is ==>', formData)
+                    var productItems = []
+                    $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
+                        function(){
+                            let id = $(this).attr('id');
+                            let qty = $(this).val();
+                            if(setProductdata.includes(parseInt(id))){
+                                let prod_data = {
+                                    'product_id': id, 
+                                    'qty': qty,
+                                }
+                    //             'used_qty': rec.used_qty,
+					// 'amount_total': rec.amount_total,
+					// 'used_amount': rec.used_amount,
+					// 'description': rec.description,
+                                productItems.push(prod_data)
+                            }
+                        }
+                    )
+                    formData.append('productItems', JSON.stringify(productItems))
+                    $.ajax({
+                        type: "POST",
+                        enctype: 'multipart/form-data',
+                        url: "/portal_data_process",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 800000,
+                    }).then(function(data) {
+                        console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                        window.location.href = `/portal-success`;
+                        console.log("XMLREQUEST Successful");
+                    }).catch(function(err) {
+                        console.log(err);
+                        alert(err);
+                    }).then(function() {
+                        console.log("ANYTING")
+                    })
+                }
             }
-
-            
-        }
+         }
 
     });
 
@@ -541,6 +801,5 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     var form = $('#msform')[0];
-    
 // return PortalRequestWidget;
 });

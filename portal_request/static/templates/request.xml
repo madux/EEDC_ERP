@@ -99,7 +99,19 @@
                             <div class="container">
                              <!-- action="/portal/form/" -->
                                 <!-- <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true" data-success-mode="redirect" data-success-page="/contactus-thank-you" data-model_name="mail.mail"> -->
-                                 
+                                <div class="modal" tabindex="-1" role="dialog" id="portal_request_alert_modal">
+                                    <div class="modal-dialog mt-5" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-body">
+                                                <p id="display_modal_message">...</p>
+                                            </div>
+                                            <div class="modal-header">
+                                                <!-- <h5 class="modal-title">Cancel Request</h5> -->
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
                                     <div class="navbar-light  py-0 mb-2">
                                         <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
@@ -128,7 +140,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="text" class="form-control s_website_form_input" name="staff_id" required="1" id="staff_id"/>
+                                                    <input type="text" class="form-control s_website_form_input" name="staff_id" required="1" id="staff_id" labelfor="Staff ID:"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -139,7 +151,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="1" class="form-control">
+                                                    <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">-- Select -- </option>
                                                         <option value="material_request">Material request</option>
                                                         <option value="procurement_request">Procurement request</option>
@@ -155,7 +167,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <select name="selectTypeRequest" id="selectTypeRequest" required="required" data-init="1" class="form-control">
+                                                    <select name="selectTypeRequest" id="selectTypeRequest" required="required" data-init="new" class="form-control" labelfor="Request Type">
                                                         <option disabled="true" selected="true" value=""></option>
                                                         <option value="new" selected="true">New</option>
                                                         <option value="existing">Existing Request</option>
@@ -166,18 +178,18 @@
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" id="div_existing_order" data-type="char" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="existing_order">
-                                                    <span class="s_website_form_label_content">Existing Ref #</span>
+                                                    <span class="s_website_form_label_content" id="existing_ref_label">Existing Ref #</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
                                                      <!-- data-fill-with="name" -->
-                                                    <input type="text" class="form-control s_website_form_input" name="existing_order" placeholder="e.g REF00001" required="0" id="existing_order"/>
+                                                    <input type="text" class="form-control s_website_form_input" name="existing_order" placeholder="e.g REF00001" required="0" id="existing_order" labelfor="Existing Order"/>
                                                 </div>
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="request_status">
                                                     <span class="s_website_form_label_content">Request Status</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="request_status" class="form-control s_website_form_input" name="request_status" required="false" readonly="1" id="request_status"/>
+                                                    <input type="request_status" class="form-control s_website_form_input" name="request_status" required="false" readonly="1" id="request_status" labelfor="Request Status"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -201,14 +213,14 @@
                                                     <span class="s_website_form_label_content">Phone Number</span>
                                                 </label>
                                                 <div class="col-sm">    
-                                                    <input type="tel" class="form-control s_website_form_input" name="phone" data-fill-with="phone" id="phone_number"/>
+                                                    <input type="tel" class="form-control s_website_form_input" name="phone" data-fill-with="phone" id="phone_number" labelfor="Phone"/>
                                                 </div>
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="email_from">
                                                     <span class="s_website_form_label_content">Your Email</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="email" class="form-control s_website_form_input" name="email_from" required="true" data-fill-with="email" id="email_from"/>
+                                                    <input type="email" class="form-control s_website_form_input" name="email_from" required="true" data-fill-with="email" id="email_from" labelfor="Email"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -220,7 +232,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="text" class="form-control s_website_form_input" name="subject" required="true" id="subject"/>
+                                                    <input type="text" class="form-control s_website_form_input" name="subject" required="true" id="subject" labelfor="Subject"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -231,7 +243,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <textarea class="form-control s_website_form_input" name="description" required="1" id="description" rows="3"/>
+                                                    <textarea class="form-control s_website_form_input" name="description" required="1" id="description" rows="3" labelfor="Description"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -242,7 +254,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="number" class="form-control s_website_form_input" id="amount_fig" name="amount_fig" required="false"/>
+                                                    <input type="number" class="form-control s_website_form_input" id="amount_fig" name="amount_fig" required="false" labelfor="Payment Amount"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -254,7 +266,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="request_date" name="request_date" required="true"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" id="request_date" name="request_date" required="true" labelfor="Request Date"/>
                                                 </div>
                                             </div>
                                         </div> 
@@ -266,7 +278,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <select id="selectDistrict" name="selectDistrict" required="required" class="form-control form-control-sm">
+                                                    <select id="selectDistrict" name="selectDistrict" required="required" class="form-control form-control-sm" labelfor="District">
                                                         <option selected="selected" value="">-- Select District --</option>
                                                         <t t-foreach="district_ids" t-as="dis">
                                                             <option t-att-value="dis.id">
@@ -277,21 +289,36 @@
                                                 </div>
                                             </div>
                                         </div> 
-                                        <div class="s_website_form_field mb-3 col-8 s_website_form_custom s_website_form_required d-none" id="leave_section" data-type="text" data-name="Field">
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" id="leave_section" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_type_id">
+                                                    <span class="s_website_form_label_content">Leave Type</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <select id="leave_type_id" name="leave_type_id" class="form-control form-control-sm" labelfor="Leave Type">
+                                                        <option selected="selected" value="">-- Select leave type --</option>
+                                                        <t t-foreach="leave_type_ids" t-as="lv">
+                                                            <option t-att-value="lv.id">
+                                                                <span t-esc="lv.name"/>
+                                                            </option>
+                                                        </t>
+                                                    </select>
+                                                </div>
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_start_date">
                                                     <span class="s_website_form_label_content">Leave Start Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_date" name="leave_start_date" required="false"/>
+                                                    <input type="hidden" class="form-control s_website_form_input" name="leave_remaining" id="leave_remaining"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_date" name="leave_start_datex" required="false" labelfor="Leave start date"/>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_end_date">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_end_datex">
                                                     <span class="s_website_form_label_content">Leave End Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_date" name="leave_end_date" required="false"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" name="leave_end_datex" required="false" labelfor="Leave End date"/>
                                                 </div>
                                             </div>
                                              
@@ -303,7 +330,7 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input id="product_ids" class="form-control d-none" required="false" name="product_ids" multiple="true"/>
+                                                    <input id="product_ids" class="form-control d-none" required="false" name="product_ids" multiple="true" labelfor="Products"/>
                                                 </div>
                                             </div>
                                         </div> 
@@ -319,13 +346,28 @@
                                                             <th width="5%">
                                                                 <label></label>
                                                             </th>
-                                                            <th width="45%">
+                                                            <th width="40%">
                                                                 Product Name
                                                             </th>
-                                                            <th width="30%">
+                                                            <th id="description_line" width="10%">
+                                                                Description
+                                                            </th>
+                                                            <th width="5%">
                                                                 <label>Request Qty</label>
                                                             </th>
-                                                            <th width="20%">
+                                                            <th width="10%">
+                                                                <label>Amount</label>
+                                                            </th>
+                                                            <th id="used_qty_for_soe" width="5%">
+                                                                <label>Used Qty</label>
+                                                            </th>
+                                                            <th id="used_amount_for_soe" width="10%">
+                                                                <label>Used Amount</label>
+                                                            </th>
+                                                            <th width="10%">
+                                                                <label>Note</label>
+                                                            </th>
+                                                            <th width="5%">
                                                                 <label>X</label>
                                                             </th>
                                                             

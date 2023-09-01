@@ -20,5 +20,6 @@
     'assets': {
         'web.assets_frontend': [
         '/portal_request/static/src/js/request.js',
+        '/portal_request/static/src/js/search_request.js',
     ]},
 }

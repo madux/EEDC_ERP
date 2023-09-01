@@ -1,9 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from odoo.tools import misc, DEFAULT_SERVER_DATETIME_FORMAT
-from dateutil.relativedelta import relativedelta
-import time
-from datetime import datetime, timedelta 
+from bs4 import BeautifulSoup
 from odoo import http
 import random
 from lxml import etree
@@ -102,6 +99,7 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('move_type', '=', 'in_invoice'), ('state', '!=', 'cancel')]"
         )
+    date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
     res_users = fields.Many2many('res.users', string='Approvers') #, default=_default_employee)
@@ -164,14 +162,22 @@ class Memo_Model(models.Model):
     product_ids = fields.One2many('request.line', 'memo_id', string ='Products') 
     leave_start_date = fields.Datetime('Leave Start Date',  default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
+    leave_type_id = fields.Many2one('hr.leave.type', string="Leave type")
 
-    @api.depends('approver_id')
+    # @api.depends('approver_id')
     def compute_user_is_approver(self):
         if self.approver_id and self.approver_id.user_id.id == self.env.user.id:
             self.user_is_approver = True
+
+        if self.employee_id.parent_id.user_id.id == self.env.user.id or \
+        self.employee_id.administrative_supervisor_id.user_id.id == self.env.user.id:
+            self.user_is_approver = True
+
+        if self.determine_if_user_is_config_approver():
+            self.user_is_approver = True
         else:
             self.user_is_approver = False
-    
+
     @api.model
     def fields_view_get(self, view_id='company_memo.memo_model_form_view_3', view_type='form', toolbar=False, submenu=False):
         res = super(Memo_Model, self).fields_view_get(view_id=view_id,
@@ -291,11 +297,26 @@ class Memo_Model(models.Model):
             if not self.employee_id.parent_id:
                 raise ValidationError('Please ensure you have a unit manager / head manager assigned to your record !')
             return True
+    
+                                    
+    def validate_memo_for_approval(self):
+        item_lines = self.mapped('product_ids')
+        type_required_items = ['material_request', 'procurement_request', 'vehicle_request']
+        if self.memo_type in type_required_items and self.state in ["Approve2"]:
+            without_source_location_and_qty = item_lines.filtered(lambda sef: sef.source_location_id == False or sef.quantity_available < 1)
+            if without_source_location_and_qty:
+                 raise ValidationError("Please ensure all request lines has a source location and quantity greater than 0")
 
     def forward_memo(self): 
         if self.state == "submit":
             if not self.env.user.id == self.employee_id.user_id.id:#  or self.env.uid != self.create_uid:
                 raise ValidationError('You cannot forward a memo at draft state because you are not the initiator')
+        if self.state == "Sent":
+            if self.env.user.id == self.employee_id.user_id.id:
+                raise ValidationError("""
+                                      You cannot forward this memo again \n \
+                                       until returned or approved by superior!!!
+                                      """) 
         users = self.env['res.users'].browse([self.env.uid])
         manager = users.has_group("company_memo.mainmemo_manager")
         admin = users.has_group("base.group_system")
@@ -330,21 +351,27 @@ class Memo_Model(models.Model):
         # self.write({'partner_id': [(4, lists2)]}) 
         type = "loan request" if self.memo_type == "loan" else "memo"
         Beneficiary = self.employee_id.name or self.user_ids.name
-        body_msg = f"""Dear {self.direct_employee_id.name}, \n \
-        </br>I wish to notify you that a {type} with description, {self.name},</br>  
+        body_msg = f"""Dear {self.direct_employee_id.name or self.approver_id.name}, \n \
+        <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
         from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
-        was sent to you for review / approval. </br> </br>Kindly {self.get_url(self.id, self._name)} \
-        </br> Yours Faithfully</br>{self.env.user.name}""" 
+        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id, self._name)} \
+        <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.mail_sending_direct(body_msg)
         self.direct_employee_id = False 
-        body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(type, self.name, Beneficiary, self.env.user.name, employee)
+        body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(
+            type, 
+            self.name, 
+            Beneficiary, 
+            self.env.user.name, 
+            employee
+            )
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
           
     def mail_sending_direct(self, body_msg): 
         subject = "Memo Notification"
         email_from = self.env.user.email
-        mail_to = self.direct_employee_id.work_email
+        mail_to = self.direct_employee_id.work_email or self.approver_id.work_email
         emails = (','.join(str(item2.work_email) for item2 in self.users_followers))
         mail_data = {
                 'email_from': email_from,
@@ -354,8 +381,8 @@ class Memo_Model(models.Model):
                 'email_cc': emails if self.users_followers else [],
                 'body_html': body_msg
             }
-        mail_id = self.env['mail.mail'].create(mail_data)
-        self.env['mail.mail'].send(mail_id)
+        mail_id = self.env['mail.mail'].sudo().create(mail_data)
+        self.env['mail.mail'].sudo().send(mail_id)
     
     def _get_group_users(self):
         followers = []
@@ -366,17 +393,37 @@ class Memo_Model(models.Model):
             for rex in employee:
                 followers.append(rex.id)
         return self.write({'users_followers': [(4, follow) for follow in followers]})
-
+    
+    def determine_if_user_is_config_approver(self):
+        """
+        This determines if the user is responsible to approve the memo as a Purchase Officer
+        This will open up the procurement application to proceed with the respective record
+        """
+        memo_settings = self.env['memo.config'].sudo().search([
+            ('memo_type', '=', self.memo_type)
+            ])
+        memo_approver_ids = memo_settings.approver_ids
+        user = self.env.user
+        emloyee = self.env['hr.employee'].search([('user_id', '=', user.id)], limit=1)
+        if emloyee and emloyee.id in [emp.id for emp in memo_approver_ids]:
+            return True
+        else:
+            return False
+            
+    def user_approve_memo(self): # Always available to Some specific groups
+        return self.approve_memo()
+    
     def approve_memo(self): # Always available to Some specific groups
-        users = self.env['res.users'].browse([self.env.uid])
-        manager = users.has_group("company_memo.mainmemo_manager")
-        if not manager:
-            if self.env.uid == self.employee_id.user_id.id:
-                raise ValidationError('You are not Permitted to approve a Payment Memo.\
-                Forward it to the authorized Person')
-         
+        # users = self.env['res.users'].browse([self.env.uid])
+        # manager = users.has_group("company_memo.mainmemo_manager")
+        # if not manager: 
+        if self.env.uid == self.employee_id.user_id.id:
+            raise ValidationError(
+                """You are not Permitted to approve a Payment Memo.\
+                    Forward it to the authorized Person
+            """)
         body = "MEMO APPROVE NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
-        type = "loan request" if self.memo_type == "loan" else "memo"
+        type = "request"
         body_msg = f"""Dear {self.employee_id.name}, </br>I wish to notify you that a {type} with description, '{self.name}',\
                 from {self.employee_id.department_id.name or self.user_ids.name} department have been approved by {self.env.user.name}.</br>\
                 Accountant's/ Respective authority should take note. \
@@ -384,40 +431,177 @@ class Memo_Model(models.Model):
                 Yours Faithfully</br>{self.env.user.name}"""
 
         users = self.env['res.users'].browse([self.env.uid])
-        if self.state == "Approve":
+        if self.state in ["Approve", "Approve2", "Done"]:
             raise ValidationError("Sorry!!! this record have already been approved.")
-        
         if self.memo_type in ["Payment", 'loan']:
             self.state = "Approve"
-            self.write({'res_users': [(4, users.id)]})
-        elif self.memo_type == "Internal":
-            self.state = "Done"
-            self.write({'res_users': [(4, users.id)]})
-        self.mail_sending_direct(body_msg)
-        self.follower_messages(body)
-    
-    def user_approve_memo(self): # Always available to Some specific groups
-        if self.memo_type == "Internal":
-            type = "loan request" if self.memo_type == "loan" else "memo"
-            body = "%s APPROVAL NOTIFICATION: -Approved By ;\n %s on %s" %(type.capitalize(), self.env.user.name, fields.Date.today())
-            bodyx = "Dear {}, </br>I wish to notify you that a {} with description, '{}',\n \
-                    from {} department have been approved by {}. Kindly review. </br> </br>Kindly {} </br>\
-                    Yours Faithfully</br>{}".format(self.employee_id.name, type,
-                                                self.name, self.employee_id.department_id.name, self.env.user.name,
-                                                self.get_url(self.id, self._name), self.env.user.name)
-            
-            users = self.env['res.users'].browse([self.env.uid])
-            user = users.has_group("company_memo.mainmemo_officer")
-            manager = users.has_group("company_memo.mainmemo_manager")
-            acc = users.has_group("company_memo.mainmemo_account")
-            msg = """You are not Permitted to approve a Payment Memo.\n Kindly Forward it to the authorized Person"""
-            if not manager:
-                raise ValidationError(msg)
-            else:
-                self.approve_memo()
-        else:
-            raise ValidationError('To use this feature, ensure the Memo Type is not a payment memo')
+        else: #lif self.memo_type == "Internal":
+            self.state = "Approve2"
         
+        self.write({'res_users': [(4, users.id)]})
+        return self.generate_memo_artifacts(body_msg, body)
+         
+    def generate_memo_artifacts(self, body_msg, body):
+        if self.memo_type == "material_request":
+            return self.generate_stock_material_request(body_msg, body)
+        elif self.memo_type == "procurement_request":
+            self.generate_stock_procurement_request(body_msg, body) 
+        elif self.memo_type == "vehicle_request":
+            self.generate_vehicle_request(body_msg, body) 
+        elif self.memo_type == "leave_request":
+            self.generate_leave_request(body_msg, body)
+        else:
+            pass 
+
+    def generate_stock_material_request(self, body_msg, body):
+        stock_picking_type_out = self.env.ref('stock.picking_type_out')
+        stock_picking = self.env['stock.picking']
+        user = self.env.user
+        warehouse_location_id = self.env['stock.warehouse'].search([
+            ('company_id', '=', user.company_id.id) 
+        ], limit=1)
+        destination_location_id = self.env.ref('stock.stock_location_customers')
+        vals = {
+            'scheduled_date': fields.Date.today(),
+            'picking_type_id': stock_picking_type_out.id,
+            'origin': self.code,
+            'partner_id': self.employee_id.user_id.partner_id.id,
+            'move_ids_without_package': [(0, 0, {
+                            'name': self.code, 
+                            'picking_type_id': stock_picking_type_out.id,
+                            'location_id': mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                            'location_dest_id': destination_location_id.id,
+                            'product_id': mm.product_id.id,
+                            'product_uom_qty': mm.quantity_available,
+                            'date_deadline': self.date_deadline,
+            }) for mm in self.product_ids]
+        }
+        stock = stock_picking.sudo().create(vals)
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        # self.follower_messages(body)
+        is_config_approver = self.determine_if_user_is_config_approver()
+        if is_config_approver:
+            """Check if the user is enlisted as the approver for memo type"""
+            view_id = self.env.ref('stock.view_picking_form').id
+            return self.record_to_open(
+                "stock.picking", 
+                view_id,
+                stock.id,
+                f"Stock - {stock.name}"
+                )
+    
+    def generate_stock_procurement_request(self, body_msg, body):
+        stock_picking_type_in = self.env.ref('stock.picking_type_in')
+        purchase_obj = self.env['purchase.order']
+        vals = {
+            'date_order': self.date,
+            'picking_type_id': stock_picking_type_in.id,
+            'origin': self.code,
+            'memo_id': self.id,
+            'partner_id': self.employee_id.user_id.partner_id.id,
+            'order_line': [(0, 0, {
+                            'product_id': mm.product_id.id,
+                            'name': mm.description,
+                            'product_qty': mm.quantity_available,
+                            'date_planned': self.date,
+            }) for mm in self.product_ids]
+        }
+        po = purchase_obj.create(vals)
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        # self.follower_messages(body)
+        is_config_approver = self.determine_if_user_is_config_approver()
+        if is_config_approver:
+            """Check if the user is enlisted as the approver for memo type"""
+            view_id = self.env.ref('purchase.purchase_order_form').id
+            self.mail_sending_direct(body_msg)
+            self.follower_messages(body)
+            return self.record_to_open(
+                    "purchase.order", 
+                    view_id,
+                    po.id,
+                    f"Purchase Order - {po.name}"
+                    )
+
+    def generate_vehicle_request(self, body_msg, body):
+        self.state = 'Approve2'
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        # self.follower_messages(body)
+
+    def generate_leave_request(self, body_msg, body):
+        leave = self.env['hr.leave'].sudo()
+        vals = {
+            'employee_id': self.employee_id.id,
+            'request_date_from': self.leave_start_date,
+            'request_date_to': self.leave_end_date,
+            'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
+            'holiday_status_id': self.leave_type_id.id,
+            'origin': self.code,
+            'memo_id': self.id,
+        }
+        leave.create(vals)
+        self.state = 'Approve2'
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        # self.follower_messages(body)
+
+    def record_to_open(self, model, view_id, res_id=False, name=False):
+        obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
+        if obj:
+            return self.open_related_record_view(
+            model, 
+            res_id if res_id else obj.id ,
+            view_id,
+            name if name else f"{obj.name}"
+            )
+        else:
+            raise ValidationError("No related record found for the memo")
+
+    def open_related_record_view(self, model, res_id, view_id, name="Record To approved"):
+        ret = {
+                'name': name,
+                'view_mode': 'form',
+                'view_id': view_id,
+                'view_type': 'form',
+                'res_model': model,
+                'res_id': res_id,
+                'type': 'ir.actions.act_window',
+                'domain': [],
+                'target': 'current'
+                }
+        return ret
+
+    def update_memo_type_approver(self):
+        """update memo type approver"""
+        memo_settings = self.env['memo.config'].sudo().search([
+                ('memo_type', '=', self.memo_type)
+                ])
+        memo_approver_ids = memo_settings.approver_ids
+        for appr in memo_approver_ids:
+            self.sudo().write({
+                'users_followers': [(4, appr.id)] 
+            })
+      
+    def view_related_record(self):
+        if self.memo_type == "material_request":
+            view_id = self.env.ref('stock.view_picking_form').id
+            return self.record_to_open('stock.picking', view_id)
+             
+        elif self.memo_type == "procurement_request":
+            view_id = self.env.ref('purchase.purchase_order_form').id
+            return self.record_to_open('purchase.order', view_id)
+        elif self.memo_type == "vehicle_request":
+            # view_id = self.env.ref('stock.view_picking_form').id
+            # self.record_to_open('purchase.order', view_id)
+            pass 
+        elif self.memo_type == "leave_request":
+            view_id = self.env.ref('hr_holidays.hr_leave_view_form').id
+            return self.record_to_open('purchase.order', view_id)
+        else:
+            pass  
+
     def follower_messages(self, body):
         pass 
         # body= "RETURN NOTIFICATION;\n %s" %(self.reason_back)

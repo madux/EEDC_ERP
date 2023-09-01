@@ -3,3 +3,4 @@ from . import company_memo
 from . import forward_memo
 from . import account_payment
 from . import request_line
+from . import config_setting

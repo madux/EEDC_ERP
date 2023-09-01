@@ -34,6 +34,7 @@ class ProductTemplate(models.Model):
     vehicle_color = fields.Char("Vehicle Color")
     vehicle_model = fields.Char("Vehicle Model")
     vehicle_make = fields.Char("Vehicle Make")
+    is_available = fields.Char("Is Available")
 
     @api.onchange('is_vehicle_product')
     def onchange_is_vehicle_product(self):
