@@ -92,20 +92,20 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <input type="text" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" required="required" class="productinput form-control" labelfor="Product Line - ${elm.name} Quantity"/> 
+                            <input type="text" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" required="required" class="productinput form-control" labelfor="Product Line - ${elm.name} Quantity"/> 
                         </th>
                         
                         <th width="10%">
-                            <input type="number" name="${elm.amount_total}" id="${elm.id}" value="${elm.amount_total}" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Amount Total"/> 
+                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Amount Total"/> 
                         </th>
                         <th width="5%">
-                            <input type="text" name="${elm.used_qty}" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" readonly="${readon}" class="productUsedQty form-control ${hidden}" labelfor="Product Line - ${elm.name}: Used Quantity"/> 
+                            <input type="text" name="usedqty" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" readonly="${readon}" class="productUsedQty form-control ${hidden}" labelfor="Product Line - ${elm.name}: Used Quantity"/> 
                         </th>
                         <th width="10%">
-                            <input type="text" name="${elm.used_amount}" id="${elm.used_amount-lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productUsedAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Product Line - ${elm.name}: Used Amount"/> 
+                            <input type="text" name="usedAmount" id="${elm.used_amount-lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productUsedAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Product Line - ${elm.name}: Used Amount"/> 
                         </th>
                         <th width="10%">
-                            <input type="textarea" name="${elm.note}" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control ${hidden}" labelfor="Note"/> 
+                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
                             <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
@@ -156,10 +156,10 @@ odoo.define('portal_request.portal_request', function (require) {
                     <input type="textarea" placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Note"/> 
                 </th>
                 <th width="5%">
-                    <input type="text" class="productinput form-control" required="required" labelfor="Product Line - Quantity"/>
+                    <input type="text" productinput="productreqQty" class="productinput form-control" required="required" labelfor="Product Line - Quantity"/>
                 </th>
                 <th width="10%">
-                    <input type="number" name="Amount-${lastRow_count}" id="amountt-${lastRow_count}" amount_total="Amount-${lastRow_count}" required="${memo_type == 'cash_advance' ? 'required': ''}" readonly="${memo_type == 'cash_advance' ? '0': 'readonly'}" class="productAmt form-control" labelfor="Amount Total"/> 
+                    <input type="number" name="amount_total" id="amountt-${lastRow_count}" amount_total="Amount-${lastRow_count}" required="${memo_type == 'cash_advance' ? 'required': ''}" readonly="${memo_type == 'cash_advance' ? '0': 'readonly'}" class="productAmt form-control" labelfor="Amount Total"/> 
                 </th>
                 <th width="5%">
                     <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Product Line -: Used Quantity"/> 
@@ -168,7 +168,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     <input type="number" name="UsedAmount-${lastRow_count}" id="amounttUsed-${lastRow_count}" amount_total="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '0': 'readonly'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Amount Total"/> 
                 </th>
                 <th width="10%">
-                    <input type="textarea" name="noteelm_${lastRow_count}" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control" labelfor="Note"/> 
+                    <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control" labelfor="Note"/> 
                 </th>
                 
                 <th width="5%">
@@ -742,19 +742,38 @@ odoo.define('portal_request.portal_request', function (require) {
                     var formData = new FormData(form);
                     console.log('formData is ==>', formData)
                     var productItems = []
-                    $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
+                    // $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
+                    //     function(){
+                    //         let id = $(this).attr('id');
+                    //         let qty = $(this).val();
+                    //         if(setProductdata.includes(parseInt(id))){
+                    //             let prod_data = {
+                    //                 'product_id': id, 
+                    //                 'qty': qty,
+                    //             } 
+                    //             productItems.push(prod_data)
+                    //         }
+                    //     }
+                    // )
+                    $(`#tbody_product > tr.prod_row > th > span > input`).each(
                         function(){
-                            let id = $(this).attr('id');
-                            let qty = $(this).val();
+                            let product_id = $(this).attr('name') == "product_item_id" ? $(this).attr('id') : null;
+                            let description = $(this).attr('name') == "description" ? $(this).attr('value') : null;
+                            let request_qty = $(this).attr('productinput') == "productreqQty" ? $(this).attr('value') : null;
+                            let amount_total = $(this).attr('name') == "amount_total" ? $(this).attr('value') : null;
+                            let usedqty = $(this).attr('name') == "usedqty" ? $(this).attr('value') : null;
+                            let usedAmount = $(this).attr('name') == "usedAmount" ? $(this).attr('value') : null;
+                            let note_area = $(this).attr('name') == "note_area" ? $(this).attr('value') : null;
                             if(setProductdata.includes(parseInt(id))){
                                 let prod_data = {
-                                    'product_id': id, 
-                                    'qty': qty,
-                                }
-                    //             'used_qty': rec.used_qty,
-					// 'amount_total': rec.amount_total,
-					// 'used_amount': rec.used_amount,
-					// 'description': rec.description,
+                                    'product_id': product_id, 
+                                    'description': description,
+                                    'qty': request_qty,
+                                    'amount_total': amount_total,
+                                    'used_qty': usedqty,
+                                    'used_amount': usedAmount,
+                                    'note': note_area,
+                                } 
                                 productItems.push(prod_data)
                             }
                         }

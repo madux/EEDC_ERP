@@ -448,6 +448,7 @@ class PortalRequest(http.Controller):
 					'amount_total': rec.amount_total,
 					'used_amount': rec.used_amount,
 					'description': rec.description,
+					'note': rec.note,
 				})
 
 	def get_pagination(self, page):
