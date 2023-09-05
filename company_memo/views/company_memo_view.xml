@@ -14,6 +14,8 @@
                     <button name="approve_memo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','in',['submit', 'Approve','Done','refuse'])]}" string="Approve" type="object" class="oe_highlight" groups="base.group_system,company_memo.mainmemo_manager"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','not in',['Sent'])]}"  type="object" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit"/>
                     <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Approve']), ('memo_type','not in',['Payment'])]}"/>
+                    <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
+                    <button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve']), ('memo_type','not in',['soe']),('user_is_approver','=', False)]}"/>
                     <button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Approve']),('memo_type','not in',['loan'])]}"/>
 
                     
@@ -61,7 +63,7 @@
                                 class="oe_highlight"
                                 icon="fa-book" 
                                 type="object">
-                                <field name="attachment_number" widget="statinfo" string="Documents"/>
+                                <field name="attachment_number" widget="statinfo" string=" - Documents"/>
                             </button>
                             <button name="view_related_record"
                                 class="btn-primary oe_highlight"
@@ -107,15 +109,18 @@
                                 <field name="periods" attrs="{'invisible':[('memo_type','!=','loan')],'required':[('memo_type','=','loan')]}"/>
                                 <field name="method_period" attrs="{'invisible':[('memo_type','!=','loan')],'required':[('memo_type','=','loan')]}"/>
                                 <field name="start_date" attrs="{'invisible':[('memo_type','!=', 'loan')],'required':[('memo_type','=','loan')]}"/>
+                                <field name="cash_advance_reference" attrs="{'invisible':[('memo_type','!=', 'soe')],'required':[('memo_type','=','soe')]}"/>
+                                <field name="soe_advance_reference" attrs="{'invisible':[('memo_type','!=', 'cash_advance')]}"/>
                                 <field name="currency_id" invisible="1"/>
                                 <field name="invoice_id" attrs="{'invisible':[('memo_type','!=','Payment')]}"
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
                                 <field name = "users_followers" widget="many2many_tags" required="0" readonly="1"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
+                                
                                 <field name="active" invisible="1"/>
-                                <field name="approver_id" invisible="0" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
-                                <field name="user_is_approver" invisible="0"/>
+                                <field name="approver_id" invisible="1" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
+                                <field name="user_is_approver" invisible="1"/>
 
                             </group> 
                             <group> 
@@ -151,7 +156,7 @@
                                         <field name="description" string="Description" invisible="0" attrs="{'required': [('product_id', '=', False)]}"/> 
                                         <field name="code" string="Code" readonly="1" attrs="{'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="quantity_available" string="Request Quantity" attrs="{'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
-                                        <field name="amount_total" string="Amount" attrs="{'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
+                                        <field name="amount_total" string="Unit Price" attrs="{'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="used_qty" string="Used Qty" attrs="{'readonly': [('memo_type', 'not in', ['soe'])],'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="used_amount" string="Used Amount" attrs="{'readonly': [('memo_type', 'not in', ['soe'])],'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="note" string="Note" invisible="0"/> 

@@ -17,6 +17,8 @@
         'views/res_users.xml',
         'views/memo_forward_view.xml',
         'views/memo_config_view.xml',
+        'views/account_account_view.xml',
+        'views/account_move.xml',
         'wizard/return_memo_wizard_view.xml',
         'reports/report_memo.xml',
         'views/assets.xml',

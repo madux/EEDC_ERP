@@ -99,6 +99,8 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('move_type', '=', 'in_invoice'), ('state', '!=', 'cancel')]"
         )
+    soe_advance_reference = fields.Many2one('memo.model', 'SOE ref.')
+    cash_advance_reference = fields.Many2one('memo.model', 'Cash Advance ref.')
     date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
@@ -433,7 +435,7 @@ class Memo_Model(models.Model):
         users = self.env['res.users'].browse([self.env.uid])
         if self.state in ["Approve", "Approve2", "Done"]:
             raise ValidationError("Sorry!!! this record have already been approved.")
-        if self.memo_type in ["Payment", 'loan']:
+        if self.memo_type in ["Payment", 'loan', 'cash_advance', 'soe']:
             self.state = "Approve"
         else: #lif self.memo_type == "Internal":
             self.state = "Approve2"
@@ -450,6 +452,12 @@ class Memo_Model(models.Model):
             self.generate_vehicle_request(body_msg, body) 
         elif self.memo_type == "leave_request":
             self.generate_leave_request(body_msg, body)
+        elif self.memo_type == "cash_advance":
+            self.update_memo_type_approver()
+            self.mail_sending_direct(body_msg)
+        elif self.memo_type == "soe":
+            self.update_memo_type_approver()
+            self.mail_sending_direct(body_msg)
         else:
             pass 
 
@@ -541,12 +549,116 @@ class Memo_Model(models.Model):
             'origin': self.code,
             'memo_id': self.id,
         }
-        leave.create(vals)
-        self.state = 'Approve2'
-        self.update_memo_type_approver()
+        leave_id = leave.create(vals)
+        leave_id.action_approve()
+        leave_id.action_validate()
+        self.state = 'Done'
+        # self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
         # self.follower_messages(body)
 
+    def generate_move_entries(self):
+        # self.follower_messages(body)
+        is_config_approver = self.determine_if_user_is_config_approver()
+        if is_config_approver:
+            """Check if the user is enlisted as the approver for memo type
+            if approver is an account officer, system generates move and open the exact record"""
+            view_id = self.env.ref('account.view_move_form').id
+            # move_id = self.generate_move_entries()
+
+            journal_id = self.env['account.journal'].search(
+            [('type', '=', 'purchase'),
+             ('code', '=', 'BILL')
+             ], limit=1)
+            account_move = self.env['account.move'].sudo()
+            inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            if not inv:
+                partner_id = self.employee_id.user_id.partner_id
+                inv = account_move.create({ 
+                    'memo_id': self.id,
+                    'ref': self.code,
+                    'origin': self.code,
+                    'partner_id': partner_id.id,
+                    'company_id': self.env.user.company_id.id,
+                    'currency_id': self.env.user.company_id.currency_id.id,
+                    # Do not set default name to account move name, because it
+                    # is unique 
+                    'name': f"CASH ADV/ {self.code}",
+                    'move_type': 'in_receipt',
+                    'invoice_date': fields.Date.today(),
+                    'date': fields.Date.today(),
+                    'journal_id': journal_id.id,
+                    'invoice_line_ids': [(0, 0, {
+                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'ref': f'{self.code}: {pr.product_id.name or pr.description}',
+                            'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                            'price_unit': pr.amount_total,
+                            'quantity': pr.quantity_available,
+                            'discount': 0.0,
+                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                            'product_id': pr.product_id.id if pr.product_id else None,
+                    }) for pr in self.product_ids],
+                })
+
+            return self.record_to_open(
+            "account.move", 
+            view_id,
+            inv.id,
+            f"Journal Entry - {inv.name}"
+            ) 
+        else:
+            raise ValidationError("Sorry! You are not allowed to validate cash advance payments")
+        
+    def generate_soe_entries(self):
+        # self.follower_messages(body)
+        is_config_approver = self.determine_if_user_is_config_approver()
+        if is_config_approver:
+            """Check if the user is enlisted as the approver for memo type
+            if approver is an account officer, system generates move and open the exact record"""
+            view_id = self.env.ref('account.view_move_form').id
+            journal_id = self.env['account.journal'].search(
+            [('type', '=', 'sale'),
+             ('code', '=', 'INV')
+             ], limit=1)
+            account_move = self.env['account.move'].sudo()
+            inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            if not inv:
+                partner_id = self.employee_id.user_id.partner_id
+                inv = account_move.create({ 
+                    'memo_id': self.id,
+                    'ref': self.code,
+                    'origin': self.code,
+                    'partner_id': partner_id.id,
+                    'company_id': self.env.user.company_id.id,
+                    'currency_id': self.env.user.company_id.currency_id.id,
+                    # Do not set default name to account move name, because it
+                    # is unique 
+                    'name': f"SOE {self.code}",
+                    'move_type': 'out_receipt',
+                    'invoice_date': fields.Date.today(),
+                    'date': fields.Date.today(),
+                    'journal_id': journal_id.id,
+                    'invoice_line_ids': [(0, 0, {
+                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'ref': f'{self.code}: {pr.product_id.name}',
+                            'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                            'price_unit': pr.amount_total,
+                            'quantity': pr.quantity_available,
+                            'discount': 0.0,
+                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                            'product_id': pr.product_id.id if pr.product_id else None,
+                    }) for pr in self.product_ids],
+                })
+            self.update_inventory_product_quantity()
+            return self.record_to_open(
+            "account.move", 
+            view_id,
+            inv.id,
+            f"Journal Entry SOE - {inv.name}"
+            ) 
+        else:
+            raise ValidationError("Sorry! You are not allowed to validate cash advance payments")
+         
     def record_to_open(self, model, view_id, res_id=False, name=False):
         obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
         if obj:
@@ -558,6 +670,34 @@ class Memo_Model(models.Model):
             )
         else:
             raise ValidationError("No related record found for the memo")
+
+    def update_inventory_product_quantity(self):
+        '''this will be used to raise a stock tranfer record. Once someone claimed he returned a 
+         positive product (storable product) , system should generate a stock picking to update the new product stock
+         if product does not exist, To be asked for '''
+        stock_picking_type_out = self.env.ref('stock.picking_type_out')
+        stock_picking = self.env['stock.picking']
+        user = self.env.user
+        warehouse_location_id = self.env['stock.warehouse'].search([
+            ('company_id', '=', user.company_id.id) 
+        ], limit=1)
+        partner_location_id = self.env.ref('stock.stock_location_customers')
+        vals = {
+            'scheduled_date': fields.Date.today(),
+            'picking_type_id': stock_picking_type_out.id,
+            'origin': self.code,
+            'partner_id': self.employee_id.user_id.partner_id.id,
+            'move_ids_without_package': [(0, 0, {
+                            'name': self.code, 
+                            'picking_type_id': stock_picking_type_out.id,
+                            'location_id': partner_location_id.id,
+                            'location_dest_id': mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                            'product_id': mm.product_id.id,
+                            'product_uom_qty': mm.quantity_available,
+                            'date_deadline': self.date_deadline,
+            }) for mm in self.mapped('product_ids').filtered(lambda pr: pr.product_id and pr.product_id.detailed_type == "product")]
+        }
+        stock_picking.sudo().create(vals)
 
     def open_related_record_view(self, model, res_id, view_id, name="Record To approved"):
         ret = {
@@ -599,6 +739,9 @@ class Memo_Model(models.Model):
         elif self.memo_type == "leave_request":
             view_id = self.env.ref('hr_holidays.hr_leave_view_form').id
             return self.record_to_open('purchase.order', view_id)
+        elif self.memo_type == "cash_advance":
+            view_id = self.env.ref('account.view_move_form').id
+            return self.record_to_open('account.move', view_id)
         else:
             pass  
 
@@ -610,6 +753,76 @@ class Memo_Model(models.Model):
         # followers = records
         # self.message_post(body=body)
         # self.message_post(body=body, subtype='mt_comment',message_type='notification',partner_ids=followers)
+    
+     
+    def generate_move_entriesxx(self):
+        '''pr: product obj'''
+        # journal_id = self.env['account.journal'].search([
+        #     '|',('type', '=', 'cash'),
+        #     ('type', '=', 'bank'),
+        #     ], limit=1)
+        journal_id = self.env['account.journal'].search(
+            [('type', '=', 'purchase'),
+             ('code', '=', 'BILL')
+             ], limit=1
+        )
+        account_move = self.env['account.move'].sudo()
+        inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+        if not inv:
+            partner_id = self.employee_id.user_id.partner_id
+            inv = account_move.create({ 
+                'memo_id': self.id,
+                'ref': self.code,
+                'origin': self.code,
+                'partner_id': partner_id.id,
+                'company_id': self.env.user.company_id.id,
+                'currency_id': self.env.user.company_id.currency_id.id,
+                # Do not set default name to account move name, because it
+                # is unique 
+                'name': f"CASH ADV/ {self.code}",
+                'move_type': 'in_receipt',
+                'date': fields.Date.today(),
+                'journal_id': journal_id.id,
+                'invoice_line_ids': [(0, 0, {
+                        'name': pr.product_id.name,
+                        'ref': f'{self.code}: {pr.product_id.name}',
+                        'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                        'price_unit': pr.amount_total,
+                        'quantity': pr.quantity_available,
+                        'discount': 0.0,
+                        'product_uom_id': pr.product_id.uom_id.id,
+                        'product_id': pr.product_id.id,
+                }) for pr in self.product_ids],
+            })
+            # inv.post()
+            # self.validate_invoice_and_post_journal(journal_id.id, inv)
+        else:
+            return inv
+        return inv
+
+    def validate_invoice_and_post_journal(
+            self, journal_id, inv):
+        """To be used only when they request for automatic payment generation"""
+        account_payment_obj = self.env['account.payment'].sudo()
+        outbound_payment_method = self.env['account.payment.method'].sudo().search(
+            [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
+        payment_method = 1
+        if journal_id:
+            payment_method = journal_id.outbound_payment_method_line_ids[0].id if journal_id.outbound_payment_method_line_ids else outbound_payment_method.id if outbound_payment_method else payment_method
+        acc_values = {
+            'invoice_ids': [(6, 0, [inv.id])],
+            'amount': inv.amount_residual_signed,
+            'ref': inv.name,
+            'move_id': inv.id,
+            'payment_type': 'outbound',
+            'partner_type': 'supplier',
+            'journal_id': journal_id.id,
+            # 'branch_id': 1, #sale_order.branch_id.id,
+            'payment_method_id': payment_method,
+            'partner_id': inv.partner_id.id,
+        }
+        payment = account_payment_obj.create(acc_values)
+        payment.post()
 
     def Register_Payment(self):
         # dummy, view_id = self.env['ir.model.data'].get_object_reference('account', 'view_account_payment_form')

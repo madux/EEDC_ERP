@@ -53,8 +53,7 @@ class Forward_Wizard(models.TransientModel):
     def onchange_direct_employer_id(self):
         if self.direct_employee_id:
             if self.env.user.id == self.direct_employee_id.user_id.id:
-                raise ValidationError('You cannot forward this memo to your self')
-        
+                raise ValidationError('You cannot forward this memo to your self. You can try approving the memo if you are amongst the approver.')
      
     def forward_memo(self): # Always available, 
         if self.memo_record.memo_type == "Payment":

@@ -12,7 +12,7 @@ class RequestLine(models.Model):
     district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested")
     used_qty = fields.Float(string="Qty Used")
-    amount_total = fields.Float(string="Amount")
+    amount_total = fields.Float(string="Unit Price")
     used_amount = fields.Float(string="Amount Used")
     note = fields.Char(string="Note")
     state = fields.Char(string="State")

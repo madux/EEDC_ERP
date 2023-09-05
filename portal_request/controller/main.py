@@ -188,7 +188,42 @@ class PortalRequest(http.Controller):
 				"status": False,
 				"message": msg, 
 				}
-	
+		
+	@http.route(['/check-cash-retirement'], type='json', website=True, auth="user", csrf=False)
+	def check_cash_retirement(self, **post):
+		user = request.env.user 
+		request_type = post.get('request_type')
+		staff_num = post.get('staff_num')
+		memo_obj = request.env['memo.model'].sudo()
+		if staff_num:
+			domain = [
+				('employee_id.employee_number', '=', staff_num),
+				('active', '=', True),
+				('employee_id.user_id', '=', user.id),
+				('memo_type', '=', 'cash_advance'),
+				('soe_advance_reference', '=', False) 
+			]
+			cash_advance_not_retired = memo_obj.search(domain, limit=1)
+			_logger.info(f"This is cash advance check staff_num: {staff_num}")
+			if cash_advance_not_retired:
+				_logger.info(f"Cash advance not retired: {cash_advance_not_retired}")
+				return {
+					"status": False,
+					"message": f"You cannot request for another cash advance without retiring an existing one" 
+				}
+			else:
+				_logger.info(f"Cash advance is retired")
+				return {
+					"status": True,
+					"message": "" 
+				}
+				
+		else:
+			return {
+				"status": False,
+				"message": "Staff Number required" 
+			}
+
 	@http.route(['/check_order'], type='json', website=True, auth="user", csrf=False)
 	def check_order(self, **post):
 		staff_num = post.get('staff_num')
@@ -205,14 +240,20 @@ class PortalRequest(http.Controller):
 		_logger.info('Checking check_order No ...')
 		user = request.env.user 
 		if staff_num:
-			memo_request = request.env['memo.model'].sudo().search(
-			[
+			domain = [
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('code', '=ilike', existing_order)
-			], 
-			limit=1) 
+				('code', '=ilike', existing_order) 
+			]
+			if request_type == "soe":
+				'''this should only return the request cash advance that has
+				  been approved and taken out from the account side
+				'''
+				domain += [('state', 'in', ['Done']), ('memo_type', 'in', ['cash_advance'])]
+			else:
+				domain += [('state', 'in', ['submit'])]
+			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
 			if memo_request: 
 				return {
 					"status": True,
@@ -222,7 +263,7 @@ class PortalRequest(http.Controller):
 						'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
 						'work_email': memo_request.employee_id.work_email,
 						'subject': memo_request.name,
-						'description': memo_request.description,
+						'description': memo_request.description or "",
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
 								if memo_request.product_ids else memo_request.amountfig,
@@ -236,7 +277,7 @@ class PortalRequest(http.Controller):
 							'used_qty': q.used_qty,
 							'amount_total': q.amount_total,
 							'used_amount': q.used_amount,
-							'description': q.description,
+							'description': q.description or "",
 							} 
 							for q in memo_request.product_ids
 						]
@@ -244,6 +285,8 @@ class PortalRequest(http.Controller):
 					"message": "", 
 					}
 			else:
+				message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
+				if request_type == "soe" else "Order ID with staff ID does not exist / has been submitted already. Contact Admin"
 				return {
 					"status": False,
 					"data": {
@@ -256,7 +299,7 @@ class PortalRequest(http.Controller):
 						'request_date': "",
 						'product_ids': "",
 					},
-					"message": "Existing order ID with staff ID does not exist. Contact Admin", 
+					"message": message 
 					}
 			
 	@http.route(["/portal-success"], type='http', auth='user', website=True, website_published=True)
@@ -385,6 +428,12 @@ class PortalRequest(http.Controller):
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
+		
+		if post.get("selectRequestOption") == "soe":
+			cash_advance_id = request.env['memo.model'].sudo().search([
+			('code', '=', existing_order)], limit=1)
+		else:
+			cash_advance_id = False
 		vals = {
 			"employee_id": employee_id.id,
 			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption") if post.get("selectRequestOption") else "Internal",
@@ -401,6 +450,7 @@ class PortalRequest(http.Controller):
 			"approver_id": employee_id.parent_id.id, 
 			"state": "Sent", 
 			"direct_employee_id": employee_id.parent_id.id, 
+			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 			"res_users": [
 				(4, employee_id.parent_id.user_id.id), 
 				(4, request.env.user.id)],
@@ -409,7 +459,7 @@ class PortalRequest(http.Controller):
 				(4, employee_id.id)],
 		}
 		_logger.info(f"POST DATA {vals}")
-		_logger.info(f"""Accreditation ggeenn ===>  {json.loads(post.get('productItems'))}""")
+		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
 		productItems = []
 		productItems = json.loads(post.get('productItems'))
 		memo_obj = request.env['memo.model']
@@ -434,21 +484,20 @@ class PortalRequest(http.Controller):
 	
 	def generate_request_line(self, product_items, memo_id):
 		memo_id.sudo().write({'product_ids': False})
-		for rec in product_items:
-			desc = rec.description or f"Request: {product_id.description or product_id.name}"
+		for rec in product_items:  
+			# desc = rec.get('description') or f"Request: {product_id.name}"
 			_logger.info(f"PRODUCT IDS=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec.get('product_id')}")
 			product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
-					'product_id': int(rec.get('product_id')) if rec.get('product_id') else False,
+					'product_id': product_id.id, #int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-            		'description': BeautifulSoup(desc, features="lxml").get_text(),
-					'used_qty': rec.used_qty,
-					'amount_total': rec.amount_total,
-					'used_amount': rec.used_amount,
-					'description': rec.description,
-					'note': rec.note,
+            		# 'description': BeautifulSoup(desc, features="lxml").get_text(),
+					'used_qty': rec.get('used_qty'),
+					'amount_total': rec.get('amount_total'),
+					'used_amount': rec.get('used_amount'),
+					'note': rec.get('note'),
 				})
 
 	def get_pagination(self, page):

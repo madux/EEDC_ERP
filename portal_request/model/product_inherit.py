@@ -14,8 +14,9 @@ _logger = logging.getLogger(__name__)
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
-    @api.constrains('vehicle_plate_number', 'vehicle_reg_number', 'name')
-    def _check_duplicate_vehicle_props(self):
+    @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
+    def check_duplicate_vehicle_props(self):
+        self.ensure_one()
         product = self.env['product.template'].sudo()
         for rec in self:
             duplicate = product.search([('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)

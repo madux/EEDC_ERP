@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="account_view_move_form_memo_inherit">
+            <field name="name">Journal Entries --</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='ref']" position="after">
+                    <field name="memo_id" readonly="1" force_save="1"/>
+                    <field name="origin" required="0"/>
+                </xpath>
+            </field>
+        </record>
+        
+
+    </data>
+</odoo>
