@@ -3,9 +3,30 @@
 from datetime import date, datetime
 from odoo import models, fields
 
+
 class Applicant(models.Model):
     _inherit = "hr.applicant"
     _order = "id asc"
+
+    cbt_scheduled_date = fields.Date("CBT Scheduled Date ")
+    shared_url = fields.Char("Shared Url", 
+                             help="""Used to store the url of the applicant for 
+                             cbt: /applicantId/Link i.e /5/213r423wqsffbjmdfcefbgrfvcdfsbgnfbvdvbrgfnhadhfgjr1234""")
+    applicant_question_line_ids = fields.One2many(
+        'cbt.question.line',
+        'hr_applicant_id',
+        string="Question line",
+        required=False,
+    )
+    cbt_template_config_id = fields.Many2one(
+        'cbt.template.config',
+        string="CBT Template",
+        required=False,
+    )
+    cbt_start_date = fields.Datetime("CBT Start Date")
+    cbt_end_date = fields.Datetime("CBT End Date ")
+    duration = fields.Integer("Duration")
+
 
     current_salary = fields.Float("Current Salary ", group_operator="avg", help="Current Salary")
     first_name = fields.Char("First Name")
