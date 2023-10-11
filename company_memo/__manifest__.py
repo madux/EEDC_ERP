@@ -26,7 +26,7 @@
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',
-        '/company_memo/static/src/js/hide_function.js',
+        # '/company_memo/static/src/js/hide_function.js',
     ]},
     # 'qweb': [
     #     'static/src/xml/base.xml',
