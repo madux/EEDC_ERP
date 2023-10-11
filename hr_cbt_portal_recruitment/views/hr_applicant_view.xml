@@ -22,7 +22,7 @@
                             <group colspan="4">
                                 <field name="has_completed_nysc"/>
                                 <field name="know_anyone_at_eedc"/>
-                                <field name="specify_personal_personality" attrs="{'invisible':[('know_anyone_at_eha', '!=', 'Yes')]}"/>
+                                <field name="specify_personal_personality" attrs="{'invisible':[('know_anyone_at_eedc', '!=', 'Yes')]}"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
 
@@ -43,6 +43,63 @@
                             </group>
                         </group>
                          
+                    </page> 
+                    <page name="CBT_Information" string="CBT Information"  attrs="{'invisible':[('shared_url', '=', False)]}">
+                        <group>
+                            <group colspan="4"> 
+                                <field name="cbt_scheduled_date" readonly="1" force_save="1"/>
+                                <field name="shared_url" readonly="1" force_save="1"/>
+                                <field name="cbt_template_config_id" readonly="1"/>
+                            </group>
+                            <group colspan="4">
+                                <field name="cbt_start_date" readonly="1"/>
+                                <field name="cbt_end_date" readonly="1"/>
+                                <field name="duration" readonly="1"/>
+                            </group>
+                            <notebook>
+                                <page name="cbt_applicants_question" string="Applicant's Question">
+                                    <field name="applicant_question_line_ids" string="Application question line" readonly="1">
+                                        <form string="Application question line" options="{'no_open': True}">
+                                            <group>
+                                                <group>
+                                                    <field name="name"/>
+                                                    <field name="sequence" readonly="1"/>
+                                                </group>
+                                                <group>
+                                                    <field name="type" invisible="1"/>
+                                                    <field name="cbt_template_config_id" invisible="1" readonly="1"/>
+                                                    <field name="hr_applicant_id" invisible="1" readonly="1"/>
+                                                </group>
+                                                <notebook>
+                                                    <page name="cbt_applicants_answers" string="Applicants Answers">
+                                                        <field name="answer_line_ids" string="Application Answer line" readonly="1">
+                                                            <form string="Application Answer line" options="{'no_open': True}">
+                                                                <group>
+                                                                    <group>
+                                                                        <field name="name" readonly="1"/>
+                                                                    </group>
+                                                                    <group>
+                                                                        <field name="is_answer" invisible="1"/>
+                                                                        <field name="code" invisible="1"/>
+                                                                    </group>
+                                                                </group>
+                                                            </form>
+                                                            <tree string="Application answer line">
+                                                                <field name="code" invisible="1"/>
+                                                                <field name="name" invisible="0" readonly="1"/>
+                                                            </tree>
+                                                        </field>
+                                                    </page>
+                                                </notebook>
+                                            </group>
+                                        </form>
+                                        <tree string="Application answer line">
+                                            <field name="name" invisible="0" readonly="1" force_save="1"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook>
+                        </group>
                     </page> 
                 </notebook>
             </xpath>
