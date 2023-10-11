@@ -3,9 +3,9 @@
         <template id="my_portal_request" name="My Requests">
             <t t-call="portal.portal_layout">
                 <t t-set="breadcrumbs_searchbar" t-value="True"/>
-                <!-- <t t-call="portal.portal_searchbar">
+                <t t-call="portal.portal_searchbar">
                     <t t-set="title">Requests</t>
-                </t> -->
+                </t>
                 <section id="search_request_section">
                     <nav t-attf-class="navbar navbar-light navbar-expand-lg border py-0 mb-2 o_portal_navbar {{classes if classes else ''}} {{'mt-3 rounded' if breadcrumbs_searchbar else 'border-top-0' }}">
                         <!-- <t t-if="breadcrumbs_searchbar">
@@ -72,6 +72,9 @@
                                     </div>
                                 </div> -->
                                 <div class="ms-lg-2">
+                                    <a id="previous" href="/portal-request" class="btn btn-secondary btn-sm">
+                                        Create
+                                    </a>
                                     <div class="btn-group">
                                         <a id="previous" href="/my/requests/page/prev" class="btn btn-secondary btn-sm">
                                             Prev

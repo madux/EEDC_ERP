@@ -8,11 +8,14 @@
     'description': "ODOO Base Extension to customize modules for portal users",
     "data": [
         # 'security/ir.model.access.csv',
+        'static/templates/menu.xml',
         'static/templates/request.xml',
         'static/templates/request_tree.xml',
         'static/templates/request_form.xml',
+        'static/templates/portal_request_inherit.xml',
         'views/menu_view.xml',
         'views/product_inherit_view.xml',
+        'security/ir.model.access.csv'
     ],
     # 'qweb': [
     #     'static/xml/partials.xml',

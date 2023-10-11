@@ -49,7 +49,8 @@
                                             <path d="M 0 40 L 152.5 40" vector-effect="non-scaling-stroke"/>
                                         </svg>
                                         <div class="s_process_step_icon">
-                                            <i class="fa fa-shopping-basket fa-2x mx-auto rounded-circle bg-primary"/>
+                                            <!-- <i class="fa fa-shopping-basket fa-2x mx-auto rounded-circle bg-primary"/> -->
+                                            <i class="fa fa-pencil fa-2x mx-auto rounded-circle bg-primary"/>
                                         </div>
                                         <div class="s_process_step_content">
                                             <h2 class="o_default_snippet_text">Draft</h2>
@@ -73,7 +74,7 @@
                                             <path d="M 0 40 L 152.5 40" vector-effect="non-scaling-stroke"/>
                                         </svg>
                                         <div class="s_process_step_icon">
-                                            <i class="fa fa-paypal fa-2x mx-auto rounded-circle bg-secondary"/>
+                                            <i class="fa fa-hourglass-start fa-2x mx-auto rounded-circle bg-secondary"/>
                                         </div>
                                         <div class="s_process_step_content">
                                             <h2 class="o_default_snippet_text">Awaiting Approval</h2>
@@ -255,6 +256,7 @@
                                                 </label>
                                                 <div class="col-sm">
                                                     <input type="number" class="form-control s_website_form_input" id="amount_fig" name="amount_fig" required="false" labelfor="Payment Amount"/>
+                                                    <input type="text" class="d-none s_website_form_input" value="0" id="allAmount" name="allAmount" required="false"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -340,7 +342,7 @@
                                                 <table width="100%" border="1" bordercolor="#999999"
                                                 bgcolor="#F7F7EF" border-collapse="collapse" align="center"
                                                 id="attachment_table" class="table table-bordered"
-                                                style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                                style="height: 250px !important; width: 1400px !important; overflow: scroll !important;display: block;">
                                                     <thead>
                                                         <tr class="heading">
                                                             <th width="5%">
@@ -389,13 +391,62 @@
                                                     </tbody>
                                                     
                                                 </table>
-                                                
                                             </div> 
                                             <div class="mb-0 py-2 col-12 add_item justify-content-center">
                                                 <div style="width: 200px;" class="s_website_form_label"/>
                                                 <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
                                                 <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
                                                 <span id="s_website_form_result_addxx"/>
+                                            </div>
+                                            <div class="tableclass table-responsive" id="div_all_total_amount">
+                                                <table width="100%" border="1" bordercolor="#FFFFFF"
+                                                bgcolor="#FFFFFF" border-collapse="collapse" align="center"
+                                                id="all_total_amount_table" class="table"
+                                                style="height: 100px !important; width: 1000px !important; display: block;">
+                                                    <thead>
+                                                        <tr class="heading">
+                                                            <th width="25%">
+                                                            </th>
+                                                            <th width="10%">
+                                                            </th>
+                                                            <th width="5%">
+                                                            </th>
+                                                            <th width="10%">
+                                                            </th>
+                                                            <th width="5%">
+                                                            </th>
+                                                            <th width="20%">
+                                                            </th>
+                                                            <th width="5%">
+                                                            </th>
+                                                            <th width="5%">
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="all_total_amount_tbody" name="all_total_amount_tbody">
+                                                        <tr>
+                                                            <td width="25%">
+                                                            </td>
+                                                            <td width="10%">
+                                                            </td>
+                                                            <td width="5%">
+                                                            </td>
+                                                            <td width="10%">
+                                                            </td>
+                                                            <td width="10%">
+                                                                Total - 
+                                                            </td>
+                                                            <td width="20%">
+                                                                <span name="all_total_amount" id="all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span>
+                                                            </td>
+                                                            <td width="5%">
+                                                            </td>
+                                                            <td width="10%">
+                                                            </td>
+                                                            
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                         <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">

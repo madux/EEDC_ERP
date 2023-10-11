@@ -66,8 +66,10 @@ class PortalRequest(http.Controller):
 		# ('user_id', '=', user.id)
 		if staff_num:
 			employee = request.env['hr.employee'].sudo().search(
-			[('employee_number', '=', staff_num),('active', '=', True)], limit=1) 
-
+			[
+				('employee_number', '=', staff_num),
+				('active', '=', True),
+				('user_id', '=', user.id)], limit=1) 
 			if employee:
 				return {
 					"status": True,
@@ -201,7 +203,8 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
 				('memo_type', '=', 'cash_advance'),
-				('soe_advance_reference', '=', False) 
+				('soe_advance_reference', '=', False),
+				('state', '=', 'Done') 
 			]
 			cash_advance_not_retired = memo_obj.search(domain, limit=1)
 			_logger.info(f"This is cash advance check staff_num: {staff_num}")
@@ -278,8 +281,9 @@ class PortalRequest(http.Controller):
 							'amount_total': q.amount_total,
 							'used_amount': q.used_amount,
 							'description': q.description or "",
+							'code': q.code,
 							} 
-							for q in memo_request.product_ids
+							for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
 						]
 					},
 					"message": "", 
@@ -367,8 +371,8 @@ class PortalRequest(http.Controller):
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
-				if request_type in ['procurement_request', 'material_request']:
-					total_availability = request.env['stock.quant']._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
+				if request_type in ['material_request']:
+					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
 					product_qty = float(qty) if qty else 0
 					if product_qty > total_availability:
 						return {
@@ -390,6 +394,11 @@ class PortalRequest(http.Controller):
 					"status": True,
 					"message": "The product does not exist on the inventory", 
 					}
+		else:
+			return {
+				"status": True,
+				"message": "Please ensure you select a product line", 
+				}
 
 	# total_availability = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 
@@ -405,7 +414,6 @@ class PortalRequest(http.Controller):
 			('user_id', '=', request.env.uid), 
 			('employee_number', '=', post.get('staff_id'))], limit=1)
 		if not employee_id:
-			_logger.info(f'Employee not found')
 			return json.dumps({'status': False, 'message': "No employee record found for staff id provided"})
 		existing_request  = post.get("selectTypeRequest")
 		existing_order = post.get("existing_order")
@@ -418,13 +426,16 @@ class PortalRequest(http.Controller):
 			if not memo_id:
 				_logger.info(f'memo not found')
 				return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-		district_id =False 
+		district_id =False
 		if post.get("selectDistrict"):
-			district = request.env['hr.district'].sudo().browse([int(post.get("selectDistrict"))])
+			district = request.env['hr.district'].sudo().search([
+				('id', '=', post.get("selectDistrict"))
+				], limit=1)
 			if district:
 				district_id = district.id 
 			else:
 				district_id = memo_id.district_id.id
+		_logger.info(f'WHAT IS DISTRICT ==> {district_id}')
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
@@ -446,9 +457,10 @@ class PortalRequest(http.Controller):
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
-			"district_id": district_id or int(post.get("selectDistrict")) if post.get("selectDistrict") else 1, #int(post.get("selectDistrict")) if post.get("selectDistrict") else memo_id.district_id.id if memo_id else False,
+			"district_id": district_id,
+			# or district_id or int(post.get("selectDistrict")) if post.get("selectDistrict") else 1, #int(post.get("selectDistrict")) if post.get("selectDistrict") else memo_id.district_id.id if memo_id else False,
 			"approver_id": employee_id.parent_id.id, 
-			"state": "Sent", 
+			"state": "Sent",
 			"direct_employee_id": employee_id.parent_id.id, 
 			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 			"res_users": [
@@ -484,21 +496,25 @@ class PortalRequest(http.Controller):
 	
 	def generate_request_line(self, product_items, memo_id):
 		memo_id.sudo().write({'product_ids': False})
-		for rec in product_items:  
-			# desc = rec.get('description') or f"Request: {product_id.name}"
-			_logger.info(f"PRODUCT IDS=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec.get('product_id')}")
+		counter = 1
+		for rec in product_items:
+			desc = rec.get('description', '')
+			_logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
 			product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
 					'product_id': product_id.id, #int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-            		# 'description': BeautifulSoup(desc, features="lxml").get_text(),
+            		'description': BeautifulSoup(desc, features="lxml").get_text(),
 					'used_qty': rec.get('used_qty'),
 					'amount_total': rec.get('amount_total'),
 					'used_amount': rec.get('used_amount'),
 					'note': rec.get('note'),
+					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
+					'to_retire': rec.get('line_checked'),
 				})
+			counter += 1
 
 	def get_pagination(self, page):
 		sessions = request.session  
@@ -561,7 +577,7 @@ class PortalRequest(http.Controller):
 			# self.get_request_info(requests)
 			domain += [
 				'|', ('name', 'ilike', search_param),
-				('code', '=ilike', search_param),
+				('code', 'ilike', search_param),
 			]
 			
 		start, end = self.get_pagination(page)# if page else False, False

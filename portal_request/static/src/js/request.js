@@ -71,6 +71,7 @@ odoo.define('portal_request.portal_request', function (require) {
     // }
 
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
+        console.log("Product table building loading")
         $.each(data, function (k, elm) {
 
             if (elm) {
@@ -80,7 +81,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     `<tr class="heading prod_row" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
                         <th width="5%">
                             <span>
-                                <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" id="${elm.id}" name="${elm.qty}"/>
+                                <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.code}"/>
                             </span>
                         </th>
                         <th width="20%">
@@ -98,14 +99,14 @@ odoo.define('portal_request.portal_request', function (require) {
                         <th width="10%">
                             <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Price"/> 
                         </th>
-                        <th width="5%">
+                        <th width="10%">
                             <input type="text" name="usedqty" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" class="productUsedQty form-control ${hidden}" labelfor="Used Quantity"/> 
                         </th>
                         <th width="10%">
                             <input type="text" name="usedAmount" id="${elm.used_amount-lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required': ''}" class="productUsedAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor=" Used Amount"/> 
                         </th>
-                        <th width="10%">
-                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control ${hidden}" labelfor="Note"/> 
+                        <th width="45%">
+                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
                             <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
@@ -120,6 +121,83 @@ odoo.define('portal_request.portal_request', function (require) {
                 console.log('No product items found')
             }
         });
+    }
+
+    
+    function buildProductRow(memo_type){ 
+        // for new request: building each line of item 
+        let lastRow_count = getOrAssignRowNumber()
+        console.log("what is memo type ==", memo_type)
+        console.log(`lastrowcount ${lastRow_count}`)
+        $(`#tbody_product`).append(
+            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
+                <th width="5%">
+                    <span>
+                        <input type="checkbox" class="productchecked" code=""/>
+                    </span>
+                </th>
+                <th width="25%">
+                    <span>
+                        <input special_id="${lastRow_count}" class="form-control productitemrow" name="product_item_id" required="${memo_type == 'cash_advance' ? '': 'required'}" labelfor="Product Name"/>
+                    </span>
+                </th>
+                <th width="20%">
+                    <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
+                </th>
+                <th width="10%">
+                    <input type="text" productinput="productreqQty" class="productinput form-control" required="required" labelfor="Requested Quantity"/>
+                </th>
+                <th width="15%">
+                    <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request']) !== -1 ? 'd-none': ''}" labelfor="Unit Price"/> 
+                </th>
+                <th width="5%">
+                    <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Quantity"/> 
+                </th>
+                <th width="10%">
+                    <input type="number" name="UsedAmount" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Amount"/> 
+                </th>
+                <th width="20%">
+                    <textarea rows="2" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control" labelfor="Note"/> 
+                </th>
+                
+                <th width="5%">
+                    <a href="#" id="" remove_id="${lastRow_count}" class="remove_field btn btn-primary btn-sm"> Remove </a>
+                </th>
+            </tr>`
+        )
+        TriggerProductField(lastRow_count)
+        $('textarea').autoResize();
+        scrollTable(); // used to scroll to the next level when add a line
+    }
+    localStorage.setItem('SelectedProductItems', "[]")
+
+    function getSelectedProductItems(){
+        let products = JSON.parse(localStorage.getItem('SelectedProductItems'));
+        console.log("Products store is ", products)
+        return products
+    }
+
+    var formatCurrency = function(value) {
+        if (value) {
+            return value.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+        }
+    }
+    var compute_total_amount = function(targetEv){
+        // targetEv: amount_total or usedAmount
+        var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
+        var total = 0
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_co = $(this).attr('row_count') 
+            $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
+                function(){
+                    if($(this).attr('name') == targetEv){
+                        total += Number($(this).val())
+                    }
+                }
+            )
+        })
+        $('#all_total_amount').text(`${formatCurrency(total)}`)
     }
 
     function getOrAssignRowNumber(){
@@ -137,55 +215,37 @@ odoo.define('portal_request.portal_request', function (require) {
         return lastRow_count
     }
 
-    function buildProductRow(memo_type){ // building each line of item 
-        let lastRow_count = getOrAssignRowNumber()
-        console.log("what is memo type ==", memo_type)
-        console.log(`lastrowcount ${lastRow_count}`)
-        $(`#tbody_product`).append(
-            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
-                <th width="5%">
-                    <span>
-                        <input type="checkbox" class="productchecked"/>
-                    </span>
-                </th>
-                <th width="25%">
-                    <span>
-                        <input special_id="${lastRow_count}" class="form-control productitemrow" name="product_item_id" required="${memo_type == 'cash_advance' ? '': 'required'}" labelfor="Product Name"/>
-                    </span>
-                </th>
-                <th width="20%">
-                    <input type="textarea" placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Note"/> 
-                </th>
-                <th width="5%">
-                    <input type="text" productinput="productreqQty" class="productinput form-control" required="required" labelfor="Requested Quantity"/>
-                </th>
-                 
-                <th width="15%">
-                    <input type="number" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? 'd-none': ''}" labelfor="Unit Price"/> 
-                </th>
-                <th width="5%">
-                    <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Quantity"/> 
-                </th>
-                <th width="10%">
-                    <input type="number" name="UsedAmount-${lastRow_count}" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Amount"/> 
-                </th>
-                <th width="20%">
-                    <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" required="${memo_type == 'soe' || memo_type == 'cash_advance' ? 'required': ''}" class="Notefor form-control" labelfor="Note"/> 
-                </th>
-                
-                <th width="5%">
-                    <a href="#" id="" remove_id="${lastRow_count}" class="remove_field btn btn-primary btn-sm"> Remove </a>
-                </th>
-            </tr>`
-        )
-        TriggerProductField(lastRow_count)
-    }
-    localStorage.setItem('SelectedProductItems', "[]")
-
-    function getSelectedProductItems(){
-        let products = JSON.parse(localStorage.getItem('SelectedProductItems'));
-        console.log("Products store is ", products)
-        return products
+    $.fn.autoResize = function(){
+        let r = e => {
+          e.style.height = '';
+          e.style.width = '';
+          e.style.height = e.scrollHeight + 'px'
+          e.style.width = e.scrollWidth + 'px'
+        };
+        return this.each((i,e) => {
+          e.style.overflow = 'hidden';
+          r(e);
+          $(e).bind('input', e => {
+            r(e.target);
+          })
+        })
+      };
+      $('textarea').autoResize();
+     
+    var scrollTable = function(){
+        var i = 1;
+        if (i < $(`#tbody_product tr`).length) {
+            let position = $(`#tbody_product tr:eq(${i})`).offset().top;
+            $('#attachment_table').stop().animate({
+              scrollTop: $('#attachment_table').scrollTop() + position
+            }, 300);
+            i++
+          } else {
+            i = 0
+          }
+        // $('#attachment_table').stop().animate({
+        //     scrollTop: '+=60px' // 40px can be the height of a row
+        // }, 200);
     }
 
     function TriggerProductField(lastRow_count){
@@ -281,13 +341,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert_modal.modal('show');
                     return false;
                 });
-            }
-            // else{
-            //     message = "[Staff ID, leave start date and end date] Must all be provided";
-            //     modal_message.text(message)
-            //     alert_modal.modal('show');
-            //     return false;
-            // }
+            } 
         } 
     }
 
@@ -298,26 +352,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#leave_end_datex').attr("required", false);
         $('#product_form_div').addClass('d-none');
         $('#product_ids').addClass('d-none');
-        $('#product_ids').attr("required", false);
-        // $('.product_section').addClass('d-none');
+        $('#product_ids').attr("required", false); 
         }
-
-    // function validate_empty_required_fields(){
-    //     var list_of_fields = [];
-    //     $('input,textarea,select').filter('[required]:visible').each(function(ev){
-    //         var field = $(this); 
-    //         if (field.val() == ""){
-    //             field.addClass('is-invalid');
-    //             console.log($(this).attr('labelfor'));
-    //             list_of_fields.push(field.attr('labelfor'));
-    //         } 
-    //     });
-    //     if (list_of_fields.length > 0){
-    //         return true
-    //     }else{
-    //         return false
-    //     }
-    // }
+ 
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
             $('#leave_start_date').trigger('blur')
@@ -391,30 +428,31 @@ odoo.define('portal_request.portal_request', function (require) {
                 link.attr('id', product_val);
                 remove_link.attr('id', product_val);
                 setProductdata.push(parseInt(product_val));
-                console.log('sele ==> ', setProductdata)
-                // let product_data = JSON.parse(localStorage.getItem('SelectedProductItems'));
-                // product_data.append(product_val);
-                // localStorage.setItem('SelectedProductItems', JSON.stringify(product_data))
-                // let name="${elm.qty}" id="${elm.id}" value="${elm.qty}"
+                console.log('sele ==> ', setProductdata) 
             },
             'click .remove_field': function(ev){
                 let elm = $(ev.target);
                 let elm_remove_id = elm.attr('remove_id'); 
                 elm.closest(":has(tr.prod_row)").find('tr.prod_row').each(function(ev){
                     if($(this).attr('row_count') == elm_remove_id){
-                        let remove_element_id = elm.attr('id');
-                        // remove product id from the productData list
-                        console.log("Remove element id == ", remove_element_id)
-                        console.log('SEE PRODUCT DATA ', setProductdata)
-
-                        // setProductdata.splice(remove_element_id)
+                        let remove_element_id = elm.attr('id'); 
                         setProductdata.splice(setProductdata.indexOf(remove_element_id),1)
                         console.log(`See it ${$.inArray(remove_element_id, setProductdata)}}`)
                         console.log('SEE PRD ', setProductdata)
                         $(this).remove();
+                        compute_total_amount();
                     }
                 });
             }, 
+            'change .productAmt': function(ev){
+                //computation of the total unit price
+                compute_total_amount();
+            },
+            'change .productUsedAmt': function(ev){
+                //computation of the total productUsedQty unit price
+                compute_total_amount();
+            },
+
             'change .productinput': function(ev){
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
@@ -543,6 +581,7 @@ odoo.define('portal_request.portal_request', function (require) {
             'change select[name=selectRequestOption]': function(ev){
                 let selectedTarget = $(ev.target).val();
                 $('#existing_ref_label').text("Existing Ref #");
+                $('#div_existing_order').addClass('d-none');
                 clearAllElement();
                 if(selectedTarget == "leave_request"){
                     $('#leave_section').removeClass('d-none');
@@ -577,13 +616,15 @@ odoo.define('portal_request.portal_request', function (require) {
                             $("#amount_fig").val('')
                             $('#amount_section').addClass('d-none');
                             $('#product_form_div').addClass('d-none');
+                            $('.add_item').addClass('d-none')
                             alert(`Validation Error! ${data.message}`)
                         }else{
-                            $('#amount_section').removeClass('d-none');
-                            $('#amount_fig').attr("required", true);
+                            // $('#amount_section').removeClass('d-none');
+                            // $('#amount_fig').attr("required", false);
                             console.log("request selected== ", selectedTarget);
                             displayNonLeaveElement()
                             $('#product_form_div').removeClass('d-none');
+                            $('.add_item').removeClass('d-none');
                         }
                     }).guardedCatch(function (error) {
                         let msg = error.message.message
@@ -594,15 +635,12 @@ odoo.define('portal_request.portal_request', function (require) {
                         alert(`Unknown Error! ${msg}`)
                     }); 
                 }
-
                 else if(selectedTarget == "soe"){
-                    $('#amount_section').removeClass('d-none');
-                    $('#amount_fig').attr("required", true); 
+                    // $('#amount_section').removeClass('d-none');
+                    // $('#amount_fig').attr("required", true); 
                     displayNonLeaveElement()
-                    $('#product_form_div').removeClass('d-none');
-                    let existing_order = $(ev.target).val();
-                    let selectTypeRequest = $('#selectTypeRequest');
-
+                    $('.add_item').addClass('d-none')
+                    $('#product_form_div').removeClass('d-none'); 
                     if ($('#selectTypeRequest').val() == "new"){
                         if ($('#staff_id').val() == ""){
                             selectedTarget.val('').trigger('change')
@@ -622,8 +660,6 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log("request selected");
                     displayNonLeaveElement();
                     $('#product_form_div').removeClass('d-none');
-                    // $('.product_section').removeClass('d-none');
-                    // $('#product_ids').attr('required', true);
                 } 
             },
 
@@ -680,17 +716,15 @@ odoo.define('portal_request.portal_request', function (require) {
                             // $("#description").removeClass('required', false)
                             $("#selectDistrict").val(district_id).trigger('change')
                             $("#request_status").val(state)
-                            $("#amount_fig").val(amount)
-                            // $("#request_date").val(formatToDatePicker(request_date))
-                            $("#request_date").val(request_date).trigger('change')
-                            // let product_val = $('input[name="product_ids"]').val();
+                            $("#amount_fig").val(formatCurrency(amount))
+                            $('#amount_fig').attr("readonly", false); 
+                            $("#request_date").val(request_date).trigger('change') 
                             // building product items
                             if(state == "Draft"){
                                 let product_val = [];
                                 $.each(product_ids, function(k, elm){
                                     product_val.push(elm.id)
-                                })
-                                // $("#product_ids").val(product_val).trigger('change');
+                                }) 
                                 buildProductTable(product_ids, selectRequestOption.val());
                             }
                             if(selectRequestOption.val() == "soe"){
@@ -792,15 +826,17 @@ odoo.define('portal_request.portal_request', function (require) {
                                 'used_qty': '',
                                 'used_amount': '',
                                 'note': '',
+                                'line_checked': false,
+                                'code': 'mef00981',
                         }
-                        $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
+                        // input[type='text'], input[type='number']
+                        $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
                             function(){
                                 if($(this).attr('name') == "product_item_id"){
                                     console.log($(this).val())
                                     list_item['product_id'] = $(this).val()
                                 }
-                                if($(this).attr('name') == "description"){
-                                    console.log($(this).val())
+                                if($(this).attr('name') === "description"){
                                     list_item['description'] = $(this).val()
                                 }
                                 if($(this).attr('productinput') == "productreqQty"){
@@ -824,11 +860,17 @@ odoo.define('portal_request.portal_request', function (require) {
                                     console.log($(this).val())
                                     list_item['note'] = $(this).val()
                                 }
+                                if($(this).attr('class') == "productchecked"){
+                                    console.log($(this).val())
+                                    list_item['line_checked'] = $(this).val()
+                                    list_item['code'] = $(this).attr('code')
+                                }
+                                 
                             }
                         )
                         productItems.push(list_item)
-                    }) 
-                    console.log(productItems)
+                    })
+                    console.log('this main reason for====>', productItems)
                     formData.append('productItems', JSON.stringify(productItems))
                     $.ajax({
                         type: "POST",
@@ -843,11 +885,14 @@ odoo.define('portal_request.portal_request', function (require) {
                         console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
                         window.location.href = `/portal-success`;
                         console.log("XMLREQUEST Successful");
+                        // clearing form content
+                        $("#msform")[0].reset();
+                        $("#tbody_product").empty()
                     }).catch(function(err) {
                         console.log(err);
                         alert(err);
                     }).then(function() {
-                        console.log("ANYTING")
+                        console.log(".")
                     })
                 }
             }
@@ -867,9 +912,7 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#product_ids').val('').trigger('change');
         $('#product_form_div').addClass('d-none');
         $('#tbody_product').empty();
-
     }
-
     var form = $('#msform')[0];
 // return PortalRequestWidget;
 });

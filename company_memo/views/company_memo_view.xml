@@ -112,6 +112,7 @@
                                 <field name="cash_advance_reference" attrs="{'invisible':[('memo_type','!=', 'soe')],'required':[('memo_type','=','soe')]}"/>
                                 <field name="soe_advance_reference" attrs="{'invisible':[('memo_type','!=', 'cash_advance')]}"/>
                                 <field name="currency_id" invisible="1"/>
+                                <field name="move_id" invisible="1"/>
                                 <field name="invoice_id" attrs="{'invisible':[('memo_type','!=','Payment')]}"
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
@@ -147,6 +148,7 @@
                                 <field name="product_ids" string = "Items" context="{'default_state': state, 'default_memo_type': memo_type}">
                                     <tree string="Items" editable="bottom">
                                         <field name="state" string="State" invisible="1"/> 
+                                        <field name="to_retire" string="To Retire" attrs="{'column_invisible': [('memo_type', 'not in', ['soe'])]}"/> 
                                         <field name="district_id" string="District" invisible="1"/> 
                                         <field name="memo_id" string="Memo" invisible="1"/> 
                                         <field name="memo_type" string="Memo type" invisible="1"/> 
@@ -161,7 +163,8 @@
                                         <field name="used_amount" string="Used Amount" attrs="{'readonly': [('memo_type', 'not in', ['soe'])],'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="note" string="Note" invisible="0"/> 
                                         <field name="source_location_id" string="Source Location" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
-                                        <field name="dest_location_id" string="Destination Location" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
+                                        <field name="dest_location_id" string="Destination Location" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>
+                                        <field name="retired" string="Retired" attrs="{'column_invisible': [('memo_type', 'not in', ['soe'])]}"/>
                                     </tree>
                                 </field>
                             </page>
