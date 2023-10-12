@@ -27,6 +27,7 @@
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
         'security/ir.model.access.csv',
+        'data/mail_template_data.xml',
         # 'views/preloader.xml',
         # 'views/templates.xml',
     ],
