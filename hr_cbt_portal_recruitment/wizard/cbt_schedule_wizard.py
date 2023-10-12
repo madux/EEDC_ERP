@@ -8,11 +8,21 @@ class CBTscheduleWizard(models.TransientModel):
     _name = "cbt.schedule.wizard"
     _order = "id asc"
     _description = "CBT Wizard Scheduler"
+    _rec_name = "survey_id"
 
-    name = fields.Char("Template Name")
     cbt_template_config_id = fields.Many2one(
         'cbt.template.config',
         string="CBT Template",
+        required=False,
+    )
+    survey_id = fields.Many2one(
+        'survey.survey',
+        string="Test Template",
+        required=False,
+    )
+    email_invite_template = fields.Many2one(
+        'mail.template',
+        string="Invitation Mail Template",
         required=False,
     )
     applicant_ids = fields.Many2many(
@@ -24,6 +34,6 @@ class CBTscheduleWizard(models.TransientModel):
     )
 
     def schedule_action(self):
-        """takes the cbt_template_config_id and randomly 
-        generate question lines of the template for each applicants"""
-        pass 
+        """takes all the applicants emails and shares test links to them"""
+        email_list = ','.join([applicant.email_from or applicant.email_cc or "" for applicant in self.applicant_ids])
+        return self.survey_id.action_send_survey(email_list, self.email_invite_template)
