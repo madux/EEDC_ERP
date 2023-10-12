@@ -35,5 +35,5 @@ class CBTscheduleWizard(models.TransientModel):
 
     def schedule_action(self):
         """takes all the applicants emails and shares test links to them"""
-        email_list = ','.join([applicant.email_from or applicant.email_cc or "" for applicant in self.applicant_ids])
-        return self.survey_id.action_send_survey(email_list, self.email_invite_template)
+        # email_list = ','.join([applicant.email_from or applicant.email_cc or "" for applicant in self.applicant_ids])
+        return self.survey_id.action_send_survey(self.email_invite_template)
