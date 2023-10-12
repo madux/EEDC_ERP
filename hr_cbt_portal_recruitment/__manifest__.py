@@ -26,6 +26,7 @@
         'views/hr_applicant_view.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'security/ir.model.access.csv',
+        'data/mail_template_data.xml',
         # 'views/preloader.xml',
         # 'views/templates.xml',
     ],
