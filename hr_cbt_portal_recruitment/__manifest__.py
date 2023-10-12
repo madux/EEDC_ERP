@@ -17,11 +17,12 @@
     'depends': [
         'base',
         'hr_recruitment',
+        'hr_recruitment_survey',
         'website_hr_recruitment',
     ],
 
     'data': [
-        'views/hr_job_views.xml',
+        # 'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'security/ir.model.access.csv',

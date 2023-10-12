@@ -1,12 +1,26 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, datetime
-from odoo import models, fields
+from odoo import models, fields, api, _
 
 
 class Applicant(models.Model):
     _inherit = "hr.applicant"
     _order = "id asc"
+    _rec_name = "partner_name"
+
+    @api.onchange(
+        'first_name','middle_name', 'last_name'
+        )
+    def onchange_of_applicants_name(self):
+        fn, mm, ln = "", "", ""
+        if self.first_name:
+            fn = self.first_name
+        if self.middle_name:
+            mm = self.middle_name
+        if self.last_name:
+            ln = self.last_name
+        self.partner_name = f'{fn} {mm} {ln}'
 
     cbt_scheduled_date = fields.Date("CBT Scheduled Date ")
     shared_url = fields.Char("Shared Url", 
@@ -23,6 +37,16 @@ class Applicant(models.Model):
         string="CBT Template",
         required=False,
     )
+
+    survey_user_input_id = fields.Many2one(
+        'survey.user_input',
+        string="Survey Test",
+        required=False,
+    )
+    test_started = fields.Boolean(
+        "Test Start", 
+        readonly=True, 
+        help="used to check if application test has been set")
     cbt_start_date = fields.Datetime("CBT Start Date")
     cbt_end_date = fields.Datetime("CBT End Date ")
     duration = fields.Integer("Duration")
@@ -62,16 +86,16 @@ class HrJob(models.Model):
     # , compute='_compute_recuitment_requests_count', store=True)
     datetime_publish = fields.Date("Date Published")
 
-    def set_recruit(self):
-        res = super().set_recruit()
-        self.date_publish = date.today()
-        self.datetime_publish = datetime.now()
-        return res
+    # def set_recruit(self):
+    #     res = super().set_recruit()
+    #     self.date_publish = date.today()
+    #     self.datetime_publish = datetime.now()
+    #     return res
 
-    def allow_to_appy_in_period(self, email_from):
-        for job in self:
-            domain = [('job_id', '=', job.id), ('email_from', '=', email_from)]
-            start = job.datetime_publish
-            domain += [('create_date', '>=', start), ('create_date', '<=', datetime.now())]
-            applicants = self.env['hr.applicant'].sudo().search(domain)
-            return not bool(applicants)
+    # def allow_to_appy_in_period(self, email_from):
+    #     for job in self:
+    #         domain = [('job_id', '=', job.id), ('email_from', '=', email_from)]
+    #         start = job.datetime_publish
+    #         domain += [('create_date', '>=', start), ('create_date', '<=', datetime.now())]
+    #         applicants = self.env['hr.applicant'].sudo().search(domain)
+    #         return not bool(applicants)

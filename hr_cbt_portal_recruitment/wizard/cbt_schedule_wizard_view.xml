@@ -8,18 +8,33 @@
                 <form string="CBT Wizard">
                     <group>
                         <group>
-                            <field name="name" />
+                            <field name="survey_id" required="1"/>
                         </group>
                         <group>
-                            <field name="cbt_template_config_id" />
-                            <field name="applicant_ids" widget="many2many_tags"/>
+                            <field name="email_invite_template" invisible="0" required="1" domain="[('model', '=', 'survey.user_input')]"/>
                         </group>
-
+                        <notebook>
+                            <page name="Applicants" string="CBT Information">
+                                <field name="applicant_ids" context="{
+                                    'form_view_ref': 'hr_recruitment.hr_applicant_view_form', 
+                                    }">
+                                    <tree string="Applicants">
+                                        <field name="partner_name"/>
+                                        <field name="email_from"/>
+                                        <field name="partner_phone"/>
+                                        <field name="type_id"/>
+                                        <field name="job_id"/>
+                                        <field name="stage_id"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
                     </group>
+                    
                     <footer>
                         <button type="object" name="schedule_action"
-                            string="Schedule" class="oe_highlight"
-                            attrs="{'invisible': ['|', ('applicant_ids','=', False), ('cbt_template_config_id', '=', False)]}" />
+                            string="Confirm Schedule" class="oe_highlight"
+                            attrs="{'invisible': [('applicant_ids','=', False)]}" />
                         <button special="cancel" string="Cancel"/>
                     </footer>
                 </form>
@@ -27,7 +42,7 @@
         </record> 
 
         <record id="cbt_schedule_wizard_action" model="ir.actions.act_window">
-            <field name="name">CBT Wizard</field>
+            <field name="name">Schedule CBT</field>
             <field name="res_model">cbt.schedule.wizard</field>
             <field name="view_mode">form</field>
             <field name="context">{'default_applicant_ids': active_ids}</field>
