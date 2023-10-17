@@ -37,7 +37,6 @@ class Applicant(models.Model):
         string="CBT Template",
         required=False,
     )
-
     survey_user_input_id = fields.Many2one(
         'survey.user_input',
         string="Survey Test",
@@ -50,7 +49,6 @@ class Applicant(models.Model):
     cbt_start_date = fields.Datetime("CBT Start Date")
     cbt_end_date = fields.Datetime("CBT End Date ")
     duration = fields.Integer("Duration")
-
 
     current_salary = fields.Float("Current Salary ", group_operator="avg", help="Current Salary")
     first_name = fields.Char("First Name")
@@ -75,27 +73,3 @@ class Applicant(models.Model):
     reference_title = fields.Char("Reference Title")
     reference_email = fields.Char("Reference email")
     reference_phone = fields.Char("Reference Phone")
-
-class HrJob(models.Model):
-    _inherit = 'hr.job'
-
-    # recuitment_request_ids = fields.One2many('hr.recruitment.request', 'job_id',
-    #                               string='Recruitment Requests',
-    #                               readonly=True)
-    # recuitment_requests_count = fields.Integer(string='Recruitment Requests Count', store=True)
-    # , compute='_compute_recuitment_requests_count', store=True)
-    datetime_publish = fields.Date("Date Published")
-
-    # def set_recruit(self):
-    #     res = super().set_recruit()
-    #     self.date_publish = date.today()
-    #     self.datetime_publish = datetime.now()
-    #     return res
-
-    # def allow_to_appy_in_period(self, email_from):
-    #     for job in self:
-    #         domain = [('job_id', '=', job.id), ('email_from', '=', email_from)]
-    #         start = job.datetime_publish
-    #         domain += [('create_date', '>=', start), ('create_date', '<=', datetime.now())]
-    #         applicants = self.env['hr.applicant'].sudo().search(domain)
-    #         return not bool(applicants)

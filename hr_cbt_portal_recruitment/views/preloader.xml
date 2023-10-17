@@ -1,6 +1,6 @@
 <odoo>
     <data>
-        <template t-name="eha_website_hr_recruitment.preloader" name="eha-Preloader">
+        <template t-name="hr_cbt_portal_recruitment.preloader" name="hr-Preloader">
             <div class="text-center mt-30 mb-50" id="preloader">
                 <i class="fa fa-spinner fa-spin fa-2x"></i> working...
             </div>

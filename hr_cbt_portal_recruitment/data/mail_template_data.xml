@@ -28,6 +28,24 @@
             <field name="lang">{{ object.partner_id.lang }}</field>
             <field name="auto_delete" eval="True"/>
         </record>
+        <record id="mail_template_move_applicants" model="mail.template">
+            <field name="name">Job Application Stage</field>
+            <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_move_wizard"/>
+            <field name="subject">Job Application Update</field>
+            <field name="email_to"></field>
+            <field name="description">Sent to job applicant when you stages are changes</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear Applicant<br/><br/>
+                        Your job application has been updated to {{ object.stage_id.name }}
+                        We wish you good luck!
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.create_uid.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
 
     </data>
 </odoo>

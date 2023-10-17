@@ -6,9 +6,10 @@
       <field name="model">hr.job</field>
       <field name="inherit_id" ref="hr.view_hr_job_form"/>
       <field name="arch" type="xml">
-        <xpath expr="//field[@name='contract_type_id']" position="inside">
+        <xpath expr="//field[@name='website_published']" position="after">
           <group>
-            <field name="datetime_publish" readonly="True" />
+            <field name="datetime_publish" string="Publish Date"/>
+            <field name="close_date" required="True" />
           </group>
         </xpath>
       </field>

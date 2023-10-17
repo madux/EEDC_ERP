@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="hr_recruitment_cbt_schedule_wizard_form_view" model="ir.ui.view">
-            <field name="name">cbt.schedule.wizard.view.form</field>
-            <field name="model">cbt.schedule.wizard</field>
+        <record id="hr_recruitment_hr_applicant_move_wizard_form_view" model="ir.ui.view">
+            <field name="name">hr.applicant.move.wizard.view.form</field>
+            <field name="model">hr.applicant.move.wizard</field>
             <field name="arch" type="xml">
-                <form string="CBT Wizard">
+                <form string="Move Applicants">
                     <group>
                         <group>
-                            <field name="survey_id" required="1"/>
+                            <field name="stage_id" required="1"/>
                         </group>
                         <group>
-                            <field name="email_invite_template" invisible="0" required="1" domain="[('model', '=', 'survey.user_input')]"/>
+                            <field name="send_mail"/>
+                            <field name="email_invite_template" invisible="0" required="1" 
+                            attrs="{'invisible': [('send_mail', '=', False)], 'reuired': [('send_mail', '=', True)]}"
+                            domain="[('model', '=', 'hr.applicant.move.wizard')]"/>
+
                         </group>
                         <notebook>
-                            <page name="Applicants" string="Applicants">
+                            <page name="Applicants_move" string="Applicants">
                                 <field name="applicant_ids" context="{
                                     'form_view_ref': 'hr_recruitment.hr_applicant_view_form', 
                                     }">
@@ -32,18 +36,17 @@
                     </group>
                     
                     <footer>
-                        <button type="object" name="schedule_action"
-                            string="Confirm Schedule" class="oe_highlight"
-                            attrs="{'invisible': [('applicant_ids','=', False)]}" />
+                        <button type="object" name="action_move_applicant"
+                            string="Confirm" class="oe_highlight"/>
                         <button special="cancel" string="Cancel"/>
                     </footer>
                 </form>
             </field>
         </record> 
 
-        <record id="cbt_schedule_wizard_action" model="ir.actions.act_window">
-            <field name="name">Schedule CBT</field>
-            <field name="res_model">cbt.schedule.wizard</field>
+        <record id="move_applicants_wizard_action" model="ir.actions.act_window">
+            <field name="name">Move Applicants to Next Stage</field>
+            <field name="res_model">hr.applicant.move.wizard</field>
             <field name="view_mode">form</field>
             <field name="context">{'default_applicant_ids': active_ids}</field>
             <field name="target">new</field>
