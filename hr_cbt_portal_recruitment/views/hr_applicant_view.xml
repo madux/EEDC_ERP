@@ -19,6 +19,7 @@
                             <group>
                                 <field name="has_completed_nysc"/>
                                 <field name="know_anyone_at_eedc"/>
+                                <field name="linkedin_account"/>
                                 <field name="specify_personal_personality" attrs="{'invisible':[('know_anyone_at_eedc', '!=', 'Yes')]}"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>

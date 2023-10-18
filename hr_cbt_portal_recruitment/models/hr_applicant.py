@@ -59,6 +59,7 @@ class Applicant(models.Model):
         ('Yes', 'Yes'), ('No', 'No')],
         string="Know anyone at EEDC?",
         default=False)
+    linkedin_account = fields.Char("Linkedin")
     specify_personal_personality = fields.Text("Provide Details")
     degree_in_relevant_field = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string="Degree in relevant field")
     specifylevel_qualification = fields.Text("Total years of Experience")

@@ -6,11 +6,11 @@ import logging
 import base64
 import json
 from datetime import date, datetime
-from odoo.addons.website_sale.controllers.main import WebsiteSale
+# from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 _logger = logging.getLogger(__name__)
 
-class JobPortal(WebsiteSale):
+class WebsiteHrRecruitment(http.Controller):
     
     # @http.route()
     # def complete_recruitment(self, **post):
@@ -28,7 +28,6 @@ class JobPortal(WebsiteSale):
     #     else:
     #         return super().complete_recruitment(**post)
         
-
     # generate attachment
     def generate_attachment(self, name, title, datas, res_id, model='hr.applicant'):
         attachment = request.env['ir.attachment'].sudo()
@@ -59,10 +58,10 @@ class JobPortal(WebsiteSale):
             ('job_id', '=', job.id), 
             ('email_from', '=', email_from),
             ('create_date', '>=', job.datetime_publish),
-            ('create_date', '<=', job.close_date)
+            ('create_date', '<=', job.close_date),
             ('active', '=', True)
             ]
-        applicants = self.env['hr.applicant'].sudo().search(domain)
+        applicants = request.env['hr.applicant'].sudo().search(domain)
         
         if date.today() > job.close_date:
             return request.render("hr_cbt_portal_recruitment.job_already_closed")
@@ -76,18 +75,19 @@ class JobPortal(WebsiteSale):
             vals = {
                 "partner_name": applicant_name,
                 "name": f'Application for {applicant_name}',
-                "first_name": post.get('partner_name'),
-                "last_name": post.get("last_name"),
-                "middle_name": post.get("middle_name", ""),
+                "first_name": post.get('partner_name').strip(),
+                "last_name": post.get("last_name", "").strip(),
+                "middle_name": post.get("middle_name", "").strip(),
                 "job_id": int(post.get("job_id")) if post.get("job_id") else False,
-                "email_from": post.get("email_from", ""),
-                "partner_phone": post.get("partner_phone", ""),
+                "email_from": post.get("email_from", "").strip(),
+                "partner_phone": post.get("partner_phone", "").strip(),
                 "description": post.get("description", ""),
-                "current_salary": post.get("current_salary",""),
-                "salary_proposed": post.get("current_salary",""),
-                "salary_expected": post.get("salary_expection",""),
+                "current_salary": post.get("current_salary", False),
+                "salary_proposed": post.get("current_salary", False),
+                "salary_expected": post.get("salary_expection", False),
+                "linkedin_account": post.get("recruitment4",""),
                 "has_completed_nysc": 'Yes' if post.get("completed_nysc_yes") == 'on' else 'No',
-                "know_anyone_at_eha": 'Yes' if post.get("personal_capacity_headings_yes") == 'on' else 'No',
+                "know_anyone_at_eedc": 'Yes' if post.get("personal_capacity_headings_yes") == 'on' else 'No',
                 "degree_in_relevant_field": 'Yes' if post.get("level_qualification_header_yes") == 'on' else 'No',
                 "reside_job_location": 'Yes' if post.get("reside_job_location_yes") == 'on' else 'No',
                 "relocation_plans": 'Yes' if post.get("relocation_plans_yes") == 'on' else 'No',
