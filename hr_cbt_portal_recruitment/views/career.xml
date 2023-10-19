@@ -170,7 +170,7 @@
                                             <div class="col-sm">
                                                 <video autoplay="1" id="video" class="d-none" width="360" height="240"></video>
                                                 <canvas width='360' class="d-none" height='240' style="border:1px solid #d3d3d3;"></canvas>
-                                                <img src="" class="d-none" id="passport_img"/>
+                                                <img src="" class="oe_avatar" options='{"preview_image": "avatar_128"}' style="border:1px solid #d3d3d3;" id="passport_img"/>
                                                 <div>
                                                     <input type="button" id="startCapture" value="start capture"/>
                                                     <input type="button" id="takePhoto" class="d-none" value="take snapshot"/>
