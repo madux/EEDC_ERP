@@ -139,9 +139,11 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
         $("#startCapture").click(function(){
             console.log("starting capture");
             $("#takePhoto").removeClass("d-none");
-            $("#stopCapture").removeClass("d-none");
+            // $("#stopCapture").removeClass("d-none");
             $("#startCapture").addClass("d-none");
+            $("#passport_img").addClass("d-none");
             $("#video").removeClass("d-none");
+            $(this).val("Recapture");
             navigator.getUserMedia({ video: true }, function (mediaStream) {
                 // video.src = window.URL.createObjectURL(stream);
                 video.srcObject = mediaStream;
