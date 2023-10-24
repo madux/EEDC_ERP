@@ -98,7 +98,7 @@ class Applicant(models.Model):
     @api.depends("survey_user_input_id")
     def _compute_cbt_score(self):
         for rec in self:
-            if rec.survey_user_input_id and rec.survey_user_input_id.socring_success:
+            if rec.survey_user_input_id and rec.survey_user_input_id.scoring_success:
                 rec.test_passed = True
             else:
                 rec.test_passed = False 
