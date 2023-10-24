@@ -145,13 +145,13 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
             $("#passport_img").addClass("d-none");
             $("#video").removeClass("d-none");
             $(this).val("Recapture");
-            navigator.getUserMedia({ video: true }, function (mediaStreams) {
-                // video.src = window.URL.createObjectURL(stream);
-                video.srcObject = mediaStreams;
-                localMediaStream = mediaStreams;
-            }, function (e) {
-                console.log(e);
-            });
+            // navigator.getUserMedia({ video: true }, function (mediaStreams) {
+            //     // video.src = window.URL.createObjectURL(stream);
+            //     video.srcObject = mediaStreams;
+            //     localMediaStream = mediaStreams;
+            // }, function (e) {
+            //     console.log(e);
+            // });
         });
 
         var stopCapture = function(){

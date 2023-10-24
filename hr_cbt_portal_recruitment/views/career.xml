@@ -15,7 +15,7 @@
                                         <h2 class="h1 text-secondary">Start Your Career with Us</h2>
                                         <h3 class="text-muted">Join us!</h3>
                                         <p>
-                                        Our Company is staffed by a <b>dedicated team</b> of highly-qualified and experienced professionals providing standard services. 
+                                        Our Company is staffed by a <b>dedicated team</b> of highly-qualified and experienced professionals providing standard services, 
                                         We aim to <b>bridge the gap</b> between customers and energy services in any setting through innovative solutions.
                                         </p>
                                         <p>
@@ -152,10 +152,6 @@
                                     <input type="hidden" name="job_id" t-att-data-id="job.id" t-att-value="job.id"/>
                                     <input type="hidden" name="department_id" t-att-data-id="job.department_id.id" t-att-value="job.department_id.id"/>
                                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                    
-                                    
-                                    
-     
                                     <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required">
                                         
                                         <div class="row s_col_no_resize s_col_no_bgcolor">
@@ -586,22 +582,17 @@
             </t>
         </template>
 
-        <template id="default_website_description">
+        <template id="website_hr_recruitment.default_website_description">
             <!-- Description text and ratings -->
             <section class="pt32">
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-8 pb32">
                             <p class="lead">
-                                As an employee of our company, you will <b>collaborate with each department
-                                to create and deploy disruptive products.</b> Come work at a growing company
-                                that offers great benefits with opportunities to moving forward and learn
-                                alongside accomplished leaders. We're seeking an experienced and outstanding
-                                member of staff.
-                                <br/><br/>
-                                This position is both <b>creative and rigorous</b> by nature you need to think
-                                outside the box. We expect the candidate to be proactive and have a "get it done"
-                                spirit. To be successful, you will have solid solving problem skills.
+                                EEDC is amongst top performing Discos on various <b>performance parameters and envisions to 
+                                be the best in Nigeria.</b> in near future.
+                                We are also the largest employer in the South East of Nigeria with a current workforce
+                                of 4500 plus across various domains. <br/><br/> 
                             </p>
                         </div>
                         <div class="col-lg-3 offset-lg-1 pb32">
@@ -639,8 +630,8 @@
                                     <span class="s_rating_active_icons text-primary">
                                         <i class="fa fa-star"/>
                                         <i class="fa fa-star"/>
-                                        <i class="fa fa-star"/>
-                                        <i class="fa fa-star"/>
+                                        <i class="fa fa-star-o"/>
+                                        <i class="fa fa-star-o"/>
                                     </span>
                                     <span class="s_rating_inactive_icons text-primary">
                                         <i class="fa fa-star-o"/>
@@ -655,9 +646,9 @@
                                         <i class="fa fa-star"/>
                                     </span>
                                     <span class="s_rating_inactive_icons text-primary">
-                                        <i class="fa fa-star-o"/>
-                                        <i class="fa fa-star-o"/>
-                                        <i class="fa fa-star-o"/>
+                                        <i class="fa fa-star"/>
+                                        <i class="fa fa-star"/>
+                                        <i class="fa fa-star"/>
                                     </span>
                                 </div>
                             </div>
