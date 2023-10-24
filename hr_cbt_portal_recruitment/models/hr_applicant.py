@@ -93,6 +93,7 @@ class Applicant(models.Model):
         string="Do you have any Professional Certification?",
         default="No")
     professional_certificate_link = fields.Char()
+    gender = fields.Char()
 
     @api.depends("survey_user_input_id")
     def _compute_cbt_score(self):
