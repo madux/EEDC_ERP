@@ -69,14 +69,13 @@
                                 <field name="duration" readonly="1"/>
                             </group>
                         </group>
-                        <notebook>
-                            <page name="cbt_applicants_survey" string="Applicant's Test">
-                                <field name="survey_user_input_id" string="CBT Sent" readonly="1"
-                                context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}"/>
-                                <field name="test_passed" readonly="1" force_save="1"/>
-                            </page>
-                        </notebook>
+                        
                     </page> 
+                    <page name="cbt_applicants_survey" string="Applicant's Test">
+                        <field name="survey_user_input_id" string="CBT Sent" readonly="1"
+                        context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}"/>
+                        <field name="test_passed" readonly="1" force_save="1"/>
+                    </page>
                 </notebook>
             </xpath>
         </field>
