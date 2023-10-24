@@ -86,7 +86,7 @@ class Applicant(models.Model):
     reference_title = fields.Char("Reference Title")
     reference_email = fields.Char("Reference email")
     reference_phone = fields.Char("Reference Phone")
-    test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score")
+    test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score", store=True)
     nysc_certificate_link = fields.Char()
     has_professional_certification = fields.Selection([
         ('Yes', 'Yes'), ('No', 'No')], 
