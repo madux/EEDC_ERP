@@ -131,7 +131,8 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
             return true;
         });
         const mediaStream = new MediaStream();
-        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        // navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
         window.URL = window.URL || window.webkitURL;
         var localMediaStream = null;
         var video = document.querySelector('video'); // 
@@ -145,6 +146,21 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
             $("#passport_img").addClass("d-none");
             $("#video").removeClass("d-none");
             $(this).val("Recapture");
+            // navigator.getUserMedia({ video: true }, function (mediaStreams) {
+            //     // video.src = window.URL.createObjectURL(stream);
+            //     video.srcObject = mediaStreams;
+            //     localMediaStream = mediaStreams;
+            // }, function (e) {
+            //     console.log(e);
+            // });
+            // navigator.mediaDevices.getUserMedia({ video: true })
+            //     .then(function(mediaStreams) {
+            //         video.srcObject = mediaStreams;
+            //         localMediaStream = mediaStreams;
+            //     })
+            //     .catch(function (e) {
+            //         console.log(e);
+            //     });
             // navigator.getUserMedia({ video: true }, function (mediaStreams) {
             //     // video.src = window.URL.createObjectURL(stream);
             //     video.srcObject = mediaStreams;
