@@ -63,7 +63,7 @@ class WebsiteHrRecruitment(http.Controller):
             ]
         applicants = request.env['hr.applicant'].sudo().search(domain)
         
-        if date.today() > job.close_date:
+        if job.close_date and date.today() > job.close_date:
             return request.render("hr_cbt_portal_recruitment.job_already_closed")
         
         elif applicants:
@@ -96,9 +96,12 @@ class WebsiteHrRecruitment(http.Controller):
                 "reference_title": post.get("reference_title",""),
                 "reference_email": post.get("reference_email",""),
                 "reference_phone": post.get("reference_phone",""),
+                "relationship_type": post.get("relationship_type",""),
+                "presentlocation": post.get("presentlocation",""),
+                "knowledge_description": post.get("knowledge_description",""),
                 "specify_personal_personality": post.get("specify_personal_personality",""),
                 "specifylevel_qualification": post.get("specifylevel_qualification",False),
-                # attachment_ids
+                "image_1920": post.get("passport_img"),# base64.b64encode(post.get("passport_img").read()),
             }
             applicant = request.env['hr.applicant'].sudo().create(vals)
             _logger.info('Applicant record Successfully Registered!')

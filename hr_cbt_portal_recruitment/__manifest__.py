@@ -25,6 +25,7 @@
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
         'views/career.xml',
+        'views/hr_employee.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
         'wizard/hr_move_applicant.xml',
