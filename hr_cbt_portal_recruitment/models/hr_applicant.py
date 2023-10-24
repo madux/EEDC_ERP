@@ -43,7 +43,7 @@ class Applicant(models.Model):
         required=False,
     )
     test_started = fields.Boolean(
-        "Test Start", 
+        "Test Started", 
         readonly=True, 
         help="used to check if application test has been set")
     cbt_start_date = fields.Datetime("CBT Start Date")
@@ -61,8 +61,20 @@ class Applicant(models.Model):
         default=False)
     linkedin_account = fields.Char("Linkedin")
     specify_personal_personality = fields.Text("Provide Details")
+    relationship_type = fields.Selection([
+        ('father', 'Father'), 
+        ('mother', 'Mother'),
+        ('sister', 'Sister'),
+        ('spouse', 'Spouse'),
+        ('friend', 'Friend'),
+        ('uncle', 'Uncle'),
+        ('others', 'Others'),
+        ], "Relationship Type")
+    image_1920 = fields.Image(string="Image", max_width=1024, max_height=1024)
     degree_in_relevant_field = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string="Degree in relevant field")
     specifylevel_qualification = fields.Text("Total years of Experience")
+    knowledge_description = fields.Text("What is your Knowledge of this Role")
+    presentlocation = fields.Char("Present Location")
     reside_job_location = fields.Selection([('Yes', 'Yes'), ('No', 'No')], 
                                            string="Reside within Job location",
                                            default=False
@@ -74,3 +86,15 @@ class Applicant(models.Model):
     reference_title = fields.Char("Reference Title")
     reference_email = fields.Char("Reference email")
     reference_phone = fields.Char("Reference Phone")
+    test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score")
+
+    @api.depends("survey_user_input_id")
+    def _compute_cbt_score(self):
+        for rec in self:
+            if rec.survey_user_input_id and rec.survey_user_input_id.socring_success:
+                rec.test_passed = True
+            else:
+                rec.test_passed = False 
+            
+
+                

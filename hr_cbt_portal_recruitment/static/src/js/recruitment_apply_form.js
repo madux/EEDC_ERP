@@ -41,6 +41,7 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
         // $("#hr_recruitment_form2")[0].reset();
         $('#level_qualification_header_yes').prop('checked', false);
         $('#reside_job_location_yes').prop('checked', true);
+        $('#reside_job_location_no').prop('checked', false);
         console.log("scatter ent app!!!!")
         $('#completed_nysc_no').change(function () {
             if ($(this).prop('checked')) {

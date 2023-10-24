@@ -6,11 +6,19 @@
             <field name="model">hr.applicant</field>
             <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_form"/>
             <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="after">
+                <div classs="row">
+                    <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
+                </div>
+            </xpath>  
             <field name="email_from" position="before">
                 <field name="first_name"/>
                 <field name="middle_name"/>
                 <field name="last_name" invisible="0" force_save="1" required="1"/>
                 <field name="partner_id" invisible="0" force_save="1" readonly="1"/>
+            </field>
+            <field name="availability" position="before">
+                <field name="current_salary" string="Current salary"/>
             </field>
             <xpath expr="//form/sheet/group[last()]">
                 <notebook name="otherinfo">
@@ -21,14 +29,16 @@
                                 <field name="know_anyone_at_eedc"/>
                                 <field name="linkedin_account"/>
                                 <field name="specify_personal_personality" attrs="{'invisible':[('know_anyone_at_eedc', '!=', 'Yes')]}"/>
+                                <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
-
                             </group>
                             <group>
                                 <field name="reside_job_location"/>
+                                <field name="presentlocation"/>
                                 <field name="relocation_plans" attrs="{'invisible':[('reside_job_location', '!=', 'No')]}"/>
                                 <field name="resumption_period"/>
+                                <field name="knowledge_description"/>
                             </group>
 
                             <group>
@@ -57,11 +67,11 @@
                         </group>
                         <notebook>
                             <page name="cbt_applicants_survey" string="Applicant's Test">
-                                <field name="survey_user_input_id" string="Applicants question" readonly="1"
+                                <field name="survey_user_input_id" string="CBT Sent" readonly="1"
                                 context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}"/>
-                                     
+                                <field name="test_passed" readonly="1" force_save="1"/>
                             </page>
-                        </notebook> 
+                        </notebook>
                     </page> 
                 </notebook>
             </xpath>
