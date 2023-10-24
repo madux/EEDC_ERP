@@ -29,6 +29,7 @@
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
         'wizard/hr_move_applicant.xml',
+        'wizard/import_applicant_view.xml',
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
         'views/preloader.xml',

@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+    <record id="hr_import_applicants_form_view" model="ir.ui.view">
+        <field name="name">hr.import_applicant.wizard</field>
+        <field name="model">hr.import_applicant.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import ">
+                <header>
+                    Import 
+                </header>
+                <group>
+
+                    <field name="filename" invisible="1"/> 
+                    <field name="index"/> 
+                </group>
+                <group>
+
+                    <field name="data_file" filename="filename" widget="binary"/>
+                </group>
+                <footer>
+                    <button name="import_records_action" string="Import Applicants Record" type="object"  class="oe_highlight"/>
+                    or
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record> 
+
+    <record id="action_wizard_hr_import_applicants" model="ir.actions.act_window">
+        <field name="name">Import</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.import_applicant.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="hr_import_applicants_confirm_dialog_view" model="ir.ui.view">
+        <field name="name">hr.import_applicant.confirm.dialog</field>
+        <field name="model">hr.import_applicant.confirm.dialog</field>
+        <field name="arch" type="xml">
+            <form string="Message">
+                <field name="name"/>
+
+                <footer>
+                    <button string="OK" class="btn-primary" special="cancel" />
+                </footer>				
+            </form>
+        </field>	
+    </record>
+
+    <menuitem
+            id="menu_import_applicants_records"
+            name="Import Applicants"
+            parent="hr_recruitment.menu_hr_recruitment_root"
+            action="hr_cbt_portal_recruitment.action_wizard_hr_import_applicants"
+            sequence="102"/>
+
+</odoo>
