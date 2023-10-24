@@ -134,7 +134,7 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
         navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
         window.URL = window.URL || window.webkitURL;
         var localMediaStream = null;
-        var video = document.querySelector('video'); //  
+        var video = document.querySelector('video'); // 
         var canvas = document.querySelector('canvas');
 
         $("#startCapture").click(function(){
@@ -145,10 +145,10 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
             $("#passport_img").addClass("d-none");
             $("#video").removeClass("d-none");
             $(this).val("Recapture");
-            navigator.getUserMedia({ video: true }, function (mediaStream) {
+            navigator.getUserMedia({ video: true }, function (mediaStreams) {
                 // video.src = window.URL.createObjectURL(stream);
-                video.srcObject = mediaStream;
-                localMediaStream = mediaStream;
+                video.srcObject = mediaStreams;
+                localMediaStream = mediaStreams;
             }, function (e) {
                 console.log(e);
             });
