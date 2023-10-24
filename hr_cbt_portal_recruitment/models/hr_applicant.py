@@ -87,6 +87,12 @@ class Applicant(models.Model):
     reference_email = fields.Char("Reference email")
     reference_phone = fields.Char("Reference Phone")
     test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score")
+    nysc_certificate_link = fields.Char()
+    has_professional_certification = fields.Selection([
+        ('Yes', 'Yes'), ('No', 'No')], 
+        string="Do you have any Professional Certification?",
+        default="No")
+    professional_certificate_link = fields.Char()
 
     @api.depends("survey_user_input_id")
     def _compute_cbt_score(self):

@@ -39,6 +39,9 @@
                                 <field name="relocation_plans" attrs="{'invisible':[('reside_job_location', '!=', 'No')]}"/>
                                 <field name="resumption_period"/>
                                 <field name="knowledge_description"/>
+                                <field name="professional_certificate_link"/>
+                                <field name="nysc_certificate_link"/>
+                                <field name="has_professional_certification"/>
                             </group>
 
                             <group>
