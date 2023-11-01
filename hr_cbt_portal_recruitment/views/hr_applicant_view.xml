@@ -10,7 +10,8 @@
                 <div classs="row">
                     <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
                 </div>
-            </xpath>  
+            </xpath> 
+            
             <field name="email_from" position="before">
                 <field name="first_name"/>
                 <field name="middle_name"/>

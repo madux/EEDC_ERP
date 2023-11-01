@@ -27,7 +27,7 @@ class HrApplicantMove(models.TransientModel):
     )
     email_invite_template = fields.Many2one(
         'mail.template',
-        string="Invitation Mail Template",
+        string="Mail Template",
         required=False,
     )
 
@@ -51,10 +51,10 @@ class HrApplicantMove(models.TransientModel):
 
     def _send_mail(self, template_id, email_items= None, email_from=None):
         '''Email_to = [lists of emails], Contexts = {Dictionary} '''
-        email_to = ','.join([m for m in email_items]) if email_items else False
+        email_to = ','.join([m for m in email_items if m])
         # ir_model_data = self.env['ir.model.data']
         # template_id = ir_model_data.get_object_reference('inseta_etqa', with_template_id)[1]         
-        if template_id:
+        if template_id and email_to:
             template_id.write({'email_to': email_to})
             template_id.send_mail(self.id, True)
             # ctx = dict()

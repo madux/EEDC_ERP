@@ -12,7 +12,7 @@
                         </group>
                         <group>
                             <field name="send_mail"/>
-                            <field name="email_invite_template" invisible="0" required="1" 
+                            <field name="email_invite_template" invisible="0" required="0" 
                             attrs="{'invisible': [('send_mail', '=', False)], 'reuired': [('send_mail', '=', True)]}"
                             domain="[('model', '=', 'hr.applicant.move.wizard')]"/>
 
