@@ -86,7 +86,9 @@ class Applicant(models.Model):
     reference_title = fields.Char("Reference Title")
     reference_email = fields.Char("Reference email")
     reference_phone = fields.Char("Reference Phone")
-    test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score", store=True)
+    test_passed = fields.Boolean("Test Passed", compute="_compute_cbt_score", store=True, default=False)
+    scoring_percentage = fields.Integer("Test Passed", compute="_compute_cbt_score", store=True, default=False)
+    scoring_total = fields.Integer("Test Passed", compute="_compute_cbt_score", store=True, default=False)
     nysc_certificate_link = fields.Char()
     has_professional_certification = fields.Selection([
         ('Yes', 'Yes'), ('No', 'No')], 
@@ -98,10 +100,19 @@ class Applicant(models.Model):
     @api.depends("survey_user_input_id")
     def _compute_cbt_score(self):
         for rec in self:
-            if rec.survey_user_input_id and rec.survey_user_input_id.scoring_success:
-                rec.test_passed = True
+            if rec.survey_user_input_id:
+                if rec.survey_user_input_id.scoring_success:
+                    rec.test_passed = True
+                else:
+                    rec.test_passed = False 
+                rec.scoring_percentage = rec.survey_user_input_id.scoring_percentage
+                rec.scoring_total = rec.survey_user_input_id.scoring_total
             else:
-                rec.test_passed = False 
+                rec.scoring_percentage = 0
+                rec.scoring_total = 0
+                rec.test_passed = False
+
+ 
             
 
                 
