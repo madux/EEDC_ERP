@@ -10,8 +10,8 @@
             <field name ="arch" type="xml">
                 <form string="Memo Record">
                 <header>
-                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':[('state','in',['Approve','Done','refuse'])]}" type="object" class="oe_highlight fwm"/>
-                    <button name="approve_memo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','in',['submit', 'Approve','Done','refuse'])]}" string="Approve" type="object" class="oe_highlight" groups="base.group_system,company_memo.mainmemo_manager"/>
+                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':[('state','in',['Approve','Done','Refuse'])]}" type="object" class="oe_highlight fwm"/>
+                    <button name="approve_memo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','in',['submit', 'Approve','Done','Refuse'])]}" string="Approve" type="object" class="oe_highlight" groups="base.group_system,company_memo.mainmemo_manager"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','not in',['Sent'])]}"  type="object" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit"/>
                     <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Approve']), ('memo_type','not in',['Payment'])]}"/>
                     <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
@@ -20,10 +20,10 @@
 
                     
                     <!-- attrs="{'invisible':['&amp;',('memo_type','!=','Payment'),('state','in',['Approve'])]}"/> -->
-                    <button name="set_draft" states="refuse" string="Set to Draft" type="object" class="btn-primary"/>
+                    <button name="set_draft" states="Refuse" string="Set to Draft" type="object" class="btn-primary"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" class="btn-primary" attrs="{'invisible':[('state','!=',['sent'])]}" />
                     <button name="user_done_memo" class="oe_stat_button oe_highlight" icon="fa-calendar" states="Approve2" help="Click to move to Done." type="object" confirm="Are you sure you want to Complete?" string="Complete"/>
-                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','refuse'])]}" type="object" class="oe_highlight"/>
+                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Refuse'])]}" type="object" class="oe_highlight"/>
                     <field name="state" widget="statusbar" statusbar_visible="submit,Sent,Approve,Done"/><!--statusbar_visible="draft,reported,done,refused"-->
 
                 </header>
@@ -51,7 +51,7 @@
                                 <button name="return_memo"
                                     class="btn-danger oe_stat_button sm"
                                     icon="fa-redo"
-                                    attrs="{'invisible': ['|', '|',('memo_type','not in',['Internal', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']),('state','!=','Sent'),('user_is_approver','!=', True)]}"
+                                    attrs="{'invisible': ['|', '|',('memo_type','not in',['Internal','server_access', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']),('state','!=','Sent'),('user_is_approver','!=', True)]}"
                                     type="object" string="Return Memo">
                             </button>
                             <!-- groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit" -->
@@ -68,7 +68,7 @@
                             <button name="view_related_record"
                                 class="btn-primary oe_highlight"
                                 attrs="{
-                                    'invisible': [('state','in',['Sent', 'submit', 'refuse'])]}"
+                                    'invisible': [('state','in',['Sent', 'submit', 'Refuse'])]}"
                                 type="object" string="View Related Record"/>
                                 
                             <!-- <button name="migrate_records"
@@ -285,7 +285,7 @@
         <record model="ir.actions.act_window" id="memo_model_refuse_action">
             <field name="name">Internal Memo Request</field>
             <field name="res_model">memo.model</field>
-            <field name="domain">[('state', '=', 'refuse')]</field>
+            <field name="domain">[('state', '=', 'Refuse')]</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_mode">tree,form</field>
         </record>

@@ -40,6 +40,28 @@ odoo.define('portal_request.portal_request', function (require) {
         }
     }
 
+    function setRecordStatus(targetElementId, setStatus){
+        if(targetElementId !== ''){   
+            let setState = setStatus
+            this._rpc({
+                route: `/my/request-state`,
+                params: {
+                    'type': setState,
+                    'id': targetElementId
+                },
+            }).then(function (data) {
+                if (!data.status) {
+                    alert(`Validation Error! ${data.message}`)
+                }else{
+                    console.log('updating record to draft => '+ JSON.stringify(data))
+                }
+            }).guardedCatch(function (error) {
+                let msg = error.message.message
+                alert(`Unknown Error! ${msg}`)
+            });
+        }
+    }
+
     // var FormateDateToMMDDYYYY = function(dateObject) {
     //     var d = new Date(dateObject);
     //     var day = d.getDate();
@@ -73,7 +95,6 @@ odoo.define('portal_request.portal_request', function (require) {
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
         console.log("Product table building loading")
         $.each(data, function (k, elm) {
-
             if (elm) {
                 var lastRow_count = getOrAssignRowNumber()
                 console.log(`Building product table ${k} ${elm}`)
@@ -123,7 +144,6 @@ odoo.define('portal_request.portal_request', function (require) {
         });
     }
 
-    
     function buildProductRow(memo_type){ 
         // for new request: building each line of item 
         let lastRow_count = getOrAssignRowNumber()
@@ -593,6 +613,13 @@ odoo.define('portal_request.portal_request', function (require) {
                     $('#amount_section').addClass('d-none');
                     $('#amount_fig').attr("required", false);
                 }
+                else if(selectedTarget == "server_access"){
+                    $('#amount_section').addClass('d-none');
+                    $('#amount_fig').attr("required", false);
+                    $('#product_form_div').addClass('d-none');
+                    console.log("request selected== ", selectedTarget);
+                    displayNonLeaveElement()
+                }
                 // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
                 else if(selectedTarget == "payment_request"){
                     $('#amount_section').removeClass('d-none');
@@ -779,6 +806,18 @@ odoo.define('portal_request.portal_request', function (require) {
                 console.log("the search")
                 var get_search_query = $("#search_input_panel").val()
                 window.location.href = `/my/requests/param/${get_search_query}`
+            },
+
+            'click .set_state_draft': function(ev){
+                console.log("drafting")
+                let targetElement = $(ev.target).attr('id');
+                setRecordStatus(targetElement, 'submit');
+            },
+
+            'click .resend_request': function(ev){
+                console.log("Resending")
+                let targetElement = $(ev.target).attr('id');
+                setRecordStatus(targetElement, 'Sent');
             },
 
             'click .button_req_submit': function (ev) {

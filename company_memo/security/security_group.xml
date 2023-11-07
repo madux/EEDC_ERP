@@ -81,7 +81,7 @@
             <field name="name">Memo Account Users See Records in Account</field>
             <field name="model_id" ref="model_memo_model"/>
             <field name="groups" eval="[(6, 0, [ref('mainmemo_account')])]"/>
-            <field name="domain_force">['|','|',('direct_employee_id.user_id.id','=', user.id),('employee_id.user_id.id','=', user.id),('state','in',['Approve','Done', 'refuse'])]</field>
+            <field name="domain_force">['|','|',('direct_employee_id.user_id.id','=', user.id),('employee_id.user_id.id','=', user.id),('state','in',['Approve','Done', 'Refuse'])]</field>
         </record> 
         <record id="memo_managers_see_all_record" model="ir.rule">
             <field name="name">Memo Managers See all Records in except Draft</field>

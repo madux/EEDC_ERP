@@ -36,16 +36,16 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
 
         },
     })
-
-    $(function(){
-        $("#hr_recruitment_form2")[0].reset();
+    $( document ).ready(function() {
+        // $(function(){
+        // $("#hr_recruitment_form2")[0].reset();
         $('#level_qualification_header_yes').prop('checked', false);
         $('#reside_job_location_yes').prop('checked', true);
         $('#reside_job_location_no').prop('checked', false);
         console.log("scatter ent app!!!!")
         $('#completed_nysc_no').change(function () {
             if ($(this).prop('checked')) {
-            $('#completed_nysc_yes').prop('checked', false);
+                $('#completed_nysc_yes').prop('checked', false);
             }
         });
         $('#completed_nysc_yes').change(function () {
@@ -128,6 +128,7 @@ odoo.define('hr_cbt_portal_recruitment.HrRecruitment', function (require) {
                 alert("Please only PDF files are allowed !!! ")
                 return false;
             }
+            $("#hr_recruitment_form2")[0].reset();
             return true;
         });
         const mediaStream = new MediaStream();

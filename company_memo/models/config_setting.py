@@ -29,6 +29,7 @@ class MemoConfig(models.Model):
         string="Employees for approvals",
         required=True
         )
+    
     active = fields.Boolean(string="Active", default=True)
 
     @api.constrains('memo_type')
