@@ -22,5 +22,5 @@ class HRLeave(models.Model):
     def action_refuse(self):
         res = super(HRLeave, self).action_refuse()
         if self.memo_id:
-            self.memo_id.state = "refuse"
+            self.memo_id.state = "Refuse"
         return res

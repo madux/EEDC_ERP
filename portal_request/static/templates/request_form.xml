@@ -51,7 +51,7 @@
                                                     <p>Are you sure you wish to proceed?</p>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <a role="button" class="btn btn-primary" t-att-href="'/my/request/cancel/%s' % (req.id)">Cancel the request</a>
+                                                    <a role="button" class="btn btn-primary" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">Cancel the request</a>
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
                                                 </div>
                                             </div>
@@ -125,14 +125,25 @@
                                 <div class="row gs-0">
                                     <div class="col-md">
                                         <h5 class="row mx-1 mb-1 mb-md-0">
-                                            <div class="col-9 text-truncate">
+                                            <div class="col-6 text-truncate">
                                                 <span t-field="req.name"/>
                                                 <small class="text-muted "> (#<span t-field="req.code"/>)</small>
                                             </div>
+                                            <!-- <t t-if="req.state=='Refuse'"> -->
+                                                <div class="col-3 text-truncate">
+                                                    <a id="req.id" class="set_state_draft btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">
+                                                        Set to draft 
+                                                    </a>
+                                                    <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Sent')">
+                                                        Resend
+                                                    </a>
+                                                </div>
+                                            <!-- </t> -->
                                             <div class="col-3 text-end">
                                                 <small class="text-end">Status:</small>
                                                 <span t-field="req.state" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
                                             </div>
+                                             
                                         </h5>
                                     </div>
                                 </div>

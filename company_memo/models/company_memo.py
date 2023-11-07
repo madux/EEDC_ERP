@@ -56,6 +56,7 @@ class Memo_Model(models.Model):
         ("procurement_request", "Procurement Request"),
         ("vehicle_request", "Vehicle request"),
         ("leave_request", "Leave request"),
+        ("server_access", "Server Access Request"), 
         ("cash_advance", "Cash Advance"),
         ("soe", "Statement of Expense"),
         ], string="Memo Type",default="Internal", required=True)
@@ -87,7 +88,7 @@ class Memo_Model(models.Model):
                                 ('Approve', 'Waiting For Payment / Confirmation'),
                                 ('Approve2', 'Memo Approved'),
                                 ('Done', 'Done'),
-                                ('refuse', 'Refused'),
+                                ('Refuse', 'Refused'),
                               ], string='Status', index=True, readonly=True,
                              copy=False, default='submit',
                              required=True,
@@ -177,11 +178,11 @@ class Memo_Model(models.Model):
         if self.approver_id and self.approver_id.user_id.id == self.env.user.id:
             self.user_is_approver = True
 
-        if self.employee_id.parent_id.user_id.id == self.env.user.id or \
+        elif self.employee_id.parent_id.user_id.id == self.env.user.id or \
         self.employee_id.administrative_supervisor_id.user_id.id == self.env.user.id:
             self.user_is_approver = True
 
-        if self.determine_if_user_is_config_approver():
+        elif self.determine_if_user_is_config_approver():
             self.user_is_approver = True
         else:
             self.user_is_approver = False
@@ -251,7 +252,7 @@ class Memo_Model(models.Model):
         if self.employee_id.user_id.id != self.env.uid:
             raise ValidationError('Sorry!!! you are not allowed to cancel a memo not initiated by you.') 
         
-        if self.state not in ['refuse', 'Sent']:
+        if self.state not in ['Refuse', 'Sent']:
             raise ValidationError('You cannot cancel a memo that is currently undergoing management approval')
         for rec in self:
             rec.write({
@@ -442,7 +443,7 @@ class Memo_Model(models.Model):
         users = self.env['res.users'].browse([self.env.uid])
         if self.state in ["Approve", "Approve2", "Done"]:
             raise ValidationError("Sorry!!! this record have already been approved.")
-        if self.memo_type in ["Payment", 'loan', 'cash_advance', 'soe']:
+        if self.memo_type in ["Payment", 'loan', 'cash_advance', 'soe', 'server_access']:
             self.state = "Approve"
         else: #lif self.memo_type == "Internal":
             self.state = "Approve2"
@@ -463,6 +464,9 @@ class Memo_Model(models.Model):
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
         elif self.memo_type == "soe":
+            self.update_memo_type_approver()
+            self.mail_sending_direct(body_msg)
+        elif self.memo_type == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
         else:
@@ -946,7 +950,7 @@ class Memo_Model(models.Model):
     # Depending on any field change (ORM or Form), the function is triggered.
     def _progress_state(self):
         for order in self:
-            if order.state in ["submit", "refuse"]:
+            if order.state in ["submit", "Refuse"]:
                 order.status_progress = random.randint(0, 5)
 
             elif order.state == "Sent":

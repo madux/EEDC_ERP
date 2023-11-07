@@ -169,7 +169,7 @@ class PortalRequest(http.Controller):
 				('request_date_from', '<=', st),
 				('request_date_to', '>=', ed),
 				('employee_id', '=', employee_id.id),
-				# ('state', 'not in', ['draft', 'refuse']),
+				# ('state', 'not in', ['draft', 'Refuse']),
 				], 
 				limit=1) 
 			if hr_request:
@@ -335,6 +335,43 @@ class PortalRequest(http.Controller):
 			}
 		})	
 	
+
+	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
+	def check_qty(self,  *args, **kwargs):
+		type = kwargs.get('type') 
+		id = kwargs.get('id') 
+		"""Check quantity.
+		Args:
+			type (type): either set to draft or set to Sent
+			id: id of the record
+		Returns:
+			dict: Response
+		"""
+		_logger.info(f'Sending request of .... {type} with id {id}')
+		if id and type:
+			record = request.env['memo.model'].sudo().search(
+			[
+				('active', '=', True),
+				('id', '=', int(id))
+			], 
+			limit=1) 
+			if record:
+				return {
+					"status": True,
+					"message": f"Succeessfully updated", 
+					}
+			else:
+				return {
+					"status": False,
+					"message": "There is no record found to update status", 
+					}
+		else:
+			return {
+				"status": False,
+				"message": "No record found to update", 
+				}
+				 
+		
 	@http.route(['/check-quantity'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
 		# params = kwargs.get('params')
@@ -560,8 +597,8 @@ class PortalRequest(http.Controller):
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
 					else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
-						if type in ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
-							else ['Internal', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
+						if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
+							else ['Internal', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
@@ -606,16 +643,17 @@ class PortalRequest(http.Controller):
 		values = {'req': requests}
 		return request.render("portal_request.request_form_template", values)
 	
-	@http.route('/my/request/cancel/<int:id>', type='http', auth="user", website=True)
-	def cancel_my_request(self, id):
+	@http.route('/my/request/update/<int:id>/<string:status>', type='http', auth="user", website=True)
+	def update_my_request_status(self, id, status):
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('employee_id.user_id', '=', user.id),
 				('id', '=', id),
+				('state', '=', "Sent"),
 			]
 		requests = request_id.search(domain, limit=1)
-		requests.write({'state': 'submit'})
+		requests.write({'state': status})
 		return request.redirect('/my/request/view/%s' %(requests.id))
 
  

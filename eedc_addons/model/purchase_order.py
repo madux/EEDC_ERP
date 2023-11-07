@@ -26,6 +26,6 @@ class PurchaseOrder(models.Model):
     
     def button_cancel(self):
         res = super(PurchaseOrder, self).button_cancel()
-        self.update_memo_status('refuse') 
+        self.update_memo_status('Refuse') 
         return res
      
