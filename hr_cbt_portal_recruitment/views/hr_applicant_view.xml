@@ -74,7 +74,15 @@
                     <page name="cbt_applicants_survey" string="Applicant's Test">
                         <field name="survey_user_input_id" string="CBT Sent" readonly="1"
                         context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}"/>
-                        <field name="test_passed" readonly="1" force_save="1"/>
+                        <group>
+                            <group>
+                                <field name="test_passed" readonly="1" force_save="1"/>
+                            </group>
+                            <group>
+                                <field name="scoring_percentage" readonly="1"/>
+                                <field name="scoring_total" readonly="1" />
+                            </group>
+                        </group>
                     </page>
                 </notebook>
             </xpath>
@@ -88,6 +96,16 @@
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_applications']" position="after">
                  <filter name="passed" string="Passed Applicants" domain="[('test_passed', '=', True)]"/>
+                 <filter string="Score: 0 - 19" name="score_0_19" domain="[('scoring_percentage','&lt;', 20)]"/>
+                <filter string="Score: 20 - 29" name="score_0_20" domain="[('scoring_percentage','&gt;', 19),('scoring_percentage','&lt;', 30)]"/>
+                <filter string="Score: 30 - 39" name="score_0_30" domain="[('scoring_percentage','&gt;', 29),('scoring_percentage','&lt;', 40)]"/>
+                <filter string="Score: 40 - 49" name="score_0_40" domain="[('scoring_percentage','&gt;', 39),('scoring_percentage','&lt;', 50)]"/>
+                <filter string="Score: 50 - 59" name="score_0_50" domain="[('scoring_percentage','&gt;', 49),('scoring_percentage','&lt;', 60)]"/>
+                <filter string="Score: 60 - 69" name="score_0_60" domain="[('scoring_percentage','&gt;', 59),('scoring_percentage','&lt;', 70)]"/>
+                <filter string="Score: 70 - 79" name="score_0_70" domain="[('scoring_percentage','&gt;', 69),('scoring_percentage','&lt;', 80)]"/>
+                <filter string="Score: 80 - 89" name="score_0_80" domain="[('scoring_percentage','&gt;', 79),('scoring_percentage','&lt;', 90)]"/>
+                <filter string="Score: 90 - 99" name="score_0_90" domain="[('scoring_percentage','&gt;', 89),('scoring_percentage','&lt;', 100)]"/>
+                <filter string="Score: 100" name="score_0_100" domain="[('scoring_percentage','=', 100)]"/>
             </xpath>
         </field>
     </record>
