@@ -22,7 +22,8 @@
         'wizard/return_memo_wizard_view.xml',
         'reports/report_memo.xml',
         'views/assets.xml',
-        'security/ir.model.access.csv'
+        'security/ir.model.access.csv',
+        'data/memo_stage.xml', 
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',

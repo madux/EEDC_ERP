@@ -137,7 +137,8 @@
                                         <span t-field="request.employee_id.user_id"/>
                                     </td>
                                     <td id="request_stage" class="text-end">
-                                        <span t-attf-class="badge rounded-pill #{'text-bg-info' if request.state == 'submit' else 'text-bg-light'}" t-esc="request.state"/>
+                                        <!-- <span t-attf-class="badge rounded-pill #{'text-bg-info' if request.state == 'submit' else 'text-bg-light'}" t-esc="request.state"/> -->
+                                        <span t-attf-class="badge rounded-pill text-bg-info" t-esc="request.stage_id.name"/>
                                     </td>
                                 </tr>
                             </t>

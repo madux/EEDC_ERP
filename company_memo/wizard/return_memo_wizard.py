@@ -14,7 +14,7 @@ class Send_Memo_back(models.Model):
     reason = fields.Char('Reason') 
     date = fields.Datetime('Date')
     direct_employee_id = fields.Many2one('hr.employee', 'Direct To')
-     
+
     def get_url(self, id, name):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
         base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
@@ -28,9 +28,10 @@ class Send_Memo_back(models.Model):
             msg_body = "Dear Sir/Madam, </br>We wish to notify you that a Memo request from {} has been refused / returned. </br>\
              </br>Kindly {} to Review</br> </br>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
             get_state.write({
-                'state':'Refuse', 
+                'state':'Refuse',
+                'stage_id': self.env.ref("company_memo.memo_refuse_stage").id,
                 'users_followers': [(4, self.direct_employee_id.id)],
-                'set_staff': self.direct_employee_id.id
+                'set_staff': self.direct_employee_id.id,
                 })
             for rec in get_state.res_users:
                 if get_state.user_ids.id == rec.id:

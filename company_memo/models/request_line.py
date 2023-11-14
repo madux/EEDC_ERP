@@ -30,6 +30,7 @@ class RequestLine(models.Model):
         ("procurement_request", "Procurement Request"),
         ("vehicle_request", "Vehicle request"),
         ("leave_request", "Leave request"),
+        ("server_access", "Server Access Request"),
         ("cash_advance", "Cash Advance"),
         ("soe", "Statement of Expense"),
         ], string="Memo Type")

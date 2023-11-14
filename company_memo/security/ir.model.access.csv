@@ -10,3 +10,4 @@ mail.access_mail_mail_user,mail.mail.user,mail.model_mail_mail,base.group_user,1
 access_company_memo_request_line_user,company_memo_request_line.user,company_memo.model_request_line,base.group_user,1,1,1,1
 access_memo_config_manager,memo_config_user_name,company_memo.model_memo_config,company_memo.mainmemo_manager,1,1,1,1
 access_memo_group_system_manager,memo_config_group_system_name,company_memo.model_memo_config,base.group_system,1,1,1,1
+access_memo_stage,memo_stage_user_name,company_memo.model_memo_stage,,1,1,1,1

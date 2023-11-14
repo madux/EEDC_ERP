@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from odoo import http
 
 
-class AccountMove(models.Model):
+class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
 
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
@@ -15,13 +15,13 @@ class AccountMove(models.Model):
     origin = fields.Char(string="Source")
     
     def action_post(self):
-        # res = super(AccountMove, self).action_post()
         if self.memo_id:
-            self.memo_id.state = "Done"
             if self.memo_id.memo_type == "soe":
                 '''This is added to help send the soe reference to the related cash advance'''
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
-        return super(AccountMove, self).action_post()
+            self.memo_id.is_request_completed = True
+            # self.memo_id.state = "Done"
+        return super(AccountMoveMemo, self).action_post()
     
 class AccountMove(models.Model):
     _inherit = 'account.move.line'

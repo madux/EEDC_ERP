@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class AccountMove(models.Model):
+class AccountMoveLoan(models.Model):
     _inherit = "account.move"
 
     loan_line_id = fields.Many2one(
@@ -15,7 +15,7 @@ class AccountMove(models.Model):
     )
 
     def action_post(self):
-        res = super(AccountMove, self).action_post()
+        res = super(AccountMoveLoan, self).action_post()
         for record in self:
             if self.loan_id:
                 loan_line_id = record.loan_line_id

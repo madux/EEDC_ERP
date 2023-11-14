@@ -51,7 +51,7 @@
                                                     <p>Are you sure you wish to proceed?</p>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <a role="button" class="btn btn-primary" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">Cancel the request</a>
+                                                    <a role="button" class="btn btn-primary" t-att-href="'/my/request/update/%s/%s' % (req.id, 'cancel')">Cancel the request</a>
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
                                                 </div>
                                             </div>
@@ -96,7 +96,7 @@
 
                                 <li t-if="req.approver_id" class="list-group-item flex-grow-1">
                                     <div class="col-12 col-md-12 pb-2" t-if="req.approver_id.user_id">
-                                        <strong>Approver to</strong>
+                                        <strong>To be Approved by</strong>
                                         <div class="d-flex ps-3 flex-nowrap">
                                             <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(req.approver_id.user_id.avatar_1024)" alt="Contact"/>
                                             <div class="ms-2">
@@ -131,9 +131,9 @@
                                             </div>
                                             <!-- <t t-if="req.state=='Refuse'"> -->
                                                 <div class="col-3 text-truncate">
-                                                    <a id="req.id" class="set_state_draft btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">
+                                                    <!-- <a id="req.id" class="set_state_draft btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">
                                                         Set to draft 
-                                                    </a>
+                                                    </a> -->
                                                     <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Sent')">
                                                         Resend
                                                     </a>
@@ -141,7 +141,7 @@
                                             <!-- </t> -->
                                             <div class="col-3 text-end">
                                                 <small class="text-end">Status:</small>
-                                                <span t-field="req.state" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
                                             </div>
                                              
                                         </h5>
@@ -195,7 +195,6 @@
                                             <th width="20%">
                                                 <label>X</label>
                                             </th>
-                                            
                                         </tr>
                                     </thead>
                                     <tbody id="tbody_product" name="tbody_product">

@@ -154,7 +154,7 @@
                                                 <div class="col-sm">
                                                     <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">-- Select -- </option>
-                                                        <option value="server_access">Server Access Request</option>
+                                                        <option value="server_access">Internal / System Access Request</option>
                                                         <option value="material_request">Material request</option>
                                                         <option value="procurement_request">Procurement request</option>
                                                         <option value="payment_request">Payment Request</option>
@@ -168,7 +168,7 @@
                                                     <span class="s_website_form_label_content">Type of Request</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm" id="selectTypeRequestDiv">
                                                     <select name="selectTypeRequest" id="selectTypeRequest" required="required" data-init="new" class="form-control" labelfor="Request Type">
                                                         <option disabled="true" selected="true" value=""></option>
                                                         <option value="new" selected="true">New</option>
