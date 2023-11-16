@@ -22,6 +22,7 @@
     ],
 
     'data': [
+        'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
         'views/career.xml',

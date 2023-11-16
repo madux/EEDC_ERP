@@ -6,11 +6,17 @@
       <field name="model">hr.job</field>
       <field name="inherit_id" ref="hr.view_hr_job_form"/>
       <field name="arch" type="xml">
+        
+        <xpath expr="//field[@name='website_published']" position="replace">
+        </xpath>
+        <xpath expr="//field[@name='contract_type_id']" position="after">
+            <field name="website_published" string="Publish to Website" nolabel="0"/>
+        </xpath>
         <xpath expr="//field[@name='website_published']" position="after">
-          <group>
+          <!-- <group> -->
             <field name="datetime_publish" string="Publish Date"/>
             <field name="close_date" required="True" />
-          </group>
+          <!-- </group> -->
         </xpath>
       </field>
     </record>
