@@ -10,22 +10,21 @@
             <field name ="arch" type="xml">
                 <form string="Memo Record">
                 <header>
-                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':[('state','in',['Approve','Done','Refuse'])]}" type="object" class="oe_highlight fwm"/>
-                    <button name="approve_memo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','in',['submit', 'Approve','Done','Refuse'])]}" string="Approve" type="object" class="oe_highlight" groups="base.group_system,company_memo.mainmemo_manager"/>
-                    <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': ['|',('memo_type','not in',['loan', 'Payment']),('state','not in',['Sent'])]}"  type="object" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit"/>
-                    <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Approve']), ('memo_type','not in',['Payment'])]}"/>
-                    <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
-                    <button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve']), ('memo_type','not in',['soe']),('user_is_approver','=', False)]}"/>
-                    <button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Approve']),('memo_type','not in',['loan'])]}"/>
-
-                    
+                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
+                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type','not in',['loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('is_request_completed','=', True),('memo_type','not in',['Payment'])]}"/>
+                    <button name="complete_memo_transactions" string="Generate &amp; Comfirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
+                    <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Done']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
+                    <button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Done']), ('memo_type','not in',['soe']),('user_is_approver','=', False)]}"/>
+                    <button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type','not in',['loan'])]}"/>
                     <!-- attrs="{'invisible':['&amp;',('memo_type','!=','Payment'),('state','in',['Approve'])]}"/> -->
-                    <button name="set_draft" states="Refuse" string="Set to Draft" type="object" class="btn-primary"/>
+                    <button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object" class="btn-primary"/>
+                    <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" class="btn-primary" attrs="{'invisible':[('state','!=',['sent'])]}" />
-                    <button name="user_done_memo" class="oe_stat_button oe_highlight" icon="fa-calendar" states="Approve2" help="Click to move to Done." type="object" confirm="Are you sure you want to Complete?" string="Complete"/>
+                    <!-- <button name="user_done_memo" class="oe_stat_button oe_highlight" icon="fa-calendar" states="Approve2" help="Click to move to Done." type="object" confirm="Are you sure you want to Complete?" string="Complete"/> -->
                     <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Refuse'])]}" type="object" class="oe_highlight"/>
-                    <field name="state" widget="statusbar" statusbar_visible="submit,Sent,Approve,Done"/><!--statusbar_visible="draft,reported,done,refused"-->
-
+                    <!-- <field name="state" widget="statusbar" statusbar_visible="submit,Sent,Approve,Done"/>statusbar_visible="draft,reported,done,refused" -->
+                    <field name="stage_id" widget="statusbar" readonly="0" options="{'clickable': '1'}"/>
                 </header>
                     <sheet>
                     <!-- https://i.imgur.com/ezqLtzV.jpg -->
@@ -34,27 +33,20 @@
                         <div class="row">
                                 <!-- <center><img src="/company_memo/static/img/usl.png" style="max-height:180px;max-width:400px;"/></center> -->
                             <div class="col-xs-4 pull-left mt8">
-                                <!-- <button name="user_approve_memo"
-                                    class="oe_stat_button oe_highlight"
-                                    icon="fa-calendar" 
-                                    attrs="{'invisible': ['|','|',('memo_type','!=','Internal'),('state','!=','Sent'),('user_is_approver','=', False)]}"
-                                    type="object" confirm ="Are you sure you want to approve?" string="Approve Memo"
-                                    groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit">
-                                </button> -->
                                  <button 
                                  name="user_approve_memo" 
                                  class="oe_stat_button oe_highlight" 
                                  icon="fa-calendar" 
                                  attrs="{'invisible': ['|', ('state','!=','Sent'),('user_is_approver','!=', True)]}" type="object" confirm="Are you sure you want to approve?" string="Approve Memo">
                                 </button>
-                                <!-- ('memo_type','!=','Internal'), -->
                                 <button name="return_memo"
                                     class="btn-danger oe_stat_button sm"
                                     icon="fa-redo"
                                     attrs="{'invisible': ['|', '|',('memo_type','not in',['Internal','server_access', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']),('state','!=','Sent'),('user_is_approver','!=', True)]}"
-                                    type="object" string="Return Memo">
+                                    type="object" string="Refuse"
+                                    confirm="Are you sure you want to refuse with comments?"
+                                    >
                             </button>
-                            <!-- groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_audit" -->
                             </div> 
                         </div>
                         <br/>
@@ -97,8 +89,9 @@
                             </group>
                             <group>
                                 <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'readonly':[('state','not in',['submit'])]}"/>
-                                 <field name="phone" readonly="1"/>
-                                 <field name="email" readonly="1"/>
+                                <field name="phone" readonly="1"/>
+                                <field name="email" readonly="1"/>
+                                <field name="memo_setting_id" invisible="0" force_save="1"/>
                                 <field name="direct_employee_id" required="0" invisible="1" string= "Through" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
                                 <field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
                                 <field name="demo_staff" invisible="1"/>
@@ -117,12 +110,9 @@
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
                                 <field name = "users_followers" widget="many2many_tags" required="0" readonly="1"/>
-                                <field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
+                                <field name = "res_users" widget="many2many_tags" required="0" readonly="0"/>  
                                 
-                                <field name="active" invisible="1"/>
-                                <field name="approver_id" invisible="1" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
-                                <field name="user_is_approver" invisible="1"/>
-
+                                <field name="active" invisible="1" groups="base.group_system"/>
                             </group> 
                             <group> 
                              
@@ -140,7 +130,10 @@
                                 <field name = "partner_id" string="Notification Reciepients" widget="many2many_tags" invisible="1" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                                 <field name="code"/>  
-
+                                <field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+                                <field name="user_is_approver" invisible="0" readonly="0"/>
+                                <field name="state" invisible="0" force_save="1" readonly="0"/>
+                                <field name="is_request_completed" readonly="0"/>
                             </group> 
                         </group>
                         <notebook>

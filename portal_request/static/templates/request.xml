@@ -137,7 +137,7 @@
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="char" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="staff_id">
-                                                    <span class="s_website_form_label_content">Staff ID</span>
+                                                    <span class="s_website_form_label_content">Staff / Vendor ID</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
@@ -154,7 +154,7 @@
                                                 <div class="col-sm">
                                                     <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">-- Select -- </option>
-                                                        <option value="server_access">Server Access Request</option>
+                                                        <option value="server_access">Internal / System Access Request</option>
                                                         <option value="material_request">Material request</option>
                                                         <option value="procurement_request">Procurement request</option>
                                                         <option value="payment_request">Payment Request</option>
@@ -168,7 +168,7 @@
                                                     <span class="s_website_form_label_content">Type of Request</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm" id="selectTypeRequestDiv">
                                                     <select name="selectTypeRequest" id="selectTypeRequest" required="required" data-init="new" class="form-control" labelfor="Request Type">
                                                         <option disabled="true" selected="true" value=""></option>
                                                         <option value="new" selected="true">New</option>
@@ -261,8 +261,9 @@
                                                 </div>
                                             </div>
                                         </div>
+ 
 
-                                        <div class="s_website_form_field mb-3 col-8 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="request_date">
                                                     <span class="s_website_form_label_content">Request Date</span>
@@ -270,6 +271,14 @@
                                                 </label>
                                                 <div class="col-sm">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="request_date" name="request_date" required="true" labelfor="Request Date"/>
+                                                </div>
+
+                                                <label class="col-form-label col-sm-auto s_website_form_label d-none" id="label_end_date" style="width: 200px" for="request_end_date">
+                                                    <span class="s_website_form_label_content">End Date</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <input type="text" class="form-control datepicker s_website_form_input d-none" id="request_end_date" name="request_end_date" required="false" labelfor="End Date"/>
                                                 </div>
                                             </div>
                                         </div> 
@@ -289,6 +298,13 @@
                                                             </option>
                                                         </t>
                                                     </select>
+                                                </div>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="other_docs">
+                                                    <span class="s_website_form_label_content">Documents</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="1" required="1"/>
                                                 </div>
                                             </div>
                                         </div> 

@@ -19,6 +19,20 @@ odoo.define('portal_request.portal_request', function (require) {
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
 
+    const NonItemRequest = [
+        'server_access', 
+        'payment_request',
+        'leave_request'
+
+    ];
+    const ItemRequest = [
+        'material_request', 
+        'Procurement',
+        'vehicle_request',
+        'leave_request',
+        'cash_advance',
+        'soe',
+    ];
     function getSelectedProductItem(valueName){
         // use to compile id no of the checked options for assessors and moderators
         let Items = [];
@@ -417,6 +431,18 @@ odoo.define('portal_request.portal_request', function (require) {
                     maxDate: null,
                     minDate: new Date()
                 });
+
+                $('#request_end_date').datepicker('destroy').datepicker({
+                    onSelect: function (ev) {
+                        $('#request_end_date').trigger('blur')
+                    },
+                    dateFormat: 'mm/dd/yy',
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: '2022:2050',
+                    maxDate: null,
+                    minDate: new Date()
+                });
             });
 
         },
@@ -604,12 +630,11 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#div_existing_order').addClass('d-none');
                 clearAllElement();
                 if(selectedTarget == "leave_request"){
+                    console.log('Yes leave is selected')
                     $('#leave_section').removeClass('d-none');
                     $('#leave_start_date').attr('required', true);
                     $('#leave_end_datex').attr('required', true);
                     $('#product_form_div').addClass('d-none');
-                    // $('#product_ids').addClass('d-none');
-                    // $('#product_ids').attr('required', false);
                     $('#amount_section').addClass('d-none');
                     $('#amount_fig').attr("required", false);
                 }
@@ -617,7 +642,11 @@ odoo.define('portal_request.portal_request', function (require) {
                     $('#amount_section').addClass('d-none');
                     $('#amount_fig').attr("required", false);
                     $('#product_form_div').addClass('d-none');
-                    console.log("request selected== ", selectedTarget);
+                    $('#label_end_date').removeClass('d-none');
+                    $('#request_end_date').removeClass('d-none');
+                    $('#request_end_date').attr('required', true);
+
+                    console.log("server request selected == ", selectedTarget);
                     displayNonLeaveElement()
                 }
                 // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
@@ -792,7 +821,15 @@ odoo.define('portal_request.portal_request', function (require) {
                         $('#div_existing_order').removeClass('d-none');
                         }
                 }
-                $('#product_form_div').removeClass('d-none');
+                // ensure that normal request such as server request, leave request and payment request
+                // does not show product item div elements
+                if ($.inArray($("#selectRequestOption").val(), ItemRequest) !== -1){
+                    $('#product_form_div').removeClass('d-none');
+                    console.log("item element selected")
+                }
+                else{
+                    $('#product_form_div').addClass('d-none');
+                }
             },
 
             'click .add_item_btn': function(ev){
@@ -946,6 +983,10 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#description').val('')
         $('#amount_fig').val('');
         $('#request_date').val('');
+        $('#request_end_date').val('');
+        $('#label_end_date').addClass('d-none');
+        $('#request_end_date').addClass('d-none');
+        $('#request_end_date').attr('required', false);
         $('#existing_order').val('');
         $('#request_status').val('');
         $('#product_ids').val('').trigger('change');

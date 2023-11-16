@@ -24,7 +24,6 @@
             <field name="category_id" ref="category_main_memo_app_group"/>
              <!-- <field name="users" eval="[(4, ref('base.group_system'))]"/> -->
         </record>
-
         <record id="mainmemo_manager" model="res.groups">
             <field name="name">Memo Manager</field>
             <field name="category_id" ref="category_main_memo_app_group"/>
@@ -36,15 +35,12 @@
             <!-- <field name="users" eval="[(4, ref('base.group_system'),ref('account.group_account_manager'),ref('account.group_account_invoice'))]"/> -->
         </record>
  
-        <record id="memo_employee_see_own_rule33" model="ir.rule">
+        <!-- <record id="memo_employee_see_own_rule33" model="ir.rule">
             <field name="name">Memo to Enable All Employee Access to their records</field>
             <field name="model_id" ref="model_memo_model"/>
-            <field name="groups" eval="[(6, 0, [ref('mainmemo_manager'),ref('mainmemo_officer')])]"/>
-
-            <field name="domain_force">['|', '|', ('users_followers.user_id','=', user.id), ('employee_id.user_id.id','=', user.id), ('direct_employee_id.user_id.id','=', user.id)]</field>
-            <!-- <field name="groups" eval="[(4, [ref('group_memo_xx_emp'), ref('group_memo_xx_manager'),ref('group_memo_xx_direct'), ref('group_memo_xx_coo'),ref('group_memo_xx_ed'),ref('group_memo_xx_account')])]"/> -->
-            
-        </record>
+            <field name="groups" eval="[(6, 0, [ref('mainmemo_manager'),ref('mainmemo_officer'), ref('base.group_user')])]"/>
+            <field name="domain_force">['|', '|', '|', ('approver_id.user_id','=', user.id), ('users_followers.user_id.id','=', user.id), ('employee_id.user_id.id','=', user.id),('direct_employee_id.user_id.id','=', user.id)]</field>
+        </record> -->
         <record id="account_memo_see_account_record" model="ir.rule">
             <field name="name">Memo Account Users See Records in Account</field>
             <field name="model_id" ref="model_memo_model"/>
@@ -73,9 +69,11 @@
             <field name="domain_force">[
             '|','|', '|',('direct_employee_id.user_id.id','=', user.id),
             ('employee_id.user_id.id','=', user.id),
-            ('users_followers.user_id','=', user.id), 
-            ('approver_id.user_id','=', user.id)]</field>
+            ('users_followers.user_id.id','=', user.id), 
+            ('approver_id.user_id.id','=', user.id)]</field>
         </record>
+
+     
 
        <!--  <record id="account_memo_see_account_record" model="ir.rule">
             <field name="name">Memo Account Users See Records in Account</field>

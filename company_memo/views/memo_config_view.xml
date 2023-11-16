@@ -1,38 +1,105 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-        
         <record id="memo_config_form" model="ir.ui.view">
             <field name="name">Memo User Setting</field>
             <field name="model">memo.config</field>
             <field name="arch" type="xml">
                 <form string="Memo Setting">
                     <header>
+                        <button name="auto_configuration" type="object" class="oe_highlight" string="Auto Configure" confirm="Are you sure? Note this will auto generate all department not yet configured"/>
                     </header>
-                    <group>
+                    <sheet>
                         <group>
-                            <field name="memo_type" required="1"/> 
-                            <field name="active" default="1"/> 
+                            <group>
+                                <field name="memo_type" required="1"/> 
+                                <field name="active" default="1" readonly="1"/> 
+                                <field name="department_id" required="1" options="{'no_create':True, 'no_open': False}"/> 
+                            </group>
+                            <group>
+                                <field name="approver_ids" string="Employees for Final Validation" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                            </group>
+                            <notebook>
+                                <page string="Stages">
+                                    <field name="stage_ids" domain="[('id', '=', None)]" required="1" context="{'default_memo_config_id': active_id}">
+                                        <tree string="stages">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="name"/>
+                                            <field name="id"/>
+                                            <field name="approver_id" options="{'no_create':True, 'no_open': False}"/>
+                                            <field name="is_approved_stage"/>
+                                            <field name="memo_config_id" force_save="1" invisible="0" options="{'no_create':True, 'no_open': False}"/>
+                                            <field name="active"/>
+                                            
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook> 
                         </group>
-                        <group>
-                            <field name="approver_ids" required="0" widget="many2many_tags"/>
-                        </group>
-                    </group>
+                    </sheet>
                 </form>
             </field>
         </record>
+
+        <record id="view_memo_config_filter" model="ir.ui.view">
+			<field name="name">Memo settings</field>
+			<field name="model">memo.config</field>
+			<field name="arch" type="xml">
+				<search string="Search">
+                    <field name="department_id"/>
+                    <field name="memo_type"/>
+                    <filter string="Active" name="memo_active_filter" domain="[('active','=', True)]"/>
+                    <filter string="InActive" name="memo_inactive_filter" domain="[('active','=', False)]"/>
+                    <group  expand='0' string='Group by...'>
+                        <filter name="group_memo_department_id" string='Department' domain="[]" context="{'group_by' : 'department_id'}"/>
+                    </group>
+				</search>
+			</field>
+		</record>
         <record model="ir.actions.act_window" id="memo_configuration_action">
             <field name="name">Memo Configuration</field>
             <field name="res_model">memo.config</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_group_memo_department_id': 1}</field>
         </record>
+
         <menuitem id="memo_configuration" name="Configuration"
             parent="internal_memo_menu_model_main2" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
         <menuitem id="memo_approvers_configuration" name="Approvers"
             parent="memo_configuration" action="memo_configuration_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
             
 
+        <record id="memo_stage_form" model="ir.ui.view">
+            <field name="name">Memo Stage Setting</field>
+            <field name="model">memo.stage</field>
+            <field name="arch" type="xml">
+                <form string="Memo Stage">
+                    <header>
+                    </header>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/> 
+                            <field name="sequence" required="1"/> 
+                            <field name="active" default="1"/> 
+                        </group>
+                        <group>
+                            <field name="approver_id" required="0"/> 
+                            <field name="is_approved_stage" default="0"/> 
+                            <field name="memo_config_id" readonly="1" required="1" force_save="1" string="Parent setting"/> 
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="memo_stage_action">
+            <field name="name">Memo stage</field>
+            <field name="res_model">memo.stage</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="memo_stage_configuration" name="Stage(s)"
+            parent="memo_configuration" action="memo_stage_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
         
     </data>
 </odoo>

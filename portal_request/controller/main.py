@@ -392,6 +392,7 @@ class PortalRequest(http.Controller):
 			product = request.env['product.product'].sudo().search(
 			[
 				('active', '=', True),
+				# ('detailed_type', '=', 'product'),
 				('id', '=', int(product_id))
 			], 
 			limit=1) 
@@ -408,7 +409,7 @@ class PortalRequest(http.Controller):
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
-				if request_type in ['material_request']:
+				if request_type in ['material_request'] and product.detailed_type in ['product']:
 					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
 					product_qty = float(qty) if qty else 0
 					if product_qty > total_availability:
@@ -438,7 +439,19 @@ class PortalRequest(http.Controller):
 				}
 
 	# total_availability = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
-
+	
+	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
+		attachment = request.env['ir.attachment'].sudo()
+		attachment_id = attachment.create({
+            'name': f'{title} for {name}',
+			'type': 'binary',
+			'datas': datas,
+			'res_name': name,
+			'res_model': model,
+			'res_id': res_id,
+		})
+		return attachment_id
+	
 	# portal_request data_process form post
 	@http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
 	def portal_data_process(self, **post):
@@ -496,9 +509,9 @@ class PortalRequest(http.Controller):
 			"leave_end_date": leave_end_date,
 			"district_id": district_id,
 			# or district_id or int(post.get("selectDistrict")) if post.get("selectDistrict") else 1, #int(post.get("selectDistrict")) if post.get("selectDistrict") else memo_id.district_id.id if memo_id else False,
-			"approver_id": employee_id.parent_id.id, 
+			# "approver_id": employee_id.parent_id.id, 
 			"state": "Sent",
-			"direct_employee_id": employee_id.parent_id.id, 
+			# "direct_employee_id": employee_id.parent_id.id, 
 			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 			"res_users": [
 				(4, employee_id.parent_id.user_id.id), 
@@ -511,6 +524,8 @@ class PortalRequest(http.Controller):
 		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
 		productItems = []
 		productItems = json.loads(post.get('productItems'))
+
+
 		memo_obj = request.env['memo.model']
 		if not memo_id:
 			_logger.info("Memo id creating")
@@ -522,13 +537,39 @@ class PortalRequest(http.Controller):
 		if productItems:
 			_logger.info(f'PRODUCT IDS IS HERE {productItems}')
 			self.generate_request_line(productItems, memo_id) # LA
+		
+		## generating attachment
+		if 'other_docs' in request.params:
+			attached_files = request.httprequest.files.getlist('other_docs')
+			for attachment in attached_files:
+				file_name = attachment.filename
+				datas = base64.b64encode(attachment.read())
+				other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
+            
+		####
 		# memo_id.action_submit_button()
-		memo_id.forward_memos(
+		stage_id = memo_id.get_initial_stage(
+			memo_id.memo_type, 
+			memo_id.employee_id.department_id.id or memo_id.department_id.id
+			)
+		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
+		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
+		_logger.info(f'Successfully Registered! with memo id Approver = {approver_id} stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
+		memo_id.sudo().write({
+			'stage_id': next_stage_id, 
+			'approver_id': approver_id,
+			"direct_employee_id": approver_id, 
+			'users_followers': [(4, approver_id)],
+			'memo_setting_id': stage_obj.memo_config_id.id,
+		})
+		memo_id.confirm_memo(
 				memo_id.direct_employee_id or employee_id.parent_id.id, 
-				post.get("description", "")
+				post.get("description", ""),
+				from_website=True
 				)
 		request.session['memo_ref'] = memo_id.code
-		_logger.info('Successfully Registered!')
+		_logger.info(f'Successfully Registered! with memo id stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
 		return json.dumps({'status': True, 'message': "Form Submitted!"})
 	
 	def generate_request_line(self, product_items, memo_id):
@@ -629,15 +670,16 @@ class PortalRequest(http.Controller):
 		values = {'requests': requests}
 		return request.render("portal_request.my_portal_request", values)
 	
-	@http.route('/my/request/view/<int:id>', type='http', auth="user", website=True)
+	@http.route('/my/request/view/<string:id>', type='http', auth="user", website=True)
 	def my_single_request(self, id):
+		id = int(id) if id else 0
 		"""This route is used to call the requesters or user record for display"""
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('id', '=', id),
+				('id', '=', int(id)),
 			]
 		requests = request_id.search(domain, limit=1)
 		values = {'req': requests}
@@ -648,12 +690,26 @@ class PortalRequest(http.Controller):
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
 		domain = [
-				('employee_id.user_id', '=', user.id),
-				('id', '=', id),
-				('state', '=', "Sent"),
-			]
-		requests = request_id.search(domain, limit=1)
-		requests.write({'state': status})
-		return request.redirect('/my/request/view/%s' %(requests.id))
-
- 
+			('employee_id.user_id', '=', user.id),
+			('id', '=', id),
+			# ('state', 'in', ['Refuse']),
+		]
+		request_record = request_id.search(domain, limit=1)
+		stage_id = False
+		if status == "cancel":
+			stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+			request_record.write({'state': 'Refuse', 'stage_id': stage_id})
+		elif status == "Sent":
+			stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
+				request_record.sudo().memo_setting_id.stage_ids else \
+					request.env.ref('company_memo.memo_cancel_stage').id
+			request_record.write({'state': 'Sent', 'stage_id': stage_id})
+		elif status in ["Refuse"]:
+			# useds this to determine the stages configured on the system
+			# if the length of stages is just 1, try the first condition else,
+			# set the stage to the next stage after draft.
+			memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
+			if memoStage_ids:
+				stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+				request_record.write({'state': 'Sent', 'stage_id': stage_id})
+		return request.redirect(f'/my/request/view/{id}')# %(requests.id))

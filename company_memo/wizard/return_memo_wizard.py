@@ -14,7 +14,7 @@ class Send_Memo_back(models.Model):
     reason = fields.Char('Reason') 
     date = fields.Datetime('Date')
     direct_employee_id = fields.Many2one('hr.employee', 'Direct To')
-     
+
     def get_url(self, id, name):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
         base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
@@ -25,12 +25,13 @@ class Send_Memo_back(models.Model):
         reasons = "<b><h4>Refusal Message From: %s </b></br> Please refer to the reasons below:</h4></br>* %s." %(self.env.user.name,self.reason)
         get_state.write({'reason_back': reasons})
         if self.reason:
-            msg_body = "Dear Sir/Madam, </br>We wish to notify you that a Memo request from {} has been refused / returned. </br>\
-             </br>Kindly {} to Review</br> </br>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
+            msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
+             <br/>Kindly {} to Review</br> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
             get_state.write({
-                'state':'Refuse', 
+                'state':'Refuse',
+                'stage_id': self.env.ref("company_memo.memo_refuse_stage").id,
                 'users_followers': [(4, self.direct_employee_id.id)],
-                'set_staff': self.direct_employee_id.id
+                'set_staff': self.direct_employee_id.id,
                 })
             for rec in get_state.res_users:
                 if get_state.user_ids.id == rec.id:
@@ -57,4 +58,9 @@ class Send_Memo_back(models.Model):
             }
         mail_id = self.env['mail.mail'].create(mail_data)
         self.env['mail.mail'].send(mail_id)
+        self.memo_record.message_post(body=_(msg_body),
+                              message_type='comment',
+                              subtype_xmlid='mail.mt_note',
+                              author_id=self.env.user.partner_id.id)
+        
         
