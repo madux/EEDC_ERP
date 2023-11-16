@@ -198,13 +198,15 @@ class Memo_Model(models.Model):
             domain=[('id', '=', 0)]
         return domain
     
-    def trigger_initial_stage(self):
+    @api.onchange('memo_type')
+    def get_default_stage_id(self):
+        """ Gives default stage_id """
         if self.memo_type:
             if not self.res_users:
-                department_id = self.employee_id.department_id.id
+                department_id = self.employee_id.department_id
                 ms = self.env['memo.config'].sudo().search([
                     ('memo_type', '=', self.memo_type),
-                    ('department_id', '=', department_id)
+                    ('department_id', '=', department_id.id)
                     ], limit=1)
                 if ms:
                     memo_setting_stage = ms.stage_ids[0]
@@ -214,8 +216,7 @@ class Memo_Model(models.Model):
                     self.memo_type = False
                     self.stage_id = False
                     self.memo_setting_id = False
-                    msg = "No stage configured for this memo type. Please contact administrator"
-                    # raise ValidationError(msg)
+                    msg = f"No stage configured for department {department_id.name} and selected memo type. Please contact administrator"
                     return {'warning': {
                                 'title': "Validation",
                                 'message':msg,
@@ -224,12 +225,6 @@ class Memo_Model(models.Model):
         else:
             self.stage_id = False
 
-    @api.onchange('memo_type')
-    def get_default_stage_id(self):
-        """ Gives default stage_id """
-        # memo_type = self.env.context.get('default_memo_type') or self.memo_type
-        self.trigger_initial_stage()
-    
     # @api.depends('approver_id')
     def compute_user_is_approver(self):
         for rec in self:
@@ -535,10 +530,10 @@ class Memo_Model(models.Model):
         self.update_final_state_and_approver(from_website)
         self.mail_sending_direct(body_msg)
         body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(
-            type, 
-            self.name, 
-            Beneficiary, 
-            self.env.user.name, 
+            type,
+            self.name,
+            Beneficiary,
+            self.env.user.name,
             employee
             )
         body_main = body + "\n with the comments: %s" %(comments)
@@ -548,7 +543,7 @@ class Memo_Model(models.Model):
         subject = "Memo Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
-        stage_approver_list = [appr.work_email for appr in self.stage_id.memo_config_id.approver_ids if appr.work_email]
+        stage_approver_list = [appr.work_email for appr in self.stage_id.memo_config_id.approver_ids if appr.work_email] if self.stage_id.memo_config_id.approver_ids else []
         email_list = follower_list + stage_approver_list
         mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email or self.direct_employee_id.work_email
         # emails = (','.join(str(item2.work_email) for item2 in self.users_followers if item2.work_email))
@@ -615,8 +610,8 @@ class Memo_Model(models.Model):
                 Forward it to the authorized Person""")
         if self.env.uid != self.stage_id.approver_id.user_id.id:
             raise ValidationError(
-                """You are not Permitted to approve this Memo. Contact the authorized Person
-            """)
+                """You are not Permitted to approve this Memo. Contact the authorized Person"""
+                )
         body = "MEMO APPROVE NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
         type = "request"
         body_msg = f"""Dear {self.employee_id.name}, <br/>I wish to notify you that a {type} with description, '{self.name}',\

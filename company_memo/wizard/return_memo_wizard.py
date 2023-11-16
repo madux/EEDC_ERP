@@ -25,8 +25,8 @@ class Send_Memo_back(models.Model):
         reasons = "<b><h4>Refusal Message From: %s </b></br> Please refer to the reasons below:</h4></br>* %s." %(self.env.user.name,self.reason)
         get_state.write({'reason_back': reasons})
         if self.reason:
-            msg_body = "Dear Sir/Madam, </br>We wish to notify you that a Memo request from {} has been refused / returned. </br>\
-             </br>Kindly {} to Review</br> </br>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
+            msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
+             <br/>Kindly {} to Review</br> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
             get_state.write({
                 'state':'Refuse',
                 'stage_id': self.env.ref("company_memo.memo_refuse_stage").id,
@@ -58,4 +58,9 @@ class Send_Memo_back(models.Model):
             }
         mail_id = self.env['mail.mail'].create(mail_data)
         self.env['mail.mail'].send(mail_id)
+        self.memo_record.message_post(body=_(msg_body),
+                              message_type='comment',
+                              subtype_xmlid='mail.mt_note',
+                              author_id=self.env.user.partner_id.id)
+        
         

@@ -439,7 +439,19 @@ class PortalRequest(http.Controller):
 				}
 
 	# total_availability = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
-
+	
+	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
+		attachment = request.env['ir.attachment'].sudo()
+		attachment_id = attachment.create({
+            'name': f'{title} for {name}',
+			'type': 'binary',
+			'datas': datas,
+			'res_name': name,
+			'res_model': model,
+			'res_id': res_id,
+		})
+		return attachment_id
+	
 	# portal_request data_process form post
 	@http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
 	def portal_data_process(self, **post):
@@ -512,6 +524,8 @@ class PortalRequest(http.Controller):
 		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
 		productItems = []
 		productItems = json.loads(post.get('productItems'))
+
+
 		memo_obj = request.env['memo.model']
 		if not memo_id:
 			_logger.info("Memo id creating")
@@ -523,6 +537,16 @@ class PortalRequest(http.Controller):
 		if productItems:
 			_logger.info(f'PRODUCT IDS IS HERE {productItems}')
 			self.generate_request_line(productItems, memo_id) # LA
+		
+		## generating attachment
+		if 'other_docs' in request.params:
+			attached_files = request.httprequest.files.getlist('other_docs')
+			for attachment in attached_files:
+				file_name = attachment.filename
+				datas = base64.b64encode(attachment.read())
+				other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
+            
+		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
 			memo_id.memo_type, 
@@ -668,19 +692,24 @@ class PortalRequest(http.Controller):
 		domain = [
 			('employee_id.user_id', '=', user.id),
 			('id', '=', id),
-			('state', '=', "Sent"),
-			('res_users', '=', False),
+			# ('state', 'in', ['Refuse']),
 		]
 		request_record = request_id.search(domain, limit=1)
 		stage_id = False
 		if status == "cancel":
 			stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+			request_record.write({'state': 'Refuse', 'stage_id': stage_id})
 		elif status == "Sent":
 			stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
 				request_record.sudo().memo_setting_id.stage_ids else \
 					request.env.ref('company_memo.memo_cancel_stage').id
-			# raise ValidationError(requests.memo_setting_id.stage_ids[0].name)
-		request_record.write({'state': status, 'stage_id': stage_id})
+			request_record.write({'state': 'Sent', 'stage_id': stage_id})
+		elif status in ["Refuse"]:
+			# useds this to determine the stages configured on the system
+			# if the length of stages is just 1, try the first condition else,
+			# set the stage to the next stage after draft.
+			memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
+			if memoStage_ids:
+				stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+				request_record.write({'state': 'Sent', 'stage_id': stage_id})
 		return request.redirect(f'/my/request/view/{id}')# %(requests.id))
-
- 

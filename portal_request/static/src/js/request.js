@@ -431,6 +431,18 @@ odoo.define('portal_request.portal_request', function (require) {
                     maxDate: null,
                     minDate: new Date()
                 });
+
+                $('#request_end_date').datepicker('destroy').datepicker({
+                    onSelect: function (ev) {
+                        $('#request_end_date').trigger('blur')
+                    },
+                    dateFormat: 'mm/dd/yy',
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: '2022:2050',
+                    maxDate: null,
+                    minDate: new Date()
+                });
             });
 
         },
@@ -630,6 +642,10 @@ odoo.define('portal_request.portal_request', function (require) {
                     $('#amount_section').addClass('d-none');
                     $('#amount_fig').attr("required", false);
                     $('#product_form_div').addClass('d-none');
+                    $('#label_end_date').removeClass('d-none');
+                    $('#request_end_date').removeClass('d-none');
+                    $('#request_end_date').attr('required', true);
+
                     console.log("server request selected == ", selectedTarget);
                     displayNonLeaveElement()
                 }
@@ -967,6 +983,10 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#description').val('')
         $('#amount_fig').val('');
         $('#request_date').val('');
+        $('#request_end_date').val('');
+        $('#label_end_date').addClass('d-none');
+        $('#request_end_date').addClass('d-none');
+        $('#request_end_date').attr('required', false);
         $('#existing_order').val('');
         $('#request_status').val('');
         $('#product_ids').val('').trigger('change');
