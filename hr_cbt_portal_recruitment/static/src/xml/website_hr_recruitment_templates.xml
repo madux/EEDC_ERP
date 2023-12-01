@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    
+    <template id="custom_website_description" inherit_id="website_hr_recruitment.default_website_description">
+        <!-- Update the content inside the dynamic section -->
+        <xpath expr="//section[@data-snippet='s_comparisons']" position="replace">
+            <section class="s_comparisons pt24 pb24 bg-200" data-snippet="s_comparisons">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-4 s_col_no_bgcolor pt16 pb16" t-if="job_section_descriptions">
+                            <t t-foreach="job_section_descriptions" t-as="section">
+                                <div class="card text-bg-primary">
+                                    <h4 class="card-header"><t t-esc="section.title"/></h4>
+                                    <ul class="list-group list-group-flush">
+                                        <t t-foreach="section.job_descriptions" t-as="description">
+                                            <li class="list-group-item"><t t-esc="description.description"/></li>
+                                        </t>
+                                    </ul>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </xpath>
+    </template>
+    
+</odoo>
