@@ -18,25 +18,6 @@
             <field name="close_date" required="True" />
           <!-- </group> -->
         </xpath>
-        <!-- <xpath expr="//page[@name='job_description_page']" position="after">
-          <page string="Descriptions" name="more_descriptions">
-              <field name="job_section_descriptions">
-                <form>
-                  <group>
-                    <field name="title" />
-                  </group>
-                  <field name="job_descriptions">
-                    <tree>
-                        <field name="description" />
-                    </tree>
-                  </field>
-                </form>
-                <tree>
-                  <field name="title" />
-                </tree>
-              </field>
-          </page>
-        </xpath> -->
         <xpath expr="//notebook" position="inside">
             <page string="Descriptions" name="more_descriptions">
                 <field name="job_section_descriptions" domain="[('id', '=', None)]">

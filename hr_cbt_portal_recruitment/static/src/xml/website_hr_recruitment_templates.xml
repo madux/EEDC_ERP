@@ -138,6 +138,13 @@
                     
                     <!-- Photos -->
                     <section class="pt24 pb16">
+                        <style>
+                            .row2 img {
+                                height: 100%; /* Set the height to 100% of the container */
+                                width: auto; /* Maintain the aspect ratio */
+                                object-fit: cover; /* Ensure the entire image is visible, maintaining aspect ratio */
+                            }
+                        </style>
                         <div class="container">
                             <div class="row">
                                 <div class="col-md-12 col-lg-4 mt16 mb16">
@@ -148,6 +155,17 @@
                                 </div>
                                 <div class="col-md-6 col-lg-4 mt16 mb16">
                                     <img alt="" class="img img-fluid" src="/hr_cbt_portal_recruitment/static/src/img/job_page_img3.jpg"/>
+                                </div>
+                            </div>
+                            <div class="row row2">
+                                <div class="col-md-12 col-lg-4 mt16 mb16">
+                                    <img alt="" class="img img-fluid" src="/hr_cbt_portal_recruitment/static/src/img/job_page_img5.jpg"/>
+                                </div>
+                                <div class="col-md-6 col-lg-4 mt16 mb16">
+                                    <img alt="" class="img img-fluid" src="/hr_cbt_portal_recruitment/static/src/img/job_page_img4.jpg"/>
+                                </div>
+                                <div class="col-md-6 col-lg-4 mt16 mb16">
+                                    <img alt="" class="img img-fluid" src="/hr_cbt_portal_recruitment/static/src/img/job_page_img8.jpg"/>
                                 </div>
                             </div>
                         </div>

@@ -3,8 +3,7 @@
 from datetime import date, datetime
 from odoo import models, fields, api, _
 from dateutil.relativedelta import relativedelta
-# from odoo.tools import mute_logger
-# from odoo.tools.translate import html_translate
+
  
 class HrJob(models.Model):
     _inherit = 'hr.job'
@@ -49,36 +48,25 @@ class HrJob(models.Model):
                 }
             
 
-    job_section_descriptions = fields.Many2many('description.sections')
-
-    # @api.model
-    # @mute_logger('odoo.addons.base.models.ir_qweb')
-    # def _get_default_website_description(self):
-    #     sections = self.env['description.sections'].sudo().search([])
-
-    #     template = self.env['ir.qweb']._render(
-    #         "website_hr_recruitment.default_website_description",
-    #         {'job_section_descriptions': sections},
-    #         raise_if_not_found=False
-    #     )
-
-    #     return template
-    
-    # website_description = fields.Html(
-    #     'Website description', translate=html_translate,
-    #     default=_get_default_website_description, prefetch=True,
-    #     sanitize_overridable=True,
-    #     sanitize_attributes=False, sanitize_form=False)
+    job_section_descriptions = fields.Many2many('description.sections') # Table objects for storing different sections of descriptions
 
 
     class hrJobDescriptionSection(models.Model):
         _name = 'description.sections'
 
+        """
+            This is the definition of the description section
+        """
+
         title = fields.Char()
-        job_descriptions = fields.One2many('job.descriptions', 'section_description')
+        job_descriptions = fields.One2many('job.descriptions', 'section_description') # Table objects for the description in each section.
 
     class hrJobDescriptions(models.Model):
         _name = 'job.descriptions'
+
+        """
+            This is the definition of the descriptions for each section
+        """
 
         description = fields.Char()
         section_description = fields.Many2one('description.sections')
