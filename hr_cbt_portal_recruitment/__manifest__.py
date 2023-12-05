@@ -22,9 +22,11 @@
     ],
 
     'data': [
+        'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
         'views/career.xml',
+        'static/src/xml/website_hr_recruitment_templates.xml',
         'views/hr_employee.xml',
         'views/hr_recruitment_request.xml',
         # 'views/company_memo_inherit.xml',
@@ -41,4 +43,8 @@
         'web.assets_frontend': [
         '/hr_cbt_portal_recruitment/static/src/js/recruitment_apply_form.js',
     ]},
+    'qweb': [
+        # 'static/src/xml/custom_template.xml',
+        # 'static/src/xml/website_hr_recruitment_templates.xml'
+    ]
 }
