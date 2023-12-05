@@ -59,6 +59,7 @@ class Memo_Model(models.Model):
         ("server_access", "Server Access Request"), 
         ("cash_advance", "Cash Advance"),
         ("soe", "Statement of Expense"),
+        ("recruitment_request", "Recruitment Request"),
         ], string="Memo Type", required=True)
 
     name = fields.Char('Subject', size=400)
@@ -187,6 +188,60 @@ class Memo_Model(models.Model):
         string="Memo config id", 
         # related="stage_id.memo_config_id"
         )
+    
+    ###############3 RECRUITMENT ##### 
+    job_id = fields.Many2one('hr.job', string='Requested Position',
+                             states={'submit': [('required', True)],
+                                     'submit':[('readonly', False)],
+                                     },
+                             help='The Job Position you expected to get more hired.',
+                             )
+    job_tmp = fields.Char(string="Job Title",
+                          size=256,
+                          readonly=True,
+                          states={'submit': [('required', True)],
+                                     'submit':[('readonly', False)],
+                                     },)
+    
+    established_position = fields.Selection([('yes', 'Yes'),
+                                ('no', 'No'),
+                              ], string='Established Position', index=True,
+                             copy=False,
+                             readonly=True,
+                             store=True,
+                             states={'submit': [('required', True)],
+                                     'submit':[('readonly', False)],
+                                     })
+    recruitment_mode = fields.Selection([('Internal', 'Internal'),
+                                ('External', 'External'),
+                                ('Outsourced', 'Outsourced'),
+                              ], string='Recruitment Mode', index=True,
+                             copy=False,
+                             readonly=True,
+                             store=True,
+                             states={'submit': [('required', True)],
+                                     'submit':[('readonly', False)],
+                                     })
+    requested_department_id = fields.Many2one('hr.department', string ='Requested Department for Recruitment') 
+    qualification = fields.Char('Qualification')
+    age_required = fields.Char('Required Age')
+    years_of_experience = fields.Char('Years of Experience')
+    expected_employees = fields.Integer('Expected Employees', default=1,
+                                        help='Number of extra new employees to be expected via the recruitment request.',
+                                        required=False,
+                                        index=True,
+                                        )
+    recommended_by = fields.Many2one('hr.employee', string='Recommended by',
+                                     states={
+                                         'submit':[('readonly', False)],
+                                     })
+    date_expected = fields.Date('Expected Date',
+                                states={
+                                         'submit': [('required', True)],
+                                         'submit':[('readonly', False)],
+                                     }, index=True)
+
+    ################################
 
     def _get_related_stage(self):
         if self.memo_type:
@@ -228,12 +283,16 @@ class Memo_Model(models.Model):
     # @api.depends('approver_id')
     def compute_user_is_approver(self):
         for rec in self:
-            if rec.approver_id and rec.approver_id.user_id.id == self.env.user.id:
+            if rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
                 rec.user_is_approver = True
                 rec.users_followers = [(4, self.env.user.employee_id.id)]
-            elif rec.determine_if_user_is_config_approver():
-                rec.user_is_approver = True
-                rec.users_followers = [(4, self.env.user.employee_id.id)]
+            # elif rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
+            #     raise ValidationError("FUCK")
+            #     rec.user_is_approver = True
+            #     rec.users_followers = [(4, self.env.user.employee_id.id)]
+            # elif rec.determine_if_user_is_config_approver():
+            #     rec.user_is_approver = True
+            #     rec.users_followers = [(4, self.env.user.employee_id.id)]
             else:
                 rec.user_is_approver = False
  
@@ -630,7 +689,9 @@ class Memo_Model(models.Model):
         elif self.memo_type == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
         elif self.memo_type == "vehicle_request":
-            self.generate_vehicle_request(body_msg, body) 
+            self.generate_vehicle_request(body_msg) 
+        elif self.memo_type == "recruitment_request":
+            self.generate_recruitment_request(body_msg) 
         elif self.memo_type == "leave_request":
             self.generate_leave_request(body_msg, body)
         elif self.memo_type == "cash_advance":
@@ -750,13 +811,64 @@ class Memo_Model(models.Model):
             #         f"Purchase Order - {po.name}"
             #         )
 
-    def generate_vehicle_request(self, body_msg, body):
+    def generate_vehicle_request(self, body_msg):
         # TODO: generate fleet asset
         self.state = 'Done'
         self.is_request_completed = True
         # self.sudo().update_final_state_and_approver()
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
+
+    def generate_recruitment_request(self, body_msg):
+        """
+        Create HR job application ready for publication 
+        """
+        recruitment_request_obj = self.env['hr.job.recruitment.request']
+        existing_hrr = recruitment_request_obj.search([
+            ('memo_id', '=', self.id),
+            ], limit=1)
+        if not existing_hrr:
+            vals = {
+                'job_tmp': self.job_tmp,
+                'department_id': self.requested_department_id.id,
+                'name': self.name,
+                'recruitment_mode': self.recruitment_mode,
+                'job_id': self.job_id.id,
+                'user_id': self.employee_id.user_id.id,
+                'user_to_approve_id': self.stage_id.approver_id.id,
+                'expected_employees': self.expected_employees,
+                'recommended_by': self.recommended_by.id,
+                'description': self.description,
+                'requirements': self.qualification,
+                'age_required': self.age_required,
+                'years_of_experience': self.age_required,
+                'state': 'draft',
+                'date_expected': self.date_expected,
+                'date_accepted': fields.Date.today(),
+                'date_confirmed': fields.Date.today(),
+            }
+            rr_id = recruitment_request_obj.create(vals)
+        else:
+            rr_id = existing_hrr
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        # is_config_approver = self.determine_if_user_is_config_approver()
+        self.state = 'Done'
+        # if is_config_approver:
+        """Check if the user is enlisted as the approver for memo type"""
+        view_id = self.env.ref('hr_cbt_portal_recruitment.hr_job_recruitment_request_form_view').id
+        ret = {
+            'name': "Recruitment request",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'hr.job.recruitment.request',
+            'res_id': rr_id.id,
+            'type': 'ir.actions.act_window',
+            'domain': [],
+            'target': 'new'
+            }
+        return ret
 
     def generate_leave_request(self, body_msg, body):
         leave = self.env['hr.leave'].sudo()

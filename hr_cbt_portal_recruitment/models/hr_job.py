@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 class HrJob(models.Model):
     _inherit = 'hr.job'
  
+    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", store=True)
     datetime_publish = fields.Date("Date Published")
     close_date = fields.Date("Closing Date")
 
