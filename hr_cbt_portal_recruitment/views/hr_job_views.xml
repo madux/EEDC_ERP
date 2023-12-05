@@ -18,7 +18,7 @@
             <field name="close_date" required="True" />
           <!-- </group> -->
         </xpath>
-        <xpath expr="//page[@name='job_description_page']" position="after">
+        <!-- <xpath expr="//page[@name='job_description_page']" position="after">
           <page string="Descriptions" name="more_descriptions">
               <field name="job_section_descriptions">
                 <form>
@@ -36,37 +36,26 @@
                 </tree>
               </field>
           </page>
-          
-        <!-- <page string="Descriptions" name="more_descriptions">
-          <field name="job_section_descriptions">
-              <tree>
-                  <field name="title"/>
-              </tree>
-              <form>
-                  <group>
-                      <field name="title"/>
-                  </group>
-                  <notebook>
-                      <t t-foreach="job_section_descriptions" t-as="section">
-                          <page t-if="section.title" t-att-string="section.title" name="section_{$section.id}">
-                              <field name="job_descriptions">
-                                  <tree editable="bottom">
-                                      <field name="description"/>
-                                  </tree>
-                                  <form>
-                                      <group>
-                                          <field name="description"/>
-                                      </group>
-                                  </form>
-                              </field>
-                          </page>
-                      </t>
-                  </notebook>
-              </form>
-          </field>
-      </page> -->
-          
-      </xpath>
+        </xpath> -->
+        <xpath expr="//notebook" position="inside">
+            <page string="Descriptions" name="more_descriptions">
+                <field name="job_section_descriptions" domain="[('id', '=', None)]">
+                  <form>
+                    <group>
+                      <field name="title" />
+                    </group>
+                    <field name="job_descriptions">
+                      <tree>
+                          <field name="description" />
+                      </tree>
+                    </field>
+                  </form>
+                  <tree>
+                    <field name="title" />
+                  </tree>
+                </field>
+            </page>
+          </xpath>
       </field>
     </record>
     
