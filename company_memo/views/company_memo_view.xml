@@ -316,7 +316,7 @@
         </record>
 
         <menuitem id="internal_memo_menu_model_main2" name="Office Memo" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer" action = "internal_memo_model_action" sequence = "2" web_icon="company_memo,static/description/icon.png"/>
-        <menuitem id="account_loan_request_menu" name="Loan Request" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer,base.group_user" sequence = "10" web_icon="company_memo,static/description/loan_icon.png"/>
+        <!-- <menuitem id="account_loan_request_menu" name="Loan Request" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer,base.group_user" sequence = "10" web_icon="company_memo,static/description/loan_icon.png"/>
             <menuitem id="account_loan_request_menu_node1" name="Request(s)"
             parent="account_loan_request_menu" sequence= "1" action = "loan_request_action" />
 
@@ -328,7 +328,7 @@
                 action="account_loan.account_loan_action"
                 groups="account.group_account_user,account.group_account_invoice,account.group_account_manager,base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account"
 
-            />
+            /> -->
 
         <menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
             parent="internal_memo_menu_model_main2" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
