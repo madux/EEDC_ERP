@@ -60,6 +60,7 @@ class MemoConfig(models.Model):
         ("server_access", "Server Access Request"),
         ("cash_advance", "Cash Advance"),
         ("soe", "Statement of Expense"),
+        ("recruitment_request", "Recruitment Request"),
         ], string="Memo Type",default="", required=True)
     
     approver_ids = fields.Many2many(

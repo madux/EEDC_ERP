@@ -21,8 +21,9 @@ class PurchaseOrder(models.Model):
     
     def button_confirm(self):
         # is request completed is used to determine if the entire process is done
-        self.memo_id.is_request_completed = True
-        self.sudo().memo_id.update_final_state_and_approver()
+        if self.memo_id:
+            self.memo_id.is_request_completed = True
+            self.sudo().memo_id.update_final_state_and_approver()
         res = super(PurchaseOrder, self).button_confirm()
         return res
     

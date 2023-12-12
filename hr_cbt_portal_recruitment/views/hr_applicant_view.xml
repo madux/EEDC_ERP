@@ -56,7 +56,7 @@
                             </group>
                         </group>
                     </page> 
-                    <page name="CBT_Information" string="CBT Information">
+                    <page name="CBT_Information" string="CBT Information" invisible="1">
                         <group>
                             <group> 
                                 <field name="cbt_scheduled_date" readonly="1" force_save="1"/>
@@ -72,7 +72,7 @@
                         </group>
                         
                     </page> 
-                    <page name="cbt_applicants_survey" string="Applicant's Test">
+                    <page name="cbt_applicants_survey" string="CBT Information / Applicant's Test">
                         <field name="survey_user_input_id" string="CBT Sent" readonly="1"
                         context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}"/>
                         <group>
@@ -107,6 +107,17 @@
                 <filter string="Score: 80 - 89" name="score_0_80" domain="[('scoring_percentage','&gt;', 79),('scoring_percentage','&lt;', 90)]"/>
                 <filter string="Score: 90 - 99" name="score_0_90" domain="[('scoring_percentage','&gt;', 89),('scoring_percentage','&lt;', 100)]"/>
                 <filter string="Score: 100" name="score_0_100" domain="[('scoring_percentage','=', 100)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="cbt_hr_recruitment_inherit_crm_case_tree_view_job" model="ir.ui.view">
+        <field name="name">hr.applicant.view.list.inherit.cbt</field>
+        <field name="model">hr.applicant</field>
+        <field name="inherit_id" ref="hr_recruitment.crm_case_tree_view_job"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='create_date']" position="before">
+                <field name="test_passed" readonly="1" force_save="1"/>
             </xpath>
         </field>
     </record>

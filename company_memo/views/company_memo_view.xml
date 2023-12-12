@@ -10,8 +10,9 @@
             <field name ="arch" type="xml">
                 <form string="Memo Record">
                 <header>
-                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
+                    <button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
                     <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type','not in',['loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
                     <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('is_request_completed','=', True),('memo_type','not in',['Payment'])]}"/>
                     <button name="complete_memo_transactions" string="Generate &amp; Comfirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
                     <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Done']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
@@ -22,7 +23,7 @@
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" class="btn-primary" attrs="{'invisible':[('state','!=',['sent'])]}" />
                     <!-- <button name="user_done_memo" class="oe_stat_button oe_highlight" icon="fa-calendar" states="Approve2" help="Click to move to Done." type="object" confirm="Are you sure you want to Complete?" string="Complete"/> -->
-                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Refuse'])]}" type="object" class="oe_highlight"/>
+                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
                     <!-- <field name="state" widget="statusbar" statusbar_visible="submit,Sent,Approve,Done"/>statusbar_visible="draft,reported,done,refused" -->
                     <field name="stage_id" widget="statusbar" readonly="0" options="{'clickable': '1'}"/>
                 </header>
@@ -33,20 +34,19 @@
                         <div class="row">
                                 <!-- <center><img src="/company_memo/static/img/usl.png" style="max-height:180px;max-width:400px;"/></center> -->
                             <div class="col-xs-4 pull-left mt8">
-                                 <button 
+                                 <!-- <button 
                                  name="user_approve_memo" 
                                  class="oe_stat_button oe_highlight" 
                                  icon="fa-calendar" 
                                  attrs="{'invisible': ['|', ('state','!=','Sent'),('user_is_approver','!=', True)]}" type="object" confirm="Are you sure you want to approve?" string="Approve Memo">
-                                </button>
+                                </button> -->
                                 <button name="return_memo"
                                     class="btn-danger oe_stat_button sm"
                                     icon="fa-redo"
                                     attrs="{'invisible': ['|', '|',('memo_type','not in',['Internal','server_access', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']),('state','!=','Sent'),('user_is_approver','!=', True)]}"
                                     type="object" string="Refuse"
-                                    confirm="Are you sure you want to refuse with comments?"
-                                    >
-                            </button>
+                                    confirm="Are you sure you want to refuse with comments?">
+                                </button>
                             </div> 
                         </div>
                         <br/>
@@ -62,13 +62,7 @@
                                 attrs="{
                                     'invisible': [('state','in',['Sent', 'submit', 'Refuse'])]}"
                                 type="object" string="View Related Record"/>
-                                
-                            <!-- <button name="migrate_records"
-                                class="oe_stat_button"
-                                icon="fa-book" 
-                                type="object"
-                                string="Migrate Account Records" groups="base.group_system">
-                            </button> -->
+                                 
                         </div>
                         <div class="oe_title">
                         <label for="name"/>
@@ -87,11 +81,11 @@
                             <group>
 
                             </group>
-                            <group>
+                            <group name="normal_memo_group1">
                                 <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'readonly':[('state','not in',['submit'])]}"/>
                                 <field name="phone" readonly="1"/>
                                 <field name="email" readonly="1"/>
-                                <field name="memo_setting_id" invisible="0" force_save="1"/>
+                                <field name="memo_setting_id" invisible="1" force_save="1"/>
                                 <field name="direct_employee_id" required="0" invisible="1" string= "Through" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
                                 <field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
                                 <field name="demo_staff" invisible="1"/>
@@ -109,13 +103,11 @@
                                 <field name="invoice_id" attrs="{'invisible':[('memo_type','!=','Payment')]}"
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
-                                <field name = "users_followers" widget="many2many_tags" required="0" readonly="1"/>
+                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="0" readonly="1"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="0"/>  
-                                
                                 <field name="active" invisible="1" groups="base.group_system"/>
                             </group> 
-                            <group> 
-                             
+                            <group name="normal_memo_group2"> 
                                 <field name="date" attrs="{'readonly':[('state','not in',['submit'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
                                 <field name="date_deadline" attrs="{'readonly':[('state','not in',['submit'])], 'invisible':[('memo_type','not in',[['material_request','procurement_request']])]}"/>
                                 <!-- <field name="leave_start_date" options='{"datepicker": {"daysOfWeekDisabled": [0, 6]}}' attrs="{'required':[('memo_type','in',['leave_request'])],'invisible':[('memo_type','not in',['leave_request'])]}"/> -->
@@ -133,10 +125,13 @@
                                 <field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
                                 <field name="user_is_approver" invisible="0" readonly="0"/>
                                 <field name="state" invisible="0" force_save="1" readonly="0"/>
-                                <field name="is_request_completed" readonly="0"/>
+                                <field name="is_request_completed" readonly="1"/>
                             </group> 
                         </group>
                         <notebook>
+                            <page name='description' string='Memo Body'>
+                                <field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+                            </page> 
                             <page name='Products' string='Request item' attrs="{'invisible':[('memo_type','not in',['material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])]}">
                                 <field name="product_ids" string = "Items" context="{'default_state': state, 'default_memo_type': memo_type}">
                                     <tree string="Items" editable="bottom">
@@ -161,9 +156,29 @@
                                     </tree>
                                 </field>
                             </page>
-                            <page name='description' string='Memo Body'>
-                                <field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-                            </page> 
+                            <page name='rr_form' string='Recruitment Request form' attrs="{'invisible':[('memo_type','not in',['recruitment_request'])]}">
+                                <form string="Items"> 
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="requested_department_id" string="Requesting Department"/> 
+                                                <field name="job_id" string="Job Position" attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
+                                                <field name="job_tmp" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="established_position" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="recruitment_mode" string="Recruitment Mode" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="qualification" string="Qualification" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="age_required" string="Required Age" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                            </group>
+                                            <group>
+                                                <field name="years_of_experience" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="expected_employees" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="recommended_by" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="date_expected" string="deadline" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                            </group>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </page>
                             
                             <page name='comments' string='Comments'>
                                 <field name="comments" readonly="1" string = "Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>

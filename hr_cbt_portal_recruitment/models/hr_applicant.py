@@ -97,7 +97,24 @@ class Applicant(models.Model):
     professional_certificate_link = fields.Char()
     gender = fields.Char()
 
- 
+    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
+
+    @api.depends('job_id')
+    def _compute_request_id(self):
+        requests = self.env['hr.job.recruitment.request'].search([
+            ('state', '=', 'recruiting'),
+            ('job_id', 'in', self.job_id.ids)])
+        for r in self:
+            r.request_id = requests.filtered(lambda req: req.job_id == r.job_id)[:1] or False if r.job_id else False
+
+
+    @api.depends("survey_user_input_id")
+    def _compute_cbt_score(self):
+        for rec in self:
+            if rec.survey_user_input_id and rec.survey_user_input_id.scoring_success:
+                rec.test_passed = True
+            else:
+                rec.test_passed = False 
             
 
                 

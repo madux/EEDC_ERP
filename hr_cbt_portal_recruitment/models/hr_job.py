@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 class HrJob(models.Model):
     _inherit = 'hr.job'
  
+    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", store=True)
     datetime_publish = fields.Date("Date Published")
     close_date = fields.Date("Closing Date")
 
@@ -59,7 +60,10 @@ class HrJob(models.Model):
         """
 
         title = fields.Char()
-        job_descriptions = fields.One2many('job.descriptions', 'section_description') # Table objects for the description in each section.
+        job_descriptions = fields.One2many(
+            'job.descriptions', 'section_description',
+            
+            ) # Table objects for the description in each section.
 
     class hrJobDescriptions(models.Model):
         _name = 'job.descriptions'

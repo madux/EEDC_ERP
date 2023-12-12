@@ -28,6 +28,8 @@
         'views/career.xml',
         'static/src/xml/website_hr_recruitment_templates.xml',
         'views/hr_employee.xml',
+        'views/hr_recruitment_request.xml',
+        # 'views/company_memo_inherit.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
         'wizard/hr_move_applicant.xml',
@@ -35,6 +37,7 @@
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
         'views/preloader.xml',
+
     ],
     'assets': {
         'web.assets_frontend': [

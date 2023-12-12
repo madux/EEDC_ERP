@@ -18,6 +18,12 @@ class HrApplicantMove(models.TransientModel):
     send_mail = fields.Boolean(
         string="Send Mail?",
     )
+    is_interview_stage = fields.Boolean(
+        string="is interview stage?",
+    )
+    interview_date = fields.Datetime(
+        string="Interview Date",
+    )
     applicant_ids = fields.Many2many(
         'hr.applicant',
         'applicant_move_rel',
