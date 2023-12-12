@@ -12,6 +12,7 @@ MEMOTYPES = [
         'server_access',
         'cash_advance',
         'soe',
+        'recruitment_request',
         ] 
 DEFAULT_STAGES = [
     'Draft', 'Awaiting approval', 'Done'
