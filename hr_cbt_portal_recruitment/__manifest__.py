@@ -19,6 +19,7 @@
         'hr_recruitment',
         'hr_recruitment_survey',
         'website_hr_recruitment',
+        'eedc_addons'
     ],
 
     'data': [

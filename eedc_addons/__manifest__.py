@@ -4,7 +4,7 @@
     'author': "Maduka Sopulu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize base modules',
-    'depends': ['base', 'hr', 'hr_pms', 'company_memo', 'stock_no_negative', 'purchase'],
+    'depends': ['base', 'hr', 'hr_pms', 'company_memo', 'stock_no_negative', 'purchase', 'hr_holidays'],
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
         'security/ir.model.access.csv',
