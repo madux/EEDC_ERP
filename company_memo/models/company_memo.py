@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from odoo import http
 import random
 from lxml import etree
+from bs4 import BeautifulSoup
 
 import logging
 
@@ -241,6 +242,12 @@ class Memo_Model(models.Model):
                                          'submit':[('readonly', False)],
                                      }, index=True)
 
+    closing_date = fields.Date('Closing Date',
+                                states={
+                                         'submit': [('required', True)],
+                                         'submit':[('readonly', False)],
+                                     }, index=True)
+
     ################################
 
     def _get_related_stage(self):
@@ -286,13 +293,6 @@ class Memo_Model(models.Model):
             if rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
                 rec.user_is_approver = True
                 rec.users_followers = [(4, self.env.user.employee_id.id)]
-            # elif rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
-            #     raise ValidationError("FUCK")
-            #     rec.user_is_approver = True
-            #     rec.users_followers = [(4, self.env.user.employee_id.id)]
-            # elif rec.determine_if_user_is_config_approver():
-            #     rec.user_is_approver = True
-            #     rec.users_followers = [(4, self.env.user.employee_id.id)]
             else:
                 rec.user_is_approver = False
  
@@ -450,7 +450,7 @@ class Memo_Model(models.Model):
         user_exist = self.mapped('res_users').filtered(
             lambda user: user.id == self.env.uid
             )
-        if user_exist:
+        if user_exist and self.stage_id.approver_id.user_id.id != self.env.uid:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
                 ) 
@@ -819,7 +819,7 @@ class Memo_Model(models.Model):
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
 
-    def generate_recruitment_request(self, body_msg):
+    def generate_recruitment_request(self, body_msg=False):
         """
         Create HR job application ready for publication 
         """
@@ -832,17 +832,18 @@ class Memo_Model(models.Model):
                 'job_tmp': self.job_tmp,
                 'department_id': self.requested_department_id.id,
                 'name': self.name,
+                'memo_id': self.id,
                 'recruitment_mode': self.recruitment_mode,
                 'job_id': self.job_id.id,
                 'user_id': self.employee_id.user_id.id,
-                'user_to_approve_id': self.stage_id.approver_id.id,
+                'user_to_approve_id': self.stage_id.approver_id.user_id.id,
                 'expected_employees': self.expected_employees,
                 'recommended_by': self.recommended_by.id,
-                'description': self.description,
+                'description': BeautifulSoup(self.description or "-", features="lxml").get_text(),
                 'requirements': self.qualification,
                 'age_required': self.age_required,
-                'years_of_experience': self.age_required,
-                'state': 'draft',
+                'years_of_experience': self.years_of_experience,
+                'state': 'confirmed',
                 'date_expected': self.date_expected,
                 'date_accepted': fields.Date.today(),
                 'date_confirmed': fields.Date.today(),
@@ -851,10 +852,9 @@ class Memo_Model(models.Model):
         else:
             rr_id = existing_hrr
         self.update_memo_type_approver()
-        self.mail_sending_direct(body_msg)
-        # is_config_approver = self.determine_if_user_is_config_approver()
+        if body_msg:
+            self.mail_sending_direct(body_msg)
         self.state = 'Done'
-        # if is_config_approver:
         """Check if the user is enlisted as the approver for memo type"""
         view_id = self.env.ref('hr_cbt_portal_recruitment.hr_job_recruitment_request_form_view').id
         ret = {
@@ -885,11 +885,9 @@ class Memo_Model(models.Model):
         leave_id.action_approve()
         leave_id.action_validate()
         self.state = 'Done'
-        # self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
 
     def generate_move_entries(self):
-        # self.follower_messages(body)
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
             """Check if the user is enlisted as the approver for memo type
@@ -1181,7 +1179,6 @@ class Memo_Model(models.Model):
             raise ValidationError(
                 """You are not Permitted to approve this Memo. Contact the authorized Person
             """)
-        # dummy, view_id = self.env['ir.model.data'].get_object_reference('account', 'view_account_payment_form')
         view_id = self.env.ref('account.view_account_payment_form')
         if (self.memo_type != "Payment") or (self.amountfig < 1):
             raise ValidationError("(1) Memo type must be 'Payment'\n (2) Amount must be greater than one to proceed with payment")

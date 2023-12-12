@@ -42,6 +42,13 @@
                                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                                     Dear Applicant<br/><br/>
                                     Your job application has been updated to <strong t-out="object.stage_id.name or ''">Next stage</strong><br/>
+                                    <t t-if="object.interview_date">
+                                        Your Interview date is scheduled on <strong t-out="object.interview_date or ''"></strong>
+                                    </t>
+                                    <t t-else="">
+                                        <strong t-out="''"></strong>
+                                    </t>
+                                    <br/>
                                     We wish you good luck!
                                 </p><br/><br/>
                                 <p>
@@ -53,7 +60,6 @@
                                         <t t-out="object.create_uid.company_id.street2 or ''">Houston street 2</t><br/>
                                     </t>
                                     <t t-out="object.create_uid.company_id.phone or ''">+232445069090</t><br/>
-                                    
                                 </p> 
                             </div>
                         </td>

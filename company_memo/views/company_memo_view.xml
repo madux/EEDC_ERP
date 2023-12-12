@@ -10,8 +10,9 @@
             <field name ="arch" type="xml">
                 <form string="Memo Record">
                 <header>
-                    <button name="forward_memo" id="forward_memo" string="Forward" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
-                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type','not in',['loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request', 'recruitment_request']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
+                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type','not in',['loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
                     <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('is_request_completed','=', True),('memo_type','not in',['Payment'])]}"/>
                     <button name="complete_memo_transactions" string="Generate &amp; Comfirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
                     <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Done']), ('memo_type','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
@@ -122,8 +123,8 @@
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                                 <field name="code"/>  
                                 <field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
-                                <field name="user_is_approver" invisible="1" readonly="0"/>
-                                <field name="state" invisible="1" force_save="1" readonly="0"/>
+                                <field name="user_is_approver" invisible="0" readonly="0"/>
+                                <field name="state" invisible="0" force_save="1" readonly="0"/>
                                 <field name="is_request_completed" readonly="1"/>
                             </group> 
                         </group>
@@ -160,19 +161,19 @@
                                     <sheet>
                                         <group>
                                             <group>
-                                                <field name="requested_department_id" string="Job Position"/> 
-                                                <field name="job_id" string="Job Position"/> 
-                                                <field name="job_tmp"/> 
-                                                <field name="established_position"/> 
-                                                <field name="recruitment_mode" string="Recruitment Mode"/> 
-                                                <field name="qualification" string="Qualification"/> 
-                                                <field name="age_required" string="Required Age"/> 
+                                                <field name="requested_department_id" string="Requesting Department"/> 
+                                                <field name="job_id" string="Job Position" attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
+                                                <field name="job_tmp" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="established_position" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="recruitment_mode" string="Recruitment Mode" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="qualification" string="Qualification" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="age_required" string="Required Age" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
                                             </group>
                                             <group>
-                                                <field name="years_of_experience"/> 
-                                                <field name="expected_employees"/> 
-                                                <field name="recommended_by"/> 
-                                                <field name="date_expected"/> 
+                                                <field name="years_of_experience" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="expected_employees" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="recommended_by" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
+                                                <field name="date_expected" string="deadline" attrs="{'required':[('memo_type','in',['recruitment_request'])]}"/> 
                                             </group>
                                         </group>
                                     </sheet>

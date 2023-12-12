@@ -78,11 +78,11 @@ class Forward_Wizard(models.TransientModel):
     def _load_all_superior_ids(self):
         self.all_superior_ids = [(6,0, self._get_all_related_superior_ids())]
 
-    @api.onchange('direct_employee_id')
-    def onchange_direct_employer_id(self):
-        if self.direct_employee_id:
-            if self.env.user.id == self.direct_employee_id.user_id.id:
-                raise ValidationError('You cannot forward this memo to your self. You can try approving the memo if you are amongst the approver.')
+    # @api.onchange('direct_employee_id')
+    # def onchange_direct_employer_id(self):
+    #     if self.direct_employee_id:
+    #         if self.env.user.id == self.direct_employee_id.user_id.id:
+    #             raise ValidationError('You cannot forward this memo to your self. You can try approving the memo if you are amongst the approver.')
      
     def forward_memo(self): # Always available, 
         if self.memo_record.memo_type == "Payment":
@@ -111,3 +111,4 @@ class Forward_Wizard(models.TransientModel):
         next_stage_id = self.get_next_stage_artifact()
         return self.memo_record.confirm_memo(self.direct_employee_id.name, msg)#, next_stage_id[1])
  
+    

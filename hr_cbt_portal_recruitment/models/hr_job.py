@@ -60,7 +60,10 @@ class HrJob(models.Model):
         """
 
         title = fields.Char()
-        job_descriptions = fields.One2many('job.descriptions', 'section_description') # Table objects for the description in each section.
+        job_descriptions = fields.One2many(
+            'job.descriptions', 'section_description',
+            
+            ) # Table objects for the description in each section.
 
     class hrJobDescriptions(models.Model):
         _name = 'job.descriptions'

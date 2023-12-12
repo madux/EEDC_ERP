@@ -22,53 +22,65 @@
 						<button name="action_done" states="recruiting"
 							string="Set to Done" type="object"
 							/> -->
-                        <button name="action_start_recruit" states="accepted"
+						<button name="action_start_recruit" states="confirmed"
 							string="Start Recruitment" type="object" class="oe_highlight"
 							/>
+						<button name="action_open_and_publish" states="recruiting"
+							string="Publish &amp; Advertise Recruitment" type="object" class="oe_highlight"
+							/>
 						<field name="state" widget="statusbar"
-							statusbar_visible="draft,confirmed,accepted,recruiting,done"
+							statusbar_visible="draft,confirmed,accepted,done"
 							statusbar_colors='{"confirm":"blue","refused":"red"}' />
 					</header>
 					<sheet>
 						<div class="oe_title">
 							<label for="name" class="oe_edit_only" />
 							<h1>
-								<field name="name" />
+								<field name="name" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
 							</h1>
 						</div>
 						<field name="company_id" groups="base.group_multi_company"
-							options="{'no_create': True}" />
+							options="{'no_create': True, 'no_open': True}" readonly="1"/>
 						<group>
 							<group>
-								<field name="department_id" />
-								<field name="job_id" />
+								<field name="department_id" options="{'no_create': True, 'no_open': True}" 
+								attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+								<field name="job_id" options="{'no_create': True, 'no_open': True}"
+								attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
 								<field name="job_tmp"
-									attrs="{'invisible':[('job_id', '!=', False)], 'required':[('job_id', '=', False)]}" />
-								<field name="employees_count" />
+									attrs="{'invisible':[('job_id', '!=', False)], 'required':[('job_id', '=', False)]}"/>
+								<field name="employees_count" readonly="1"/>
 							</group>
-							<group>
-								<field name="expected_employees" />
-								<field name="date_expected" />
-								<field name="user_id" />
+							<group> 
+								<field name="user_id" readonly="1" options="{'no_create': True, 'no_open': True}"/>
 							</group>
 						</group>
 						<div>
 							<label for="reason" />
-							<field name="reason" />
+							<field name="reason" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
 						</div>
-
 						<notebook>
 							<page string="Information">
-								<label for="description" />
-								<field name="description" />
-								<label for="requirements" />
-								<field name="requirements" />
+								<group>
+									<group>
+										<field name="description" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+										<field name="requirements" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/> 
+										<field name="expected_employees" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+										
+									</group>
+									<group>
+										<field name="age_required" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+										<field name="years_of_experience" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+										<field name="date_expected" attrs="{'readonly':[('state', 'in', ['recruiting', 'done'])]}"/>
+										<field name="user_to_approve_id" readonly="1" options="{'no_create': True, 'no_open': True}"/>
+									</group>
+								</group>
 							</page>
 							<page string="Applicants">
-								<field name="applicant_ids" />
+								<field name="applicant_ids" readonly="1"/>
 							</page>
 							<page string="Recruited Employees">
-								<field name="employee_ids" />
+								<field name="employee_ids" readonly="1" />
 							</page>
 						</notebook>
 					</sheet>
