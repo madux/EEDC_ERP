@@ -103,7 +103,7 @@
                                 <field name="invoice_id" attrs="{'invisible':[('memo_type','!=','Payment')]}"
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
-                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="0" readonly="1"/>
+                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="1" readonly="1"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="0"/>  
                                 <field name="active" invisible="1" groups="base.group_system"/>
                             </group> 
@@ -123,9 +123,9 @@
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                                 <field name="code"/>  
                                 <field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
-                                <field name="user_is_approver" invisible="0" readonly="0"/>
-                                <field name="state" invisible="0" force_save="1" readonly="0"/>
-                                <field name="is_request_completed" readonly="1"/>
+                                <field name="user_is_approver" invisible="1" readonly="0"/>
+                                <field name="state" invisible="1" force_save="1" readonly="0"/>
+                                <field name="is_request_completed" readonly="1" invisible="1"/>
                             </group> 
                         </group>
                         <notebook>
