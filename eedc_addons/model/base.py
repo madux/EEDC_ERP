@@ -41,6 +41,8 @@ class HrRank(models.Model):
 
     name = fields.Char('Rank')
     code = fields.Char('Code')
+    salary_range = fields.Text(string='Salary Range')
+    grade_id = fields.Many2one('hr.grade', string='Grade')
 
 
 class HrRank(models.Model):
