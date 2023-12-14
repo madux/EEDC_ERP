@@ -86,7 +86,7 @@
                         </group>
                     </page>
                     <page string='Checklist'>
-                        <field name="applicant_checklist_document">
+                        <field name="applicant_documentation_checklist">
                           <tree>
                             <field name="document_type"/>
                             <field name="document_file" widget="binary" filename="name"/>

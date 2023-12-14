@@ -2,7 +2,7 @@ from odoo import models, fields, api, _
 
 
 class HrApplicantDocuments(models.Model):
-    _name = 'hr.applicant.documents'
+    _name = 'hr.applicant.documentation'
 
     document_type = fields.Selection([
         ('degree_cert', 'Degree Certificate'),

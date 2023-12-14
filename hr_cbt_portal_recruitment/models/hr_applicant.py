@@ -117,7 +117,7 @@ class Applicant(models.Model):
                 rec.test_passed = False
 
 
-    applicant_checklist_document = fields.One2many('hr.applicant.documents', 'applicant_id', string='Checklists') 
+    applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
             
 
                 
