@@ -10,7 +10,7 @@
                         <group>
                             <field name="stage_id" required="1"/>
                             <field name="is_interview_stage" required="0"/>
-                            <field name="interview_date" options="{'datepicker': {'warn_past': true}}" attrs="{'invisible': [('is_interview_stage', '=', False)], 'reuired': [('is_interview_stage', '=', True)]}"/>
+                            <field name="interview_date" attrs="{'invisible': [('is_interview_stage', '=', False)], 'reuired': [('is_interview_stage', '=', True)]}"/>
                         </group>
                         <group>
                             <field name="send_mail"/>

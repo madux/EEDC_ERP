@@ -42,6 +42,13 @@ class Applicant(models.Model):
         string="Survey Test",
         required=False,
     )
+    survey_panelist_input_ids = fields.One2many(
+        'panelist.score_sheet',
+        'applicant_id',
+        help="Used in storing panelist survey",
+        string="Panelist Survey Tests",
+        required=False,
+    )
     test_started = fields.Boolean(
         "Test Started", 
         readonly=True, 

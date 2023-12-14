@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from odoo import models, fields
+from odoo.exceptions import ValidationError
 
  
 class CBTscheduleWizard(models.TransientModel):
@@ -20,6 +21,10 @@ class CBTscheduleWizard(models.TransientModel):
         string="Test Template",
         required=False,
     )
+    is_score_sheet = fields.Boolean(
+        'Is score sheet',
+        help="Used to determine if the action is for sending score sheet"
+        )
     email_invite_template = fields.Many2one(
         'mail.template',
         string="Invitation Mail Template",
@@ -32,7 +37,26 @@ class CBTscheduleWizard(models.TransientModel):
         'hr_cbt_schedule_id',
         string="Applicants",
     )
+    panelist_ids = fields.Many2many(
+        'hr.employee',
+        'application_cbt_panelist_rel',
+        'hr_applicant', 
+        'hr_panelist_id',
+        string="Panelist",
+    )
 
     def schedule_action(self):
         """takes all the applicants emails and shares test links to them"""
-        return self.survey_id.action_send_survey(self.email_invite_template)
+        no_applicant_with_email = self.mapped('panelist_ids').filtered(lambda s: not s.work_email)
+        if self.is_score_sheet:
+            if no_applicant_with_email:
+                raise ValidationError(
+                    """Please check!  Ensure all the panelist email is added !!!
+                    """)
+            if not self.panelist_ids:
+                raise ValidationError(
+                    """Please ensure panelist is selected on the tab"""
+                    )
+        return self.survey_id.action_send_survey(
+            self.email_invite_template, self.panelist_ids
+            )

@@ -94,6 +94,31 @@
                         </tree>
                         </field>
                       </page>
+                    <page name="panelist_score_sheet" string="Panelist Score Sheet">
+                        <field name="survey_panelist_input_ids" string="Panelist Score Sheet" readonly="0">
+                            <tree string="Panelist Score Sheet">
+                                <field name="panelist_id"/>
+                                <field name="survey_user_input_ids" widget="many2many_tags"/>
+                            </tree>
+                            <form string="Panelist Score Sheet">
+                                <sheet>
+                                    <group>
+                                        <group>
+                                            <field name="panelist_id"/>
+                                        </group>
+                                        <group>
+                                        </group>
+                                        <notebook>
+                                            <page string="Panelist survey">
+                                                <field name="survey_user_input_ids" context="{'form_view_ref': 'survey.survey_user_input_view_form','tree_view_ref': 'survey.survey_user_input_view_tree',}">
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </group>
+                                </sheet> 
+                            </form>
+                        </field>
+                    </page>
                 </notebook>
             </xpath>
         </field>

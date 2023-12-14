@@ -7,3 +7,4 @@ from . import cbt_template
 from . import survey
 from . import recruitment_request
 from . import hr_applicant_documentation
+from . import panelist
