@@ -16,3 +16,5 @@ access_hr_job_recruitment_request_id,access_user_hr_job_recruitment_request,mode
 
 access_description_sections_id,access_description_sections,model_description_sections,,1,1,1,1
 access_job_descriptions_id,access_job_descriptions,model_job_descriptions,,1,1,1,1
+
+access_hr_applicant_documents_id,access_hr_applicant_documents,model_hr_applicant_documents,,1,1,1,1

@@ -114,7 +114,10 @@ class Applicant(models.Model):
             if rec.survey_user_input_id and rec.survey_user_input_id.scoring_success:
                 rec.test_passed = True
             else:
-                rec.test_passed = False 
+                rec.test_passed = False
+
+
+    applicant_checklist_document = fields.One2many('hr.applicant.documents', 'applicant_id', string='Checklists') 
             
 
                 

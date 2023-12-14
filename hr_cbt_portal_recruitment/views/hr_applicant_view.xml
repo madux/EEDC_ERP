@@ -85,6 +85,14 @@
                             </group>
                         </group>
                     </page>
+                    <page string='Checklist'>
+                        <field name="applicant_checklist_document">
+                          <tree>
+                            <field name="document_type"/>
+                            <field name="document_file" widget="binary" filename="name"/>
+                        </tree>
+                        </field>
+                      </page>
                 </notebook>
             </xpath>
         </field>
