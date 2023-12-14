@@ -19,6 +19,12 @@ class SurveyInvite(models.TransientModel):
                                      'hr_appllicant_id',
                                      'survey_invite_id',
                                      string='Applicants')
+    panelist_ids = fields.Many2many('hr.employee', 
+                                     'hr_employee_survey_invite_rel',
+                                     'hr_employee_id',
+                                     'survey_invite_id',
+                                     string='Panelists')
+    
     
     def action_invite(self):
         """ Process the wizard content and proceed with sending the related
@@ -80,19 +86,38 @@ class SurveyInvite(models.TransientModel):
                     answers |= next(existing_answer for existing_answer in
                         existing_answers.sorted(lambda answer: answer.create_date, reverse=True)
                         if existing_answer.email == email_done)
-
-        for new_partner in partners - partners_done:
-            answers |= self.survey_id._create_answer(partner=new_partner, check_attempts=False, **self._get_answers_values())
-        for new_email in [email for email in emails if email not in emails_done]:
-            answers |= self.survey_id._create_answer(email=new_email, check_attempts=False, **self._get_answers_values())
-
+        
+        ### customization starts here ###
         if applicant_ids:
-            for applicant in applicant_ids:
-                if applicant.email_from not in emails_done:
-                    applicant_email = applicant.email_from
-                    survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
-                    answers |= survey_input
-                    applicant.survey_user_input_id = survey_input.id
-            # for applicant_email in [email.email_from for email in self.applicant_ids if email not in emails_done]:
-            #     answers |= self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+            if not self.panelist_ids:
+                for applicant in applicant_ids:
+                    if applicant.email_from not in emails_done:
+                        applicant_email = applicant.email_from
+                        survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+                        answers |= survey_input
+                        applicant.survey_user_input_id = survey_input.id
+                # for applicant_email in [email.email_from for email in self.applicant_ids if email not in emails_done]:
+                #     answers |= self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+            else:
+                applicant_panelist = self.env['panelist.score_sheet']
+                for panelist in self.panelist_ids:
+                    # applicant_panelist_id = applicant_panelist.create({
+                    #         'panelist_id': panelist.id,
+                    #     })
+                    for applicant in applicant_ids:
+                        survey_input = self.survey_id._create_answer(email=panelist.work_email, check_attempts=False, **self._get_answers_values())
+                        answers |= survey_input
+                        # applicant.survey_user_input_id = survey_input.id
+                        applicant_panelist.create({
+                            'panelist_id': panelist.id,
+                            'survey_user_input_ids': [(4, survey_input.id)],
+                            'applicant_id': applicant.id
+                        })
+
+            ### customization ends here ###
+        else:
+            for new_partner in partners - partners_done:
+                answers |= self.survey_id._create_answer(partner=new_partner, check_attempts=False, **self._get_answers_values())
+            for new_email in [email for email in emails if email not in emails_done]:
+                answers |= self.survey_id._create_answer(email=new_email, check_attempts=False, **self._get_answers_values())
         return answers

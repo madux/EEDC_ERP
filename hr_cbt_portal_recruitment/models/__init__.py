@@ -6,3 +6,4 @@ from . import hr_employee
 from . import cbt_template
 from . import survey
 from . import recruitment_request
+from . import panelist
