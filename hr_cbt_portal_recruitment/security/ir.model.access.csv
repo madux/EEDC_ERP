@@ -18,3 +18,4 @@ access_description_sections_id,access_description_sections,model_description_sec
 access_job_descriptions_id,access_job_descriptions,model_job_descriptions,,1,1,1,1
 
 access_hr_applicant_documentation_id,access_hr_applicant_documentation,model_hr_applicant_documentation,,1,1,1,1
+access_documentation_type_id,access_documentation_type,model_documentation_type,,1,1,1,1

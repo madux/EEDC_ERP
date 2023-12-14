@@ -89,7 +89,8 @@
                         <field name="applicant_documentation_checklist">
                           <tree>
                             <field name="document_type"/>
-                            <field name="document_file" widget="binary" filename="name"/>
+                            <field name="document_file" widget="binary" filename="filename"/>
+                            <field name="filename" invisible="1"/> 
                         </tree>
                         </field>
                       </page>
