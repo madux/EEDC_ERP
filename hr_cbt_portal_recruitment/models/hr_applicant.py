@@ -140,6 +140,7 @@ class Applicant(models.Model):
             else:
                 rec.test_passed = False
 
+
     @api.depends("survey_panelist_input_ids")
     def compute_panel_list(self):
         for rec in self:
@@ -147,6 +148,9 @@ class Applicant(models.Model):
                 rec.is_panelist_added = True 
             else: 
                 rec.is_panelist_added =False 
+
+    applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
+
             
 
                 

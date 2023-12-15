@@ -40,6 +40,7 @@
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
         'views/preloader.xml',
+        'data/documentation_data.xml'
 
     ],
     'assets': {
