@@ -53,6 +53,7 @@ class Applicant(models.Model):
         "Test Started", 
         readonly=True, 
         help="used to check if application test has been set")
+     
     cbt_start_date = fields.Datetime("CBT Start Date")
     cbt_end_date = fields.Datetime("CBT End Date ")
     duration = fields.Integer("Duration")
@@ -103,9 +104,26 @@ class Applicant(models.Model):
         default="No")
     professional_certificate_link = fields.Char()
     gender = fields.Char()
-
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
+    is_panelist_added = fields.Boolean(
+        "Panelist added?", 
+        readonly=True, 
+        compute="compute_panel_list",
+        help="used to track that the panelist has been added")
+    
+    is_undergoing_verification = fields.Boolean(
+        "Undergoing Verification process?", 
+        readonly=True, 
+        # compute="compute_verification_process",
+        help="used to track that the candidates selected for verification")
+    
+    is_documentation_process = fields.Boolean(
+        "Documentation process?", 
+        readonly=True, 
+        # compute="compute_verification_process",
+        )
 
+    
     @api.depends('job_id')
     def _compute_request_id(self):
         requests = self.env['hr.job.recruitment.request'].search([
@@ -113,7 +131,6 @@ class Applicant(models.Model):
             ('job_id', 'in', self.job_id.ids)])
         for r in self:
             r.request_id = requests.filtered(lambda req: req.job_id == r.job_id)[:1] or False if r.job_id else False
-
 
     @api.depends("survey_user_input_id")
     def _compute_cbt_score(self):
@@ -124,7 +141,16 @@ class Applicant(models.Model):
                 rec.test_passed = False
 
 
+    @api.depends("survey_panelist_input_ids")
+    def compute_panel_list(self):
+        for rec in self:
+            if rec.survey_panelist_input_ids:
+                rec.is_panelist_added = True 
+            else: 
+                rec.is_panelist_added =False 
+
     applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
+
             
 
                 
