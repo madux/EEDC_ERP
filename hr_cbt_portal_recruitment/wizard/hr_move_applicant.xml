@@ -9,8 +9,8 @@
                     <group>
                         <group>
                             <field name="stage_id" required="1"/>
-                            <field name="is_interview_stage" required="0"/>
-                            <field name="interview_date" attrs="{'invisible': [('is_interview_stage', '=', False)], 'reuired': [('is_interview_stage', '=', True)]}"/>
+                            <field name="stage_type" required="0"/>
+                            <field name="interview_date" attrs="{'invisible': [('stage_type', '!=', 'is_interview_stage')], 'required': [('stage_type', '=', 'is_interview_stages')]}"/>
                         </group>
                         <group>
                             <field name="send_mail"/>

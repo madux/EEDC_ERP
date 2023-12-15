@@ -79,6 +79,15 @@
 							<page string="Applicants">
 								<field name="applicant_ids" readonly="1"/>
 							</page>
+							<page string="Shortlisted Candidates">
+								<button name="action_export_score_sheet"
+									string="Export Score Sheet" type="object" class="oe_highlight btn-sm"
+									/>
+								<field name="applicant_ready_for_panelist_ids" readonly="1"/>
+							</page>
+							<page string="Candidates for Verification">
+								<field name="applicant_ready_for_verification_ids" readonly="1"/>
+							</page>
 							<page string="Recruited Employees">
 								<field name="employee_ids" readonly="1" />
 							</page>
