@@ -156,7 +156,8 @@ class HRJobRecruitmentRequest(models.Model):
 					]
 				applicant_ready_for_verification = [
 					pa.id for pa in applicants.filtered(
-						lambda pnl: pnl.is_undergoing_verification==True
+						lambda pnl: pnl.is_undergoing_verification==True \
+						and pnl.is_documentation_process == True
 						)
 					]
 				if applicant_ready_for_panelist:
@@ -170,6 +171,8 @@ class HRJobRecruitmentRequest(models.Model):
 						(6, 0, applicant_ready_for_panelist)]
 				else:
 					rec.applicant_ready_for_verification_ids = False
+			rec.applicant_ready_for_panelist_ids = False
+			rec.applicant_ready_for_verification_ids = False
 	
 	def action_start_recruit(self):
 		if self.user_to_approve_id.id != self.env.user.id:

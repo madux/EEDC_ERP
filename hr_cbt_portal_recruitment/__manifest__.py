@@ -36,6 +36,7 @@
         'wizard/survey_invite_inherit.xml',
         'wizard/hr_move_applicant.xml',
         'wizard/import_applicant_view.xml',
+        'wizard/hr_recruitment_sign_view.xml',
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
         'views/preloader.xml',
