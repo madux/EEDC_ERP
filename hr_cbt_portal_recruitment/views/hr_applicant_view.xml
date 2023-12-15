@@ -85,6 +85,15 @@
                             </group>
                         </group>
                     </page>
+                    <page string='Checklist'>
+                        <field name="applicant_documentation_checklist">
+                          <tree>
+                            <field name="document_type"/>
+                            <field name="document_file" widget="binary" filename="filename"/>
+                            <field name="filename" invisible="1"/> 
+                        </tree>
+                        </field>
+                      </page>
                     <page name="panelist_score_sheet" string="Panelist Score Sheet">
                         <field name="survey_panelist_input_ids" string="Panelist Score Sheet" readonly="0">
                             <tree string="Panelist Score Sheet">
