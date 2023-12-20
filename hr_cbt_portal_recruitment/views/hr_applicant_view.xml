@@ -6,6 +6,12 @@
             <field name="model">hr.applicant</field>
             <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_form"/>
             <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_audit_certify" string="Audit Certify" class="oe_highlight" type="object" attrs="{'invisible': [('stage_type', '!=', 'audit')]}"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="after">
+                <field name="audited" />
+            </xpath> 
             <xpath expr="//div[@name='button_box']" position="after">
                 <div classs="row">
                     <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
@@ -17,6 +23,7 @@
                 <field name="middle_name"/>
                 <field name="last_name" invisible="0" force_save="1" required="1"/>
                 <field name="partner_id" invisible="0" force_save="1" readonly="1"/>
+                <field name="stage_type" invisible="1" />
             </field>
             <field name="availability" position="before">
                 <field name="current_salary" string="Current salary"/>

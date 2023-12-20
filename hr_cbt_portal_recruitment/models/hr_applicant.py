@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class Applicant(models.Model):
@@ -151,6 +152,26 @@ class Applicant(models.Model):
 
     applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
 
-            
+    audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
 
+
+    def action_audit_certify(self):
+        if self.stage_id and self.stage_id.group_ids:
+            user_group_ids = self.env.user.groups_id.ids
+            group_ids_to_check = self.stage_id.group_ids.ids
+
+            # Retrieve the names of the groups
+            group_names_to_check = self.env['res.groups'].sudo().search([('id', 'in', group_ids_to_check)]).mapped('name')
+
+            if not set(user_group_ids).intersection(group_ids_to_check):
+                raise ValidationError(f"You have to be in one of the groups with names {group_names_to_check} to approve")
+
+            self.audited = True
+        else:
+            self.audited = False
+
+
+
+
+    stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
                 
