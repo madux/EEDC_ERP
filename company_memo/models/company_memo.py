@@ -838,7 +838,7 @@ class Memo_Model(models.Model):
                 'user_id': self.employee_id.user_id.id,
                 'user_to_approve_id': self.stage_id.approver_id.user_id.id,
                 'expected_employees': self.expected_employees,
-                'recommended_by': self.recommended_by.id,
+                'recommended_by': self.recommended_by.user_id.id,
                 'description': BeautifulSoup(self.description or "-", features="lxml").get_text(),
                 'requirements': self.qualification,
                 'age_required': self.age_required,
