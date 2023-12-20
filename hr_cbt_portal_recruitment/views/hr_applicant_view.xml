@@ -10,12 +10,16 @@
                 <button name="action_audit_certify" string="Audit Certify" class="oe_highlight" type="object" attrs="{'invisible': [('stage_type', '!=', 'audit')]}"/>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="after">
-                <field name="audited" />
+                <field name="audited" invisible="1" />
             </xpath> 
             <xpath expr="//div[@name='button_box']" position="after">
                 <div classs="row">
                     <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
                 </div>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="after">
+                <!-- Ribbon for successful audit -->
+                <widget name="web_ribbon" title="Audit Successful" bg_color="bg-success" attrs="{'invisible': [('audited', '=', False)]}"/>
             </xpath> 
             
             <field name="email_from" position="before">
