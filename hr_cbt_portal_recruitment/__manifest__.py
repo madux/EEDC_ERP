@@ -38,6 +38,7 @@
         'wizard/hr_move_applicant.xml',
         'wizard/import_applicant_view.xml',
         'wizard/hr_recruitment_sign_view.xml',
+        'wizard/score_sheet_export.xml',
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
         'views/preloader.xml',

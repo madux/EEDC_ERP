@@ -336,6 +336,34 @@ odoo.define('portal_request.portal_request', function (require) {
     allowClear: true,
     });
 
+    // let checkConfiguredStages = function(this, requestOption){
+    //     var staff_num = $('#staff_id').val();
+    //     this._rpc({
+    //         route: `/check-configured-stage`,
+    //         params: {
+    //             'staff_num': staff_num,
+    //             'request_option': requestOption,
+    //         },
+    //     }).then(function (data) {
+    //         console.log('checking if stage is configured => '+ JSON.stringify(data))
+    //         if (!data.status) {
+    //             $('#selectRequestOption').val('')
+    //             // alert(`Validation Error! ${data.message}`)
+    //             message = `Validation Error! ${data.message}`
+    //             modal_message.text(message)
+    //             alert_modal.modal('show');
+    //         }
+    //         else{
+
+    //         }
+    //     }).guardedCatch(function (error) {
+    //         let msg = error.message.message
+    //         console.log(msg)
+    //         $("#selectRequestOption").val('')
+    //         alert(`Unknown Error! ${msg}`)
+    //     });
+    // }
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
@@ -356,7 +384,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         $("#leave_end_datex").val('') //.trigger('change')
                         $('#leave_start_date').attr('required', true);
                         $('#leave_start_date').addClass('is-invalid', true);
-                        message = `Validation Error! ${data.message}`
+                        let message = `Validation Error! ${data.message}`
                         console.log("not Passed for leave, ", message)
                         // alert(message); 
                         // return false
@@ -499,6 +527,24 @@ odoo.define('portal_request.portal_request', function (require) {
                 compute_total_amount();
             },
 
+            // $('#inactivelist').change(function () {
+            //     alert('changed');
+            //  });
+
+            'change .otherChangeOption': function(ev){
+                if ($(ev.target).is(':checked')){
+                    $('#div_other_system_details').removeClass('d-none');
+                    $('#other_system_details').attr('required', true);
+                    // $('#other_system_details').addClass("is-invalid");
+                }
+                else {
+                    $('#div_other_system_details').addClass('d-none');
+                    $('#other_system_details').attr('required', false);
+                    $('#other_system_details').val('');
+                    // $('#other_system_details').addClass("is-valid");
+                }
+            },
+
             'change .productinput': function(ev){
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
@@ -629,94 +675,124 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#existing_ref_label').text("Existing Ref #");
                 $('#div_existing_order').addClass('d-none');
                 clearAllElement();
-                if(selectedTarget == "leave_request"){
-                    console.log('Yes leave is selected')
-                    $('#leave_section').removeClass('d-none');
-                    $('#leave_start_date').attr('required', true);
-                    $('#leave_end_datex').attr('required', true);
-                    $('#product_form_div').addClass('d-none');
-                    $('#amount_section').addClass('d-none');
-                    $('#amount_fig').attr("required", false);
-                }
-                else if(selectedTarget == "server_access"){
-                    $('#amount_section').addClass('d-none');
-                    $('#amount_fig').attr("required", false);
-                    $('#product_form_div').addClass('d-none');
-                    $('#label_end_date').removeClass('d-none');
-                    $('#request_end_date').removeClass('d-none');
-                    $('#request_end_date').attr('required', true);
-
-                    console.log("server request selected == ", selectedTarget);
-                    displayNonLeaveElement()
-                }
-                // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
-                else if(selectedTarget == "payment_request"){
-                    $('#amount_section').removeClass('d-none');
-                    $('#amount_fig').attr("required", true);
-                    console.log("request selected== ", selectedTarget);
-                    displayNonLeaveElement()
-                }
-                // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
-                else if(selectedTarget == "cash_advance"){
-                    var staff_num = $('#staff_id').val();
-                    this._rpc({
-                        route: `/check-cash-retirement`,
-                        params: {
-                            'staff_num': staff_num,
-                            'request_type': selectedTarget,
-                        },
-                    }).then(function (data) {
-                        console.log('retrieved cash advance data => '+ JSON.stringify(data))
-                        if (!data.status) {
-                            $(ev.target).val('');
-                            $("#amount_fig").val('')
-                            $('#amount_section').addClass('d-none');
+                // checkConfiguredStages(this, selectedTarget);
+                let staff_num = $('#staff_id').val();
+                this._rpc({
+                    route: `/check-configured-stage`,
+                    params: {
+                        'staff_num': staff_num,
+                        'request_option': selectedTarget,
+                    },
+                }).then(function (data) {
+                    console.log('checking if stage is configured => '+ JSON.stringify(data))
+                    if (!data.status) {
+                        $('#selectRequestOption').val('')
+                        // alert(`Validation Error! ${data.message}`)
+                        let message = `Validation Error! ${data.message}`
+                        modal_message.text(message)
+                        alert_modal.modal('show');
+                    }
+                    else{
+                        if(selectedTarget == "leave_request"){
+                            console.log('Yes leave is selected')
+                            $('#leave_section').removeClass('d-none');
+                            $('#leave_start_date').attr('required', true);
+                            $('#leave_end_datex').attr('required', true);
                             $('#product_form_div').addClass('d-none');
-                            $('.add_item').addClass('d-none')
-                            alert(`Validation Error! ${data.message}`)
-                        }else{
-                            // $('#amount_section').removeClass('d-none');
-                            // $('#amount_fig').attr("required", false);
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                        }
+                        else if(selectedTarget == "server_access"){
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            $('#product_form_div').addClass('d-none');
+                            $('#label_end_date').removeClass('d-none');
+                            $('#div_system_requirement').removeClass('d-none');
+                            $('#request_end_date').removeClass('d-none');
+                            $('#request_end_date').attr('required', true);
+                            $('#labelDescription').text('Resource Details (IP Adress/Server Name/Database');
+                            $('#div_justification_reason').removeClass('d-none');
+                            $('#justification_reason').attr('required', true);
+                            // $('#justification_reason').addClass("is-valid");
+                            $('#justification_reason').removeClass("d-none");
+                            console.log("server request selected == ", selectedTarget);
+                            displayNonLeaveElement()
+                        }
+                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
+                        else if(selectedTarget == "payment_request"){
+                            $('#amount_section').removeClass('d-none');
+                            $('#amount_fig').attr("required", true);
                             console.log("request selected== ", selectedTarget);
                             displayNonLeaveElement()
-                            $('#product_form_div').removeClass('d-none');
-                            $('.add_item').removeClass('d-none');
                         }
-                    }).guardedCatch(function (error) {
-                        let msg = error.message.message
-                        console.log(msg)
-                        $("#amount_fig").val('')
-                        $('#amount_section').addClass('d-none');
-                        $('#product_form_div').addClass('d-none');
-                        alert(`Unknown Error! ${msg}`)
-                    }); 
-                }
-                else if(selectedTarget == "soe"){
-                    // $('#amount_section').removeClass('d-none');
-                    // $('#amount_fig').attr("required", true); 
-                    displayNonLeaveElement()
-                    $('.add_item').addClass('d-none')
-                    $('#product_form_div').removeClass('d-none'); 
-                    if ($('#selectTypeRequest').val() == "new"){
-                        if ($('#staff_id').val() == ""){
-                            selectedTarget.val('').trigger('change')
-                            alert("Please enter staff ID");
+                        // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
+                        else if(selectedTarget == "cash_advance"){
+                            var staff_num = $('#staff_id').val();
+                            this._rpc({
+                                route: `/check-cash-retirement`,
+                                params: {
+                                    'staff_num': staff_num,
+                                    'request_type': selectedTarget,
+                                },
+                            }).then(function (data) {
+                                console.log('retrieved cash advance data => '+ JSON.stringify(data))
+                                if (!data.status) {
+                                    $(ev.target).val('');
+                                    $("#amount_fig").val('')
+                                    $('#amount_section').addClass('d-none');
+                                    $('#product_form_div').addClass('d-none');
+                                    $('.add_item').addClass('d-none')
+                                    alert(`Validation Error! ${data.message}`)
+                                }else{
+                                    // $('#amount_section').removeClass('d-none');
+                                    // $('#amount_fig').attr("required", false);
+                                    console.log("request selected== ", selectedTarget);
+                                    displayNonLeaveElement()
+                                    $('#product_form_div').removeClass('d-none');
+                                    $('.add_item').removeClass('d-none');
+                                }
+                            }).guardedCatch(function (error) {
+                                let msg = error.message.message
+                                console.log(msg)
+                                $("#amount_fig").val('')
+                                $('#amount_section').addClass('d-none');
+                                $('#product_form_div').addClass('d-none');
+                                alert(`Unknown Error! ${msg}`)
+                            }); 
                         }
-                        else{
-                            $('#existing_order').attr('required', true);
-                            $('#div_existing_order').removeClass('d-none');
-                            $('#existing_ref_label').text("Cash Advance Ref #");
+                        else if(selectedTarget == "soe"){
+                            // $('#amount_section').removeClass('d-none');
+                            // $('#amount_fig').attr("required", true); 
+                            displayNonLeaveElement()
+                            $('.add_item').addClass('d-none')
+                            $('#product_form_div').removeClass('d-none'); 
+                            if ($('#selectTypeRequest').val() == "new"){
+                                if ($('#staff_id').val() == ""){
+                                    selectedTarget.val('').trigger('change')
+                                    alert("Please enter staff ID");
+                                }
+                                else{
+                                    $('#existing_order').attr('required', true);
+                                    $('#div_existing_order').removeClass('d-none');
+                                    $('#existing_ref_label').text("Cash Advance Ref #");
+                                    }
                             }
+                        }
+                         
+                        else{
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            console.log("request selected");
+                            displayNonLeaveElement();
+                            $('#product_form_div').removeClass('d-none');
+                        }
                     }
-                }
-                 
-                else{
-                    $('#amount_section').addClass('d-none');
-                    $('#amount_fig').attr("required", false);
-                    console.log("request selected");
-                    displayNonLeaveElement();
-                    $('#product_form_div').removeClass('d-none');
-                } 
+                }).guardedCatch(function (error) {
+                    let msg = error.message.message
+                    console.log(msg)
+                    $("#selectRequestOption").val('')
+                    alert(`Unknown Error! ${msg}`)
+                });
             },
 
             'blur input[name=existing_order]': function(ev){
@@ -984,7 +1060,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#amount_fig').val('');
         $('#request_date').val('');
         $('#request_end_date').val('');
+        $('#labelDescription').text('Description');
         $('#label_end_date').addClass('d-none');
+        $('#div_system_requirement').addClass('d-none');
         $('#request_end_date').addClass('d-none');
         $('#request_end_date').attr('required', false);
         $('#existing_order').val('');
@@ -992,6 +1070,23 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#product_ids').val('').trigger('change');
         $('#product_form_div').addClass('d-none');
         $('#tbody_product').empty();
+        $('#otherChangeOption').prop('checked', false);
+        $('#hardwareOption').prop('checked', false);
+        $('#versionUpgrade').prop('checked', false);
+        $('#ids_on_os_and_db').prop('checked', false);
+        $('#osChange').prop('checked', false);
+        $('#databaseChange').prop('checked', false);
+        $('#datapatch').prop('checked', false);
+        $('#enhancement').prop('checked', false);
+        $('#applicationChange').prop('checked', false);
+        $('#div_other_system_details').addClass('d-none');
+        $('#other_system_details').attr('required', false);
+        $('#other_system_details').val('');
+        // $('#other_system_details').addClass("is-valid");
+        $('#div_justification_reason').addClass('d-none');
+        $('#justification_reason').attr('required', false);
+        $('#justification_reason').val('');
+        // $('#justification_reason').addClass("is-valid");
     }
     var form = $('#msform')[0];
 // return PortalRequestWidget;

@@ -23,4 +23,5 @@ access_cbt_recruitment_sign_wizard_id,access_cbt_recruitment_sign_wizard,model_c
 access_hr_applicant_documentation_id,access_hr_applicant_documentation,model_hr_applicant_documentation,,1,1,1,1
 access_documentation_type_id,access_documentation_type,model_documentation_type,,1,1,1,1
 access_panelist_score_sheet_id,access_panelist_score_sheet,model_panelist_score_sheet,,1,1,1,1
+access_score_sheet_export_id,access_score_sheet_export,model_score_sheet_export,,1,1,1,1
 

@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 class HRJobRecruitmentRequest(models.Model):
 	_name = 'hr.job.recruitment.request'
 	_inherit = ['mail.thread', 'mail.activity.mixin']
-	_order = 'date_expected desc, id desc'
+	_order = 'id desc'
 	_description = "Recruitment Request"
 
 	@api.model
