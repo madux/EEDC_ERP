@@ -31,6 +31,7 @@
         'static/src/xml/website_hr_recruitment_templates.xml',
         'views/hr_employee.xml',
         'views/hr_recruitment_request.xml',
+        'views/hr_recruitment_stage_inherit.xml',
         # 'views/company_memo_inherit.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
