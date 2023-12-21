@@ -123,6 +123,23 @@ class Memo_Model(models.Model):
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
     res_users = fields.Many2many('res.users', string='Approvers') #, default=_default_employee)
     comments = fields.Text('Comments', default="-")
+    supervisor_comment = fields.Html('Supervisor Comments', default="")
+    manager_comment = fields.Html('Manager Comments', default="")
+    is_supervior = fields.Boolean(string="compute_employee_supervisor")
+    is_manager = fields.Boolean(string="is_manager", compute="compute_employee_supervisor")
+    
+    # Fields for server request
+    applicationChange = fields.Boolean(string="Application Change")
+    datapatch = fields.Boolean(string="Data patch")
+    enhancement = fields.Boolean(string="Enhancement")
+    databaseChange = fields.Boolean(string="Database Change")
+    osChange = fields.Boolean(string="OS Change")
+    ids_on_os_and_db = fields.Boolean(string="IDS on OS and DB")
+    versionUpgrade = fields.Boolean(string="version Upgrade")
+    hardwareOption = fields.Boolean(string="hardware Option")
+    otherChangeOption = fields.Boolean(string="Other Change")
+    other_system_details = fields.Html(string="Specify Other reason")
+    justification_reason = fields.Html(string="Justification Reason")
     attachment_number = fields.Integer(compute='_compute_attachment_number', string='No. Attachments')
     partner_id = fields.Many2many('res.partner', string='Related Partners')
     approver_id = fields.Many2one('hr.employee', 'Approver')
@@ -263,7 +280,10 @@ class Memo_Model(models.Model):
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
+        
         if self.memo_type:
+            if not self.employee_id.department_id:
+                raise ValidationError("Contact Admin !!!  Employee must be linked to a department")
             if not self.res_users:
                 department_id = self.employee_id.department_id
                 ms = self.env['memo.config'].sudo().search([
@@ -274,6 +294,12 @@ class Memo_Model(models.Model):
                     memo_setting_stage = ms.stage_ids[0]
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
+                    # self.res_users = [
+                    #     (4, self.employee_id.administrative_supervisor_id.user_id.id),
+                    #     ]
+                    self.users_followers = [
+                        (4, self.employee_id.administrative_supervisor_id.id),
+                        ] 
                 else:
                     self.memo_type = False
                     self.stage_id = False
@@ -347,7 +373,23 @@ class Memo_Model(models.Model):
         else:
             self.dept_ids = False
             # self.district_id = self.employee_id.ps_district_id.id
-        
+    @api.depends('employee_id')
+    def compute_employee_supervisor(self):
+        if self.employee_id:
+            current_user = self.env.user
+            if current_user.id == self.employee_id.administrative_supervisor_id.user_id.id:
+                self.is_supervior = True
+            else:
+                self.is_supervior = False
+            
+            if current_user.id == self.employee_id.parent_id.user_id.id:
+                self.is_manager = True
+            else:
+                self.is_manager = False
+        else:
+            self.is_supervior = False
+            self.is_manager = False 
+
     def print_memo(self):
         report = self.env["ir.actions.report"].search(
             [('report_name', '=', 'company_memo.memomodel_print_template')], limit=1)
@@ -655,6 +697,17 @@ class Memo_Model(models.Model):
         Yours Faithfully<br/>{self.env.user.name}"""
         return self.generate_memo_artifacts(body_msg, body)
 
+    def check_supervisor_comment(self):
+        if self.memo_type == "server_access":
+            if self.employee_id.administrative_supervisor_id and not self.supervisor_comment:
+                raise ValidationError(
+                    """Please Inform the employee's supervisor to comment on this before approving 
+                    """)
+            elif not self.employee_id.administrative_supervisor_id and not self.manager_comment:
+                raise ValidationError(
+                    """Please Inform the employee's Manager to comment on this before approving 
+                    """)
+                    
     def user_approve_memo(self): # Always available to Some specific groups
         return self.approve_memo()
 
@@ -662,6 +715,8 @@ class Memo_Model(models.Model):
         # users = self.env['res.users'].browse([self.env.uid])
         # manager = users.has_group("company_memo.mainmemo_manager")
         # if not manager: 
+        ### check if supervisor has commented on the memo if it is server access
+        self.check_supervisor_comment()
         is_config_approver = self.determine_if_user_is_config_approver()
         if self.env.uid == self.employee_id.user_id.id and not is_config_approver:
             raise ValidationError(

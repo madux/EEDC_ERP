@@ -69,17 +69,31 @@ class PortalRequest(http.Controller):
 			[
 				('employee_number', '=', staff_num),
 				('active', '=', True),
-				('user_id', '=', user.id)], limit=1) 
+				('user_id', '=', user.id)], limit=1)
 			if employee:
-				return {
-					"status": True,
-					"data": {
-						'name': employee.name,
-						'phone': employee.work_phone or employee.mobile_phone,
-						'work_email': employee.work_email,
-					},
-					"message": "", 
+				if employee.department_id:
+					
+					return {
+						"status": True,
+						"data": {
+							'name': employee.name or "",
+							'phone': employee.work_phone or employee.mobile_phone or "",
+							'work_email': employee.work_email or "",
+						},
+						"message": "", 
 					}
+				else:
+					return {
+						"status": False,
+						"data": {
+							'name': "",
+							'phone': "",
+							'work_email': "",
+						},
+						"message": "Employee is not linked to any department. Contact Admin", 
+					}
+			
+			
 			else:
 				return {
 					"status": False,
@@ -186,6 +200,46 @@ class PortalRequest(http.Controller):
 					}
 		else:
 			msg = """No Employee record found"""
+			return {
+				"status": False,
+				"message": msg, 
+				}
+		
+	@http.route(['/check-configured-stage'], type='json', website=True, auth="user", csrf=False)
+	def check_configured_leave(self, **post):
+		staff_num = post.get('staff_num')
+		request_option = post.get('request_option')
+		_logger.info(f'posted to check configured stage ...{staff_num}, {request_option}')
+		employee_id = request.env['hr.employee'].sudo().search([
+			('employee_number', '=', staff_num)
+			], limit=1)
+		if not any([staff_num, request_option]):
+			return {
+					"status": False,
+					"message": "Please ensure you provide staff number, request option", 
+					}
+		else:
+			_logger.info('All fields captured')
+
+		if employee_id and employee_id.department_id: 
+			memo_settings = request.env['memo.config'].sudo().search([
+            ('memo_type', '=', request_option),
+            ('department_id', '=', employee_id.department_id.id)
+            ], limit=1) 
+			if not memo_settings or not memo_settings.stage_ids:
+				msg = """Please contact system admin to properly configure a request type for your department"""
+				return {
+					"status": False,
+					"message": msg, 
+					} 
+			else:
+				_logger.info('Found memo setting')
+				return {
+					"status": True,
+					"message": "", 
+					}
+		else:
+			msg = """No Employee record found or employee department not properly configured. Contact system Admin"""
 			return {
 				"status": False,
 				"message": msg, 
@@ -508,29 +562,39 @@ class PortalRequest(http.Controller):
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
 			"district_id": district_id,
+			"applicationChange": True if post.get("applicationChange") == "on" else False,
+			"enhancement": True if post.get("enhancement") == "on" else False,
+			"datapatch": True if post.get("datapatch") == "on" else False,
+			"databaseChange": True if post.get("databaseChange") == "on" else False,
+			"osChange": True if post.get("osChange") == "on" else False,
+			"ids_on_os_and_db": True if post.get("ids_on_os_and_db") == "on" else False,
+			"versionUpgrade": True if post.get("versionUpgrade") == "on" else False,
+			"hardwareOption": True if post.get("hardwareOption") == "on" else False,
+			"otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
+			"other_system_details": post.get("other_system_details"),
+			"justification_reason": post.get("justification_reason"),
 			# or district_id or int(post.get("selectDistrict")) if post.get("selectDistrict") else 1, #int(post.get("selectDistrict")) if post.get("selectDistrict") else memo_id.district_id.id if memo_id else False,
 			# "approver_id": employee_id.parent_id.id, 
 			"state": "Sent",
 			# "direct_employee_id": employee_id.parent_id.id, 
 			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
-			"res_users": [
-				(4, employee_id.parent_id.user_id.id), 
-				(4, request.env.user.id)],
-			"users_followers": [
-				(4, employee_id.parent_id.id), 
-				(4, employee_id.id)],
+			# "res_users": [
+			# 	# (4, employee_id.parent_id.user_id.id),
+			# 	# (4, employee_id.administrative_supervisor_id.user_id.id if employee_id.administrative_supervisor_id and employee_id.administrative_supervisor_id.user_id else False),
+			# 	(4, request.env.user.id)],
+			# "users_followers": [
+			# 	(4, employee_id.parent_id.id), 
+			# 	(4, employee_id.administrative_supervisor_id.id if employee_id.administrative_supervisor_id else False),
+			# 	(4, employee_id.id)],
 		}
 		_logger.info(f"POST DATA {vals}")
 		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
 		productItems = []
 		productItems = json.loads(post.get('productItems'))
-
-
 		memo_obj = request.env['memo.model']
 		if not memo_id:
 			_logger.info("Memo id creating")
 			memo_id = memo_obj.sudo().create(vals)
-			 
 		else:
 			_logger.info("Memo id updating")
 			memo_id.sudo().write(vals)
@@ -545,22 +609,32 @@ class PortalRequest(http.Controller):
 				file_name = attachment.filename
 				datas = base64.b64encode(attachment.read())
 				other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
-            
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
 			memo_id.memo_type, 
-			memo_id.employee_id.department_id.id or memo_id.department_id.id
+			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
 		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
 		_logger.info(f'Successfully Registered! with memo id Approver = {approver_id} stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
+		# "users_followers": [
+			# 	(4, employee_id.parent_id.id), 
+			# 	(4, employee_id.administrative_supervisor_id.id if employee_id.administrative_supervisor_id else False),
+			# 	(4, employee_id.id)],
+		follower_ids = [(4, approver_id)]
+		user_ids = [(4, request.env.user.id)]
+		if employee_id.administrative_supervisor_id:
+			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
+		if employee_id.parent_id:
+			follower_ids.append((4, employee_id.parent_id.id))
 		memo_id.sudo().write({
 			'stage_id': next_stage_id, 
 			'approver_id': approver_id,
 			"direct_employee_id": approver_id, 
-			'users_followers': [(4, approver_id)],
+			'users_followers': follower_ids,
+			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
 		})
 		memo_id.confirm_memo(

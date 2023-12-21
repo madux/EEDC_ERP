@@ -241,7 +241,7 @@
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="description">
-                                                    <span class="s_website_form_label_content">Description</span>
+                                                    <span class="s_website_form_label_content" id="labelDescription">Description</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
@@ -257,11 +257,82 @@
                                                 </label>
                                                 <div class="col-sm">
                                                     <input type="number" class="form-control s_website_form_input" id="amount_fig" name="amount_fig" required="false" labelfor="Payment Amount"/>
-                                                    <input type="text" class="d-none s_website_form_input" value="0" id="allAmount" name="allAmount" required="false"/>
+                                                    <input type="text" class="d-none s_website_form_input" id="allAmount" name="allAmount" required="false"/>
                                                 </div>
                                             </div>
                                         </div>
- 
+                                        <div id="div_system_requirement" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="systemRequirement">
+                                                    <span class="s_website_form_label_content">System Requirements</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="applicationChange" id="applicationChange"/>
+                                                        <label for="applicationChangeLabel">Application Change</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="enhancement" id="enhancement" checked="true"/>
+                                                        <label for="applicationChangeLabel">Enhancement</label>
+                                                    </div>
+                                                    
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="datapatch" id="datapatch"/>
+                                                        <label for="datapatchLabel">Data Patch</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="databaseChange" id="databaseChange"/>
+                                                        <label for="databaseChangeLabel">Database Change</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="osChange" id="osChange"/>
+                                                        <label for="osChangeLabel">OS Change</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm">
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="ids_on_os_and_db" id="ids_on_os_and_db"/>
+                                                        <label for="ids_on_os_and_dbLabel">IDs on OS and DB</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="versionUpgrade" id="versionUpgrade"/>
+                                                        <label for="versionUpgradeLabel">Version Upgrade</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" name="hardwareOption" id="hardwareOption"/>
+                                                        <label for="hardwareLabel">Hardware</label>
+                                                    </div>
+                                                    <div class="mb-2 mt-2 text-muted">
+                                                        <input type="checkbox" class="otherChangeOption" name="otherChangeOption" id="otherChangeOption"/>
+                                                        <label for="otherChangeOptionLabel">Other Change</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                        <div id="div_other_system_details" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="other_system_details_desc">
+                                                    <span class="s_website_form_label_content" id="other_system_details_desc">Specify Other Changes</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm-8">
+                                                    <input placeholder="Start typing" class="form-control s_website_form_input" name="other_system_details" required="0" id="other_system_details" rows="3" labelfor="other_system_details_desc"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="div_justification_reason" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="justification_reason">
+                                                    <span class="s_website_form_label_content" id="justification_reason_desc">Specify reason for Access /justification</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <input placeholder="Start typing" style="width=800px;" class="form-control s_website_form_input" name="justification_reason" required="0" id="justification_reason" rows="3" labelfor="Specify reason for Access /justification"/>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
@@ -340,7 +411,6 @@
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" name="leave_end_datex" required="false" labelfor="Leave End date"/>
                                                 </div>
                                             </div>
-                                             
                                         </div> 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required product_section d-none" id="product_section" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">

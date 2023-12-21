@@ -103,7 +103,7 @@
                                 <field name="invoice_id" attrs="{'invisible':[('memo_type','!=','Payment')]}"
                                 options="{&quot;no_create&quot;: True}"/>
                                 <field name="vendor_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" string="Vendor" attrs="{'invisible':[('memo_type','!=','Payment')]}"/>
-                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="1" readonly="1"/>
+                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="1" readonly="0"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="0"/>  
                                 <field name="active" invisible="1" groups="base.group_system"/>
                             </group> 
@@ -179,11 +179,42 @@
                                     </sheet>
                                 </form>
                             </page>
-                            
+
+                            <page name='server_request_page' string='Server Request information' attrs="{'invisible':[('memo_type','not in',['server_access'])]}">
+                                <form string=""> 
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="applicationChange"/> 
+                                                <field name="datapatch"/> 
+                                                <field name="enhancement"/> 
+                                                <field name="databaseChange"/> 
+                                                <field name="osChange"/> 
+                                            </group>
+                                            <group>
+                                                <field name="ids_on_os_and_db"/> 
+                                                <field name="versionUpgrade"/> 
+                                                <field name="otherChangeOption"/>
+                                                <field name="other_system_details"/>
+                                                <field name="justification_reason"/>
+                                            </group>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </page>
                             <page name='comments' string='Comments'>
                                 <field name="comments" readonly="1" string = "Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
                             </page>
 
+                            <page name='supervisor_comments' string="Supervisor's Comments">
+                                <field name="is_supervior" readonly="0" invisible="1"/>
+                                <field name="supervisor_comment" string = "Supervisor Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('is_supervior','=',False)]}"/>
+                            </page>
+                            <page name='manager_comment' string="Manager's Comments">
+                                <field name="is_manager" readonly="0" invisible="1"/>
+                                <field name="manager_comment" readonly="0" string = "Manager Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('is_manager','=',False)]}"/>
+                            </page>
+- 
                             <page name='reason_backs' string='Return Reason'>
                                 <field name="reason_back" readonly = "0" string = "Add Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
                             </page> 
