@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from bs4 import BeautifulSoup
+from odoo.tools import consteq, plaintext2html
 from odoo import http
 import random
 from lxml import etree
@@ -1151,7 +1152,6 @@ class Memo_Model(models.Model):
             return self.record_to_open('account.move', view_id)
         else:
             pass  
-
     def follower_messages(self, body):
         pass 
         # body= "RETURN NOTIFICATION;\n %s" %(self.reason_back)

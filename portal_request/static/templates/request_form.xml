@@ -127,6 +127,7 @@
                                         <h5 class="row mx-1 mb-1 mb-md-0">
                                             <div class="col-6 text-truncate">
                                                 <span t-field="req.name"/>
+                                                <a id="req.id" class="record_id"/>
                                                 <small class="text-muted "> (#<span t-field="req.code"/>)</small>
                                             </div>
                                             <!-- <t t-if="req.state=='Refuse'"> -->
@@ -134,6 +135,14 @@
                                                     <!-- <a id="req.id" class="set_state_draft btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">
                                                         Set to draft 
                                                     </a> -->
+                                                <!-- <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
+                                                    <a id="req.employee_id.administrative_supervisor_id.id" class="supervisor_comment btn btn-secondary btn-sm">
+                                                        Supervisor Comment
+                                                    </a>
+                                                </t>
+                                                <t t-else="">
+                                                    -
+                                                </t> -->
                                                 <t t-if="req.state == 'Refuse'">
                                                     <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Refuse')">
                                                         Resend
@@ -177,6 +186,30 @@
                                     <div class="col-lg-12" t-raw="req.description"/>
                                 </div>
                             </div>
+                            <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
+                                <div class="div_supervisor_comment_message">
+                                    <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
+                                    <div class="mt8">
+                                        <button id="supervisor_comment_button" class="btn btn-primary" type="button">Comment</button>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                            </t>
+                            <!-- <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
+                                <div class="div_supervisor_comment_message o_portal_chatter_composer_body mb32">
+                                    <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
+                                    <div class="o_portal_chatter_attachments mt-3"></div>
+                                    <div class="mt8">
+                                    <button id="supervisor_comment_button" class="o_portal_chatter_composer_btn btn btn-primary" type="button">Comment</button>
+                                        <button class="o_portal_chatter_attachment_btn btn btn-secondary" type="button" title="Add attachment">
+                                            <i class="fa fa-paperclip"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                            </t> -->
                             
                         </div>
                         <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment']">
@@ -238,18 +271,25 @@
                         </t>
                         <t t-else="">
                         </t>
+
+                        <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
+                            <h4><strong>Message(s) and communication history</strong></h4>
+                            <t t-call="portal.message_thread">
+                                <t t-set="object" t-value="req"/>
+                            </t> 
+                        </div>   -->
                         
 
-                        <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
+                        <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
                             <h4><strong>Message(s) and communication history</strong></h4>
                             <t t-call="portal.message_thread">
                                 <t t-set="object" t-value="req"/>
                             </t>  
-                            <!-- <t t-call="portal.message_thread">
+                            <t t-call="portal.message_thread">
                                 <t t-set="token" t-value="ticket.access_token"/>
                                 <t t-set="disable_composer" t-value="ticket.stage_id.fold"/>
-                            </t> -->
-                        </div> 
+                            </t>
+                        </div>  -->
                     </div>
                     <div id="message_thread_section" class="card-header container" data-anchor="true">
                         <div class="row gs-0">

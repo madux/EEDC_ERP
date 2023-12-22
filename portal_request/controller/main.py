@@ -6,6 +6,7 @@ from multiprocessing.spawn import prepare
 import urllib.parse
 from odoo import http, fields
 from odoo.exceptions import ValidationError
+from odoo.tools import consteq, plaintext2html
 from odoo.http import request
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
@@ -717,7 +718,8 @@ class PortalRequest(http.Controller):
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				('employee_id.user_id', '=', user.id),
+				'|',('employee_id.user_id', '=', user.id),
+				('users_followers.user_id','=', user.id)
 			]
 		domain += [
 			('memo_type', 'in', memo_type),
@@ -756,7 +758,10 @@ class PortalRequest(http.Controller):
 				('id', '=', int(id)),
 			]
 		requests = request_id.search(domain, limit=1)
-		values = {'req': requests}
+		values = {
+			'req': requests,
+			'current_user': user.id
+			}
 		return request.render("portal_request.request_form_template", values)
 	
 	@http.route('/my/request/update/<int:id>/<string:status>', type='http', auth="user", website=True)
@@ -787,3 +792,34 @@ class PortalRequest(http.Controller):
 				stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
 				request_record.write({'state': 'Sent', 'stage_id': stage_id})
 		return request.redirect(f'/my/request/view/{id}')# %(requests.id))
+	
+	@http.route('/update/data', type='json', auth="user", website=True)
+	def update_my_request_status(self, **post):
+		request_id = request.env['memo.model'].sudo()
+		domain = [
+			('id', '=', post.get('id')),
+		]
+		request_record = request_id.search(domain, limit=1)
+		if request_record:
+			supervisor_message = request_record.supervisor_comment or ""
+			message = supervisor_message +"<br/>"+ "By: " + request.env.user.name + supervisor_message
+			if not post.get('supervisor_comment'):
+				body = plaintext2html(post.get('supervisor_comment'))
+				request_record.write({
+					'supervisor_comment': message
+					})
+				request_record.message_post(body=body)
+				return {
+						"status": True,
+						"message": "Comment successfully Updated",
+						}
+			else:
+				return {
+					"status": False, 
+					"message": "Please Provide a write up in the supervisor's comment", 
+				}
+		else:
+			return {
+				"status": False, 
+				"message": "No matching memo record found. Contact Admin", 
+			}
