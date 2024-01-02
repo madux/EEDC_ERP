@@ -15,9 +15,14 @@ class Send_Memo_back(models.Model):
     date = fields.Datetime('Date')
     direct_employee_id = fields.Many2one('hr.employee', 'Direct To')
 
-    def get_url(self, id, name):
+    # def get_url(self, id, name):
+    #     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+    #     base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
+    #     return "<a href={}> </b>Click<a/>. ".format(base_url)
+
+    def get_url(self,id):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
+        base_url += "/my/request/view/%s" % (id)
         return "<a href={}> </b>Click<a/>. ".format(base_url)
 
     def post_refuse(self):
@@ -26,7 +31,7 @@ class Send_Memo_back(models.Model):
         get_state.write({'reason_back': reasons})
         if self.reason:
             msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
-             <br/>Kindly {} to Review</br> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id, self._name))
+             <br/>Kindly {} to Review<br/> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id))
             get_state.write({
                 'state':'Refuse',
                 'stage_id': self.env.ref("company_memo.memo_refuse_stage").id,

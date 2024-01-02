@@ -932,29 +932,6 @@ odoo.define('portal_request.portal_request', function (require) {
                 let targetElement = $(ev.target).attr('id');
                 setRecordStatus(targetElement, 'Sent');
             },
-            'click .supervisor_comment_button': function(ev){
-                this._rpc({
-                    route: `/update/data`,
-                    params: {
-                        'supervisor_comment': $('#supervisor_comment_message').val(),
-                        'memo_id': $('.record_id').attr('id')
-                    },
-                }).then(function (data) {
-                    if(data.status){
-                        console.log('updating record data => '+ JSON.stringify(data))
-                        $('#supervisor_comment_message').val('');
-                        modal_message.text(data.message)
-                        alert_modal.modal('show');
-                    }else{
-                        modal_message.text(data.message)
-                        alert_modal.modal('show');
-                    }
-                    
-                }).guardedCatch(function (error) {
-                    let msg = error.message.message
-                    alert(`Unknown Error! ${msg}`)
-                });
-            },
 
             'click .button_req_submit': function (ev) {
                 //// main event starts

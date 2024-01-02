@@ -9,305 +9,319 @@
                         <t t-set="backend_url" t-value="'/web#model=memo.model&amp;id=%s&amp;view_type=form' % (req.id)"/>
                     </t>
                 </t>
-                <div class="navbar-light  py-0 mb-2">
-                    <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
-                        Back
-                    </a>
-                    <a id="edit" href="/portal-request" class="btn btn-secondary btn-sm">
-                        Edit
-                    </a>
-                    <a id="save" href="#" class="btn btn-secondary btn-sm d-none">
-                        save
-                    </a>
-                </div>
+                    <section class="s_website_form pt16 pb16 o_colored_level portal-request-form" id="portal-request-form" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
+                    <div class="navbar-light  py-0 mb-2">
+                        <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
+                            Back
+                        </a>
+                        <a id="edit" href="/portal-request" class="btn btn-secondary btn-sm">
+                            Edit
+                        </a>
+                        <a id="save" href="#" class="btn btn-secondary btn-sm d-none">
+                            save
+                        </a>
+                    </div>
 
-                <div class="row mt16 o_project_portal_sidebar">
-                    <t t-call="portal.portal_record_sidebar">
-                        <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
+                    <div class="row mt16 o_project_portal_sidebar">
+                        <t t-call="portal.portal_record_sidebar">
+                            <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
 
-                        <t t-set="entries">
-                            <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
-                                <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
-                                     
-                                    <div class="d-grid flex-sm-nowrap">
-                                        <a class="btn btn-secondary pt-1" href="/portal-request">
-                                            Create Request
-                                        </a>
-                                    </div>
-                                    <div class="d-grid pt-2 flex-sm-nowrap">
-                                        <button class="btn btn-secondary" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
-                                            Cancel Request
-                                        </button>
-                                    </div>
-
-                                    <div class="modal" tabindex="-1" role="dialog" id="portal_request_cancel_modal">
-                                        <div class="modal-dialog mt-5" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Cancel Request</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Are you sure you wish to proceed?</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <a role="button" class="btn btn-primary" t-att-href="'/my/request/update/%s/%s' % (req.id, 'cancel')">Cancel the request</a>
-                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+                            <t t-set="entries">
+                                <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
+                                    <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
+                                        
+                                        <div class="d-grid flex-sm-nowrap">
+                                            <a class="btn btn-secondary pt-1" href="/portal-request">
+                                                Create Request
+                                            </a>
+                                        </div>
+                                        <div class="d-grid pt-2 flex-sm-nowrap">
+                                            <button class="btn btn-secondary cancel_btn" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                                Cancel Request
+                                            </button>
+                                        </div> 
+                                        <div class="modal" tabindex="-1" role="dialog" id="portal_request_cancel_modal">
+                                            <div class="modal-dialog mt-5" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <input type="hidden" class="form-control s_website_form_input" id="cancel_refuse_input" name="cancel_refuse_input" value=""/>
+                                                        <h5 class="modal-title">Request</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you wish to proceed? </p>
+                                                        <div id="div_refuse_comment_message" class="div_refuse_comment_message o_portal_chatter_composer_body mb32 mt32">
+                                                            <div class="o_portal_messages_container mt32" data-anchor="true">
+                                                            <h4><strong>Comments</strong></h4>
+                                                                <input type="text" name="refuse_comment_message" id="refuse_comment_message" class="form-control" placeholder="Write a message..."></input>
+                                                            </div>
+                                                            <div class="mt8">
+                                                                <button id="refuse_comment_button" class="o_portal_chatter_composer_btn refuse_comment_button btn btn-primary" type="button">Refuse With Comment</button>
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                     
+                                                    <div class="modal-footer" id="modalfooter4cancel">
+                                                        <!-- <a role="button" class="o_portal_chatter_composer_btn btn btn-primary" id="cancel_modal_btn" t-att-href="'/update/data/%s/%s' % (req.id, 'cancel')">Cancel the request</a> -->
+                                                        <a role="button" class="o_portal_chatter_composer_btn btn btn-primary cancel_modal_btn" id="cancel_modal_btn">Cancel the request</a>
+                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </li>
-                                <li id="ticket-nav" class="list-group-item ps-0 flex-grow-1" t-ignore="true" role="complementary">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item" id="nav-header">
-                                            <a class="nav-link ps-3" href="/my/requests" style="max-width: 200px;">
-                                                Request
-                                            </a>
-                                        </li>
-                                        <li class="nav-item" id="nav-chat">
-                                            <a class="nav-link ps-3" href="#request_chat">
-                                                History
-                                            </a>
-                                        </li>
-                                        <li class="nav-item" id="nav-chat">
-                                            <a class="nav-link ps-4" href="">
-                                                Previous
-                                            </a>
-                                        </li>
-                                        <li class="nav-item" id="nav-chat">
-                                            <a class="nav-link ps-5" href="">
-                                                Next
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <!-- <li id="request-links" t-if="ticket_link_section" class="list-group-item flex-grow-1" t-ignore="true" role="complementary" invisible="1">
-                                    <ul class="nav flex-column">
-                                        <t t-foreach="sorted(ticket_link_section, key=lambda r: r['sequence'])" t-as="ticket_link">
-                                            <li class="nav-item">
-                                                <a class="nav-link ps-0" t-att-href="ticket_link['access_url']">
-                                                    <t t-out="ticket_link['title']"/>
+                                    </li>
+                                    <li id="ticket-nav" class="list-group-item ps-0 flex-grow-1" t-ignore="true" role="complementary">
+                                        <ul class="nav flex-column">
+                                            <li class="nav-item" id="nav-header">
+                                                <a class="nav-link ps-3" href="/my/requests" style="max-width: 200px;">
+                                                    Request
                                                 </a>
                                             </li>
-                                        </t>
-                                    </ul>
-                                </li> -->
+                                            <li class="nav-item" id="nav-chat">
+                                                <a class="nav-link ps-3" href="#request_chat">
+                                                    History
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" id="nav-chat">
+                                                <a class="nav-link ps-4" href="">
+                                                    Previous
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" id="nav-chat">
+                                                <a class="nav-link ps-5" href="">
+                                                    Next
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <!-- <li id="request-links" t-if="ticket_link_section" class="list-group-item flex-grow-1" t-ignore="true" role="complementary" invisible="1">
+                                        <ul class="nav flex-column">
+                                            <t t-foreach="sorted(ticket_link_section, key=lambda r: r['sequence'])" t-as="ticket_link">
+                                                <li class="nav-item">
+                                                    <a class="nav-link ps-0" t-att-href="ticket_link['access_url']">
+                                                        <t t-out="ticket_link['title']"/>
+                                                    </a>
+                                                </li>
+                                            </t>
+                                        </ul>
+                                    </li> -->
 
-                                <li t-if="req.approver_id" class="list-group-item flex-grow-1">
-                                    <div class="col-12 col-md-12 pb-2" t-if="req.approver_id.user_id">
-                                        <strong>To be Approved by</strong>
-                                        <div class="d-flex ps-3 flex-nowrap">
-                                            <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(req.approver_id.user_id.avatar_1024)" alt="Contact"/>
-                                            <div class="ms-2">
-                                                <div t-out="req.approver_id.user_id" t-options='{"widget": "contact", "fields": ["name"]}' class="mt-2"/>
+                                    <li t-if="req.approver_id" class="list-group-item flex-grow-1">
+                                        <div class="col-12 col-md-12 pb-2" t-if="req.approver_id.user_id">
+                                            <strong>To be Approved by</strong>
+                                            <div class="d-flex ps-3 flex-nowrap">
+                                                <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(req.approver_id.user_id.avatar_1024)" alt="Contact"/>
+                                                <div class="ms-2">
+                                                    <div t-out="req.approver_id.user_id" t-options='{"widget": "contact", "fields": ["name"]}' class="mt-2"/>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-12 col-md-12 pb-2" t-if="req.employee_id.user_id">
-                                        <strong>Employee / Requester</strong>
-                                        <div class="d-flex ps-3 flex-nowrap">
-                                            <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(req.employee_id.user_id.avatar_1024)" alt="Contact"/>
-                                            <div class="ms-2">
-                                                <div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["name"]}'/>
-                                                <a t-attf-href="mailto:{{req.employee_id.work_email}}" t-if="req.employee_id.work_email"><div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["email"]}'/></a>
-                                                <a t-attf-href="tel:{{req.employee_id.mobile_phone}}" t-if="req.employee_id.mobile_phone"><div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["phone"]}'/></a>
+                                        <div class="col-12 col-md-12 pb-2" t-if="req.employee_id.user_id">
+                                            <strong>Employee / Requester</strong>
+                                            <div class="d-flex ps-3 flex-nowrap">
+                                                <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(req.employee_id.user_id.avatar_1024)" alt="Contact"/>
+                                                <div class="ms-2">
+                                                    <div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["name"]}'/>
+                                                    <a t-attf-href="mailto:{{req.employee_id.work_email}}" t-if="req.employee_id.work_email"><div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["email"]}'/></a>
+                                                    <a t-attf-href="tel:{{req.employee_id.mobile_phone}}" t-if="req.employee_id.mobile_phone"><div t-field="req.employee_id.user_id.partner_id" t-options='{"widget": "contact", "fields": ["phone"]}'/></a>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </li>
-                            </ul>
+                                    </li>
+                                </ul>
+                            </t>
                         </t>
-                    </t>
-                    <div id="request_content" class="col-12 col-lg justify-content-end">
-                        <div id="card" class="card">
-                            <div id="card_header" class="card-header container" data-anchor="true">
-                                <div class="row gs-0">
-                                    <div class="col-md">
-                                        <h5 class="row mx-1 mb-1 mb-md-0">
-                                            <div class="col-6 text-truncate">
-                                                <span t-field="req.name"/>
-                                                <a id="req.id" class="record_id"/>
-                                                <small class="text-muted "> (#<span t-field="req.code"/>)</small>
-                                            </div>
-                                            <!-- <t t-if="req.state=='Refuse'"> -->
-                                            <div class="col-3 text-truncate">
-                                                    <!-- <a id="req.id" class="set_state_draft btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'submit')">
-                                                        Set to draft 
-                                                    </a> -->
-                                                <!-- <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
-                                                    <a id="req.employee_id.administrative_supervisor_id.id" class="supervisor_comment btn btn-secondary btn-sm">
-                                                        Supervisor Comment
-                                                    </a>
-                                                </t>
-                                                <t t-else="">
-                                                    -
-                                                </t> -->
-                                                <t t-if="req.state == 'Refuse'">
-                                                    <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Refuse')">
-                                                        Resend
-                                                    </a>
-                                                </t>
-                                                <t t-else="">
-                                                    -
-                                                </t>
-                                            </div>
-                                            <div class="col-3 text-end">
-                                                <small class="text-end">Status:</small>
-                                                <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
-                                            </div>
-                                             
-                                        </h5>
+                        <div id="request_content" class="col-12 col-lg justify-content-end">
+                            <div id="card" class="card">
+                                <div id="card_header" class="card-header container" data-anchor="true">
+                                    
+                                    <div class="row gs-0">
+                                        <div class="col-md">
+                                            <h5 class="row mx-1 mb-1 mb-md-0">
+                                                <div class="col-6 text-truncate">
+                                                    <span t-field="req.name"/>
+                                                    <a t-att-id="req.id" class="record_id"/>
+                                                    <small class="text-muted "> (#<span t-field="req.code"/>) </small>
+                                                </div>
+                                                <div class="col-3 text-truncate">
+                                                    <t t-if="req.state == 'Sent' and req.stage_id.approver_id.user_id.id == current_user" >
+                                                        <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
+                                                         <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
+                                                            Approve
+                                                        </a>
+                                                        <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                                            Refuse
+                                                        </a>
+                                                    </t>
+                                                     <t t-else="">
+                                                        -
+                                                    </t>
+                                                    <t t-if="req.state == 'Refuse'">
+                                                        <!-- <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Refuse')"> -->
+                                                        <a id="req.id" class="resend_request btn btn-secondary btn-sm">
+                                                            Resend
+                                                        </a>
+                                                    </t>
+                                                    <t t-else="">
+                                                        -
+                                                    </t>
+                                                </div>
+                                                <div class="col-3 text-end">
+                                                    <small class="text-end">Status:</small>
+                                                    <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                </div>
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="card_body" class="card-body">
+                                    <div class="row mb-4">
+                                        <strong class="col-lg-2">Request date</strong>
+                                        <span class="col-lg-10" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                    </div>
+                                    <div class="row mb-4" t-if="req.employee_id.parent_id">
+                                        <strong class="col-lg-2">Manager</strong>
+                                        <span class="col-lg-10">
+                                            <a t-attf-href="#">
+                                                <span t-field="req.employee_id.parent_id.name"/>
+                                            </a>
+                                        </span>
+                                    </div>
+                                    <div class="row mb-4" t-if="req.employee_id.administrative_supervisor_id">
+                                        <strong class="col-lg-2">Supervisor</strong>
+                                        <span class="col-lg-10">
+                                            <a t-attf-href="#">
+                                                <span t-field="req.employee_id.administrative_supervisor_id.name"/>
+                                            </a>
+                                        </span>
+                                    </div>
+                                    <div t-if="not is_html_empty(req.description)" class="row mb-4" name="description">
+                                        <div class="col-lg-12" t-raw="req.description"/>
                                     </div>
                                 </div>
                             </div>
-                            <div id="card_body" class="card-body">
-                                <div class="row mb-4">
-                                    <strong class="col-lg-2">Request date</strong>
-                                    <span class="col-lg-10" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
-                                </div>
-                                <div class="row mb-4" t-if="req.employee_id.parent_id">
-                                    <strong class="col-lg-2">Manager</strong>
-                                    <span class="col-lg-10">
-                                        <a t-attf-href="#">
-                                            <span t-field="req.employee_id.parent_id.name"/>
-                                        </a>
-                                    </span>
-                                </div>
-                                <div class="row mb-4" t-if="req.employee_id.administrative_supervisor_id">
-                                    <strong class="col-lg-2">Supervisor</strong>
-                                    <span class="col-lg-10">
-                                        <a t-attf-href="#">
-                                            <span t-field="req.employee_id.administrative_supervisor_id.name"/>
-                                        </a>
-                                    </span>
-                                </div>
-                                <div t-if="not is_html_empty(req.description)" class="row mb-4" name="description">
-                                    <div class="col-lg-12" t-raw="req.description"/>
+                            <div class="row">
+                                <div id="successful_alert" role="dialog" class="modal col-sm-6 mt-32">
+                                    <div class="alert fade alert-simple alert-success alert-dismissible text-left font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show">
+                                    <!-- <div class="center-screen alert-success alert-dismissible text-center font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show"> -->
+                                        <i class="fa fa-check" aria-hidden="true"></i>
+                                        <strong class="font__weight-semibold">Well done!</strong> You successfully updated your comment.
+                                        <button type="button" id="btn-close-success" class="btn-close-success btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
                                 </div>
                             </div>
                             <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
-                                <div class="div_supervisor_comment_message">
-                                    <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
+                                <div class="div_supervisor_comment_message o_portal_chatter_composer_body mb32 mt32">
+                                    <div class="o_portal_messages_container mt32" data-anchor="true">
+                                    <h4><strong>Supervisor's comments</strong></h4>
+                                        <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
+                                    </div>
                                     <div class="mt8">
-                                        <button id="supervisor_comment_button" class="btn btn-primary" type="button">Comment</button>
+                                        <button id="supervisor_comment_button" class="o_portal_chatter_composer_btn supervisor_comment_button btn btn-primary" type="button">Comment &amp; Approve</button>
                                     </div>
                                 </div>
                             </t>
                             <t t-else="">
                             </t>
-                            <!-- <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
-                                <div class="div_supervisor_comment_message o_portal_chatter_composer_body mb32">
-                                    <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
-                                    <div class="o_portal_chatter_attachments mt-3"></div>
-                                    <div class="mt8">
-                                    <button id="supervisor_comment_button" class="o_portal_chatter_composer_btn btn btn-primary" type="button">Comment</button>
-                                        <button class="o_portal_chatter_attachment_btn btn btn-secondary" type="button" title="Add attachment">
-                                            <i class="fa fa-paperclip"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </t>
-                            <t t-else="">
-                            </t> -->
-                            
-                        </div>
-                        <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment']">
-                            <div class="form-row" id="product_item_form_div">
-                                <h3 class="fs-title">Request Items</h3>
-                                <div class="tableclass table-responsive" id="product_table_div">
-                                    <table width="100%" border="1" bordercolor="#FFFFFF"
-                                    bgcolor="#F7F7EF" border-collapse="collapse" align="center"
-                                    id="product_table" class="table table-bordered"
-                                    style="height: 200px !important;overflow-y: scroll !important;display: block;">
-                                        <thead>
-                                            <tr class="heading">
-                                                <th width="5%">
-                                                    <label></label>
-                                                </th>
-                                                <th width="45%">
-                                                    Product Name
-                                                </th>
-                                                <th width="30%">
-                                                    <label>Request Qty</label>
-                                                </th>
-                                                <th width="20%">
-                                                    <label>X</label>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tbody_product" name="tbody_product">
-                                            <t t-foreach="req.product_ids" t-as="prod">
-                                                <tr class="heading prod_row" t-att-id="prod.id" t-att-name="prod_row" t-att-row_count="prod.id">
+                            <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment']">
+                                <div class="form-row" id="product_item_form_div">
+                                    <h3 class="fs-title">Request Items</h3>
+                                    <div class="tableclass table-responsive" id="product_table_div">
+                                        <table width="100%" border="1" bordercolor="#FFFFFF"
+                                        bgcolor="#F7F7EF" border-collapse="collapse" align="center"
+                                        id="product_table" class="table table-bordered"
+                                        style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                            <thead>
+                                                <tr class="heading">
                                                     <th width="5%">
-                                                        <span>
-                                                            <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
-                                                        </span>
+                                                        <label></label>
                                                     </th>
-                                                    <th width="60%">
-                                                        <span t-att-id="prod.id">
-                                                            <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
-                                                        </span>
+                                                    <th width="45%">
+                                                        Product Name
+                                                    </th>
+                                                    <th width="30%">
+                                                        <label>Request Qty</label>
                                                     </th>
                                                     <th width="20%">
-                                                        <input type="text" t-att-name="prod.quantity_available" t-att-id="prod.id" t-att-value="prod.quantity_available" class="productinput form-control" readonly="readonly"/> 
-                                                    </th>
-                                                    
-                                                    <th width="15%">
-                                                        #
-                                                        <!-- <a t-att-id="prod.id" t-att-remove_id="prod.id" t-att-name="prod.product_id.name" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a> -->
+                                                        <label>X</label>
                                                     </th>
                                                 </tr>
-                                            </t>
-                                        </tbody>
-                                    </table>
-                                </div> 
-                                <!-- <div class="mb-0 py-2 col-12 add_item justify-content-center">
-                                    <div style="width: 200px;" class="s_website_form_label"/>
-                                    <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
-                                    <span id="s_website_form_result_addxx"/>
-                                </div> -->
-                            </div>
-                        </t>
-                        <t t-else="">
-                        </t>
-
-                        <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
-                            <h4><strong>Message(s) and communication history</strong></h4>
-                            <t t-call="portal.message_thread">
-                                <t t-set="object" t-value="req"/>
-                            </t> 
-                        </div>   -->
-                        
-
-                        <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
-                            <h4><strong>Message(s) and communication history</strong></h4>
-                            <t t-call="portal.message_thread">
-                                <t t-set="object" t-value="req"/>
-                            </t>  
-                            <t t-call="portal.message_thread">
-                                <t t-set="token" t-value="ticket.access_token"/>
-                                <t t-set="disable_composer" t-value="ticket.stage_id.fold"/>
+                                            </thead>
+                                            <tbody id="tbody_product" name="tbody_product">
+                                                <t t-foreach="req.product_ids" t-as="prod">
+                                                    <tr class="heading prod_row" t-att-id="prod.id" t-att-name="prod_row" t-att-row_count="prod.id">
+                                                        <th width="5%">
+                                                            <span>
+                                                                <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="60%">
+                                                            <span t-att-id="prod.id">
+                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="20%">
+                                                            <input type="text" t-att-name="prod.quantity_available" t-att-id="prod.id" t-att-value="prod.quantity_available" class="productinput form-control" readonly="readonly"/> 
+                                                        </th>
+                                                        
+                                                        <th width="15%">
+                                                            #
+                                                            <!-- <a t-att-id="prod.id" t-att-remove_id="prod.id" t-att-name="prod.product_id.name" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a> -->
+                                                        </th>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div> 
+                                    <!-- <div class="mb-0 py-2 col-12 add_item justify-content-center">
+                                        <div style="width: 200px;" class="s_website_form_label"/>
+                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                        <span id="s_website_form_result_addxx"/>
+                                    </div> -->
+                                </div>
                             </t>
-                        </div>  -->
-                    </div>
-                    <div id="message_thread_section" class="card-header container" data-anchor="true">
-                        <div class="row gs-0">
-                            <div class="col-md">
-                                <h4><strong>Communication Thread</strong></h4>
-                                <h5 class="row mx-1 mb-1 mb-md-0">
-                                    <t t-foreach="req.message_ids" t-as="mess">
-                                        <div class="col-12 text-truncate">
-                                            <img t-if="mess.author_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(mess.sudo().author_avatar)}" alt="Contact" style="width: 20px; height: 20px;"/>
-                                            <strong>Author</strong> : <small class="text-muted "> (#<span t-field="mess.author_id.name"/>)</small><br/>
-                                            <strong>Description</strong> <div class="col-lg-12" t-raw="mess.body"/><br/>
-                                        </div>
+                            <t t-else="">
+                            </t>
+                            <t t-if="req.employee_id.user_id.id == current_user">
+                                <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
+                                    <h4><strong>Message(s) and communication history</strong></h4>
+                                    <t t-call="portal.message_thread">
+                                        <t t-set="object" t-value="req"/>
                                     </t>
-                                </h5>
-                            </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                            </t>
+                            <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
+                                <h4><strong>Message(s) and communication history</strong></h4>
+                                <t t-call="portal.message_thread">
+                                    <t t-set="object" t-value="req"/>
+                                </t>  
+                                <t t-call="portal.message_thread">
+                                    <t t-set="token" t-value="ticket.access_token"/>
+                                    <t t-set="disable_composer" t-value="ticket.stage_id.fold"/>
+                                </t>
+                            </div>  -->
                         </div>
-                    </div> 
-                </div>
+                        <div id="message_thread_section" class="card-header container" data-anchor="true">
+                            <div class="row gs-0">
+                                <div class="col-md">
+                                    <h4><strong>Communication Thread</strong></h4>
+                                    <h5 class="row mx-1 mb-1 mb-md-0">
+                                        <t t-foreach="req.message_ids" t-as="mess">
+                                            <div class="col-12 text-truncate">
+                                                <img t-if="mess.author_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(mess.sudo().author_avatar)}" alt="Contact" style="width: 20px; height: 20px;"/>
+                                                <strong>Author</strong> : <small class="text-muted "> (#<span t-field="mess.author_id.name"/>)</small><br/>
+                                                <strong>Description</strong> <div class="col-lg-12" t-raw="mess.body"/><br/>
+                                            </div>
+                                        </t>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                </section>
             </t>
         </template>
     </data>

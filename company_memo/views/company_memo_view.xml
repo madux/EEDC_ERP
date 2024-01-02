@@ -185,18 +185,21 @@
                                     <sheet>
                                         <group>
                                             <group>
-                                                <field name="applicationChange"/> 
-                                                <field name="datapatch"/> 
-                                                <field name="enhancement"/> 
-                                                <field name="databaseChange"/> 
-                                                <field name="osChange"/> 
+                                                <field name="request_date" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+                                                <field name="request_end_date" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+                                                
+                                                <field name="applicationChange" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="datapatch" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="enhancement" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="databaseChange" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="osChange" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
                                             </group>
                                             <group>
-                                                <field name="ids_on_os_and_db"/> 
-                                                <field name="versionUpgrade"/> 
-                                                <field name="otherChangeOption"/>
-                                                <field name="other_system_details"/>
-                                                <field name="justification_reason"/>
+                                                <field name="ids_on_os_and_db" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="versionUpgrade" attrs="{'readonly':[('state','not in',['submit'])]}"/> 
+                                                <field name="otherChangeOption" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+                                                <field name="other_system_details" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+                                                <field name="justification_reason" attrs="{'readonly':[('state','not in',['submit'])]}"/>
                                             </group>
                                         </group>
                                     </sheet>
