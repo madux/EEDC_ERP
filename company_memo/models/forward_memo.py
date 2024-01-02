@@ -104,7 +104,8 @@ class Forward_Wizard(models.TransientModel):
                     'users_followers': [(4, self.direct_employee_id.id)],
                     'approver_id': self.direct_employee_id.id if self.is_approver == "yes" else False,
                     'comments': comment_msg +' '+body,
-                    })
+                    }) 
+            memo.message_post(body=body)
             # return{'type': 'ir.actions.act_window_close'}
         else:
             raise ValidationError('Please select an Employee to Direct To')

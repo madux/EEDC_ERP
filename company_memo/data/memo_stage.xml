@@ -15,7 +15,7 @@
         </record>
 
         <record id="memo_cancel_stage" model="memo.stage">
-            <field name="name">Cancel</field>
+            <field name="name">Cancelled</field>
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="sequence">2000000</field>

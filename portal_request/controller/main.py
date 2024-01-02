@@ -6,6 +6,7 @@ from multiprocessing.spawn import prepare
 import urllib.parse
 from odoo import http, fields
 from odoo.exceptions import ValidationError
+from odoo.tools import consteq, plaintext2html
 from odoo.http import request
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
@@ -13,6 +14,11 @@ from bs4 import BeautifulSoup
 
 _logger = logging.getLogger(__name__)
 
+
+def get_url(id):
+	base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+	base_url += "/my/request/view/%s" % (id)
+	return "<a href={}> </b>Click<a/>. ".format(base_url)
 
 def format_to_odoo_date(date_str: str) -> str:
 	"""Formats date format mm/dd/yyyy eg.07/01/1988 to %Y-%m-%d
@@ -549,13 +555,30 @@ class PortalRequest(http.Controller):
 			('code', '=', existing_order)], limit=1)
 		else:
 			cash_advance_id = False
+		systemRequirementOptions = [
+			'Application change : True' if post.get("applicationChange") == "on" else '',
+			'Enhancement : True' if post.get("enhancement") == "on" else '',
+			'Datapatch : True' if post.get("datapatch") == "on" else '',
+			'Database Change : True' if post.get("databaseChange") == "on" else '',
+			'OS Change : True' if post.get("osChange") == "on" else '',
+			'Ids on OS and DB : True' if post.get("ids_on_os_and_db") == "on" else '',
+			'Version Upgrade : True' if post.get("versionUpgrade") == "on" else '',
+			'Hardware Option : True' if post.get("hardwareOption") == "on" else '',
+			'Other Changes : ' + post.get("other_system_details", "") if post.get("other_system_details") else '', 
+			'Justification reason : ' + post.get("justification_reason", "") if post.get("justification_reason") else '', 
+			'Start date : ' + post.get("request_date",'') if post.get("request_date") else '', 
+			'End date : ' + post.get("request_end_date",'') if post.get("request_end_date") else '', 
+			]
+		description_body = f"""
+		<b>Description: </b> {post.get("description", "")}<br/>
+		<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
+		"""
 		vals = {
 			"employee_id": employee_id.id,
 			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption") if post.get("selectRequestOption") else "Internal",
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
 			"name": post.get("subject"),
-			"description": post.get("description"),
 			"amountfig": post.get("amount_fig"),
 			"date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
 			"leave_type_id": post.get("leave_type_id", ""),
@@ -573,19 +596,12 @@ class PortalRequest(http.Controller):
 			"otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
 			"other_system_details": post.get("other_system_details"),
 			"justification_reason": post.get("justification_reason"),
-			# or district_id or int(post.get("selectDistrict")) if post.get("selectDistrict") else 1, #int(post.get("selectDistrict")) if post.get("selectDistrict") else memo_id.district_id.id if memo_id else False,
-			# "approver_id": employee_id.parent_id.id, 
 			"state": "Sent",
-			# "direct_employee_id": employee_id.parent_id.id, 
 			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
-			# "res_users": [
-			# 	# (4, employee_id.parent_id.user_id.id),
-			# 	# (4, employee_id.administrative_supervisor_id.user_id.id if employee_id.administrative_supervisor_id and employee_id.administrative_supervisor_id.user_id else False),
-			# 	(4, request.env.user.id)],
-			# "users_followers": [
-			# 	(4, employee_id.parent_id.id), 
-			# 	(4, employee_id.administrative_supervisor_id.id if employee_id.administrative_supervisor_id else False),
-			# 	(4, employee_id.id)],
+			"description": description_body, 
+			"request_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
+			"request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
+
 		}
 		_logger.info(f"POST DATA {vals}")
 		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
@@ -717,7 +733,9 @@ class PortalRequest(http.Controller):
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				('employee_id.user_id', '=', user.id),
+				'|','|',('employee_id.user_id', '=', user.id),
+				('users_followers.user_id','=', user.id),
+				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 			]
 		domain += [
 			('memo_type', 'in', memo_type),
@@ -752,38 +770,190 @@ class PortalRequest(http.Controller):
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				('employee_id.user_id', '=', user.id),
+				# ('employee_id.user_id', '=', user.id),
 				('id', '=', int(id)),
+				'|','|',('employee_id.user_id', '=', user.id),
+				('users_followers.user_id','=', user.id),
+				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 			]
 		requests = request_id.search(domain, limit=1)
-		values = {'req': requests}
-		return request.render("portal_request.request_form_template", values)
+		values = {
+			'req': requests,
+			'current_user': user.id
+			}
+		return request.render("portal_request.request_form_template", values) 
 	
-	@http.route('/my/request/update/<int:id>/<string:status>', type='http', auth="user", website=True)
-	def update_my_request_status(self, id, status):
+	@http.route('/my/request/update', type='json', auth="user", website=True)
+	def update_my_request(self, **post):
+		_logger.info(f"updating the request ...{post.get('memo_id')}")
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
 		domain = [
-			('employee_id.user_id', '=', user.id),
-			('id', '=', id),
+			# ('employee_id.user_id', '=', user.id),
+			('id', '=', post.get('memo_id')),
 			# ('state', 'in', ['Refuse']),
 		]
 		request_record = request_id.search(domain, limit=1)
 		stage_id = False
-		if status == "cancel":
-			stage_id = request.env.ref('company_memo.memo_cancel_stage').id
-			request_record.write({'state': 'Refuse', 'stage_id': stage_id})
-		elif status == "Sent":
-			stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
-				request_record.sudo().memo_setting_id.stage_ids else \
-					request.env.ref('company_memo.memo_cancel_stage').id
-			request_record.write({'state': 'Sent', 'stage_id': stage_id})
-		elif status in ["Refuse"]:
-			# useds this to determine the stages configured on the system
-			# if the length of stages is just 1, try the first condition else,
-			# set the stage to the next stage after draft.
-			memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
-			if memoStage_ids:
-				stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
-				request_record.write({'state': 'Sent', 'stage_id': stage_id})
-		return request.redirect(f'/my/request/view/{id}')# %(requests.id))
+		status = post.get('status', '')
+		if request_record:
+			if status == "cancel":
+				stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+				body_msg = f"""
+					Dear Sir / Madam, <br/>
+					I wish to notify you that a memo with description \n <br/>\
+					has been cancel by {request.env.user.name} <br/>\
+					Kindly {get_url(request_record.id)}"""
+				request_record.mail_sending_direct(body_msg)
+				request_record.write({
+					'state': 'Refuse', 
+					'stage_id': stage_id,
+					})
+				return {
+					"status": True, 
+					"message": "Record updated successfully", 
+					}
+			elif status == "Sent":
+				stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
+					request_record.sudo().memo_setting_id.stage_ids else \
+						request.env.ref('company_memo.memo_cancel_stage').id
+				request_record.sudo().write({'state': 'Sent', 'stage_id': stage_id})
+				return {
+					"status": True, 
+					"message": "Record updated successfully", 
+					}
+			elif status in ["Resend"]:
+				# useds this to determine the stages configured on the system
+				# if the length of stages is just 1, try the first condition else,
+				# set the stage to the next stage after draft.
+				if not request.env.user.id == request_record.employee_id.user_id.id:
+					return {
+						"status": False, 
+						"message": "Only initiator can resend this request", 
+						}
+				
+				memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
+				if memoStage_ids:
+					stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+					request_record.write({'state': 'Sent', 'stage_id': stage_id})
+					return {
+						"status": True, 
+						"message": "Record updated successfully", 
+						}
+				else:
+					return {
+					"status": False, 
+					"message": "No stage configured or found for this request. Contact admin", 
+					}
+			elif status in ["Approve"]:
+				if not (request_record.supervisor_comment or request_record.manager_comment):
+					return {
+						"status": False, 
+						"message": "Please Ensure to provide manager's or supervisor's comment", 
+						}
+			
+				is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
+					filtered(lambda appr: appr.is_approved_stage == True) 
+				if is_approved_stage:
+					stage_id = is_approved_stage[0] 
+					# is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
+					# filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
+					current_stage_approver = request_record.sudo().stage_id.approver_id.user_id.id
+					if request.env.user.id == current_stage_approver:
+						request_record.sudo().update_final_state_and_approver()
+						request_record.sudo().write({
+							'res_users': [(4, request.env.user.id)]
+							})
+					else:
+						request_record.write({'state': 'Sent', 'stage_id': stage_id})
+					body_msg = f"""
+					Dear Sir / Madam <br/>\
+					I wish to notify you that a memo with description \n <br/>\
+					has been approved for validation by {request.env.user.name} <br/>\
+					Kindly {get_url(request_record.id)}"""
+					request_record.mail_sending_direct(body_msg)
+					return {
+						"status": True,
+						"message": "Record updated successfully", 
+						}
+				else:
+					return {
+					"status": False, 
+					"message": "No stage configured or found for this request. Contact admin", 
+					}
+			else:
+				return {
+						"status": False, 
+						"message": "Request must have a status", 
+						}
+		else:
+			return {
+					"status": False, 
+					"message": "No matching record found", 
+					}
+		# return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
+	
+	@http.route('/update/data', type='json', auth="user", website=True)
+	def update_my_request_status(self, **post):
+		request_id = request.env['memo.model'].sudo()
+		domain = [
+			('id', '=', int(post.get('memo_id'))),
+		]
+		request_record = request_id.search(domain, limit=1)
+		_logger.info(f"retriving memo update {request_record}...")
+		if request_record:
+			# TODO some kind of repeatation was done here. COnsider rewriting
+			supervisor_message = request_record.supervisor_comment or ""
+			manager_message = request_record.manager_comment or ""
+			message, body = "", ""
+			status = post.get('status', '')
+			_logger.info(f"retriving memo update {post.get('supervisor_comment')}...")
+			if post.get('supervisor_comment', ''):
+				body = plaintext2html(post.get('supervisor_comment'))
+				message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
+				request_record.write({
+					'supervisor_comment': message,
+                	'is_supervisor_commented': True,
+					'state': 'Refuse' if status == 'Refuse' else request_record.state,
+					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
+					})
+				body_msg = f"""
+					Dear Sir / Madam, <br/>
+					I wish to notify you that a memo with description \n <br/>\
+					has been commented by the supervisor. <br/>\
+					Kindly {get_url(request_record.id)}"""
+				request_record.mail_sending_direct(body_msg) 
+				request_record.message_post(body=body)
+				return {
+						"status": True,
+						"message": "Comment successfully Updated",
+						}
+			elif post.get('manager_comment'):
+				body = plaintext2html(post.get('manager_comment'))
+				message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
+				request_record.write({
+					'manager_comment': message,
+					'state': 'Refuse' if status == 'Refuse' else request_record.state,
+					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
+					})
+				body_msg = f"""
+					Dear Sir / Madam, <br/>
+					I wish to notify you that a memo with description \n <br/>\
+					has been commented by the Manager. <br/>\
+					Kindly {get_url(request_record.id)}"""
+				request_record.message_post(body=body)
+				return {
+						"status": True,
+						"message": "Comment successfully Updated",
+						}
+			else:
+				_logger.info(f"xxxxxx not updated")
+				return {
+					"status": False, 
+					"message": "Please Provide a write up in the comment section", 
+				}
+		else:
+			return {
+				"status": False, 
+				"message": "No matching memo record found. Contact Admin", 
+			}

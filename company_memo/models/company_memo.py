@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from bs4 import BeautifulSoup
+from odoo.tools import consteq, plaintext2html
 from odoo import http
 import random
 from lxml import etree
@@ -148,6 +149,14 @@ class Memo_Model(models.Model):
         string="is request completed", 
         default=False,
         help="Used to determine if the request business flow is completed. Hides all action buttons if checked")
+    is_supervisor_commented = fields.Boolean(
+        string="Supervisor commented?", 
+        help="Used to determine if supervisor has commented"
+        )
+    is_manager_approved = fields.Boolean(
+        string="Manager Approved?", 
+        help="Used to determine if manager has approved from the website portal"
+        )
     # Loan fields
     loan_type = fields.Selection(
         [
@@ -200,6 +209,10 @@ class Memo_Model(models.Model):
     product_ids = fields.One2many('request.line', 'memo_id', string ='Products') 
     leave_start_date = fields.Datetime('Leave Start Date',  default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
+
+    request_date = fields.Datetime('Request Start Date')
+    request_end_date = fields.Datetime('Request End Date')
+
     leave_type_id = fields.Many2one('hr.leave.type', string="Leave type")
     memo_setting_id = fields.Many2one(
         'memo.config', 
@@ -440,9 +453,14 @@ class Memo_Model(models.Model):
                 'set_staff': False,
                 })
 
-    def get_url(self, id, name):
+    # def get_url(self, id, name):
+    #     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+    #     base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
+    #     return "<a href={}> </b>Click<a/>. ".format(base_url)
+
+    def get_url(self, id):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
+        base_url += "/my/request/view/%s" % (id)
         return "<a href={}> </b>Click<a/>. ".format(base_url)
     
     """line 4 - 7 checks if the current user is the initiator of the memo, 
@@ -472,6 +490,7 @@ class Memo_Model(models.Model):
                     'Please ensure you have a unit manager / head manager assigned to your record !'
                     )
             return True
+        
     def validate_memo_for_approval(self):
         item_lines = self.mapped('product_ids')
         type_required_items = ['material_request', 'procurement_request', 'vehicle_request']
@@ -625,7 +644,7 @@ class Memo_Model(models.Model):
         body_msg = f"""Dear {self.direct_employee_id.name or self.approver_id.name}, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
         from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
-        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id, self._name)} \
+        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)} \
         <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.direct_employee_id = False 
         self.update_final_state_and_approver(from_website)
@@ -693,7 +712,7 @@ class Memo_Model(models.Model):
         from {self.employee_id.department_id.name or self.user_ids.name} \
         department have been Confirmed by {self.env.user.name}.<br/>\
         Respective authority should take note. \
-        <br/>Kindly {self.get_url(self.id, self._name)} <br/>\
+        <br/>Kindly {self.get_url(self.id)} <br/>\
         Yours Faithfully<br/>{self.env.user.name}"""
         return self.generate_memo_artifacts(body_msg, body)
 
@@ -731,7 +750,7 @@ class Memo_Model(models.Model):
         body_msg = f"""Dear {self.employee_id.name}, <br/>I wish to notify you that a {type} with description, '{self.name}',\
                 from {self.employee_id.department_id.name or self.user_ids.name} department have been approved by {self.env.user.name}.<br/>\
                 Respective authority should take note. \
-                <br/>Kindly {self.get_url(self.id, self._name)} <br/>\
+                <br/>Kindly {self.get_url(self.id)} <br/>\
                 Yours Faithfully<br/>{self.env.user.name}"""
         users = self.env['res.users'].sudo().browse([self.env.uid])
         self.update_final_state_and_approver()
@@ -1151,7 +1170,6 @@ class Memo_Model(models.Model):
             return self.record_to_open('account.move', view_id)
         else:
             pass  
-
     def follower_messages(self, body):
         pass 
         # body= "RETURN NOTIFICATION;\n %s" %(self.reason_back)
