@@ -186,9 +186,10 @@ class HrEmployeeBase(models.AbstractModel):
     @api.constrains('employee_number')
     def _check_duplicate_employee_number(self):
         employee = self.env['hr.employee'].sudo()
-        duplicate_employee = employee.search([('employee_number', '=', self.employee_number)], limit=2)
-        if len([r for r in duplicate_employee]) > 1:
-            raise ValidationError("Employee with same staff ID already existing")
+        if self.self.employee_number not in ["", False]:
+            duplicate_employee = employee.search([('employee_number', '=', self.employee_number)], limit=2)
+            if len([r for r in duplicate_employee]) > 1:
+                raise ValidationError("Employee with same staff ID already existing")
 
     # pms_appraisal_ids = fields.Many2many('usl.employee.appraisal', string="Appraisals", readonly=True)
     administrative_supervisor_id = fields.Many2one('hr.employee', string="Administrative Supervisor")

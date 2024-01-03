@@ -13,6 +13,7 @@ class HREmployee(models.Model):
     state_of_origin = fields.Char(string='State of Origin')
     lga = fields.Char(string='Local Goovernment')
     state_id = fields.Many2one('res.country.state', 'State')
+    rank_id = fields.Many2one('hr.rank', string='Rank')
     next_of_kin_ids = fields.Many2many('res.partner', 'nok_partner_rel', 'nok_partner_id', string='Next of Kin(s)')
 
     spouse_name = fields.Char(string='Spouse Name')
