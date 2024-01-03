@@ -40,18 +40,24 @@
             </field>
         </record>
 
-        <record model="ir.ui.view" id="hr_view_employee_inherited_filter_for_eedc_addons">
-            <field name="name">HR EMPLOYEE FILTER</field>
+        <record model="ir.ui.view" id="hr_view_employee_inherited_filter_for_eedc_addons" >
+            <field name="name">hr.employee.eedc_addons</field>
             <field name="model">hr.employee</field>
-			<field name="arch" type="xml">
-            <field name="inherit_id" ref="hr.view_employee_filter"/>
-				<search string="Search">  
-                    <group  expand='0' string='Group by...'>
-                        <filter name="group_external_company_id" string='External Company' domain="[]" context="{'group_by' : 'external_company_id'}"/>
-                    </group>
-				</search>
-			</field>
-		</record>
+            <field name="inherit_id" ref="hr.view_employee_filter" />
+            <field name="arch" type="xml"> 
+                <field name="parent_id" position="after">
+                    <field name="external_company_id"/>
+                </field>
+                <xpath expr="//filter[@name='my_department']" position="after">
+                    <filter name="group_external_company_id" string='External Company' domain="[('is_external_staff','=', True)]"/>
+                </xpath>
+                <xpath expr="//filter[@name='group_manager']" position="before">
+                    <filter name="group_external_company_id" string='External Company' domain="[('is_external_staff','=', True)]" context="{'group_by' : 'external_company_id'}"/>
+                </xpath>
+ 
+            </field>
+        </record>
+ 
         <record id="action_external_employee" model="ir.actions.act_window">
 			<field name="name">External Employees</field>
 			<field name="res_model">hr.employee</field>
