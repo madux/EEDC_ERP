@@ -13,6 +13,8 @@
                 </xpath>
                 <xpath expr="//field[@name='birthday']" position="after">
                     <field name="age"/>
+                    <field name="is_external_staff"/>
+                    <field name="external_company_id" domain="[('is_company','=', True)]" attrs="{'invisible': [('is_external_staff','=', False)], 'required': [('is_external_staff','=', True)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='children']" position="after">
                     <field name="spouse_name"/>
@@ -30,8 +32,7 @@
                                 <field name="name"/>
                                 <field name="phone"/>
                                 <field name="street"/>
-                                <field name="is_external_staff"/>
-                                <field name="external_company_id" domain="[('is_company','=', True)]" attrs="{'invisible': [('is_external_staff','=', False)], 'required': [('is_external_staff','=', True)]}"/>
+                                
                             </tree>
                         </field>
                     </group>
