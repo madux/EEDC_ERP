@@ -14,7 +14,7 @@ class HREmployee(models.Model):
     lga = fields.Char(string='Local Goovernment') 
     rank_id = fields.Many2one('hr.rank', string='Rank')
     is_external_staff = fields.Boolean(string='Is External')
-    external_company_id = fields.Many2one('res.partner', 'External Company')
+    external_company_id = fields.Many2one('res.partner', string='External Company')
     next_of_kin_ids = fields.Many2many('res.partner', 'nok_partner_rel', 'nok_partner_id', string='Next of Kin(s)')
 
     spouse_name = fields.Char(string='Spouse Name')
