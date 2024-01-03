@@ -207,6 +207,8 @@
             <field name="code">action=model.sudo().send_credential_notification()</field>
         </record>
 
+        
+
         <record id="ir_action_server_update_employee_user_credentials" model="ir.actions.server">
 			<field name="name">Update Employee Password</field>
             <field name="type">ir.actions.server</field>
