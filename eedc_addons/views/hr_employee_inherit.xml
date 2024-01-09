@@ -7,14 +7,14 @@
             <field name="inherit_id" ref="hr.view_employee_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='lang']" position="after">
-                    <field name="house_address"/>
-                    <field name="state_id"/>
-                    <field name="local_government"/>
+                    <field name="house_address" groups="base.group_user"/>
+                    <field name="state_id" groups="base.group_user"/>
+                    <field name="local_government" groups="base.group_user"/>
                 </xpath>
                 <xpath expr="//field[@name='birthday']" position="after">
                     <field name="age"/>
-                    <field name="is_external_staff"/>
-                    <field name="external_company_id" domain="[('is_company','=', True)]" attrs="{'invisible': [('is_external_staff','=', False)], 'required': [('is_external_staff','=', True)]}"/>
+                    <field name="is_external_staff" groups="base.group_user"/>
+                    <field name="external_company_id" groups="base.group_user" domain="[('is_company','=', True)]" attrs="{'invisible': [('is_external_staff','=', False)], 'required': [('is_external_staff','=', True)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='children']" position="after">
                     <field name="spouse_name"/>

@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
-    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True)
+    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True, groups="base.group_user")
 
     # employee_signature_count = fields.Integer(compute='_compute_employee_signature_count', string="# Signatures")
 
