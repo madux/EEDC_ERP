@@ -780,14 +780,12 @@ class PortalRequest(http.Controller):
 		requests = request_id.search(domain, limit=1)
 		memo_attachment_ids = attachment.search([
 			('res_model', '=', 'memo.model'),
-			('res_id', '=', requests.id),
-
+			('res_id', '=', requests.id)
 			])
 		values = {
 			'req': requests,
 			'current_user': user.id,
 			'record_attachment_ids': memo_attachment_ids,
-
 			}
 		return request.render("portal_request.request_form_template", values) 
 	
