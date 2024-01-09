@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
     
 class HrEmployee(models.Model):
-    _inherit = "hr.employee"
+    _inherit = "hr.employee.base"
 
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True, groups="base.group_user")
 
