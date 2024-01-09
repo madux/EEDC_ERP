@@ -4,8 +4,12 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class HREmployee(models.Model):
-    _inherit = "hr.employee"
+# class HREmployee(models.Model):
+#     _inherit = "hr.employee"
+
+class HrEmployeeBase(models.AbstractModel):
+    _inherit = "hr.employee.base"
+    
 
     house_address = fields.Char(string='House Address')
     age = fields.Char(string='Age')
