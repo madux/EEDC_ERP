@@ -769,6 +769,7 @@ class PortalRequest(http.Controller):
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
 		attachment = request.env['ir.attachment'].sudo()
+		attachment = request.env['ir.attachment'].sudo()
 		domain = [
 				('active', '=', True),
 				# ('employee_id.user_id', '=', user.id),
