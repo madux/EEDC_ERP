@@ -768,6 +768,7 @@ class PortalRequest(http.Controller):
 		"""This route is used to call the requesters or user record for display"""
 		user = request.env.user
 		request_id = request.env['memo.model'].sudo()
+		attachment = request.env['ir.attachment'].sudo()
 		domain = [
 				('active', '=', True),
 				# ('employee_id.user_id', '=', user.id),
@@ -777,9 +778,15 @@ class PortalRequest(http.Controller):
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 			]
 		requests = request_id.search(domain, limit=1)
+		memo_attachment_ids = attachment.search([
+			('res_model', '=', 'memo.model'),
+			('res_id', '=', requests.id),
+
+			])
 		values = {
 			'req': requests,
-			'current_user': user.id
+			'current_user': user.id,
+			'record_attachment_ids': memo_attachment_ids,
 			}
 		return request.render("portal_request.request_form_template", values) 
 	
