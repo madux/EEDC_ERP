@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="hr.view_employee_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='lang']" position="after">
-                    <field name="house_address"/>
+                    <field name="house_address" groups="hr.group_hr_user"/>
                     <field name="state_id"/>
                     <field name="local_government"/>
                 </xpath>
