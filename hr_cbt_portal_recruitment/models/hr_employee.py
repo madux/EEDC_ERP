@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 class HrEmployee(models.Model):
     _inherit = "hr.employee.public"
 
-    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True)
+    request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True,)
 
 
 class HrEmployee(models.Model):
