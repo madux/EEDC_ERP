@@ -156,6 +156,7 @@
                                                         <option disabled="true" selected="true" value="">-- Select -- </option>
                                                         <option value="server_access">Internal / System Access Request</option>
                                                         <option value="material_request">Material request</option>
+                                                        <option value="employee_update">Employee Update Request</option>
                                                         <option value="procurement_request">Procurement request</option>
                                                         <option value="payment_request">Payment Request</option>
                                                         <option value="vehicle_request">Vehicle Request</option>
@@ -173,6 +174,24 @@
                                                         <option disabled="true" selected="true" value=""></option>
                                                         <option value="new" selected="true">New</option>
                                                         <option value="existing">Existing Request</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id ="divEmployeeData" class="d-none s_website_form_field mb-3 col-6 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="divEmployeeData">
+                                                    <span class="s_website_form_label_content">Option for employee request</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm col-3" id="selectdivEmployeeData">
+                                                    <select name="selectEmployeedata" id="selectEmployeedata" required="required" data-init="new" class="form-control" labelfor="Employee update type">
+                                                        <option disabled="true" selected="true" value=""></option>
+                                                        <option value="transfer" selected="true">Transfer</option>
+                                                        <option value="promotion">Promotion</option>
+                                                        <option value="query">Query</option>
+                                                        <option value="warning">Warning</option>
+                                                        <option value="warning">Due for Retirement</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -423,6 +442,52 @@
                                                 </div>
                                             </div>
                                         </div> 
+
+                                        <!-- <t t-if="req.memo_type not in ['employee_update']"> -->
+                                <div class="form-row d-none" id="employee_item_form_div">
+                                    <h3 class="fs-title">Employee transfer</h3>
+                                    <div class="tableclass table-responsive" id="employee_table_div">
+                                        <table width="100%" border="1" bordercolor="#FFFFFF" border-collapse="collapse" align="center"
+                                        id="employee_table" class="table table-bordered"
+                                        style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                            <thead>
+                                                <tr class="heading">
+                                                    <th width="5%">
+                                                        <label></label>
+                                                    </th>
+                                                    <th width="35%">
+                                                        Employee Name
+                                                    </th>
+                                                    <th width="20%">
+                                                        <label>New Department</label>
+                                                    </th>
+                                                    <th width="20%">
+                                                        <label>New Role</label>
+                                                    </th>
+                                                    <th width="20%">
+                                                        <label>New District</label>
+                                                    </th>
+                                                    
+                                                    <th width="5%">
+                                                        <label>X</label>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody_employee" name="tbody_employee">
+                                                
+                                            </tbody>
+                                        </table>
+                                    </div> 
+                                    <div class="mb-0 py-2 col-12 add_item justify-content-center">
+                                        <div style="width: 200px;" class="s_website_form_label"/>
+                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                        <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
+                                        <span id="s_website_form_result_addxx"/>
+                                    </div>
+                                </div>
+                            <!-- </t>
+                            <t t-else="">
+                            </t> -->
                                         <div class="form-row d-none" id="product_form_div">
                                             <h2 class="fs-title">Request Items</h2>
                                             <div class="tableclass table-responsive" id="product_table_div">
@@ -476,7 +541,6 @@
                                                             </td>
                                                         </tr> -->
                                                     </tbody>
-                                                    
                                                 </table>
                                             </div> 
                                             <div class="mb-0 py-2 col-12 add_item justify-content-center">
@@ -530,7 +594,6 @@
                                                             </td>
                                                             <td width="10%">
                                                             </td>
-                                                            
                                                         </tr>
                                                     </tbody>
                                                 </table>
