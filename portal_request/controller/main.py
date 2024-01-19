@@ -393,8 +393,64 @@ class PortalRequest(http.Controller):
 			"pagination": {
 				"more": True,
 			}
-		})	
-	
+		})
+
+	@http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
+	def get_portal_product(self, **post):
+		request_type_option = post.get('request_type')
+		if request_type_option:
+			if request_type_option == "employee":
+				employeeItems = json.loads(post.get('employeeItems'))
+				_logger.info(f'Employeeitemmms {employeeItems}')
+				domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems])]
+				employees = request.env["hr.employee"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name} - {item.employee_number}'} for item in employees],
+					"pagination": {
+						"more": True,
+					}
+				})	
+			elif request_type_option == "department":
+				domain = [('active', '=', True)]
+				departments = request.env["hr.department"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			elif request_type_option == "role":
+				domain = [('active', '=', True)]
+				departments = request.env["hr.job"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			elif request_type_option == "district":
+				domain = []
+				departments = request.env["hr.district"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			else:	
+				return json.dumps({
+					"results": [{"id": '',"text": '',}],
+					"pagination": {
+						"more": True,
+					}
+				})	
+		else:
+			return json.dumps({
+				"results": [{"id": '',"text": ''}],
+				"pagination": {
+					"more": True,
+				}
+			})	
 
 	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
@@ -727,9 +783,10 @@ class PortalRequest(http.Controller):
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
-					else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
-						if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
-							else ['Internal', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
+					else ['employee_update'] if type in ['employee_update'] \
+						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
+							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
+								else ['Internal', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),

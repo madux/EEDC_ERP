@@ -54,6 +54,7 @@ class Memo_Model(models.Model):
         ("Payment", "Payment"), 
         ("loan", "Loan"), 
         ("Internal", "Internal Memo"),
+        ("employee_update", "Employee Update Request"),
         ("material_request", "Material request"),
         ("procurement_request", "Procurement Request"),
         ("vehicle_request", "Vehicle request"),

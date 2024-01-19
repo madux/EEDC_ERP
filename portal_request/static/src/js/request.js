@@ -16,13 +16,15 @@ odoo.define('portal_request.portal_request', function (require) {
     var qweb = core.qweb;
     var _t = core._t;
     const setProductdata = [];
+    const setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
 
     const NonItemRequest = [
         'server_access', 
         'payment_request',
-        'leave_request'
+        'leave_request',
+        'employee_update'
 
     ];
     const ItemRequest = [
@@ -203,6 +205,51 @@ odoo.define('portal_request.portal_request', function (require) {
         $('textarea').autoResize();
         scrollTable(); // used to scroll to the next level when add a line
     }
+
+    function buildEmployeeRow(memo_type){ 
+        // used to build employee lines for promotion and transfers
+        let lastRow_count = getOrAssignRowNumber(memo_type)
+        console.log("what is memo type ==", memo_type)
+        console.log(`lastrowcount ${lastRow_count}`)
+        $(`#tbody_employee`).append(
+            `<tr class="heading employee_row" name="employee_row" row_count=${lastRow_count}>
+                <th width="5%">
+                    <span>
+                        <input type="checkbox" class="employeechecked" code=""/>
+                    </span>
+                </th>
+                <th width="35%">
+                    <span>
+                        <input employee_line_id="" employee_special_id="${lastRow_count}" class="form-control employeeitemrow" name="employee_item_id" required="required" labelfor="Employee Name"/>
+                    </span>
+                </th>
+                <th width="20%">
+                    <span>
+                        <input department_line_id="" department_special_id="${lastRow_count}" class="form-control employeeitemrow" name="department_item_id" required="required" labelfor="Department Name"/>
+                    </span>
+                </th>
+
+                <th width="20%">
+                    <span>
+                        <input role_line_id="" role_special_id="${lastRow_count}" class="form-control employeeitemrow" name="role_item_id" required="required" labelfor="Role"/>
+                    </span>
+                </th>
+                <th width="20%">
+                    <span>
+                        <input district_line_id="" district_special_id="${lastRow_count}" class="form-control districtitemrow" name="district_item_id" required="required" labelfor="District"/>
+                    </span>
+                </th>  
+                <th width="5%">
+                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-primary btn-sm"> Remove </a>
+                </th>
+            </tr>`
+        )
+        TriggerEmployeeData(lastRow_count)
+        // $('textarea').autoResize();
+        scrollTable(); // used to scroll to the next level when add a line
+    }
+
+
     localStorage.setItem('SelectedProductItems', "[]")
 
     function getSelectedProductItems(){
@@ -234,10 +281,10 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#all_total_amount').text(`${formatCurrency(total)}`)
     }
 
-    function getOrAssignRowNumber(){
+    function getOrAssignRowNumber(memo_type=False){
         var lastRow_count = 0
         // $(`#tbody_product > tr.prod_row > th > input.productitemrow`)[0].each(
-        var lastElement = $(`#tbody_product > tr.prod_row > th > span > input.productitemrow`)
+        var lastElement = memo_type !== 'employee_update' ? $(`#tbody_product > tr.prod_row > th > span > input.productitemrow`) : $(`#tbody_employee > tr.employee_row > th > span > input.employeeitemrow`) 
         if (lastElement){
             let special_id = lastElement.last().attr('special_id');
             console.log("Last element found is, ", lastElement)
@@ -280,6 +327,113 @@ odoo.define('portal_request.portal_request', function (require) {
         // $('#attachment_table').stop().animate({
         //     scrollTop: '+=60px' // 40px can be the height of a row
         // }, 200);
+    }
+
+    function TriggerEmployeeData(lastRow_count){
+        $(`input[employee_special_id='${lastRow_count}'`).select2({
+            ajax: {
+              url: '/portal-request-employee',
+              dataType: 'json',
+              delay: 250,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  employeeItems: JSON.stringify(setEmployeedata), 
+                  request_type: 'employee', 
+                  page_limit: 10, // page size
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                console.log(data);
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 1,
+            multiple: false,
+            placeholder: 'Search for a employee',
+            allowClear: false,
+          });
+        
+          $(`input[department_special_id='${lastRow_count}'`).select2({
+            ajax: {
+              url: '/portal-request-employee',
+              dataType: 'json',
+              delay: 250,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  request_type: 'department', 
+                  page_limit: 10, // page size
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                console.log(data);
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 1,
+            multiple: false,
+            placeholder: 'Search for a department',
+            allowClear: false,
+          });
+
+          $(`input[role_special_id='${lastRow_count}'`).select2({
+            ajax: {
+              url: '/portal-request-employee',
+              dataType: 'json',
+              delay: 250,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  request_type: 'role', 
+                  page_limit: 10, // page size
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                console.log(data);
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 1,
+            multiple: false,
+            placeholder: 'Search for a job role',
+            allowClear: false,
+          });
+
+          $(`input[district_special_id='${lastRow_count}'`).select2({
+            ajax: {
+              url: '/portal-request-employee',
+              dataType: 'json',
+              delay: 250,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  request_type: 'district', 
+                  page_limit: 10, // page size
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                console.log(data);
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 1,
+            multiple: false,
+            placeholder: 'Search for a district',
+            allowClear: false,
+          });
     }
 
     function TriggerProductField(lastRow_count){
@@ -415,6 +569,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#product_form_div').addClass('d-none');
         $('#product_ids').addClass('d-none');
         $('#product_ids').attr("required", false); 
+        $('#divEmployeeData').addClass('d-none');
+        $('#selectEmployeedata').attr("required", false); 
+        $('#employee_item_form_div').addClass('d-none');
         }
  
     $('#leave_start_date').datepicker('destroy').datepicker({
@@ -504,6 +661,16 @@ odoo.define('portal_request.portal_request', function (require) {
                 setProductdata.push(parseInt(product_val));
                 console.log('sele ==> ', setProductdata) 
             },
+
+            'change .employeeitemrow': function(ev){
+                let employee_elm = $(ev.target);
+                let employee_val = employee_elm.val();
+                var link = employee_elm.closest(":has(input.employeeinput)").find('input.employeeinput');
+                var remove_link = employee_elm.closest(":has(a.employee_remove_field)").find('a.employee_remove_field');
+                link.attr('id', employee_val);
+                remove_link.attr('id', employee_val);
+                setEmployeedata.push(parseInt(employee_val));
+            },
             'click .remove_field': function(ev){
                 let elm = $(ev.target);
                 let elm_remove_id = elm.attr('remove_id'); 
@@ -518,6 +685,19 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 });
             }, 
+
+            'click .employee_remove_field': function(ev){
+                let elm = $(ev.target);
+                let elm_remove_id = elm.attr('employee_remove_id'); 
+                elm.closest(":has(tr.employee_row)").find('tr.employee_row').each(function(ev){
+                    if($(this).attr('row_count') == elm_remove_id){
+                        let remove_element_id = elm.attr('id'); 
+                        setEmployeedata.splice(setEmployeedata.indexOf(remove_element_id),1)
+                        $(this).remove();
+                    }
+                });
+            },
+
             'change .productAmt': function(ev){
                 //computation of the total unit price
                 compute_total_amount();
@@ -668,8 +848,8 @@ odoo.define('portal_request.portal_request', function (require) {
                     $('#leave_end_datex').attr('required', false);
                 }
                 checkOverlappingLeaveDate(this)
-            },
-
+            }, 
+            
             'change select[name=selectRequestOption]': function(ev){
                 let selectedTarget = $(ev.target).val();
                 $('#existing_ref_label').text("Existing Ref #");
@@ -717,6 +897,22 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#justification_reason').removeClass("d-none");
                             console.log("server request selected == ", selectedTarget);
                             displayNonLeaveElement()
+                        }
+                        else if(selectedTarget == 'employee_update'){
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            $('#product_form_div').addClass('d-none');
+                            $('#label_end_date').addClass('d-none');
+                            $('#div_system_requirement').addClass('d-none');
+                            $('#request_end_date').addClass('d-none');
+                            $('#request_end_date').attr('required', false);
+                            $('#labelDescription').text('Description');
+                            $('#div_justification_reason').addClass('d-none');
+                            $('#justification_reason').attr('required', false);
+                            $('#divEmployeeData').removeClass('d-none');
+                            $('#selectEmployeedata').attr('required', true);
+                            $('#employee_item_form_div').removeClass('d-none');
+                            
                         }
                         // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
                         else if(selectedTarget == "payment_request"){
@@ -900,8 +1096,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 // ensure that normal request such as server request, leave request and payment request
                 // does not show product item div elements
                 if ($.inArray($("#selectRequestOption").val(), ItemRequest) !== -1){
-                    $('#product_form_div').removeClass('d-none');
-                    console.log("item element selected")
+                    $('#product_form_div').removeClass('d-none'); 
                 }
                 else{
                     $('#product_form_div').addClass('d-none');
@@ -912,8 +1107,14 @@ odoo.define('portal_request.portal_request', function (require) {
                     ev.preventDefault();
                     $(ev.target).val()
                     var selectRequestOption = $('#selectRequestOption');
-                    console.log("Building product row with form data=> ", setProductdata)
-                    buildProductRow(selectRequestOption.val())
+                    if (!selectRequestOption.val() == "employee_update"){
+                        console.log("Building product row with form data=> ", setProductdata)
+                        buildProductRow(selectRequestOption.val())
+                    }
+                    else{
+                        console.log("Building Employee row with form data=> ", setEmployeedata)
+                        buildEmployeeRow(selectRequestOption.val())
+                    }
                 },
             'click .search_panel_btn': function(ev){
                 console.log("the search")
@@ -949,7 +1150,6 @@ odoo.define('portal_request.portal_request', function (require) {
                     return false;
                 }else{
                     var current_btn = $(ev.target);
-                    console.log('BUTTONMSZ is ==>', current_btn.text())
                     var form = $('#msform')[0];
                     // FormData object 
                     var formData = new FormData(form);
@@ -968,6 +1168,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     //         }
                     //     }
                     // )
+                    let selectRequestOptionValue = $('#selectRequestOption').val()
                     $(`#tbody_product > tr.prod_row`).each(function(){
                         var row_co = $(this).attr('row_count') 
                         var list_item = {
@@ -1017,7 +1218,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                     list_item['line_checked'] = $(this).val()
                                     list_item['code'] = $(this).attr('code')
                                 }
-                                 
                             }
                         )
                         productItems.push(list_item)
