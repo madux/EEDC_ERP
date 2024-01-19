@@ -48,3 +48,23 @@ class HREmployee(models.Model):
     mother_name = fields.Char(string="Mother's Name")
     mother_phone = fields.Char(string="Mother's Phone")
     manager = fields.Boolean(string="Is a Manager")
+
+    def transfer_employee_action(self):
+        rec_ids = self.env.context.get('active_ids', [])
+        return {
+              'name': 'Employee Transfer',
+              'view_type': 'form',
+              "view_mode": 'form',
+              'res_model': 'hr.employee.transfer',
+              'type': 'ir.actions.act_window',
+              'target': 'new',
+              'context': {
+                  'default_employee_ids': rec_ids,
+              },
+        }
+    
+    employee_transfer_history = fields.One2many( 
+        'hr.employee.transfer.line', 
+        'employee_id', 
+        string='Transfer History'
+        )
