@@ -11,15 +11,39 @@ class HREMployeeTransfer(models.Model):
         'employee_transfer_id', 
         string='Transfer Details'
         )
+    transfer_initiator_uid = fields.Many2one(
+        'res.users',
+        default=lambda self: self.env.uid,
+        string="Transfer Initiator",
+        copy=False,
+        readonly=True
+    )
+
+    transfer_date = fields.Date('Initiation Date',
+                                default=lambda self: fields.Date.context_today(self),
+                                copy=False,
+                                readonly=True
+                                )
 
     
-    def update_transfer_details(self):
-        for transfer in self:
-            transfer.employee_ids.write({
-                'department_id': transfer.transfer_dept.id,
-                'job_id': transfer.new_role.id,
-            })
 
+    def update_transfer_details(self):
+        employee_ids = self.env.context.get('default_employee_ids', [])
+        # raise ValidationError(employee_ids)
+        # check validations,
+        # go throught each line that the select option is checked,
+        # update employee rec with the data eg department, role, district
+        
+        
+        new_transfer = self.env['hr.employee.transfer'].create({
+            'employee_ids': [(6, 0, employee_ids)],
+            'transfer_initiator_uid': self.env.user.id,
+            'transfer_date': fields.Datetime.now(),
+            'employee_transfer_lines': self.env.context.get('default_employee_transfer_lines', [])
+        })
+
+        for transfer_line in new_transfer.employee_transfer_lines:
+            pass
 
 
 class HREmployeeTransferLine(models.Model):

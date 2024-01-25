@@ -51,6 +51,30 @@ class HREmployee(models.Model):
 
     def transfer_employee_action(self):
         rec_ids = self.env.context.get('active_ids', [])
+        employee = self.env['hr.employee']
+        # emp_transfer = self.env['hr.employee.transfer'].sudo()
+        # emp_transfer_id = emp_transfer.create({
+        #     'employee_ids': [(6, 0, [rec for rec in rec_ids])],
+        #     'employee_transfer_lines': [(0, 0, {
+        #               'employee_id': employee.browse([emp]).id,
+        #               'current_dept_id': employee.browse([emp]).department_id.id,
+        #           }) for emp in rec_ids],
+
+        # })
+        # view_id = self.env.ref('eedc_addons.view_hr_employee_transfer_form').id
+        # ret = {
+        #     'name': "Employee Transfer",
+        #     'view_mode': 'form',
+        #     'view_id': view_id,
+        #     'view_type': 'form',
+        #     'res_model': 'hr.employee.transfer',
+        #     'res_id': emp_transfer_id.id,
+        #     'type': 'ir.actions.act_window',
+        #     'domain': [],
+        #     'target': 'new'
+        #     }
+        # return ret
+    
         return {
               'name': 'Employee Transfer',
               'view_type': 'form',
@@ -60,6 +84,10 @@ class HREmployee(models.Model):
               'target': 'new',
               'context': {
                   'default_employee_ids': rec_ids,
+                  'default_employee_transfer_lines': [(0, 0, {
+                      'employee_id': employee.browse([emp]).id, 
+                      'current_dept_id': employee.browse([emp]).department_id.id,
+                  }) for emp in rec_ids]
               },
         }
     
@@ -68,3 +96,22 @@ class HREmployee(models.Model):
         'employee_id', 
         string='Transfer History'
         )
+    
+    # def open_employee_transfer_history():
+    #     pass
+
+    transfer_history_count = fields.Integer(string="Offers Count", compute="_compute_offer")
+
+    def _compute_offer(self):
+        # This solution is quite complex. It is likely that the trainee would have done a search in
+        # a loop.
+        data = self.env["hr.employee.transfer.line"].read_group(
+            [],
+            ["ids:array_agg(id)", "employee_id"],
+            ["employee_id"],
+        )
+        mapped_count = {d["employee_id"][0]: d["employee_id_count"] for d in data}
+        # mapped_ids = {d["employee_id"][0]: d["ids"] for d in data}
+        for transfer_history in self:
+            transfer_history.transfer_history_count = mapped_count.get(transfer_history.id, 0)
+            # prop_type.offer_ids = mapped_ids.get(prop_type.id, [])
