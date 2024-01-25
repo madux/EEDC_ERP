@@ -225,13 +225,13 @@ odoo.define('portal_request.portal_request', function (require) {
                 </th>
                 <th width="20%">
                     <span>
-                        <input department_line_id="" department_special_id="${lastRow_count}" class="form-control employeeitemrow" name="department_item_id" required="required" labelfor="Department Name"/>
+                        <input department_line_id="" department_special_id="${lastRow_count}" class="form-control" name="department_item_id" required="required" labelfor="Department Name"/>
                     </span>
                 </th>
 
                 <th width="20%">
                     <span>
-                        <input role_line_id="" role_special_id="${lastRow_count}" class="form-control employeeitemrow" name="role_item_id" required="required" labelfor="Role"/>
+                        <input role_line_id="" role_special_id="${lastRow_count}" class="form-control" name="role_item_id" required="required" labelfor="Role"/>
                     </span>
                 </th>
                 <th width="20%">
@@ -281,12 +281,12 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#all_total_amount').text(`${formatCurrency(total)}`)
     }
 
-    function getOrAssignRowNumber(memo_type=False){
+    function getOrAssignRowNumber(memo_type=false){
         var lastRow_count = 0
         // $(`#tbody_product > tr.prod_row > th > input.productitemrow`)[0].each(
         var lastElement = memo_type !== 'employee_update' ? $(`#tbody_product > tr.prod_row > th > span > input.productitemrow`) : $(`#tbody_employee > tr.employee_row > th > span > input.employeeitemrow`) 
         if (lastElement){
-            let special_id = lastElement.last().attr('special_id');
+            let special_id = memo_type !== 'employee_update' ? lastElement.last().attr('special_id') : lastElement.last().attr('employee_special_id');
             console.log("Last element found is, ", lastElement)
             lastRow_count = special_id ? parseInt(special_id) + 1 : lastRow_count + 1
         }else {
@@ -1154,7 +1154,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     // FormData object 
                     var formData = new FormData(form);
                     console.log('formData is ==>', formData)
-                    var productItems = []
+                    var DataItems = []
                     // $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
                     //     function(){
                     //         let id = $(this).attr('id');
@@ -1164,66 +1164,102 @@ odoo.define('portal_request.portal_request', function (require) {
                     //                 'product_id': id, 
                     //                 'qty': qty,
                     //             } 
-                    //             productItems.push(prod_data)
+                    //             DataItems.push(prod_data)
                     //         }
                     //     }
                     // )
                     let selectRequestOptionValue = $('#selectRequestOption').val()
-                    $(`#tbody_product > tr.prod_row`).each(function(){
-                        var row_co = $(this).attr('row_count') 
-                        var list_item = {
-                                'product_id': '', 
-                                'description': '',
-                                'qty': '',
-                                'amount_total': '',
-                                'used_qty': '',
-                                'used_amount': '',
-                                'note': '',
-                                'line_checked': false,
-                                'code': 'mef00981',
-                        }
-                        // input[type='text'], input[type='number']
-                        $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
-                            function(){
-                                if($(this).attr('name') == "product_item_id"){
-                                    console.log($(this).val())
-                                    list_item['product_id'] = $(this).val()
-                                }
-                                if($(this).attr('name') === "description"){
-                                    list_item['description'] = $(this).val()
-                                }
-                                if($(this).attr('productinput') == "productreqQty"){
-                                    console.log($(this).val())
-                                    list_item['qty'] = $(this).val()
-                                }
-                            
-                                if($(this).attr('name') == "amount_total"){
-                                    console.log($(this).val())
-                                    list_item['amount_total'] = $(this).val()
-                                }
-                                if($(this).attr('name') == "usedqty"){
-                                    console.log($(this).val())
-                                    list_item['used_qty'] = $(this).val()
-                                }
-                                if($(this).attr('name') == "usedAmount"){
-                                    console.log($(this).val())
-                                    list_item['used_amount'] = $(this).val()
-                                }
-                                if($(this).attr('name') == "note_area"){
-                                    console.log($(this).val())
-                                    list_item['note'] = $(this).val()
-                                }
-                                if($(this).attr('class') == "productchecked"){
-                                    console.log($(this).val())
-                                    list_item['line_checked'] = $(this).val()
-                                    list_item['code'] = $(this).attr('code')
-                                }
+                    if(!selectRequestOptionValue === 'employee_update'){
+                        $(`#tbody_product > tr.prod_row`).each(function(){
+                            var row_co = $(this).attr('row_count') 
+                            var list_item = {
+                                    'product_id': '', 
+                                    'description': '',
+                                    'qty': '',
+                                    'amount_total': '',
+                                    'used_qty': '',
+                                    'used_amount': '',
+                                    'note': '',
+                                    'line_checked': false,
+                                    'code': 'mef00981',
                             }
-                        )
-                        productItems.push(list_item)
-                    })
-                    console.log('this main reason for====>', productItems)
-                    formData.append('productItems', JSON.stringify(productItems))
+                            // input[type='text'], input[type='number']
+                            $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
+                                function(){
+                                    if($(this).attr('name') == "product_item_id"){
+                                        console.log($(this).val())
+                                        list_item['product_id'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') === "description"){
+                                        list_item['description'] = $(this).val()
+                                    }
+                                    if($(this).attr('productinput') == "productreqQty"){
+                                        console.log($(this).val())
+                                        list_item['qty'] = $(this).val()
+                                    }
+                                
+                                    if($(this).attr('name') == "amount_total"){
+                                        console.log($(this).val())
+                                        list_item['amount_total'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') == "usedqty"){
+                                        console.log($(this).val())
+                                        list_item['used_qty'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') == "usedAmount"){
+                                        console.log($(this).val())
+                                        list_item['used_amount'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') == "note_area"){
+                                        console.log($(this).val())
+                                        list_item['note'] = $(this).val()
+                                    }
+                                    if($(this).attr('class') == "productchecked"){
+                                        console.log($(this).val())
+                                        list_item['line_checked'] = $(this).val()
+                                        list_item['code'] = $(this).attr('code')
+                                    }
+                                }
+                            )
+                            DataItems.push(list_item)
+                        })
+                    }
+                    else {
+                        // #tbody_employee > tr.employee_row > th > span > input.employeeitemrow
+                        $(`#tbody_employee > tr.employee_row`).each(function(){
+                            var row_co = $(this).attr('row_count') 
+                            var list_item = {
+                                    'employee_transfer_id': '', 
+                                    'employee_id': '',
+                                    'current_dept_id': '',
+                                    'transfer_dept': '',
+                                    'new_role': '',
+                                    'new_district': '',
+                            }
+                            $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
+                                function(){
+                                    if($(this).attr('name') == "employee_item_id"){
+                                        console.log($(this).val())
+                                        list_item['employee_id'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') === "department_item_id"){
+                                        list_item['transfer_dept'] = $(this).val()
+                                    }
+                                    if($(this).attr('name') == "role_item_id"){
+                                        console.log($(this).val())
+                                        list_item['new_role'] = $(this).val()
+                                    }
+                                
+                                    if($(this).attr('name') == "district_item_id"){
+                                        console.log($(this).val())
+                                        list_item['new_district'] = $(this).val()
+                                    }
+                                }
+                            )
+                            DataItems.push(list_item)
+                        })
+                    } 
+                    formData.append('DataItems', JSON.stringify(DataItems))
                     $.ajax({
                         type: "POST",
                         enctype: 'multipart/form-data',
@@ -1240,6 +1276,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         // clearing form content
                         $("#msform")[0].reset();
                         $("#tbody_product").empty()
+                        $("#tbody_employee").empty()
                     }).catch(function(err) {
                         console.log(err);
                         alert(err);

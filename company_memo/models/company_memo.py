@@ -664,10 +664,12 @@ class Memo_Model(models.Model):
         subject = "Memo Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
-        stage_approver_list = [appr.work_email for appr in self.stage_id.memo_config_id.approver_ids if appr.work_email] if self.stage_id.memo_config_id.approver_ids else []
+        stage_approver_list = [
+            appr.work_email for appr in self.stage_id.memo_config_id.approver_ids if appr.work_email
+            ] if self.stage_id.memo_config_id.approver_ids else []
         email_list = follower_list + stage_approver_list
-        mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email or self.direct_employee_id.work_email
-        # emails = (','.join(str(item2.work_email) for item2 in self.users_followers if item2.work_email))
+        mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email \
+            or self.direct_employee_id.work_email
         emails = (','.join(elist for elist in email_list))
         mail_data = {
                 'email_from': email_from,
@@ -732,9 +734,6 @@ class Memo_Model(models.Model):
         return self.approve_memo()
 
     def approve_memo(self): # Always available to Some specific groups
-        # users = self.env['res.users'].browse([self.env.uid])
-        # manager = users.has_group("company_memo.mainmemo_manager")
-        # if not manager: 
         ### check if supervisor has commented on the memo if it is server access
         self.check_supervisor_comment()
         is_config_approver = self.determine_if_user_is_config_approver()
