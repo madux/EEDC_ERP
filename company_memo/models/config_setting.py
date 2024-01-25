@@ -93,6 +93,18 @@ class MemoConfig(models.Model):
         copy=False
         )
     active = fields.Boolean(string="Active", default=True)
+    allowed_for_company_ids = fields.Many2many(
+        'res.partner', 
+        'res_partner_memo_config_rel',
+        'partner_id',
+        'memo_setting_id',
+        string="Allowed companies",
+        help="""
+        If companies are selected, this will allow 
+        employees with external user option to select 
+        the list from the portal
+        """
+        )
 
     @api.constrains('memo_type')
     def _check_duplicate_memo_type(self):

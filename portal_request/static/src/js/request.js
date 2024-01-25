@@ -490,34 +490,6 @@ odoo.define('portal_request.portal_request', function (require) {
     allowClear: true,
     });
 
-    // let checkConfiguredStages = function(this, requestOption){
-    //     var staff_num = $('#staff_id').val();
-    //     this._rpc({
-    //         route: `/check-configured-stage`,
-    //         params: {
-    //             'staff_num': staff_num,
-    //             'request_option': requestOption,
-    //         },
-    //     }).then(function (data) {
-    //         console.log('checking if stage is configured => '+ JSON.stringify(data))
-    //         if (!data.status) {
-    //             $('#selectRequestOption').val('')
-    //             // alert(`Validation Error! ${data.message}`)
-    //             message = `Validation Error! ${data.message}`
-    //             modal_message.text(message)
-    //             alert_modal.modal('show');
-    //         }
-    //         else{
-
-    //         }
-    //     }).guardedCatch(function (error) {
-    //         let msg = error.message.message
-    //         console.log(msg)
-    //         $("#selectRequestOption").val('')
-    //         alert(`Unknown Error! ${msg}`)
-    //     });
-    // }
-
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
