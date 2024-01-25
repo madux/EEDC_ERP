@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
     <record id="menu_portal_request_applications" model="website.menu">
-        <field name="name">EDDC Applications</field>
+        <field name="name">EEDC Applications</field>
         <field name="url">#</field>
         <field name="parent_id" ref="website.main_menu" />
         <field name="website_id" ref="website.default_website" />

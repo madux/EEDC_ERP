@@ -224,46 +224,7 @@
                             </t>
                             <t t-else="">
                             </t>
-                            <t t-if="record_attachment_ids">
-                                <div class="form-row" id="attachment_div">
-                                    <h4 class="fs-title">Attachments</h4>
-                                    <div class="tableclass table-responsive" id="attachment_table_div">
-                                        <table width="100%" border="1" bordercolor="#FFFFFF"
-                                        bgcolor="#F7F7EF" border-collapse="collapse" align="center"
-                                        id="product_table" class="table table-bordered"
-                                        style="height: 200px !important;overflow-y: scroll !important;display: block;">
-                                            <thead>
-                                                <tr class="heading">
-                                                    <th width="5%">
-                                                        <label>S/N</label>
-                                                    </th> 
-                                                    <th width="45%">
-                                                        <label>Name</label>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbody_attachment" name="tbody_attachment">
-                                                <t t-foreach="record_attachment_ids" t-as="attach">
-                                                    <tr class="heading" t-att-id="attach.id" t-att-name="attach.name">
-                                                        <th width="5%">
-                                                            <label>
-                                                                <li></li>
-                                                            </label>
-                                                        </th>
-                                                        <th width="45%">
-                                                            <a t-att-href="'/web/content/%s?download=true' %(attach.id)" target="blank">
-                                                                <t t-esc="attach.name"/>
-                                                            </a>
-                                                        </th>
-                                                    </tr>
-                                                </t>
-                                            </tbody>
-                                        </table>
-                                    </div> 
-                                </div>
-                            </t>
-                            <!--<a href="/web/content/2150?download=true&access_token=b333ae27-f002-49ab-9dd5-530ffb4e06a3" target="blank"/>-->
-                            <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment']">
+                            <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment', 'employee_update', 'employee_update','recruitment_request']">
                                 <div class="form-row" id="product_item_form_div">
                                     <h3 class="fs-title">Request Items</h3>
                                     <div class="tableclass table-responsive" id="product_table_div">
@@ -318,6 +279,65 @@
                                         <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
                                         <span id="s_website_form_result_addxx"/>
                                     </div> -->
+                                </div>
+                            </t>
+                            <t t-else="">
+                            </t> 
+
+                            <t t-if="req.memo_type == 'employee_update'">
+                                <div class="form-row" id="emp_item_form_div">
+                                    <h4 class="fs-title">Employee For Update</h4>
+                                    <div class="tableclass table-responsive" id="emp_table_div">
+                                        <table width="100%" border="1" bordercolor="#FFFFFF" 
+                                        border-collapse="collapse" align="center"
+                                        id="emp_table" class="table table-bordered"
+                                        style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                            <thead>
+                                                <tr class="heading">
+                                                    <th width="30%">
+                                                        Employee Name
+                                                    </th>
+                                                    <th width="25%">
+                                                        <label>New Department</label>
+                                                    </th>
+                                                    <th width="25%">
+                                                        <label>New Role</label>
+                                                    </th>
+                                                    <th width="20%">
+                                                        <label>New District</label>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody_employee" name="tbody_employee">
+                                                <t t-foreach="req.employee_transfer_line_ids" t-as="employee">
+                                                    <tr class="heading employee_row" t-att-id="employee.id" t-att-name="employee_row" t-att-row_count="employee.id">
+                                                        <th width="30%">
+                                                            <span>
+                                                                <t t-esc="employee.employee_id.name"/>
+                                                            </span>  
+                                                        </th>
+                                                         
+                                                        <th width="25%">
+                                                            <span>
+                                                                <t t-esc="employee.transfer_dept.name"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="25%">
+                                                            <span>
+                                                                <t t-esc="employee.new_role.name"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="20%">
+                                                            <span>
+                                                                <t t-esc="employee.new_district.name"/>
+                                                            </span>
+                                                        </th>
+                                                         
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </t>
                             <t t-else="">

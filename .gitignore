@@ -10,3 +10,4 @@
  account_loan/wizard/__pycache__/
  auditlog/__pycache__/
  auditlog/models/__pycache__/
+ **/__pycache__/*.py

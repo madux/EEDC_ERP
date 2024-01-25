@@ -11,9 +11,16 @@ from odoo.http import request
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
+import odoo
+import odoo.addons.web.controllers.home as main
+from odoo.addons.web.controllers.utils import ensure_db, _get_login_redirect_url, is_user_internal
 
 _logger = logging.getLogger(__name__)
-
+# Shared parameters for all login/signup flows
+SIGN_UP_REQUEST_PARAMS = {'db', 'login', 'debug', 'token', 'message', 'error', 'scope', 'mode',
+                          'redirect', 'redirect_hostname', 'email', 'name', 'partner_id',
+                          'password', 'confirm_password', 'city', 'country_id', 'lang', 'signup_email'}
+LOGIN_SUCCESSFUL_PARAMS = set()
 
 def get_url(id):
 	base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -43,6 +50,65 @@ def format_to_odoo_date(date_str: str) -> str:
 			return f"{yy}-{mm}-{dd}"
 		except Exception:
 			return
+		
+class Home(main.Home):
+	@http.route('/', type='http', auth="none")
+	def index(self, s_action=None, db=None, **kw):
+		if request.db and request.session.uid and not is_user_internal(request.session.uid):
+			# return request.redirect_query('/web/login_successful', query=request.params)
+			return request.redirect('/')
+		# return request.redirect_query('/web', query=request.params)
+		return request.redirect('/my/requests')
+		
+	@http.route('/web/login', type='http', auth="none")
+	def web_login(self, redirect=None, **kw):
+		ensure_db()
+		request.params['login_success'] = False
+		if request.httprequest.method == 'GET' and redirect and request.session.uid:
+			# return request.redirect(redirect)
+			return request.redirect('/')
+
+		# simulate hybrid auth=user/auth=public, despite using auth=none to be able
+		# to redirect users when no db is selected - cfr ensure_db()
+		if request.env.uid is None:
+			if request.session.uid is None:
+				# no user -> auth=public with specific website public user
+				request.env["ir.http"]._auth_method_public()
+			else:
+				# auth=user
+				request.update_env(user=request.session.uid)
+
+		values = {k: v for k, v in request.params.items() if k in SIGN_UP_REQUEST_PARAMS}
+		try:
+			values['databases'] = http.db_list()
+		except odoo.exceptions.AccessDenied:
+			values['databases'] = None
+
+		if request.httprequest.method == 'POST':
+			try:
+				uid = request.session.authenticate(request.db, request.params['login'], request.params['password'])
+				request.params['login_success'] = True
+				# return request.redirect(self._login_redirect(uid, redirect=redirect))
+				return request.redirect('/')
+			except odoo.exceptions.AccessDenied as e:
+				if e.args == odoo.exceptions.AccessDenied().args:
+					values['error'] = _("Wrong login/password")
+				else:
+					values['error'] = e.args[0]
+		else:
+			if 'error' in request.params and request.params.get('error') == 'access':
+				values['error'] = _('Only employees can access this database. Please contact the administrator.')
+
+		if 'login' not in values and request.session.get('auth_login'):
+			values['login'] = request.session.get('auth_login')
+
+		if not odoo.tools.config['list_db']:
+			values['disable_database_manager'] = True
+
+		response = request.render('web.login', values)
+		response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+		response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
+		return response
 	
 class PortalRequest(http.Controller):
 	
@@ -111,7 +177,9 @@ class PortalRequest(http.Controller):
 					"message": "Employee with staff ID provided does not exist. Contact Admin", 
 				}
 			
-	@http.route(['/get/leave-allocation/<int:leave_type>/<staff_num>/'], type='json', website=True, auth="user", csrf=False)
+	@http.route(
+			['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+			type='json', website=True, auth="user", csrf=False)
 	def get_leave_allocation(self,leave_type,staff_num):
 		"""Check staff Identification No.
 		Args:
@@ -229,9 +297,9 @@ class PortalRequest(http.Controller):
 
 		if employee_id and employee_id.department_id: 
 			memo_settings = request.env['memo.config'].sudo().search([
-            ('memo_type', '=', request_option),
-            ('department_id', '=', employee_id.department_id.id)
-            ], limit=1) 
+			('memo_type', '=', request_option),
+			('department_id', '=', employee_id.department_id.id)
+			], limit=1) 
 			if not memo_settings or not memo_settings.stage_ids:
 				msg = """Please contact system admin to properly configure a request type for your department"""
 				return {
@@ -393,8 +461,64 @@ class PortalRequest(http.Controller):
 			"pagination": {
 				"more": True,
 			}
-		})	
-	
+		})
+
+	@http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
+	def get_portal_product(self, **post):
+		request_type_option = post.get('request_type')
+		if request_type_option:
+			if request_type_option == "employee":
+				employeeItems = json.loads(post.get('employeeItems'))
+				_logger.info(f'Employeeitemmms {employeeItems}')
+				domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems])]
+				employees = request.env["hr.employee"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name} - {item.employee_number}'} for item in employees],
+					"pagination": {
+						"more": True,
+					}
+				})	
+			elif request_type_option == "department":
+				domain = [('active', '=', True)]
+				departments = request.env["hr.department"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			elif request_type_option == "role":
+				domain = [('active', '=', True)]
+				departments = request.env["hr.job"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			elif request_type_option == "district":
+				domain = []
+				departments = request.env["hr.district"].sudo().search(domain)
+				return json.dumps({
+					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+					"pagination": {
+						"more": True,
+					}
+				})
+			else:	
+				return json.dumps({
+					"results": [{"id": '',"text": '',}],
+					"pagination": {
+						"more": True,
+					}
+				})	
+		else:
+			return json.dumps({
+				"results": [{"id": '',"text": ''}],
+				"pagination": {
+					"more": True,
+				}
+			})	
 
 	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
@@ -503,7 +627,7 @@ class PortalRequest(http.Controller):
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
 		attachment = request.env['ir.attachment'].sudo()
 		attachment_id = attachment.create({
-            'name': f'{title} for {name}',
+			'name': f'{title} for {name}',
 			'type': 'binary',
 			'datas': datas,
 			'res_name': name,
@@ -549,7 +673,6 @@ class PortalRequest(http.Controller):
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
-		
 		if post.get("selectRequestOption") == "soe":
 			cash_advance_id = request.env['memo.model'].sudo().search([
 			('code', '=', existing_order)], limit=1)
@@ -575,11 +698,11 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption") if post.get("selectRequestOption") else "Internal",
+			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else 'Internal' if post.get("selectRequestOption") in ['server_access'] else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
-			"name": post.get("subject"),
-			"amountfig": post.get("amount_fig"),
+			"name": post.get("subject", ''),
+			"amountfig": post.get("amount_fig", 0),
 			"date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
@@ -599,14 +722,14 @@ class PortalRequest(http.Controller):
 			"state": "Sent",
 			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 			"description": description_body, 
-			"request_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
+			"request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
 			"request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
 
 		}
 		_logger.info(f"POST DATA {vals}")
-		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('productItems'))}""")
-		productItems = []
-		productItems = json.loads(post.get('productItems'))
+		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
+		DataItems = []
+		DataItems = json.loads(post.get('DataItems'))
 		memo_obj = request.env['memo.model']
 		if not memo_id:
 			_logger.info("Memo id creating")
@@ -614,9 +737,13 @@ class PortalRequest(http.Controller):
 		else:
 			_logger.info("Memo id updating")
 			memo_id.sudo().write(vals)
-		if productItems:
-			_logger.info(f'PRODUCT IDS IS HERE {productItems}')
-			self.generate_request_line(productItems, memo_id) # LA
+		if DataItems:
+			_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
+			if post.get("selectRequestOption") != "employee_update":
+				self.generate_request_line(DataItems, memo_id)
+		
+			elif post.get("selectRequestOption") == "employee_update":
+				self.generate_employee_transfer_line(DataItems, memo_id)
 		
 		## generating attachment
 		if 'other_docs' in request.params:
@@ -634,10 +761,14 @@ class PortalRequest(http.Controller):
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
 		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
-		_logger.info(f'Successfully Registered! with memo id Approver = {approver_id} stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
+		_logger.info(f'''
+			   Successfully Registered! with memo id Approver = {approver_id} \
+				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
 		# "users_followers": [
 			# 	(4, employee_id.parent_id.id), 
-			# 	(4, employee_id.administrative_supervisor_id.id if employee_id.administrative_supervisor_id else False),
+			# 	(4, employee_id.administrative_supervisor_id.id \
+			#  if employee_id.administrative_supervisor_id else False),
 			# 	(4, employee_id.id)],
 		follower_ids = [(4, approver_id)]
 		user_ids = [(4, request.env.user.id)]
@@ -659,28 +790,53 @@ class PortalRequest(http.Controller):
 				from_website=True
 				)
 		request.session['memo_ref'] = memo_id.code
-		_logger.info(f'Successfully Registered! with memo id stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
 		return json.dumps({'status': True, 'message': "Form Submitted!"})
 	
-	def generate_request_line(self, product_items, memo_id):
+	def generate_request_line(self, DataItems, memo_id):
 		memo_id.sudo().write({'product_ids': False})
 		counter = 1
-		for rec in product_items:
+		for rec in DataItems:
 			desc = rec.get('description', '')
 			_logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
 			product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
-					'product_id': product_id.id, #int(rec.get('product_id')) if rec.get('product_id') else False,
+					'product_id': product_id.id, 
+					#int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-            		'description': BeautifulSoup(desc, features="lxml").get_text(),
+					'description': BeautifulSoup(desc, features="lxml").get_text(),
 					'used_qty': rec.get('used_qty'),
 					'amount_total': rec.get('amount_total'),
 					'used_amount': rec.get('used_amount'),
 					'note': rec.get('note'),
 					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
 					'to_retire': rec.get('line_checked'),
+				})
+			counter += 1
+
+	def generate_employee_transfer_line(self, DataItems, memo_id):
+		counter = 1
+		for rec in DataItems:
+			_logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
+			transfer_line = request.env['hr.employee.transfer.line'].sudo()
+			employee = request.env['hr.employee'].sudo()
+			department = request.env['hr.department'].sudo()
+			role = request.env['hr.job'].sudo()
+			district = request.env['hr.district'].sudo()
+			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
+			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
+			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
+			district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
+
+			if employee_id and transfer_dept_id and role_id and district_id:
+				transfer_line.create({
+					'memo_id': memo_id.id,
+					'employee_id': employee_id.id, 
+					'transfer_dept': transfer_dept_id.id,
+					'current_dept_id': employee_id.department_id.id,
+					'new_role': role_id.id,
+					'new_district': district_id.id, 
 				})
 			counter += 1
 
@@ -727,9 +883,10 @@ class PortalRequest(http.Controller):
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
-					else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
-						if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
-							else ['Internal', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
+					else ['employee_update'] if type in ['employee_update'] \
+						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
+							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
+								else ['Internal', 'employee_update', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
@@ -919,7 +1076,7 @@ class PortalRequest(http.Controller):
 				message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
 				request_record.write({
 					'supervisor_comment': message,
-                	'is_supervisor_commented': True,
+					'is_supervisor_commented': True,
 					'state': 'Refuse' if status == 'Refuse' else request_record.state,
 					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
 					})

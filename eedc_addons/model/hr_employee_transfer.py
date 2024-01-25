@@ -45,13 +45,15 @@ class HREMployeeTransfer(models.Model):
         for transfer_line in new_transfer.employee_transfer_lines:
             pass
 
-
 class HREmployeeTransferLine(models.Model):
     _name = 'hr.employee.transfer.line'
 
+    memo_id = fields.Many2one('memo.model', string='Memo ref')
     employee_transfer_id = fields.Many2one('hr.employee.transfer', string='Employee Transfer')
     employee_id = fields.Many2one('hr.employee', string='Employee')
     current_dept_id = fields.Many2one('hr.department', string='Current Department')
     transfer_dept = fields.Many2one('hr.department', string='Transfer Department')
     new_role = fields.Many2one('hr.job', string='New Role')
     new_district = fields.Many2one('hr.district', string='New District')
+
+
