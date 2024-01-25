@@ -177,7 +177,9 @@ class PortalRequest(http.Controller):
 					"message": "Employee with staff ID provided does not exist. Contact Admin", 
 				}
 			
-	@http.route(['/get/leave-allocation/<int:leave_type>/<staff_num>/'], type='json', website=True, auth="user", csrf=False)
+	@http.route(
+			['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+			type='json', website=True, auth="user", csrf=False)
 	def get_leave_allocation(self,leave_type,staff_num):
 		"""Check staff Identification No.
 		Args:
@@ -759,10 +761,14 @@ class PortalRequest(http.Controller):
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
 		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
-		_logger.info(f'Successfully Registered! with memo id Approver = {approver_id} stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
+		_logger.info(f'''
+			   Successfully Registered! with memo id Approver = {approver_id} \
+				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
 		# "users_followers": [
 			# 	(4, employee_id.parent_id.id), 
-			# 	(4, employee_id.administrative_supervisor_id.id if employee_id.administrative_supervisor_id else False),
+			# 	(4, employee_id.administrative_supervisor_id.id \
+			#  if employee_id.administrative_supervisor_id else False),
 			# 	(4, employee_id.id)],
 		follower_ids = [(4, approver_id)]
 		user_ids = [(4, request.env.user.id)]
@@ -784,7 +790,6 @@ class PortalRequest(http.Controller):
 				from_website=True
 				)
 		request.session['memo_ref'] = memo_id.code
-		_logger.info(f'Successfully Registered! with memo id stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}')
 		return json.dumps({'status': True, 'message': "Form Submitted!"})
 	
 	def generate_request_line(self, DataItems, memo_id):
@@ -797,7 +802,8 @@ class PortalRequest(http.Controller):
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
-					'product_id': product_id.id, #int(rec.get('product_id')) if rec.get('product_id') else False,
+					'product_id': product_id.id, 
+					#int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
 					'description': BeautifulSoup(desc, features="lxml").get_text(),
 					'used_qty': rec.get('used_qty'),
