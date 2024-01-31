@@ -572,10 +572,12 @@ class Memo_Model(models.Model):
                 self.employee_id.parent_id.id,
                 self.employee_id.administrative_supervisor_id.id
             ]
-        mstages = memo_settings.stage_ids
-        last_stage = mstages[-1]
+        
         if memo_settings and current_stage_id:
-            if last_stage.id != current_stage_id.id:
+            mstages = memo_settings.stage_ids
+            _logger.info(f'Found stages are {mstages}')
+            last_stage = mstages[-1] if last_stage else False
+            if last_stage and last_stage.id != current_stage_id.id:
                 current_stage_index = memo_setting_stages.index(current_stage_id.id)
                 next_stage_id = memo_setting_stages[current_stage_index + 1] # to get the next stage
             else:
