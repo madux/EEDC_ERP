@@ -1,6 +1,8 @@
 from odoo import models, fields, api, _
 import random
 import logging
+from odoo.osv import expression
+
 _logger = logging.getLogger(__name__)
 
 
@@ -68,3 +70,18 @@ class HREmployee(models.Model):
         'employee_id', 
         string='Transfer History'
         )
+    
+    @api.model
+    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+        args = args or []
+        employee_ids = []
+        if operator not in expression.NEGATIVE_TERM_OPERATORS:
+            if operator == 'ilike' and not (name or '').strip():
+                domain = []
+            else:
+                domain = ['|', ('name', '=', name), ('employee_number', '=', name)]
+            employee_ids = self._search(expression.AND([domain, args]), limit=limit, access_rights_uid=name_get_uid)
+        if not employee_ids:
+            employee_ids = self._search(expression.AND([['|',('name', operator, name), ('employee_number', operator, name)], args]), limit=limit, access_rights_uid=name_get_uid)
+        return employee_ids
+    
