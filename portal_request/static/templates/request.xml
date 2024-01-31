@@ -154,7 +154,8 @@
                                                 <div class="col-sm">
                                                     <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">-- Select -- </option>
-                                                        <option value="server_access">Internal / System Access Request</option>
+                                                        <option value="Internal">Internal Request</option>
+                                                        <option value="server_access">System Access Request</option>
                                                         <option value="material_request">Material request</option>
                                                         <option value="employee_update">Employee Update Request</option>
                                                         <option value="procurement_request">Procurement request</option>

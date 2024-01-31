@@ -718,7 +718,7 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else 'Internal' if post.get("selectRequestOption") in ['server_access'] else post.get("selectRequestOption"),
+			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
 			"name": post.get("subject", ''),
