@@ -572,7 +572,7 @@ class Memo_Model(models.Model):
                 self.employee_id.parent_id.id,
                 self.employee_id.administrative_supervisor_id.id
             ]
-        
+        _logger.info(f'Found memo_settings are {memo_settings} and stages {memo_settings.stage_ids} and current stage {current_stage_id}')
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids
             _logger.info(f'Found stages are {mstages}')
