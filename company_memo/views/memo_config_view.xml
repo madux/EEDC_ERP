@@ -17,7 +17,8 @@
                                 <field name="department_id" required="1" options="{'no_create':True, 'no_open': False}"/> 
                             </group>
                             <group>
-                                <field name="approver_ids" string="Employees for Final Validation" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                                <field name="approver_ids" string="Employees for Follow up" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                                <field name="allowed_for_company_ids" string="Allow companies" domain="[('is_company','=', True)]" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                             </group>
                             <notebook>
                                 <page string="Stages">
@@ -30,7 +31,6 @@
                                             <field name="is_approved_stage"/>
                                             <field name="memo_config_id" force_save="1" invisible="0" options="{'no_create':True, 'no_open': False}"/>
                                             <field name="active"/>
-                                            
                                         </tree>
                                     </field>
                                 </page>

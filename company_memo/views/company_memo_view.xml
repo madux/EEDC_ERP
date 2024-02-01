@@ -363,6 +363,12 @@
                 groups="account.group_account_user,account.group_account_invoice,account.group_account_manager,base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account"
 
             /> -->
+        <record model="ir.actions.act_url" id="action_memo_open_my_request_url">
+            <field name="name">Open URL for the</field>
+            <field name="url">/my/requests</field>
+            <field name="target">new</field>
+        </record>
+
 
         <menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
             parent="internal_memo_menu_model_main2" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
@@ -380,5 +386,8 @@
 
             <menuitem id="internal_memo_model_id_refuse" name="Refuse"
             parent="internal_memo_menu_model_1" sequence= "5" action = "memo_model_refuse_action"/>
+        
+        <menuitem parent="internal_memo_menu_model_main2" id="menu_memo_website_request" name="Website Request(s)" action="action_memo_open_my_request_url" sequence="5"/>
+
     </data>
 </odoo>

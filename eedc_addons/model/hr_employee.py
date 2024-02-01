@@ -1,12 +1,17 @@
 from odoo import models, fields, api, _
 import random
 import logging
+from odoo.osv import expression
+
 _logger = logging.getLogger(__name__)
 
 
-class HREmployeePublic(models.Model):
-    _inherit = "hr.employee.public"
 
+# class HREmployeePublic(models.Model):
+#     _inherit = "hr.employee.public"
+class HrEmployeeBase(models.AbstractModel):
+    _inherit = "hr.employee.base"
+    
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age', groups="base.group_user")
     local_government = fields.Many2one('res.lga', string='LGA')
@@ -97,21 +102,17 @@ class HREmployee(models.Model):
         string='Transfer History'
         )
     
-    # def open_employee_transfer_history():
-    #     pass
-
-    transfer_history_count = fields.Integer(string="Offers Count", compute="_compute_offer")
-
-    def _compute_offer(self):
-        # This solution is quite complex. It is likely that the trainee would have done a search in
-        # a loop.
-        data = self.env["hr.employee.transfer.line"].read_group(
-            [],
-            ["ids:array_agg(id)", "employee_id"],
-            ["employee_id"],
-        )
-        mapped_count = {d["employee_id"][0]: d["employee_id_count"] for d in data}
-        # mapped_ids = {d["employee_id"][0]: d["ids"] for d in data}
-        for transfer_history in self:
-            transfer_history.transfer_history_count = mapped_count.get(transfer_history.id, 0)
-            # prop_type.offer_ids = mapped_ids.get(prop_type.id, [])
+    @api.model
+    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+        args = args or []
+        employee_ids = []
+        if operator not in expression.NEGATIVE_TERM_OPERATORS:
+            if operator == 'ilike' and not (name or '').strip():
+                domain = []
+            else:
+                domain = ['|', ('name', '=', name), ('employee_number', '=', name)]
+            employee_ids = self._search(expression.AND([domain, args]), limit=limit, access_rights_uid=name_get_uid)
+        if not employee_ids:
+            employee_ids = self._search(expression.AND([['|',('name', operator, name), ('employee_number', operator, name)], args]), limit=limit, access_rights_uid=name_get_uid)
+        return employee_ids
+    

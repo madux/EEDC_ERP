@@ -14,6 +14,8 @@ from bs4 import BeautifulSoup
 import odoo
 import odoo.addons.web.controllers.home as main
 from odoo.addons.web.controllers.utils import ensure_db, _get_login_redirect_url, is_user_internal
+from odoo.tools.translate import _
+
 
 _logger = logging.getLogger(__name__)
 # Shared parameters for all login/signup flows
@@ -52,13 +54,14 @@ def format_to_odoo_date(date_str: str) -> str:
 			return
 		
 class Home(main.Home):
-	@http.route('/', type='http', auth="none")
-	def index(self, s_action=None, db=None, **kw):
-		if request.db and request.session.uid and not is_user_internal(request.session.uid):
-			# return request.redirect_query('/web/login_successful', query=request.params)
-			return request.redirect('/')
-		# return request.redirect_query('/web', query=request.params)
-		return request.redirect('/my/requests')
+	# @http.route('/', type='http', auth="none")
+	# def index(self, s_action=None, db=None, **kw):
+	# 	# if request.db and request.session.uid and not is_user_internal(request.session.uid):
+	# 	# 	# return request.redirect_query('/web/login_successful', query=request.params)
+	# 	# 	return request.redirect('/')
+	# 	# return request.redirect_query('/web', query=request.params)
+	# 	# return request.redirect('/my/requests')
+	# 	return request.redirect('/')
 		
 	@http.route('/web/login', type='http', auth="none")
 	def web_login(self, redirect=None, **kw):
@@ -295,25 +298,43 @@ class PortalRequest(http.Controller):
 		else:
 			_logger.info('All fields captured')
 
-		if employee_id and employee_id.department_id: 
-			memo_settings = request.env['memo.config'].sudo().search([
-			('memo_type', '=', request_option),
-			('department_id', '=', employee_id.department_id.id)
-			], limit=1) 
-			if not memo_settings or not memo_settings.stage_ids:
-				msg = """Please contact system admin to properly configure a request type for your department"""
+		if employee_id and employee_id.department_id:
+			# check if user is from external company, restrict them from using internal applications 
+			memo_setting_id = request.env['memo.config'].sudo().search([
+				('memo_type', '=', request_option),
+				('department_id', '=', employee_id.department_id.id)
+				], limit=1) 
+			if not memo_setting_id or not memo_setting_id.stage_ids:
+				msg = """
+				Please contact system admin to properly 
+				configure a request type for your department"""
 				return {
 					"status": False,
 					"message": msg, 
 					} 
 			else:
-				_logger.info('Found memo setting')
-				return {
-					"status": True,
-					"message": "", 
-					}
+				_logger.info('Found memo setting for thee')
+				if employee_id.is_external_staff and not employee_id.external_company_id.id in memo_setting_id.mapped('allowed_for_company_ids').ids:
+				# .filtered(
+				# 	lambda partner: partner.id !=  employee_id.external_company_id.id): 
+					_logger.info('Employee not an external user')
+
+					return {
+						"status": False,
+						"message": '''
+						Sorry! You are not allowed to
+						use this option for now''' 
+						}
+				else:
+					_logger.info('Employee is internal allowed user')
+					return {
+						"status": True,
+						"message": "", 
+						}
 		else:
-			msg = """No Employee record found or employee department not properly configured. Contact system Admin"""
+			msg = """
+			No Employee record found or employee department 
+			not properly configured. Contact system Admin"""
 			return {
 				"status": False,
 				"message": msg, 
@@ -698,7 +719,7 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else 'Internal' if post.get("selectRequestOption") in ['server_access'] else post.get("selectRequestOption"),
+			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
 			"name": post.get("subject", ''),
