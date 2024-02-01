@@ -952,9 +952,10 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				# ('employee_id.user_id', '=', user.id),
 				('id', '=', int(id)),
-				'|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+				('memo_setting_id.approver_ids.user_id.id','=', user.id),
 			]
 		requests = request_id.search(domain, limit=1)
 		memo_attachment_ids = attachment.search([
