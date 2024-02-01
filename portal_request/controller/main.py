@@ -911,9 +911,10 @@ class PortalRequest(http.Controller):
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				'|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+				('memo_setting_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
 			('memo_type', 'in', memo_type),
