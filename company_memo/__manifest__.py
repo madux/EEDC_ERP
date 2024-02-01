@@ -9,7 +9,7 @@
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
 
-    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr'],
+    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts'],
     'data': [
         'security/security_group.xml', 
         'sequence/sequence.xml',

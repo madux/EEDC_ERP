@@ -6,9 +6,12 @@ from odoo.osv import expression
 _logger = logging.getLogger(__name__)
 
 
-class HREmployeePublic(models.Model):
-    _inherit = "hr.employee.public"
 
+# class HREmployeePublic(models.Model):
+#     _inherit = "hr.employee.public"
+class HrEmployeeBase(models.AbstractModel):
+    _inherit = "hr.employee.base"
+    
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age', groups="base.group_user")
     local_government = fields.Many2one('res.lga', string='LGA')
