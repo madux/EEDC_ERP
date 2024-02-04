@@ -119,12 +119,13 @@ class PortalRequest(http.Controller):
 	def portal_request(self):
 		"""Request portal for employee / portal users
 		"""
+		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
-			# "product_ids": request.env["product.product"].sudo().search([
-			# 	('detailed_type', 'in', ['consu', 'product'])
-			# 	]),
 			"district_ids": request.env["hr.district"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
+			"memo_key_ids": request.env["memo.type"].sudo().search([
+				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
+				]),
 		}
 		return request.render("portal_request.portal_request_template", vals)
 	 
@@ -301,7 +302,7 @@ class PortalRequest(http.Controller):
 		if employee_id and employee_id.department_id:
 			# check if user is from external company, restrict them from using internal applications 
 			memo_setting_id = request.env['memo.config'].sudo().search([
-				('memo_type', '=', request_option),
+				('memo_type.memo_key', '=', request_option),
 				('department_id', '=', employee_id.department_id.id)
 				], limit=1) 
 			if not memo_setting_id or not memo_setting_id.stage_ids:
@@ -351,7 +352,7 @@ class PortalRequest(http.Controller):
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('memo_type', '=', 'cash_advance'),
+				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
 				('state', '=', 'Done') 
 			]
@@ -402,7 +403,7 @@ class PortalRequest(http.Controller):
 				'''this should only return the request cash advance that has
 				  been approved and taken out from the account side
 				'''
-				domain += [('state', 'in', ['Done']), ('memo_type', 'in', ['cash_advance'])]
+				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
@@ -719,7 +720,8 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
+			"memo_type": self.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
+			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
 			"name": post.get("subject", ''),
@@ -776,7 +778,7 @@ class PortalRequest(http.Controller):
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
-			memo_id.memo_type, 
+			memo_id.memo_type.memo_key, 
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
@@ -901,13 +903,15 @@ class PortalRequest(http.Controller):
 			sessions['start'] = 0 
 			sessions['end'] = 10
 		
+		all_memo_type_keys = [rec.memo_key for rec in self.env['memo.type'].search([])]
+		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
 					else ['employee_update'] if type in ['employee_update'] \
 						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
 							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
-								else ['Internal', 'employee_update', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
+								else all_memo_type_keys
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
@@ -917,7 +921,7 @@ class PortalRequest(http.Controller):
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
-			('memo_type', 'in', memo_type),
+			('memo_type.memo_key', 'in', memo_type),
 		]
 		if search_param:
 			# if request.httprequest:

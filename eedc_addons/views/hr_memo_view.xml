@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='server_request_page']" position="after">
-                    <page name='employee_update_request_page' string='Employee Transfer Request' attrs="{'invisible':[('memo_type','not in',['employee_update'])]}">
+                    <page name='employee_update_request_page' string='Employee Transfer Request' attrs="{'invisible':[('memo_type.memo_key','not in',['employee_update'])]}">
                         <field name ="employee_transfer_line_ids">
                             <form string=""> 
                                 <sheet>

@@ -49,22 +49,28 @@ class Memo_Model(models.Model):
         return self.env.context.get('default_user_id') or \
          self.env['res.users'].search([('id', '=', self.env.uid)], limit=1)
  
-    memo_type = fields.Selection(
-        [
-        ("Payment", "Payment"), 
-        ("loan", "Loan"), 
-        ("Internal", "Internal Memo"),
-        ("employee_update", "Employee Update Request"),
-        ("material_request", "Material request"),
-        ("procurement_request", "Procurement Request"),
-        ("vehicle_request", "Vehicle request"),
-        ("leave_request", "Leave request"),
-        ("server_access", "Server Access Request"), 
-        ("cash_advance", "Cash Advance"),
-        ("soe", "Statement of Expense"),
-        ("recruitment_request", "Recruitment Request"),
-        ], string="Memo Type", required=True)
-
+    # memo_type = fields.Selection(
+    #     [
+    #     ("Payment", "Payment"), 
+    #     ("loan", "Loan"), 
+    #     ("Internal", "Internal Memo"),
+    #     ("employee_update", "Employee Update Request"),
+    #     ("material_request", "Material request"),
+    #     ("procurement_request", "Procurement Request"),
+    #     ("vehicle_request", "Vehicle request"),
+    #     ("leave_request", "Leave request"),
+    #     ("server_access", "Server Access Request"), 
+    #     ("cash_advance", "Cash Advance"),
+    #     ("soe", "Statement of Expense"),
+    #     ("recruitment_request", "Recruitment Request"),
+    #     ], string="Memo Type", required=True)
+    memo_type = fields.Many2one(
+        'memo.type',
+        string='Memo type',
+        required=True,
+        copy=False
+        )
+    memo_type_key = fields.Char('Memo type key', readonly=True, related="memo_type.memo_key")
     name = fields.Char('Subject', size=400)
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
@@ -282,13 +288,13 @@ class Memo_Model(models.Model):
     ################################
 
     def _get_related_stage(self):
-        if self.memo_type:
-            domain = [
-                ('memo_type', '=', self.memo_type), 
-                ('department_id', '=', self.employee_id.department_id.id)
-                ]
-        else:
-            domain=[('id', '=', 0)]
+        # if self.memo_type:
+        #     domain = [
+        #         ('memo_type', '=', self.memo_type.id), 
+        #         ('department_id', '=', self.employee_id.department_id.id)
+        #         ]
+        # else:
+        domain=[('id', '=', [])]
         return domain
     
     @api.onchange('memo_type')
@@ -301,7 +307,7 @@ class Memo_Model(models.Model):
             if not self.res_users:
                 department_id = self.employee_id.department_id
                 ms = self.env['memo.config'].sudo().search([
-                    ('memo_type', '=', self.memo_type),
+                    ('memo_type', '=', self.memo_type.id),
                     ('department_id', '=', department_id.id)
                     ], limit=1)
                 if ms:
@@ -495,7 +501,7 @@ class Memo_Model(models.Model):
     def validate_memo_for_approval(self):
         item_lines = self.mapped('product_ids')
         type_required_items = ['material_request', 'procurement_request', 'vehicle_request']
-        if self.memo_type in type_required_items and self.state in ["Approve2"]:
+        if self.memo_type.memo_key in type_required_items and self.state in ["Approve2"]:
             without_source_location_and_qty = item_lines.filtered(
                 lambda sef: sef.source_location_id == False or sef.quantity_available < 1
                 )
@@ -516,9 +522,9 @@ class Memo_Model(models.Model):
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
                 ) 
-        if self.memo_type == "Payment" and self.amountfig <= 0:
+        if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
-        elif self.memo_type == "material_request" and not self.product_ids:
+        elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line")
         # users = self.env['res.users'].browse([self.env.uid])
         # manager = users.has_group("company_memo.mainmemo_manager")
@@ -542,7 +548,7 @@ class Memo_Model(models.Model):
     """The wizard action passes the employee whom the memo was director to this function."""
     def get_initial_stage(self, memo_type, department_id):
         memo_settings = self.env['memo.config'].sudo().search([
-            ('memo_type', '=', memo_type),
+            ('memo_type.memo_key', '=', memo_type),
             ('department_id', '=', department_id)
             ], limit=1)
         if memo_settings and memo_settings.stage_ids:
@@ -558,7 +564,7 @@ class Memo_Model(models.Model):
         """
         approver_ids = []
         memo_settings = self.env['memo.config'].sudo().search([
-            ('memo_type', '=', self.memo_type),
+            ('memo_type.memo_key', '=', self.memo_type),
             ('department_id', '=', self.employee_id.department_id.id)
             ], limit=1)
         memo_setting_ids = memo_settings
@@ -603,7 +609,7 @@ class Memo_Model(models.Model):
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
                 if self.stage_id.is_approved_stage:
-                    if self.memo_type in ["Payment", 'loan', 'cash_advance', 'soe']:
+                    if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                         self.state = "Approve"
                     else:
                         self.state = "Approve2"
@@ -642,7 +648,7 @@ class Memo_Model(models.Model):
     def confirm_memo(self, employee, comments, from_website=False): 
         # user_id = self.env['res.users'].search([('id','=',self.env.user.id)])
         # lists2 = [y.partner_id.id for x in self.users_followers for y in x.user_id]
-        type = "loan request" if self.memo_type == "loan" else "memo"
+        type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
         Beneficiary = self.employee_id.name or self.user_ids.name
         body_msg = f"""Dear {self.direct_employee_id.name or self.approver_id.name}, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
@@ -722,7 +728,7 @@ class Memo_Model(models.Model):
         return self.generate_memo_artifacts(body_msg, body)
 
     def check_supervisor_comment(self):
-        if self.memo_type == "server_access":
+        if self.memo_type.memo_key == "server_access":
             if self.employee_id.administrative_supervisor_id and not self.supervisor_comment:
                 raise ValidationError(
                     """Please Inform the employee's supervisor to comment on this before approving 
@@ -760,23 +766,23 @@ class Memo_Model(models.Model):
         return self.generate_memo_artifacts(body_msg, body)
   
     def generate_memo_artifacts(self, body_msg, body):
-        if self.memo_type == "material_request":
+        if self.memo_type.memo_key == "material_request":
             return self.generate_stock_material_request(body_msg, body)
-        elif self.memo_type == "procurement_request":
+        elif self.memo_type.memo_key == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
-        elif self.memo_type == "vehicle_request":
+        elif self.memo_type.memo_key == "vehicle_request":
             self.generate_vehicle_request(body_msg) 
-        elif self.memo_type == "recruitment_request":
+        elif self.memo_type.memo_key == "recruitment_request":
             self.generate_recruitment_request(body_msg) 
-        elif self.memo_type == "leave_request":
+        elif self.memo_type.memo_key == "leave_request":
             self.generate_leave_request(body_msg, body)
-        elif self.memo_type == "cash_advance":
+        elif self.memo_type.memo_key == "cash_advance":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
-        elif self.memo_type == "soe":
+        elif self.memo_type.memo_key == "soe":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
-        elif self.memo_type == "server_access":
+        elif self.memo_type.memo_key == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
         else:
@@ -1145,7 +1151,7 @@ class Memo_Model(models.Model):
     def update_memo_type_approver(self):
         """update memo type approver"""
         memo_settings = self.env['memo.config'].sudo().search([
-                ('memo_type', '=', self.memo_type),
+                ('memo_type', '=', self.memo_type.id),
                 ('department_id', '=', self.employee_id.department_id.id)
                 ])
         memo_approver_ids = memo_settings.approver_ids
@@ -1155,19 +1161,19 @@ class Memo_Model(models.Model):
             })
       
     def view_related_record(self):
-        if self.memo_type == "material_request":
+        if self.memo_type.memo_key == "material_request":
             view_id = self.env.ref('stock.view_picking_form').id
             return self.record_to_open('stock.picking', view_id)
              
-        elif self.memo_type == "procurement_request":
+        elif self.memo_type.memo_key == "procurement_request":
             view_id = self.env.ref('purchase.purchase_order_form').id
             return self.record_to_open('purchase.order', view_id)
-        elif self.memo_type == "vehicle_request":
+        elif self.memo_type.memo_key == "vehicle_request":
             pass 
-        elif self.memo_type == "leave_request":
+        elif self.memo_type.memo_key == "leave_request":
             view_id = self.env.ref('hr_holidays.hr_leave_view_form').id
             return self.record_to_open('purchase.order', view_id)
-        elif self.memo_type == "cash_advance":
+        elif self.memo_type.memo_key == "cash_advance":
             view_id = self.env.ref('account.view_move_form').id
             return self.record_to_open('account.move', view_id)
         else:
@@ -1255,7 +1261,7 @@ class Memo_Model(models.Model):
                 """You are not Permitted to approve this Memo. Contact the authorized Person
             """)
         view_id = self.env.ref('account.view_account_payment_form')
-        if (self.memo_type != "Payment") or (self.amountfig < 1):
+        if (self.memo_type.memo_key != "Payment") or (self.amountfig < 1):
             raise ValidationError("(1) Memo type must be 'Payment'\n (2) Amount must be greater than one to proceed with payment")
         account_payment_existing = self.env['account.payment'].search([
             ('memo_reference', '=', self.id)
@@ -1291,7 +1297,7 @@ class Memo_Model(models.Model):
             raise ValidationError("You have generated a loan already for this record")
         # view_id = self.env['ir.model.data'].get_object_reference('account_loan', 'account_loan_form')
         view_id = self.env.ref('account_loan.account_loan_form')
-        if (self.memo_type != "loan") or (self.loan_amount < 1):
+        if (self.memo_type.memo_key != "loan") or (self.loan_amount < 1):
             raise ValidationError("Check validation: \n (1) Memo type must be 'loan request'\n (2) Loan Amount must be greater than one to proceed with loan request")
         ret = {
             'name':'Generate loan request',

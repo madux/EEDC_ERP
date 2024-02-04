@@ -85,7 +85,7 @@ class Forward_Wizard(models.TransientModel):
     #             raise ValidationError('You cannot forward this memo to your self. You can try approving the memo if you are amongst the approver.')
      
     def forward_memo(self): # Always available, 
-        if self.memo_record.memo_type == "Payment":
+        if self.memo_record.memo_type.memo_key == "Payment":
             if self.memo_record.amountfig < 0:
                 raise ValidationError('If you are running a payment Memo, kindly ensure the amount is \
                     greater than 0')

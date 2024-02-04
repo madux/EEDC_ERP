@@ -224,7 +224,7 @@
                             </t>
                             <t t-else="">
                             </t>
-                            <t t-if="req.memo_type not in ['server_access', 'loan', 'Internal', 'Payment', 'employee_update', 'employee_update','recruitment_request']">
+                            <t t-if="req.memo_type.memo_key not in ['server_access', 'loan', 'Internal', 'Payment', 'employee_update', 'employee_update','recruitment_request']">
                                 <div class="form-row" id="product_item_form_div">
                                     <h3 class="fs-title">Request Items</h3>
                                     <div class="tableclass table-responsive" id="product_table_div">
@@ -284,7 +284,7 @@
                             <t t-else="">
                             </t> 
 
-                            <t t-if="req.memo_type == 'employee_update'">
+                            <t t-if="req.memo_type.memo_key == 'employee_update'">
                                 <div class="form-row" id="emp_item_form_div">
                                     <h4 class="fs-title">Employee For Update</h4>
                                     <div class="tableclass table-responsive" id="emp_table_div">

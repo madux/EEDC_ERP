@@ -16,7 +16,7 @@ class AccountMoveMemo(models.Model):
     
     def action_post(self):
         if self.memo_id:
-            if self.memo_id.memo_type == "soe":
+            if self.memo_id.memo_type.memo_key == "soe":
                 '''This is added to help send the soe reference to the related cash advance'''
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
             self.memo_id.is_request_completed = True

@@ -24,6 +24,7 @@
         'views/assets.xml',
         'security/ir.model.access.csv',
         'data/memo_stage.xml', 
+        'data/memo_type.xml', 
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',

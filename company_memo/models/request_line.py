@@ -21,20 +21,27 @@ class RequestLine(models.Model):
     state = fields.Char(string="State")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
-    memo_type = fields.Selection(
-        [
-        ("Payment", "Payment"), 
-        ("loan", "Loan"), 
-        ("Internal", "Internal Memo"),
-        ("employee_update", "Employee Update Request"),
-        ("material_request", "Material request"),
-        ("procurement_request", "Procurement Request"),
-        ("vehicle_request", "Vehicle request"),
-        ("leave_request", "Leave request"),
-        ("server_access", "Server Access Request"),
-        ("cash_advance", "Cash Advance"),
-        ("soe", "Statement of Expense"),
-        ("recruitment_request", "Recruitment Request"),
-        ], string="Memo Type")
+    # memo_type = fields.Selection(
+    #     [
+    #     ("Payment", "Payment"), 
+    #     ("loan", "Loan"), 
+    #     ("Internal", "Internal Memo"),
+    #     ("employee_update", "Employee Update Request"),
+    #     ("material_request", "Material request"),
+    #     ("procurement_request", "Procurement Request"),
+    #     ("vehicle_request", "Vehicle request"),
+    #     ("leave_request", "Leave request"),
+    #     ("server_access", "Server Access Request"),
+    #     ("cash_advance", "Cash Advance"),
+    #     ("soe", "Statement of Expense"),
+    #     ("recruitment_request", "Recruitment Request"),
+    #     ], string="Memo Type")
+    memo_type = fields.Many2one(
+        'memo.type',
+        string='Memo type',
+        required=True,
+        copy=False
+        )
+    memo_type_key = fields.Char('Memo type key', readonly=True, related="memo_type.memo_key")
     
     
