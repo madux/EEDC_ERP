@@ -121,7 +121,7 @@ class PortalRequest(http.Controller):
 		"""
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
-			"district_ids": request.env["hr.district"].sudo().search([]),
+			# "district_ids": request.env["hr.district"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
 			"memo_key_ids": request.env["memo.type"].sudo().search([
 				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
@@ -420,7 +420,7 @@ class PortalRequest(http.Controller):
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
 								if memo_request.product_ids else memo_request.amountfig,
-						'district_id': memo_request.employee_id.ps_district_id.id,
+						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
 						'product_ids': [
 							{'id': q.product_id.id, 
@@ -449,7 +449,7 @@ class PortalRequest(http.Controller):
 						'work_email': "",
 						'subject': "",
 						'description': "",
-						'district_id': "",
+						# 'district_id': "",
 						'request_date': "",
 						'product_ids': "",
 					},
@@ -605,13 +605,7 @@ class PortalRequest(http.Controller):
 			if product:
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
-				]
-				# if district:
-				# 	district_id = request.env['hr.district'].browse([int(district)])
-				# 	if district_id:
-				# 		domain = [
-				# 			('branch_id', '=', district_id.branch_id.id) 
-				# 		]
+				] 
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
@@ -682,16 +676,16 @@ class PortalRequest(http.Controller):
 			if not memo_id:
 				_logger.info(f'memo not found')
 				return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-		district_id =False
-		if post.get("selectDistrict"):
-			district = request.env['hr.district'].sudo().search([
-				('id', '=', post.get("selectDistrict"))
-				], limit=1)
-			if district:
-				district_id = district.id 
-			else:
-				district_id = memo_id.district_id.id
-		_logger.info(f'WHAT IS DISTRICT ==> {district_id}')
+		# district_id =False
+		# if post.get("selectDistrict"):
+		# 	district = request.env['hr.district'].sudo().search([
+		# 		('id', '=', post.get("selectDistrict"))
+		# 		], limit=1)
+		# 	if district:
+		# 		district_id = district.id 
+		# 	else:
+		# 		district_id = memo_id.district_id.id
+		# _logger.info(f'WHAT IS DISTRICT ==> {district_id}')
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
@@ -730,7 +724,7 @@ class PortalRequest(http.Controller):
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
-			"district_id": district_id,
+			# "district_id": district_id,
 			"applicationChange": True if post.get("applicationChange") == "on" else False,
 			"enhancement": True if post.get("enhancement") == "on" else False,
 			"datapatch": True if post.get("datapatch") == "on" else False,
@@ -850,16 +844,16 @@ class PortalRequest(http.Controller):
 			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
-			district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
+			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 
-			if employee_id and transfer_dept_id and role_id and district_id:
+			if employee_id and transfer_dept_id and role_id:#and district_id:
 				transfer_line.create({
 					'memo_id': memo_id.id,
 					'employee_id': employee_id.id, 
 					'transfer_dept': transfer_dept_id.id,
 					'current_dept_id': employee_id.department_id.id,
 					'new_role': role_id.id,
-					'new_district': district_id.id, 
+					# 'new_district': district_id.id, 
 				})
 			counter += 1
 

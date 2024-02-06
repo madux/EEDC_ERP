@@ -381,20 +381,20 @@
 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectDistrict">
+                                                <!-- <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectDistrict">
                                                     <span class="s_website_form_label_content">District</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
                                                     <select id="selectDistrict" name="selectDistrict" required="required" class="form-control form-control-sm" labelfor="District">
-                                                        <option selected="selected" value="">-- Select District --</option>
+                                                        <option selected="selected" value="">.- Select District ..</option>
                                                         <t t-foreach="district_ids" t-as="dis">
                                                             <option t-att-value="dis.id">
                                                                 <span t-esc="dis.name"/>
                                                             </option>
                                                         </t>
                                                     </select>
-                                                </div>
+                                                </div> -->
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="other_docs">
                                                     <span class="s_website_form_label_content">Documents</span>
                                                     <span class="s_website_form_mark"> *</span>

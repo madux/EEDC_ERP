@@ -6,8 +6,14 @@
             <field name="model">memo.model</field>
             <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
             <field name="arch" type="xml">
+                <xpath expr="//field[@name='demo_staff']" position="after">
+                    <field name="district_id" string="District" invisible="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                </xpath>
+                <xpath expr="//field[@name='product_ids']//tree//field[@name='to_retire']" position="after">
+                    <field name="district_id" string="District" invisible="1"/> 
+                </xpath>  
                 <xpath expr="//page[@name='server_request_page']" position="after">
-                    <page name='employee_update_request_page' string='Employee Transfer Request' attrs="{'invisible':[('memo_type.memo_key','not in',['employee_update'])]}">
+                    <page name='employee_update_request_page' string='Employee Transfer Request' attrs="{'invisible':[('memo_type_key','not in',['employee_update'])]}">
                         <field name ="employee_transfer_line_ids">
                             <form string=""> 
                                 <sheet>
@@ -38,5 +44,7 @@
                 </xpath>
             </field>
         </record>
+ 
+        
     </data>
 </odoo>

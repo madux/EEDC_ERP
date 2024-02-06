@@ -88,3 +88,6 @@ class HREmployee(models.Model):
             employee_ids = self._search(expression.AND([['|',('name', operator, name), ('employee_number', operator, name)], args]), limit=limit, access_rights_uid=name_get_uid)
         return employee_ids
     
+
+
+    

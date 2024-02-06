@@ -64,26 +64,31 @@ class Memo_Model(models.Model):
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
     #     ], string="Memo Type", required=True)
+    def get_publish_memo_types(self):
+        memo_configs = self.env['memo.config'].search([('active', '=', True)])
+        memo_type_ids = [r.memo_type.id for r in memo_configs]
+        return [('id', 'in', memo_type_ids)]
+    
     memo_type = fields.Many2one(
         'memo.type',
         string='Memo type',
         required=True,
-        copy=False
+        copy=False,
+        domain=lambda self: self.get_publish_memo_types(),
         )
-    memo_type_key = fields.Char('Memo type key', readonly=True, related="memo_type.memo_key")
+    memo_type_key = fields.Char('Memo type key', readonly=True)
     name = fields.Char('Subject', size=400)
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
+    # district_id = fields.Many2one("hr.district", string="District ID")
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
     set_staff = fields.Many2one('hr.employee', string = 'Employee')
-    demo_staff = fields.Integer(string='User', compute="get_user_staff",
+    demo_staff = fields.Integer(string='User',
                                 default=lambda self: self.env['res.users'].search([
-                                    ('id', '=', self.env.uid)], limit=1).id)
+                                    ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff",)
         
     user_ids = fields.Many2one('res.users', string = 'Beneficiary', default =_default_user)
-    dept_ids = fields.Many2one('hr.department', string ='Department', 
-    compute="employee_department", readonly = True, store =True)
-    district_id = fields.Many2one("hr.district", string="District ID")
+    dept_ids = fields.Many2one('hr.department', string ='Department', readonly = True, store =True, compute="employee_department",)
     description = fields.Char('Note')
     project_id = fields.Many2one('account.analytic.account', 'Project')
     vendor_id = fields.Many2one('res.partner', 'Vendor')
@@ -110,7 +115,7 @@ class Memo_Model(models.Model):
                              copy=False, default='submit',
                              required=True,
                              store=True,
-                             help='Request Report state')#, compute="compute_approved_stage")
+                             help='Request Report state')
     date = fields.Datetime('Request Date', default=fields.Datetime.now())
     invoice_id = fields.Many2one(
         'account.move', 
@@ -133,7 +138,7 @@ class Memo_Model(models.Model):
     comments = fields.Text('Comments', default="-")
     supervisor_comment = fields.Html('Supervisor Comments', default="")
     manager_comment = fields.Html('Manager Comments', default="")
-    is_supervior = fields.Boolean(string="compute_employee_supervisor")
+    is_supervior = fields.Boolean(string='is supervisor', compute="compute_employee_supervisor")
     is_manager = fields.Boolean(string="is_manager", compute="compute_employee_supervisor")
     
     # Fields for server request
@@ -284,18 +289,32 @@ class Memo_Model(models.Model):
                                          'submit': [('required', True)],
                                          'submit':[('readonly', False)],
                                      }, index=True)
+    
+    invoice_ids = fields.Many2many(
+        'account.move', 
+        'memo_invoice_rel',
+        'memo_invoice_id',
+        'invoice_memo_id',
+        string='Invoice', 
+        store=True,
+        domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
+        )
 
     ################################
 
     def _get_related_stage(self):
-        # if self.memo_type:
-        #     domain = [
-        #         ('memo_type', '=', self.memo_type.id), 
-        #         ('department_id', '=', self.employee_id.department_id.id)
-        #         ]
-        # else:
-        domain=[('id', '=', [])]
+        if self.memo_type:
+            domain = [
+                ('memo_type', '=', self.memo_type.id), 
+                ('department_id', '=', self.employee_id.department_id.id)
+                ]
+        else:
+            domain=[('id', '=', [])]
         return domain
+    
+    @api.onchange('invoice_ids')
+    def get_amount(self):
+        self.amountfig = sum(self.invoice_ids.mapped('amount_total'))
     
     @api.onchange('memo_type')
     def get_default_stage_id(self):
@@ -314,6 +333,7 @@ class Memo_Model(models.Model):
                     memo_setting_stage = ms.stage_ids[0]
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
+                    self.memo_type_key = self.memo_type.memo_key 
                     # self.res_users = [
                     #     (4, self.employee_id.administrative_supervisor_id.user_id.id),
                     #     ]
@@ -324,6 +344,7 @@ class Memo_Model(models.Model):
                     self.memo_type = False
                     self.stage_id = False
                     self.memo_setting_id = False
+                    self.memo_type_key = False
                     msg = f"No stage configured for department {department_id.name} and selected memo type. Please contact administrator"
                     return {'warning': {
                                 'title': "Validation",
@@ -333,7 +354,7 @@ class Memo_Model(models.Model):
         else:
             self.stage_id = False
 
-    # @api.depends('approver_id')
+    @api.depends('approver_id')
     def compute_user_is_approver(self):
         for rec in self:
             if rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
@@ -365,18 +386,6 @@ class Memo_Model(models.Model):
         res['arch'] = etree.tostring(doc)
         return res
 
-    @api.onchange('invoice_id')
-    def get_amount(self):
-        if self.invoice_id and self.invoice_id.state in ['posted', 'cancel']:
-            self.invoice_id = False 
-            return {
-                'warning': {
-                    'title': "Validation",
-                    'message': "You selected an invoice that is either cancelled or posted already",
-                }
-            }
-        self.amountfig = self.invoice_id.amount_total
-         
     @api.depends('set_staff')
     def get_user_staff(self):
         if self.set_staff:
@@ -393,6 +402,7 @@ class Memo_Model(models.Model):
         else:
             self.dept_ids = False
             # self.district_id = self.employee_id.ps_district_id.id
+    
     @api.depends('employee_id')
     def compute_employee_supervisor(self):
         if self.employee_id:
@@ -512,6 +522,10 @@ class Memo_Model(models.Model):
                      )
 
     def forward_memo(self):
+        if self.memo_type.memo_key == "Payment" and self.mapped('invoice_ids').filtered(
+            lambda s: s.mapped('invoice_line_ids').filtered(lambda x: x.price_unit <= 0)
+        ):
+            raise ValidationError("All invoice line must have a price amount greater than 0")
         # if self.state == "submit":
         #     if not self.env.user.id == self.employee_id.user_id.id:#  or self.env.uid != self.create_uid:
         #         raise ValidationError('You cannot forward a memo at draft state because you are not the initiator')
@@ -564,7 +578,7 @@ class Memo_Model(models.Model):
         """
         approver_ids = []
         memo_settings = self.env['memo.config'].sudo().search([
-            ('memo_type.memo_key', '=', self.memo_type),
+            ('memo_type', '=', self.memo_type.id),
             ('department_id', '=', self.employee_id.department_id.id)
             ], limit=1)
         memo_setting_ids = memo_settings
@@ -1188,72 +1202,101 @@ class Memo_Model(models.Model):
         # self.message_post(body=body, 
         # subtype='mt_comment',message_type='notification',partner_ids=followers)
      
-    def generate_move_entriesxx(self):
-        '''pr: product obj'''
-        # journal_id = self.env['account.journal'].search([
-        #     '|',('type', '=', 'cash'),
-        #     ('type', '=', 'bank'),
-        #     ], limit=1)
-        journal_id = self.env['account.journal'].search(
-            [('type', '=', 'purchase'),
-             ('code', '=', 'BILL')
-             ], limit=1
-        )
-        account_move = self.env['account.move'].sudo()
-        inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-        if not inv:
-            partner_id = self.employee_id.user_id.partner_id
-            inv = account_move.create({ 
-                'memo_id': self.id,
-                'ref': self.code,
-                'origin': self.code,
-                'partner_id': partner_id.id,
-                'company_id': self.env.user.company_id.id,
-                'currency_id': self.env.user.company_id.currency_id.id,
-                # Do not set default name to account move name, because it is unique 
-                'name': f"CASH ADV/ {self.code}",
-                'move_type': 'in_receipt',
-                'date': fields.Date.today(),
-                'journal_id': journal_id.id,
-                'invoice_line_ids': [(0, 0, {
-                        'name': pr.product_id.name,
-                        'ref': f'{self.code}: {pr.product_id.name}',
-                        'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                        'price_unit': pr.amount_total,
-                        'quantity': pr.quantity_available,
-                        'discount': 0.0,
-                        'product_uom_id': pr.product_id.uom_id.id,
-                        'product_id': pr.product_id.id,
-                }) for pr in self.product_ids],
-            })
-            # inv.post()
-            # self.validate_invoice_and_post_journal(journal_id.id, inv)
+    # def generate_move_entriesxx(self):
+    #     '''pr: product obj'''
+    #     # journal_id = self.env['account.journal'].search([
+    #     #     '|',('type', '=', 'cash'),
+    #     #     ('type', '=', 'bank'),
+    #     #     ], limit=1)
+    #     journal_id = self.env['account.journal'].search(
+    #         [('type', '=', 'purchase'),
+    #          ('code', '=', 'BILL')
+    #          ], limit=1
+    #     )
+    #     account_move = self.env['account.move'].sudo()
+    #     inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+    #     if not inv:
+    #         partner_id = self.employee_id.user_id.partner_id
+    #         inv = account_move.create({ 
+    #             'memo_id': self.id,
+    #             'ref': self.code,
+    #             'origin': self.code,
+    #             'partner_id': partner_id.id,
+    #             'company_id': self.env.user.company_id.id,
+    #             'currency_id': self.env.user.company_id.currency_id.id,
+    #             # Do not set default name to account move name, because it is unique 
+    #             'name': f"CASH ADV/ {self.code}",
+    #             'move_type': 'in_receipt',
+    #             'date': fields.Date.today(),
+    #             'journal_id': journal_id.id,
+    #             'invoice_line_ids': [(0, 0, {
+    #                     'name': pr.product_id.name,
+    #                     'ref': f'{self.code}: {pr.product_id.name}',
+    #                     'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+    #                     'price_unit': pr.amount_total,
+    #                     'quantity': pr.quantity_available,
+    #                     'discount': 0.0,
+    #                     'product_uom_id': pr.product_id.uom_id.id,
+    #                     'product_id': pr.product_id.id,
+    #             }) for pr in self.product_ids],
+    #         })
+    #         # inv.post()
+    #         # self.validate_invoice_and_post_journal(journal_id.id, inv)
+    #     else:
+    #         return inv
+    #     return inv
+    def validate_account_invoices(self):
+        invalid_record = self.mapped('invoice_ids').filtered(lambda s: not s.partner_id or not s.payment_journal_id)
+        if invalid_record:
+            raise ValidationError("Partner, Payment journal must be selected. Also ensure the status is in draft")
+        
+    def action_post_and_vallidate_payment(self):
+        self.validate_account_invoices()
+        for count, rec in enumerate(self.invoice_ids, 1):
+            if not rec.invoice_line_ids:
+                raise ValidationError(
+                    f'Invoice at line {count} does not have move lines'
+                    )   
+            else:
+                if rec.payment_state == 'not_paid': 
+                    if rec.state == 'draft':
+                        rec.action_post()
+                        self.validate_invoice_and_post_journal(rec.payment_journal_id, rec)
+                    elif rec.state == 'posted':
+                        self.validate_invoice_and_post_journal(rec.payment_journal_id, rec)
+        self.finalize_payment()
+
+    def finalize_payment(self):
+        if self.invoice_ids:
+            allpaid_invoice = self.mapped('invoice_ids').filtered(lambda s: s.payment_state in ['paid'])
+            if allpaid_invoice:
+                self.state = "Done"
         else:
-            return inv
-        return inv
+            self.state = "Done"
 
     def validate_invoice_and_post_journal(
             self, journal_id, inv):
-        """To be used only when they request for automatic payment generation"""
-        account_payment_obj = self.env['account.payment'].sudo()
-        outbound_payment_method = self.env['account.payment.method'].sudo().search(
-            [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
-        payment_method = 1
-        if journal_id:
-            payment_method = journal_id.outbound_payment_method_line_ids[0].id if journal_id.outbound_payment_method_line_ids else outbound_payment_method.id if outbound_payment_method else payment_method
-        acc_values = {
-            'invoice_ids': [(6, 0, [inv.id])],
-            'amount': inv.amount_residual_signed,
-            'ref': inv.name,
-            'move_id': inv.id,
-            'payment_type': 'outbound',
-            'partner_type': 'supplier',
-            'journal_id': journal_id.id,
-            'payment_method_id': payment_method,
-            'partner_id': inv.partner_id.id,
-        }
-        payment = account_payment_obj.create(acc_values)
-        payment.post()
+        if inv.state == "posted":
+            """To be used only when they request for automatic payment generation"""
+            account_payment_obj = self.env['account.payment'].sudo()
+            outbound_payment_method = self.env['account.payment.method'].sudo().search(
+                [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
+            payment_method = 1
+            if journal_id:
+                payment_method = journal_id.outbound_payment_method_line_ids[0].id if journal_id.outbound_payment_method_line_ids else outbound_payment_method.id if outbound_payment_method else payment_method
+            acc_values = {
+                'invoice_ids': [(6, 0, [inv.id])],
+                'amount': inv.amount_residual_signed,
+                'ref': inv.name,
+                'move_id': inv.id,
+                'payment_type': 'outbound',
+                'partner_type': 'supplier',
+                'journal_id': journal_id.id,
+                'payment_method_id': payment_method,
+                'partner_id': inv.partner_id.id,
+            }
+            payment = account_payment_obj.create(acc_values)
+            payment.post()
 
     def Register_Payment(self):
         if self.env.uid != self.stage_id.approver_id.user_id.id:

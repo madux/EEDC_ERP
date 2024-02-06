@@ -9,6 +9,7 @@
                 <xpath expr="//field[@name='ref']" position="after">
                     <field name="memo_id" readonly="1" force_save="1"/>
                     <field name="origin" required="0"/>
+                    <field name="payment_journal_id" required="0"/>
                 </xpath>
             </field>
         </record>

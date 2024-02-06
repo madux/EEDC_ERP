@@ -9,7 +9,7 @@
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
 
-    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts'],
+    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts', 'hr_holidays', 'hr_recruitment'], #, 'account_payment_invoice_online_payment_patch'],
     'data': [
         'security/security_group.xml', 
         'sequence/sequence.xml',
