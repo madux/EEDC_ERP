@@ -23,7 +23,8 @@
         'reports/report_memo.xml',
         'views/assets.xml',
         'security/ir.model.access.csv',
-        'data/memo_stage.xml', 
+        'data/memo_stage.xml',
+        'data/ir_cron.xml' 
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',
