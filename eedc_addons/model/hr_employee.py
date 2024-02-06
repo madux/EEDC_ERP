@@ -96,6 +96,28 @@ class HREmployee(models.Model):
               },
         }
     
+
+    def stats_transfer_employee_lines(self):
+        return {
+            'name': _('Employee Transfer'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'hr.employee.transfer.line',
+            'views': [[self.env.ref('eedc_addons.hr_employee_transfer_line_view_tree').id, 'tree']],
+            'domain': [('employee_id', 'in', self.ids)],
+        }
+    
+    # def stats_transfer_employee_lines(self):
+    #     return {
+    #           'name': 'Employee Transfer', 
+    #         # 'views': [[self.env.ref('hr_holidays.hr_leave_employee_view_dashboard').id, 'tree']],
+    #         #   "view_id": self.env.ref('eedc_addons.view_hr_employee_transfer_form'),
+    #           'res_model': 'hr.employee.transfer',
+    #           'type': 'ir.actions.act_window',
+    #         #   'target': 'current',
+    #           'domain': [], #[('employee_id', 'in', self.ids)],
+    #           }, 
+    
+    
     employee_transfer_history = fields.One2many( 
         'hr.employee.transfer.line', 
         'employee_id', 

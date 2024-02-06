@@ -29,21 +29,25 @@ class HREMployeeTransfer(models.Model):
 
     def update_transfer_details(self):
         employee_ids = self.env.context.get('default_employee_ids', [])
-        # raise ValidationError(employee_ids)
+        # raise ValidationError(self.id)
         # check validations,
         # go throught each line that the select option is checked,
         # update employee rec with the data eg department, role, district
         
         
-        new_transfer = self.env['hr.employee.transfer'].create({
-            'employee_ids': [(6, 0, employee_ids)],
-            'transfer_initiator_uid': self.env.user.id,
-            'transfer_date': fields.Datetime.now(),
-            'employee_transfer_lines': self.env.context.get('default_employee_transfer_lines', [])
-        })
+        # new_transfer = self.env['hr.employee.transfer'].create({
+        #     'employee_ids': [(6, 0, employee_ids)],
+        #     'transfer_initiator_uid': self.env.user.id,
+        #     'transfer_date': fields.Datetime.now(),
+        #     'employee_transfer_lines': self.env.context.get('default_employee_transfer_lines', [])
+        # })
 
-        for transfer_line in new_transfer.employee_transfer_lines:
-            pass
+        for tf_line in self.employee_transfer_lines:
+            tf_line.employee_id.update({
+                'department_id': tf_line.transfer_dept.id if tf_line.transfer_dept else tf_line.employee_id.department_id.id,
+                'job_id': tf_line.new_role.id if tf_line.new_role else tf_line.employee_id.job_id.id,
+                'ps_district_id': tf_line.new_district.id if tf_line.new_district else tf_line.employee_id.ps_district_id.id,
+            })
 
 class HREmployeeTransferLine(models.Model):
     _name = 'hr.employee.transfer.line'
