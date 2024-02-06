@@ -638,7 +638,7 @@ class PortalRequest(http.Controller):
 				"message": "Please ensure you select a product line", 
 				}
 
-	# total_availability = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 	
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
 		attachment = request.env['ir.attachment'].sudo()
@@ -897,7 +897,7 @@ class PortalRequest(http.Controller):
 			sessions['start'] = 0 
 			sessions['end'] = 10
 		
-		all_memo_type_keys = [rec.memo_key for rec in self.env['memo.type'].search([])]
+		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
 		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
