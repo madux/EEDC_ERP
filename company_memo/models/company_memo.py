@@ -1250,7 +1250,7 @@ class Memo_Model(models.Model):
         if invalid_record:
             raise ValidationError("Partner, Payment journal must be selected. Also ensure the status is in draft")
         
-    def action_post_and_vallidate_payment(self):
+    def action_post_and_vallidate_payment(self): # Register Payment
         self.validate_account_invoices()
         for count, rec in enumerate(self.invoice_ids, 1):
             if not rec.invoice_line_ids:
@@ -1284,9 +1284,10 @@ class Memo_Model(models.Model):
             payment_method = 1
             if journal_id:
                 payment_method = journal_id.outbound_payment_method_line_ids[0].id if journal_id.outbound_payment_method_line_ids else outbound_payment_method.id if outbound_payment_method else payment_method
+            # raise ValidationError(payment_method)
             acc_values = {
-                'invoice_ids': [(6, 0, [inv.id])],
-                'amount': inv.amount_residual_signed,
+                # 'invoice_ids': [(6, 0, [inv.id])],
+                # 'amount': inv.amount_residual_signed,
                 'ref': inv.name,
                 'move_id': inv.id,
                 'payment_type': 'outbound',
@@ -1294,6 +1295,8 @@ class Memo_Model(models.Model):
                 'journal_id': journal_id.id,
                 'payment_method_id': payment_method,
                 'partner_id': inv.partner_id.id,
+                'amount': inv.amount_residual,
+                'payment_method_line_id': payment_method,
             }
             payment = account_payment_obj.create(acc_values)
             payment.post()
