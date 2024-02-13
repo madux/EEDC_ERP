@@ -81,10 +81,23 @@ class HREmployee(models.Model):
         string='Transfer History'
         )
     
-    @api.onchange('first_name', 'middle_name', 'last_name')
-    def _onchange_update_full_name(self):
-        self.name = " ".join(filter(None, [self.first_name, self.middle_name, self.last_name]))
-        # self.name = " ".join([name for name in [self.first_name, self.middle_name, self.last_name] if name])
+    # @api.onchange('first_name', 'middle_name', 'last_name')
+    # def onchange_update_full_name(self):
+    #     self.name = " ".join(filter(None, [self.first_name, self.middle_name, self.last_name]))
+    #     # self.name = " ".join([name for name in [self.first_name, self.middle_name, self.last_name] if name])
+
+    @api.onchange(
+        'first_name','middle_name', 'last_name'
+        )
+    def onchange_of_applicants_name(self):
+        fn, mm, ln = "", "", ""
+        if self.first_name:
+            fn = self.first_name
+        if self.middle_name:
+            mm = self.middle_name
+        if self.last_name:
+            ln = self.last_name
+        self.name = f'{fn} {mm} {ln}'
 
     @api.model_create_multi
     def create(self, vals_list):
