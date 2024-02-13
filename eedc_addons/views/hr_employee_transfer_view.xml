@@ -12,17 +12,37 @@
                         </group>
                         <group>
                             <field name="transfer_date"/>
+                            <field name="transfer_type" widget="radio"/>
                         </group>
                     </group> 
                     <notebook>
-                        <page string="Transfer Details" name="transfer_details_page">
+                        <page string="Transfer Details" name="transfer_details_page" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}">
                             <field name="employee_transfer_lines" widget="one2many_list">
                                 <tree editable="bottom">
                                     <field name="employee_id"/>
                                     <field name="current_dept_id"/>
-                                    <field name="new_role"/>
-                                    <field name="transfer_dept"/>
-                                    <field name="new_district"/>
+                                    <field name="current_role_id" />
+                                    <!-- <field name="current_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/> -->
+                                    <field name="transfer_dept" attrs="{'invisible': [('parent.transfer_type', '!=', 'transfer')]}"/>
+                                    <field name="new_role" />
+                                    <field name="new_district" attrs="{'invisible': [('parent.transfer_type', '!=', 'transfer')]}"/>
+                                    <!-- <field name="new_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/> -->
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Promotion Details" name="promotion_details_page" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}">
+                            <field name="employee_transfer_lines" widget="one2many_list">
+                                <tree editable="bottom">
+                                    <field name="employee_id"/>
+                                    <field name="current_dept_id"/>
+                                    <field name="current_role_id" />
+                                    <field name="current_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_role" />
+                                    <field name="new_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
                                 </tree>
                             </field>
                         </page>
@@ -40,6 +60,7 @@
             <field name="model">hr.employee.transfer.line</field>
             <field name="arch" type="xml">
                 <tree string="" create="False" edit="False">
+                    <field name="transfer_type" />
                     <field name="current_dept_id" string="Old Dept" />
                     <field name="transfer_dept" string="Current Dept" />
                     <field name="new_role" string="Transfer Dept" />
@@ -56,6 +77,7 @@
             <field name="res_model">hr.employee.transfer.line</field>
             <field name="domain">[('property_type_id','=', active_id)]</field>
             <field name="view_mode">tree</field>
+            <field name="context">{'default_transfer_type': employee_transfer_id.transfer_type}</field>
         </record>
     </data>
 </odoo>

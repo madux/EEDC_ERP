@@ -36,9 +36,9 @@ class HREmployee(models.Model):
     _inherit = "hr.employee"
 
     # name = fields.Char(string="Name", compute='_compute_full_name', store=True, required=False)
-    first_name = fields.Char(string="First name", required=True, copy=False)
+    first_name = fields.Char(string="First name", copy=False)
     middle_name = fields.Char(string="Middle name", copy=False)
-    last_name = fields.Char("Surname", required=True, copy=False)
+    last_name = fields.Char("Surname", copy=False)
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age')
     local_government = fields.Many2one('res.lga', string='LGA')
@@ -86,6 +86,25 @@ class HREmployee(models.Model):
     
         return {
               'name': 'Employee Transfer',
+              'view_type': 'form',
+              "view_mode": 'form',
+              'res_model': 'hr.employee.transfer',
+              'type': 'ir.actions.act_window',
+              'target': 'new',
+              'context': {
+                  'default_employee_ids': rec_ids,
+                  'default_employee_transfer_lines': [(0, 0, {
+                      'employee_id': employee.browse([emp]).id, 
+                  }) for emp in rec_ids]
+              },
+        }
+    
+    def promote_employee_action(self):
+        rec_ids = self.env.context.get('active_ids', [])
+        employee = self.env['hr.employee']
+    
+        return {
+              'name': 'Employee Promotion',
               'view_type': 'form',
               "view_mode": 'form',
               'res_model': 'hr.employee.transfer',
@@ -147,12 +166,19 @@ class HREmployee(models.Model):
         self.name = f'{fn} {mm} {ln}'
 
     @api.model_create_multi
-    def create(self, vals_list):
+    def write(self, vals_list):
         for vals in vals_list:
             if vals.get('name', _('New')) == _('New'):
                 name = " ".join(filter(None, [vals.get('first_name', ''), vals.get('middle_name', ''), vals.get('last_name', '')]))
                 vals['name'] = name
-        return super().create(vals_list)
+        return super().write(vals_list)
+    
+    def write(self, vals):
+        for record in self:
+            if vals.get('first_name') or vals.get('middle_name') or vals.get('last_name'):
+                non_empty_names = filter(None, [vals.get('first_name', ''), vals.get('middle_name', ''), vals.get('last_name', '')])
+                vals['name'] = " ".join(non_empty_names)
+        return super().write(vals)
     
     # @api.depends('first_name', 'middle_name', 'last_name')
     # def _compute_full_name(self):

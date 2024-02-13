@@ -35,9 +35,9 @@
                     </h1>
                 </xpath> -->
                 <xpath expr="//field[@name='mobile_phone']" position="before">
-                    <field name="first_name"/>
+                    <field name="first_name" required="1"/>
                     <field name="middle_name"/>
-                    <field name="last_name"/>
+                    <field name="last_name" required="1"/>
                 </xpath>
                 <xpath expr="//field[@name='lang']" position="after">
                     <field name="house_address" groups="hr.group_hr_user"/>
@@ -60,6 +60,10 @@
                     <field name="father_phone"/>
                     <field name="mother_name"/>
                     <field name="mother_phone"/>
+                </xpath>
+
+                <xpath expr="//field[@name='grade_id']" position="after">
+                    <field name="rank_id" />
                 </xpath>
 
                 <xpath expr="//page[@name='personal_information']/group[1]" position="after">
@@ -114,6 +118,46 @@
  
             </field>
         </record>
+
+        <record id="hr_level_view_tree" model="ir.ui.view">
+            <field name="name">hr.level.view.tree</field>
+            <field name="model">hr.level</field>
+            <field name="arch" type="xml">
+                <tree create="False" edit="False" string="">
+                    <field name="name" />
+                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="hr_level_view_form" model="ir.ui.view">
+            <field name="name">hr.level.view.form</field>
+            <field name="model">hr.level</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                        <group>
+                            <group><field name="name" /></group>
+                            <group></group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="hr_level_action" model="ir.actions.act_window">
+            <field name="name">HR Level</field>
+            <field name="res_model">hr.level</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+					Click To Create.
+				</p>  
+            </field>
+        </record>
+
  
         <record id="action_external_employee" model="ir.actions.act_window">
 			<field name="name">External Employees</field>
@@ -155,6 +199,21 @@
 			])]"/>
             <field name="code">action=model.transfer_employee_action()</field>
         </record>
+
+        <record id="ir_action_server_hr_promotion" model="ir.actions.server">
+			<field name="name">Employee(s) Promotion</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="binding_model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="state">code</field>
+            <field name="groups_id" eval="[(6, 0, [
+			ref('base.group_system'),
+            ref('hr_pms.group_pms_officer_id'),
+			])]"/>
+            <field name="code">action=model.promote_employee_action()</field>
+        </record>
+
+        <menuitem action="hr_level_action" id="hr_level_menu_erp_id" name="Level" parent="base_employee_main_menu" sequence="3"/>
 
     </data>
 </odoo>
