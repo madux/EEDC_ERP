@@ -11,6 +11,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
 class Memo_Model(models.Model):
     _name = "memo.model"
     _description = "Internal Memo"
@@ -68,6 +69,7 @@ class Memo_Model(models.Model):
         memo_configs = self.env['memo.config'].search([('active', '=', True)])
         memo_type_ids = [r.memo_type.id for r in memo_configs]
         return [('id', 'in', memo_type_ids)]
+     
     
     memo_type = fields.Many2one(
         'memo.type',
@@ -95,7 +97,7 @@ class Memo_Model(models.Model):
     amountfig = fields.Float('Budget Amount', store=True, default=1.0)
     description_two = fields.Text('Reasons')
     phone = fields.Char('Phone', store=True)
-    email = fields.Char('Email')
+    email = fields.Char('Email', related='employee_id.work_email')
     reason_back = fields.Char('Return Reason')
     file_upload = fields.Binary('File Upload')
     file_namex = fields.Char("FileName")
@@ -154,7 +156,6 @@ class Memo_Model(models.Model):
     other_system_details = fields.Html(string="Specify Other reason")
     justification_reason = fields.Html(string="Justification Reason")
     attachment_number = fields.Integer(compute='_compute_attachment_number', string='No. Attachments')
-    partner_id = fields.Many2many('res.partner', string='Related Partners')
     approver_id = fields.Many2one('hr.employee', 'Approver')
     user_is_approver = fields.Boolean(string="User is approver", compute="compute_user_is_approver")
     is_request_completed = fields.Boolean(
@@ -299,7 +300,53 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
         )
-
+    
+    # MEMO THINGS 
+    attachment_ids = fields.Many2many(
+        'ir.attachment', 
+        'memo_ir_attachment_rel',
+        'memo_ir_attachment_id',
+        'ir_attachment_memo_id',
+        string='Attachment', 
+        store=True,
+        domain="[('res_model', '=', 'memo.model')]"
+        )
+     
+    internal_memo_option = fields.Selection(
+        [
+        ("all", "All"), 
+        ("selected", "Selected"),
+        ], string="All / Selected")
+    
+    partner_ids = fields.Many2many(
+        'res.partner', 
+        'memo_res_partner_rel',
+        'memo_res_partner_id',
+        'memo_partner_id',
+        string='Partners', 
+        )
+    
+    def send_memo_to_contacts(self):
+        view_id = self.env.ref('mail.email_compose_message_wizard_form')
+        is_officer = self.determine_user_role() # returns true or false 
+        return {
+                'name': 'Send memo Message',
+                'view_type': 'form',
+                'view_id': view_id.id,
+                "view_mode": 'form',
+                'res_model': 'mail.compose.message',
+                'type': 'ir.actions.act_window',
+                'target': 'new',
+                'context': {
+                    'default_partner_ids': self.partner_ids.ids,
+                    'default_subject': self.name,
+                    'default_attachment_ids': self.attachment_ids.ids,
+                    'default_body_html': self.description,
+                    'default_body': self.description,
+                },
+            } 
+    # MEMO THINGS 
+    
     ################################
 
     def _get_related_stage(self):
@@ -314,7 +361,8 @@ class Memo_Model(models.Model):
     
     @api.onchange('invoice_ids')
     def get_amount(self):
-        self.amountfig = sum(self.invoice_ids.mapped('amount_total'))
+        if self.invoice_ids:
+            self.amountfig = sum([rec.amount_total for rec in self.invoice_ids])
     
     @api.onchange('memo_type')
     def get_default_stage_id(self):
@@ -1191,7 +1239,8 @@ class Memo_Model(models.Model):
             view_id = self.env.ref('account.view_move_form').id
             return self.record_to_open('account.move', view_id)
         else:
-            pass  
+            pass 
+
     def follower_messages(self, body):
         pass 
         # body= "RETURN NOTIFICATION;\n %s" %(self.reason_back)
@@ -1261,45 +1310,70 @@ class Memo_Model(models.Model):
                 if rec.payment_state == 'not_paid': 
                     if rec.state == 'draft':
                         rec.action_post()
-                        self.validate_invoice_and_post_journal(rec.payment_journal_id, rec)
-                    elif rec.state == 'posted':
-                        self.validate_invoice_and_post_journal(rec.payment_journal_id, rec)
+        outbound_payment_method = self.env['account.payment.method'].sudo().search(
+                [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
+        payment_method = 2
+        journal_id = rec.payment_journal_id
+        if journal_id:
+            payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
+                journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
+                    if outbound_payment_method else payment_method
+        payments = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=self.invoice_ids.ids).create({
+                'group_payment': False,
+                'payment_method_line_id': payment_method,
+            })._create_payments()
         self.finalize_payment()
 
     def finalize_payment(self):
         if self.invoice_ids:
-            allpaid_invoice = self.mapped('invoice_ids').filtered(lambda s: s.payment_state in ['paid'])
+            allpaid_invoice = self.mapped('invoice_ids').filtered(lambda s: s.payment_state in ['paid', 'in_payment'])
             if allpaid_invoice:
                 self.state = "Done"
         else:
             self.state = "Done"
+ 
+    def get_payment_method_line_id(self, payment_type, journal_id):
+            if journal_id:
+                available_payment_method_lines = journal_id._get_available_payment_method_lines(payment_type)
+            else:
+                available_payment_method_lines = False
 
+            # Select the first available one by default.
+            if available_payment_method_lines:
+                payment_method_line_id = available_payment_method_lines[0]._origin
+            else:
+                payment_method_line_id = False
+            return payment_method_line_id
+
+            
     def validate_invoice_and_post_journal(
-            self, journal_id, inv):
-        if inv.state == "posted":
+            self, journal_id, inv): 
             """To be used only when they request for automatic payment generation"""
-            account_payment_obj = self.env['account.payment'].sudo()
+            account_payment = self.env['account.payment'].sudo()
             outbound_payment_method = self.env['account.payment.method'].sudo().search(
                 [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
-            payment_method = 1
+            payment_method = 2
             if journal_id:
-                payment_method = journal_id.outbound_payment_method_line_ids[0].id if journal_id.outbound_payment_method_line_ids else outbound_payment_method.id if outbound_payment_method else payment_method
-            # raise ValidationError(payment_method)
-            acc_values = {
-                # 'invoice_ids': [(6, 0, [inv.id])],
-                # 'amount': inv.amount_residual_signed,
-                'ref': inv.name,
-                'move_id': inv.id,
+                payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
+                    journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
+                        if outbound_payment_method else payment_method
+                
+            payment_method_line_id = self.get_payment_method_line_id('outbound', journal_id)
+            payment_vals = {
+                'date': fields.Date.today(),
+                'amount': inv.amount_total,
                 'payment_type': 'outbound',
                 'partner_type': 'supplier',
-                'journal_id': journal_id.id,
-                'payment_method_id': payment_method,
+                'ref': inv.name,
+                'move_id': inv.id,
+                'journal_id': 8, #inv.payment_journal_id.id,
+                'currency_id': inv.currency_id.id,
                 'partner_id': inv.partner_id.id,
-                'amount': inv.amount_residual,
-                'payment_method_line_id': payment_method,
+                'destination_account_id': inv.line_ids[1].account_id.id,
+                'payment_method_line_id': payment_method, #payment_method_line_id.id if payment_method_line_id else payment_method,
             }
-            payment = account_payment_obj.create(acc_values)
-            payment.post()
+            payments = self.env['account.payment'].create(payment_vals)
+            payments.action_post()
 
     def Register_Payment(self):
         if self.env.uid != self.stage_id.approver_id.user_id.id:
@@ -1341,7 +1415,6 @@ class Memo_Model(models.Model):
     def generate_loan_entries(self):
         if self.loan_reference:
             raise ValidationError("You have generated a loan already for this record")
-        # view_id = self.env['ir.model.data'].get_object_reference('account_loan', 'account_loan_form')
         view_id = self.env.ref('account_loan.account_loan_form')
         if (self.memo_type.memo_key != "loan") or (self.loan_amount < 1):
             raise ValidationError("Check validation: \n (1) Memo type must be 'loan request'\n (2) Loan Amount must be greater than one to proceed with loan request")

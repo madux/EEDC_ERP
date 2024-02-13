@@ -285,20 +285,20 @@ class HrEmployeeBase(models.AbstractModel):
                 template_to_use = "mail_template_non_email_subordinates_pms_notification"
             # ir_model_data = self.env['ir.model.data']
             # template_id = ir_model_data.get_object_reference('hr_pms', template_to_use)[1] 
-            template_id = self.env.ref(f'hr_pms.{template_to_use}')
-            if template_id:
+            template = self.env.ref(f'hr_pms.{template_to_use}')
+            if template:
                 ctx = dict()
                 ctx.update({
                     'default_model': 'hr.employee',
                     'default_res_id': record.id,
-                    'default_use_template': bool(template_id),
-                    'default_template_id': template_id,
+                    'default_use_template': bool(template),
+                    'default_template_id': template.id,
                     'default_composition_mode': 'comment',
                 })
-                template_rec = self.env['mail.template'].browse(template_id)
+                # template_rec = self.env['mail.template'].browse(template)
                 if email_to:
-                    template_rec.write({'email_to': email_to})
-                template_rec.with_context(ctx).send_mail(record.id, False)
+                    template.write({'email_to': email_to})
+                template.with_context(ctx).send_mail(record.id, False)
             # record.action_send_mail(
             #     'mail_template_pms_notification', 
             #     [record.work_email, record.private_email],

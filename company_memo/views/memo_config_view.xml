@@ -86,7 +86,7 @@
                         <group>
                             <field name="approver_id" required="0"/> 
                             <field name="is_approved_stage" default="0"/> 
-                            <field name="memo_config_id" readonly="1" required="1" force_save="1" string="Parent setting"/> 
+                            <field name="memo_config_id" readonly="1" force_save="1" string="Parent setting"/> 
                         </group>
                     </group>
                 </form>

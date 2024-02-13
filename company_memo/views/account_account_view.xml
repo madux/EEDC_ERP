@@ -7,9 +7,10 @@
             <field name="inherit_id" ref="account.view_account_list"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='reconcile']" position="after">
-                    <field name="district_id" required="0"/>
+                    <field name="move_type" invisible="0"/>
                 </xpath>
             </field>
         </record> -->
+       
     </data>
 </odoo>

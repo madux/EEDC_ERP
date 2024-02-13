@@ -13,7 +13,39 @@ class AccountMoveMemo(models.Model):
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
     origin = fields.Char(string="Source")
-    payment_journal_id = fields.Many2one('account.journal', string="Payment Journal", required=False)
+    memo_state = fields.Char(string="Memo state", compute="compute_memo_state")
+    payment_journal_id = fields.Many2one(
+        'account.journal', 
+        string="Payment Journal", 
+        required=False,
+        domain="[('id', 'in', suitable_journal_ids)]"
+        )
+    example_amount = fields.Float(store=False, compute='_compute_payment_term_example')
+    example_date = fields.Date(store=False, compute='_compute_payment_term_example')
+    example_invalid = fields.Boolean(compute='_compute_payment_term_example')
+    example_preview = fields.Html(compute='_compute_payment_term_example')
+
+    @api.depends('memo_id')
+    def _compute_payment_term_example(self):
+        for rec in self:
+            if rec.invoice_payment_term_id:
+                rec.example_amount = rec.invoice_payment_term_id.example_amount
+                rec.example_date = rec.invoice_payment_term_id.example_date
+                rec.example_invalid = rec.invoice_payment_term_id.example_invalid
+                rec.example_preview = rec.invoice_payment_term_id.example_preview
+            else:
+                rec.example_amount =False
+                rec.example_date = False
+                rec.example_invalid = False
+                rec.example_preview = False
+
+    @api.depends('memo_id')
+    def compute_memo_state(self):
+        for rec in self:
+            if rec.memo_id:
+                rec.memo_state = rec.memo_id.state
+            else:
+                rec.memo_state = rec.memo_id.state
 
     def action_post(self):
         if self.memo_id:
