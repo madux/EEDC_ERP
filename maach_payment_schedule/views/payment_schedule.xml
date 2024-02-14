@@ -40,7 +40,7 @@
                     </group>
                     <notebook>
                         <page name='Invoices' string='Invoices'>
-                            <field name="account_move_ids" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
+                            <field name="account_move_ids" force_save="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
                                 <tree string="Invoices">
                                     <field name="name" string="Description" invisible="0"/>  
                                     <field name="partner_id" string="Partner" invisible="0"/> 

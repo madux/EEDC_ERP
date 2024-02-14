@@ -47,6 +47,10 @@ class PaymentSchedule(models.Model):
         'res.bank', 
         string="Bank"
         )
+    memo_id = fields.Many2one(
+        'memo.model', 
+        string="Memo Id"
+        )
     activate_cron = fields.Boolean(
         string="Activate Cron"
         )
@@ -140,6 +144,8 @@ class PaymentSchedule(models.Model):
             }
         mail_id = self.env['mail.mail'].sudo().create(mail_data)
         self.env['mail.mail'].sudo().send(mail_id)
+    
+    
     
 
     

@@ -277,6 +277,7 @@
                     <field name="set_staff" string = "Memo With?"/>
                     <field name="code"/> 
                     <field name="state"/>
+                    <field name="stage_id"/>
                     <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                 </tree>
             </field>

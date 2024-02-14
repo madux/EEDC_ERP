@@ -16,11 +16,13 @@
     'license': 'AGPL-3',
     'depends': [
         'account',
+        'company_memo',
     ],
 
     'data': [
         'security/ir.model.access.csv',
         'views/payment_schedule.xml',
+        'views/memo_view.xml',
     ],
     'demo': [
         # 'demo/demo.xml',

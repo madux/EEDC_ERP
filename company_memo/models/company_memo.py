@@ -1344,7 +1344,6 @@ class Memo_Model(models.Model):
             else:
                 payment_method_line_id = False
             return payment_method_line_id
-
             
     def validate_invoice_and_post_journal(
             self, journal_id, inv): 
