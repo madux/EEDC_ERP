@@ -99,26 +99,6 @@ class HREmployee(models.Model):
               },
         }
     
-    def promote_employee_action(self):
-        rec_ids = self.env.context.get('active_ids', [])
-        employee = self.env['hr.employee']
-    
-        return {
-              'name': 'Employee Promotion',
-              'view_type': 'form',
-              "view_mode": 'form',
-              'res_model': 'hr.employee.transfer',
-              'type': 'ir.actions.act_window',
-              'target': 'new',
-              'context': {
-                  'default_employee_ids': rec_ids,
-                  'default_employee_transfer_lines': [(0, 0, {
-                      'employee_id': employee.browse([emp]).id, 
-                      'current_dept_id': employee.browse([emp]).department_id.id,
-                  }) for emp in rec_ids]
-              },
-        }
-    
 
     def stats_transfer_employee_lines(self):
         return {

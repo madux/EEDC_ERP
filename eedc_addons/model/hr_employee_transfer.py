@@ -57,12 +57,22 @@ class HREMployeeTransfer(models.Model):
         #     'employee_transfer_lines': self.env.context.get('default_employee_transfer_lines', [])
         # })
 
-        for tf_line in self.employee_transfer_lines:
-            tf_line.employee_id.update({
-                'department_id': tf_line.transfer_dept.id if tf_line.transfer_dept else tf_line.employee_id.department_id.id,
-                'job_id': tf_line.new_role.id if tf_line.new_role else tf_line.employee_id.job_id.id,
-                'ps_district_id': tf_line.new_district.id if tf_line.new_district else tf_line.employee_id.ps_district_id.id,
-            })
+        if self.transfer_type == "transfer":
+            for tf_line in self.employee_transfer_lines:
+                tf_line.employee_id.update({
+                    'department_id': tf_line.transfer_dept.id if tf_line.transfer_dept else tf_line.employee_id.department_id.id,
+                    'job_id': tf_line.new_role.id if tf_line.new_role else tf_line.employee_id.job_id.id,
+                    'ps_district_id': tf_line.new_district.id if tf_line.new_district else tf_line.employee_id.ps_district_id.id,
+                })
+        else:
+            for tf_line in self.employee_transfer_lines:
+                tf_line.employee_id.update({
+                    'department_id': tf_line.transfer_dept.id if tf_line.transfer_dept else tf_line.employee_id.department_id.id,
+                    'job_id': tf_line.new_role.id if tf_line.new_role else tf_line.employee_id.job_id.id,
+                    'level_id': tf_line.new_level_id.id if tf_line.new_level_id else tf_line.employee_id.level_id.id,
+                    'grade_id': tf_line.new_grade_id.id if tf_line.new_grade_id else tf_line.employee_id.grade_id.id,
+                    'rank_id': tf_line.new_rank_id.id if tf_line.new_rank_id else tf_line.employee_id.rank_id.id,
+                })
 
 class HREmployeeTransferLine(models.Model):
     _name = 'hr.employee.transfer.line'
@@ -82,5 +92,6 @@ class HREmployeeTransferLine(models.Model):
     new_district = fields.Many2one('hr.district', string='New District')
     new_level_id = fields.Many2one('hr.level')
     new_grade_id = fields.Many2one('hr.grade')
+    new_rank_id = fields.Many2one('hr.rank')
 
 

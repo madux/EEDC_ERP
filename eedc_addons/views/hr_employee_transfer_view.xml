@@ -16,33 +16,22 @@
                         </group>
                     </group> 
                     <notebook>
-                        <page string="Transfer Details" name="transfer_details_page" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}">
+                        <page string="Transfer Details" name="transfer_details_page" >
                             <field name="employee_transfer_lines" widget="one2many_list">
                                 <tree editable="bottom">
+                                    <field name="transfer_type" invisible="1" />
                                     <field name="employee_id"/>
                                     <field name="current_dept_id"/>
                                     <field name="current_role_id" />
-                                    <!-- <field name="current_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
-                                    <field name="current_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/> -->
-                                    <field name="transfer_dept" attrs="{'invisible': [('parent.transfer_type', '!=', 'transfer')]}"/>
+                                    <field name="current_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="transfer_dept" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
                                     <field name="new_role" />
-                                    <field name="new_district" attrs="{'invisible': [('parent.transfer_type', '!=', 'transfer')]}"/>
-                                    <!-- <field name="new_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
-                                    <field name="new_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/> -->
-                                </tree>
-                            </field>
-                        </page>
-                        <page string="Promotion Details" name="promotion_details_page" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}">
-                            <field name="employee_transfer_lines" widget="one2many_list">
-                                <tree editable="bottom">
-                                    <field name="employee_id"/>
-                                    <field name="current_dept_id"/>
-                                    <field name="current_role_id" />
-                                    <field name="current_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
-                                    <field name="current_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
-                                    <field name="new_role" />
-                                    <field name="new_level_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
-                                    <field name="new_grade_id" attrs="{'invisible': [('parent.transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_district" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
+                                    <field name="new_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
                                 </tree>
                             </field>
                         </page>
@@ -62,9 +51,15 @@
                 <tree string="" create="False" edit="False">
                     <field name="transfer_type" />
                     <field name="current_dept_id" string="Old Dept" />
-                    <field name="transfer_dept" string="Current Dept" />
+                    <field name="current_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="current_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="current_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="transfer_dept" string="Current Dept"/>
                     <field name="new_role" string="Transfer Dept" />
-                    <field name="new_district" string="Transfer District" />
+                    <field name="new_district" string="Transfer District" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
+                    <field name="new_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="new_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="new_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
                     <field name="create_uid" string="Initiator" />
                     <field name="create_date" string="Date" />   
                 </tree>

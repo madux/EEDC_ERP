@@ -21,8 +21,8 @@
         # 'data/email_template.xml',
         # 'wizard/oeh_reason_wizard.xml',
     ],
-    # 'assets': {'web.assets_backend': [
-    #     '/eha_website_sale/static/js/membership_subscription.js',
-        
-    # ]},
+    'assets': {
+        'web.assets_frontend': [
+        '/eedc_addons/static/js/emp_tranfer.js'
+    ]},
 }
