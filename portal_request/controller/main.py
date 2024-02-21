@@ -1105,7 +1105,7 @@ class PortalRequest(http.Controller):
 					})
 				body_msg = f"""
 					Dear Sir / Madam, <br/>
-					I wish to notify you that a memo with description \n <br/>\
+					I wish to notify you that a memo with the reference #{request_record.code} \n <br/>\
 					has been commented by the supervisor. <br/>\
 					Kindly {get_url(request_record.id)}"""
 				request_record.mail_sending_direct(body_msg) 
