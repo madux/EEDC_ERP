@@ -1,91 +1,78 @@
-<!-- <odoo>
-    <record id="view_hr_employee_transfer_form" model="ir.ui.view">
-        <field name="name">hr.employee.transfer.form</field>
-        <field name="model">hr.employee.transfer</field>
-        <field name="arch" type="xml">
-            <form>
-                <group>
-                    <group>
-                        <field name="employee_ids" widget="many2many_tags"/>
-                    </group>
-                    <group>
-                        <field name="current_dept" readonly="1"/>
-                        <field name="transfer_dept" readonly="1"/>
-                        <field name="new_role" readonly="1"/>
-                        <field name="new_district_ids" widget="many2many_tags"/>
-                    </group>
-                </group>
-                <footer>
-                    <button string="Update Transfer Details" type="object" class="oe_highlight" name="update_transfer_details"/>
-                    <button string="Cancel" class="oe_link" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
-    <record id="view_hr_employee_transfer_form" model="ir.ui.view">
-        <field name="name">hr.employee.transfer.form</field>
-        <field name="model">hr.employee.transfer</field>
-        <field name="arch" type="xml">
-            <form>
-                <notebook>
-                    <page string="Employee Transfer" name="employee_transfer_page">
-                        <group>
-                            <field name="employee_ids" widget="many2many_tags"/>
-                        </group>
-                    </page>
-                    <page string="Transfer Details" name="transfer_details_page">
-                        <field name="current_dept_id" readonly="1"/>
-                        <field name="transfer_dept"/>
-                        <field name="new_role"/>
-                        <field name="new_district"/>
-                    </page>
-                </notebook>
-                <footer>
-                    <button string="Update Transfer Details" type="object" class="oe_highlight" name="update_transfer_details"/>
-                    <button string="Cancel" class="oe_link" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-</odoo> -->
-<!-- hr_employee_transfer_view.xml -->
-
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="view_hr_employee_transfer_form" model="ir.ui.view">
-        <field name="name">hr.employee.transfer.form</field>
-        <field name="model">hr.employee.transfer</field>
-        <field name="arch" type="xml">
-            <form>
-                <group>
-                    <!-- <field name="employee_ids" widget="many2many_tags"/> -->
-                </group>
-                <notebook>
-                    <page string="Transfer Details" name="transfer_details_page">
-                        <field name="employee_ids" widget="one2many_list">
-                            <tree>
-                                <!-- <field name="employee_transfer_history" /> -->
-                                <field name="department_id" />
-                                <field name="age" />
-                                <field name="state_id" />
-                                <field name="employee_transfer_history">
-                                    <tree editable="bottom">
-                                        <field name="employee_id" />
-                                        <!-- <field name="current_dept_id"/>
-                                        <field name="new_role"/>
-                                        <field name="transfer_dept"/>
-                                        <field name="new_district"/> -->
-                                    </tree>
-                                </field>
-                            </tree>
-                        </field>
-                    </page>
-                </notebook>
-                <footer>
-                    <button string="Update Transfer Details" type="object" class="oe_highlight" name="update_transfer_details"/>
-                    <button string="Cancel" class="oe_link" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
+    <data>
+        <record id="view_hr_employee_transfer_form" model="ir.ui.view">
+            <field name="name">hr.employee.transfer.form</field>
+            <field name="model">hr.employee.transfer</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <group>
+                            <field name="transfer_initiator_uid"/>
+                        </group>
+                        <group>
+                            <field name="transfer_date"/>
+                            <field name="transfer_type" widget="radio"/>
+                        </group>
+                    </group> 
+                    <notebook>
+                        <page string="Transfer Details" name="transfer_details_page" >
+                            <field name="employee_transfer_lines" widget="one2many_list">
+                                <tree editable="bottom">
+                                    <field name="transfer_type" invisible="1" />
+                                    <field name="employee_id"/>
+                                    <field name="current_dept_id"/>
+                                    <field name="current_role_id" />
+                                    <field name="current_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="current_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="transfer_dept" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
+                                    <field name="new_role" />
+                                    <field name="new_district" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
+                                    <field name="new_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                    <field name="new_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                    <footer>
+                        <button string="Update Transfer Details" type="object" class="oe_highlight" name="update_transfer_details"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="hr_employee_transfer_line_view_tree" model="ir.ui.view">
+            <field name="name">hr.employee.transfer.line.view.tree</field>
+            <field name="model">hr.employee.transfer.line</field>
+            <field name="arch" type="xml">
+                <tree string="" create="False" edit="False">
+                    <field name="transfer_type" />
+                    <field name="current_dept_id" string="Old Dept" />
+                    <field name="current_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="current_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="current_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="transfer_dept" string="Current Dept"/>
+                    <field name="new_role" string="Transfer Dept" />
+                    <field name="new_district" string="Transfer District" attrs="{'invisible': [('transfer_type', '!=', 'transfer')]}"/>
+                    <field name="new_level_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="new_grade_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="new_rank_id" attrs="{'invisible': [('transfer_type', '!=', 'promotion')]}"/>
+                    <field name="create_uid" string="Initiator" />
+                    <field name="create_date" string="Date" />   
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="hr_employee_transfer_line_action" model="ir.actions.act_window">
+            <field name="name">hr.employee.transfer.line.name</field>
+            <field name="res_model">hr.employee.transfer.line</field>
+            <field name="domain">[('property_type_id','=', active_id)]</field>
+            <field name="view_mode">tree</field>
+            <field name="context">{'default_transfer_type': employee_transfer_id.transfer_type}</field>
+        </record>
+    </data>
 </odoo>

@@ -9,11 +9,11 @@
     "data": [
         'security/ir.model.access.csv',
         'views/base_view.xml',
+        'views/hr_employee_transfer_view.xml',
         'views/hr_employee_inherit.xml',
         'views/res_state_inherit_view.xml',
         'data/state_data.xml',
         'data/lga_data.xml',
-        'views/hr_employee_transfer_view.xml',
         'views/hr_memo_view.xml',
         'views/res_users_view.xml'
         # 'security/security_view.xml',
@@ -21,8 +21,8 @@
         # 'data/email_template.xml',
         # 'wizard/oeh_reason_wizard.xml',
     ],
-    # 'assets': {'web.assets_backend': [
-    #     '/eha_website_sale/static/js/membership_subscription.js',
-        
-    # ]},
+    'assets': {
+        'web.assets_frontend': [
+        '/eedc_addons/static/js/emp_tranfer.js'
+    ]},
 }

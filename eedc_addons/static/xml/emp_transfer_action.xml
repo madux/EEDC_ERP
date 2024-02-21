@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="emp_transfer_template" name="EMP Transfer" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/hr_pms/static/js/dashboard.js"></script>
+            <script type="text/javascript" src="/hr_pms/static/js/hr_pms_fields.js"></script>
+            <link rel="stylesheet" href="/hr_pms/static/css/dashboard.css"/>
+            <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script> -->
+
+        </xpath>
+    </template>
+</odoo>

@@ -36,9 +36,9 @@ class HREmployee(models.Model):
     _inherit = "hr.employee"
 
     # name = fields.Char(string="Name", compute='_compute_full_name', store=True, required=False)
-    first_name = fields.Char(string="First name", required=True, copy=False)
+    first_name = fields.Char(string="First name", copy=False)
     middle_name = fields.Char(string="Middle name", copy=False)
-    last_name = fields.Char("Surname", required=True, copy=False)
+    last_name = fields.Char("Surname", copy=False)
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age')
     local_government = fields.Many2one('res.lga', string='LGA')
@@ -60,6 +60,30 @@ class HREmployee(models.Model):
 
     def transfer_employee_action(self):
         rec_ids = self.env.context.get('active_ids', [])
+        employee = self.env['hr.employee']
+        # emp_transfer = self.env['hr.employee.transfer'].sudo()
+        # emp_transfer_id = emp_transfer.create({
+        #     'employee_ids': [(6, 0, [rec for rec in rec_ids])],
+        #     'employee_transfer_lines': [(0, 0, {
+        #               'employee_id': employee.browse([emp]).id,
+        #               'current_dept_id': employee.browse([emp]).department_id.id,
+        #           }) for emp in rec_ids],
+
+        # })
+        # view_id = self.env.ref('eedc_addons.view_hr_employee_transfer_form').id
+        # ret = {
+        #     'name': "Employee Transfer",
+        #     'view_mode': 'form',
+        #     'view_id': view_id,
+        #     'view_type': 'form',
+        #     'res_model': 'hr.employee.transfer',
+        #     'res_id': emp_transfer_id.id,
+        #     'type': 'ir.actions.act_window',
+        #     'domain': [],
+        #     'target': 'new'
+        #     }
+        # return ret
+    
         return {
               'name': 'Employee Transfer',
               'view_type': 'form',
@@ -69,8 +93,33 @@ class HREmployee(models.Model):
               'target': 'new',
               'context': {
                   'default_employee_ids': rec_ids,
+                  'default_employee_transfer_lines': [(0, 0, {
+                      'employee_id': employee.browse([emp]).id, 
+                  }) for emp in rec_ids]
               },
         }
+    
+
+    def stats_transfer_employee_lines(self):
+        return {
+            'name': _('Employee Transfer'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'hr.employee.transfer.line',
+            'views': [[self.env.ref('eedc_addons.hr_employee_transfer_line_view_tree').id, 'tree']],
+            'domain': [('employee_id', 'in', self.ids)],
+        }
+    
+    # def stats_transfer_employee_lines(self):
+    #     return {
+    #           'name': 'Employee Transfer', 
+    #         # 'views': [[self.env.ref('hr_holidays.hr_leave_employee_view_dashboard').id, 'tree']],
+    #         #   "view_id": self.env.ref('eedc_addons.view_hr_employee_transfer_form'),
+    #           'res_model': 'hr.employee.transfer',
+    #           'type': 'ir.actions.act_window',
+    #         #   'target': 'current',
+    #           'domain': [], #[('employee_id', 'in', self.ids)],
+    #           }, 
+    
     
     employee_transfer_history = fields.One2many( 
         'hr.employee.transfer.line', 
@@ -97,12 +146,19 @@ class HREmployee(models.Model):
         self.name = f'{fn} {mm} {ln}'
 
     @api.model_create_multi
-    def create(self, vals_list):
+    def write(self, vals_list):
         for vals in vals_list:
             if vals.get('name', _('New')) == _('New'):
                 name = " ".join(filter(None, [vals.get('first_name', ''), vals.get('middle_name', ''), vals.get('last_name', '')]))
                 vals['name'] = name
-        return super().create(vals_list)
+        return super().write(vals_list)
+    
+    def write(self, vals):
+        for record in self:
+            if vals.get('first_name') or vals.get('middle_name') or vals.get('last_name'):
+                non_empty_names = filter(None, [vals.get('first_name', ''), vals.get('middle_name', ''), vals.get('last_name', '')])
+                vals['name'] = " ".join(non_empty_names)
+        return super().write(vals)
     
     # @api.depends('first_name', 'middle_name', 'last_name')
     # def _compute_full_name(self):
