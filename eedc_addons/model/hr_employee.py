@@ -35,6 +35,10 @@ class HrEmployeeBase(models.AbstractModel):
 class HREmployee(models.Model):
     _inherit = "hr.employee"
 
+    # name = fields.Char(string="Name", compute='_compute_full_name', store=True, required=False)
+    first_name = fields.Char(string="First name", required=True, copy=False)
+    middle_name = fields.Char(string="Middle name", copy=False)
+    last_name = fields.Char("Surname", required=True, copy=False)
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age')
     local_government = fields.Many2one('res.lga', string='LGA')
@@ -73,6 +77,44 @@ class HREmployee(models.Model):
         'employee_id', 
         string='Transfer History'
         )
+    
+    # @api.onchange('first_name', 'middle_name', 'last_name')
+    # def onchange_update_full_name(self):
+    #     self.name = " ".join(filter(None, [self.first_name, self.middle_name, self.last_name]))
+    #     # self.name = " ".join([name for name in [self.first_name, self.middle_name, self.last_name] if name])
+
+    @api.onchange(
+        'first_name','middle_name', 'last_name'
+        )
+    def onchange_of_applicants_name(self):
+        fn, mm, ln = "", "", ""
+        if self.first_name:
+            fn = self.first_name
+        if self.middle_name:
+            mm = self.middle_name
+        if self.last_name:
+            ln = self.last_name
+        self.name = f'{fn} {mm} {ln}'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', _('New')) == _('New'):
+                name = " ".join(filter(None, [vals.get('first_name', ''), vals.get('middle_name', ''), vals.get('last_name', '')]))
+                vals['name'] = name
+        return super().create(vals_list)
+    
+    # @api.depends('first_name', 'middle_name', 'last_name')
+    # def _compute_full_name(self):
+    #     for record in self:
+    #         current_fullname = record.name
+    #         if record.first_name:
+    #             non_empty_names = filter(None, [record.first_name, record.middle_name, record.last_name])
+    #             full_name = " ".join(non_empty_names)
+    #             record.name = full_name
+    #         else:
+    #             self.name = current_fullname
+
     
     @api.model
     def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):

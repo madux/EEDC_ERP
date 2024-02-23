@@ -1500,6 +1500,35 @@ class Memo_Model(models.Model):
                 order.status_progress = random.randint(98, 100)
             else:
                 order.status_progress = random.randint(0, 1) # 100 / len(order.state)
+    
+    expiry_mail_sent = fields.Boolean(default=False, copy=False)
+
+    @api.model
+    def _cron_notify_server_request_followers(self):
+        """
+        System should check all requests end date expired, and send message
+        to server admin or followers. 
+        """
+        # for record in self:
+        
+        expired_memos = self.env['memo.model'].search([
+            ('request_end_date', '<', fields.Datetime.now()),
+            ('expiry_mail_sent', '=', False),
+            ('memo_type', '=', 'server_access'),
+            ])
+        for exp in expired_memos:
+            if exp.memo_setting_id and exp.memo_setting_id.approver_ids:
+                body_msg = f"""Dear Sir, \n \
+                    <br/>I wish to notify you that a server access request with description, {exp.name},<br/>  
+                    from {exp.employee_id.name} \
+                    has now expired. <br/> <br/>Go to the request {self.get_url(exp.id)} \
+                """
+                exp.mail_sending_direct(body_msg)
+                exp.expiry_mail_sent = True
+                # request_followers = [
+                #     eml.work_email for eml in exp.memo_setting_id.approver_ids if eml.work_email
+                #     ]
+        
 
     def unlink(self):
         for delete in self.filtered(lambda delete: delete.state in ['Sent','Approve2', 'Approve']):

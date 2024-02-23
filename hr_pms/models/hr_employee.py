@@ -295,7 +295,7 @@ class HrEmployeeBase(models.AbstractModel):
                     'default_template_id': template.id,
                     'default_composition_mode': 'comment',
                 })
-                # template_rec = self.env['mail.template'].browse(template)
+                # template_rec = self.env['mail.template'].browse([template_id.id])
                 if email_to:
                     template.write({'email_to': email_to})
                 template.with_context(ctx).send_mail(record.id, False)
