@@ -74,6 +74,18 @@
                         </field>
                     </group>
                 </xpath>
+                <div name="button_box" position="inside">
+                    <button name="stats_transfer_employee_lines" string="Transfers" class="oe_stat_button" groups="hr.group_hr_user,hr.group_hr_manager" icon="fa-exchange" type="object">
+                        <!-- <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="pms_number_appraisal" readonly="1"/>
+                            </span>
+                            <span class="o_stat_text">
+                                Appraisals
+                            </span>
+                        </div> -->
+                    </button>
+                </div>
             </field>
         </record>
 
@@ -132,7 +144,7 @@
         </record>
 
         <record id="ir_action_server_hr_transfer" model="ir.actions.server">
-			<field name="name">Transfer</field>
+			<field name="name">Employee(s) Transfer</field>
             <field name="type">ir.actions.server</field>
             <field name="model_id" ref="eedc_addons.model_hr_employee"/>
             <field name="binding_model_id" ref="eedc_addons.model_hr_employee"/>
