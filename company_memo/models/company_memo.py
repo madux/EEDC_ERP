@@ -131,8 +131,25 @@ class Memo_Model(models.Model):
         store=True,
         readonly=True
         )
+    
+    # @api.onchange('cash_advance_reference')
+    # def cash_advance_reference(self):
+    #     raise ValidationError('dere')
+    #     if self.cash_advance_reference:
+    #         raise ValidationError('dere')
+    #         # if not self.employee_id:
+    #         for rec in self.cash_advance_reference.mapped('product_ids').filtered(lambda s: s.retired == False):
+    #             self.product_ids = [(0, 0, {
+    #                 'memo_id': rec.id,
+    #                 'product_id': rec.product_id.id,
+    #                 'description': rec.description,
+    #                 'amount_total': rec.amount_total,
+    #             })]
+
     soe_advance_reference = fields.Many2one('memo.model', 'SOE ref.')
-    cash_advance_reference = fields.Many2one('memo.model', 'Cash Advance ref.')
+    cash_advance_reference = fields.Many2one(
+        'memo.model', 
+        'Cash Advance ref.')
     date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
@@ -921,8 +938,9 @@ class Memo_Model(models.Model):
                 'partner_id': self.employee_id.user_id.partner_id.id,
                 'order_line': [(0, 0, {
                                 'product_id': mm.product_id.id,
-                                'name': mm.description,
+                                'name': mm.description or f'{mm.product_id.name} Requistion',
                                 'product_qty': mm.quantity_available,
+                                'price_unit': mm.amount_total,
                                 'date_planned': self.date,
                 }) for mm in self.product_ids]
             }
