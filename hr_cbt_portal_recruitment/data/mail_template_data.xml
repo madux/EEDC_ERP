@@ -94,7 +94,7 @@
 
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">
                                                 <li>
-                                                    <t t-if="file.document_file == 'True' ">
+                                                    <t t-if="file.document_file.datas != False ">
                                                         <t t-esc="file.document_type.name"/> : See attachment to download
                                                     </t>
                                                     <t t-esc="file.document_type.name"/>
