@@ -123,8 +123,11 @@ class Applicant(models.Model):
         readonly=True, 
         # compute="compute_verification_process",
         )
+    applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
 
-    
+    audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
+    stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
+
     @api.depends('job_id')
     def _compute_request_id(self):
         requests = self.env['hr.job.recruitment.request'].search([
@@ -150,11 +153,6 @@ class Applicant(models.Model):
             else: 
                 rec.is_panelist_added =False 
 
-    applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
-
-    audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
-
-
     def action_audit_certify(self):
         if self.stage_id and self.stage_id.group_ids:
             user_group_ids = self.env.user.groups_id.ids
@@ -169,9 +167,49 @@ class Applicant(models.Model):
             self.audited = True
         else:
             self.audited = False
-
-
-
-
-    stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
                 
+    def send_applicants_checklist(self):
+        rec_ids = self.env.context.get('active_ids', [])
+        self.send_checklist(rec_ids)
+        
+    def send_checklist(self, rec_ids):
+        template_to_use = "mail_template_applicants_checklist"
+        for rec in rec_ids:
+            record = self.env['hr.applicant'].browse([rec])
+            email_to = False
+            if record.email_from:
+                email_to = record.email_from 
+            template = self.env.ref(f'hr_cbt_portal_recruitment.{template_to_use}')
+            if template:
+                ctx = dict()
+                ctx.update({
+                    'default_model': 'hr.applicant',
+                    'default_res_id': record.id,
+                    'default_use_template': bool(template),
+                    'default_template_id': template.id,
+                    'default_composition_mode': 'comment',
+                    'default_no_attachment': record.mapped('applicant_documentation_checklist')\
+                            .filtered(lambda data: not data.document_file)
+                            })
+                template.write({
+                    'email_to': email_to,
+                    'attachment_ids': [(6, 0, self.generate_document_checklist_attachment(record))],
+                    })
+                record.is_documentation_process = True
+                template.with_context(ctx).send_mail(record.id, False)
+             
+    def generate_document_checklist_attachment(self, record):
+        '''
+        Process the attachment in documentation checklist line
+          and generated the attachment id in array
+        returns: attachments ==> [2, 4, 5, 78]
+        '''
+        if record:
+            document_with_attachments = record.mapped('applicant_documentation_checklist')\
+            .filtered(lambda data: data.document_file)
+            attachments = []
+            for attachment in document_with_attachments:
+                attachments.append(attachment.document_file.id)
+            return attachments
+
+
