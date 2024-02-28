@@ -28,9 +28,8 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
         events: {
 
             'click .button_doc_submit': function (ev) {
-                var list_of_fields = [];
                     var current_btn = $(ev.target);
-                    var form = $('#msform')[0];
+                    var form = $('#msformidocs')[0];
                     var formData = new FormData(form);
                     console.log('formData is ==>', formData)
                     var DataItems = []

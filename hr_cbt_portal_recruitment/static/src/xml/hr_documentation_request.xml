@@ -67,11 +67,10 @@
                                 </ul>
                             </t>
                         </t>
-                        <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
-                            <div id="document_request_content" class="col-12 col-lg justify-content-end">
-                                <div id="card" class="card">
-                                    <div id="card_header" class="card-header container" data-anchor="true">
-                                        
+                        <div id="document_request_content" class="col-12 col-lg justify-content-end">
+                            <div id="card" class="card">
+                                <div id="card_header" class="card-header container" data-anchor="true">
+                                    <form id="msformidocs" method="post" enctype="multipart/form-data" data-mark="*" data-pre-fill="true">
                                         <div class="row gs-0">
                                             <div class="col-md">
                                                 <h5 class="row mx-1 mb-1 mb-md-0">
@@ -90,31 +89,32 @@
                                                 </h5>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div id="build_attachment" class="card-body">
-                                        
-                                        <!-- <div t-if="not is_html_empty(applicant.description)" class="row mb-4" name="description">
-                                            <div class="col-lg-12" t-raw="applicant.description"/>
-                                        </div> -->
-                                    </div>
-                                    <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">
-                                        <div style="width: 200px;" class="s_website_form_label"/>
-                                        <a href="#" role="button" class="btn btn-primary btn-lg o_default_snippet_text button_doc_submit">Submit</a>
-                                        <span id="s_website_form_result"/>
-                                    </div>
+                                    </form>  
                                 </div>
-                                <div class="row">
-                                    <div id="successful_alert" role="dialog" class="modal col-sm-6 mt-32">
-                                        <div class="alert fade alert-simple alert-success alert-dismissible text-left font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show">
-                                        <!-- <div class="center-screen alert-success alert-dismissible text-center font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show"> -->
-                                            <i class="fa fa-check" aria-hidden="true"></i>
-                                            <strong class="font__weight-semibold">Well done!</strong> You successfully updated your comment.
-                                            <button type="button" id="btn-close-success" class="btn-close-success btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
+                                <div id="build_attachment" class="card-body">
+                                    
+                                    <!-- <div t-if="not is_html_empty(applicant.description)" class="row mb-4" name="description">
+                                        <div class="col-lg-12" t-raw="applicant.description"/>
+                                    </div> -->
+                                </div>
+                                
+                            </div>
+                            <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">
+                                <div style="width: 200px;" class="s_website_form_label"/>
+                                <a href="#" role="button" class="btn btn-primary btn-lg o_default_snippet_text button_doc_submit">Submit</a>
+                                <span id="s_website_form_result"/>
+                            </div>
+                            <div class="row">
+                                <div id="successful_alert" role="dialog" class="modal col-sm-6 mt-32">
+                                    <div class="alert fade alert-simple alert-success alert-dismissible text-left font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show">
+                                    <!-- <div class="center-screen alert-success alert-dismissible text-center font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show"> -->
+                                        <i class="fa fa-check" aria-hidden="true"></i>
+                                        <strong class="font__weight-semibold">Well done!</strong> You successfully updated your comment.
+                                        <button type="button" id="btn-close-success" class="btn-close-success btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </section>
             </t>
