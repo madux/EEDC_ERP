@@ -675,10 +675,12 @@ class Memo_Model(models.Model):
                 next_stage_id = memo_setting_stages[current_stage_index + 1] # to get the next stage
             else:
                 next_stage_id = self.stage_id.id
-            approver_ids += [
+                apps = [
                 emp.approver_ids.ids for emp in ms.mapped('stage_ids').filtered(
                     lambda stage: stage.id == next_stage_id
                     )]
+                for ap in apps:
+                    approver_ids.append(ap)
             return approver_ids, next_stage_id
         else:
             raise ValidationError(
@@ -766,7 +768,7 @@ class Memo_Model(models.Model):
         email_list = follower_list + stage_followers_list
         # mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email \
         #     or self.direct_employee_id.work_email
-        approver_emails = [eml.work_email for eml in self.stage_id.approver_ids]
+        approver_emails = [eml.work_email for eml in self.stage_id.approver_ids if eml.work_email]
         mail_to = (','.join(approver_emails))
         emails = (','.join(elist for elist in email_list))
         mail_data = {
