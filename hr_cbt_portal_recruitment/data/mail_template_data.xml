@@ -70,6 +70,58 @@
             <field name="auto_delete" eval="True"/>
         </record>
 
+        <record id="mail_template_applicants_checklist" model="mail.template">
+            <field name="name">Applicant Documentation Checklist </field>
+            <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
+            <field name="email_from">"{{ object.write_uid.company_id.email or object.write_uid.login }}"</field>
+            <field name="email_to">"{{ object.work_email }}"</field>
+            <field name="subject">"{{ object.write_uid.company_id.name }}" HR: Applicant Documentation Checklist </field>
+            <field name="reply_to">"{{ object.write_uid.company_id.email or object.write_uid.login }}"</field>
+            <field name="body_html" type="html">
+            <table border="0" cellpadding="0" cellspacing="0" style="background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;"><tr><td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="590" style="padding: 16px; background-color: white; color: #454748; border-collapse:separate;">
+                    <tbody>
+                        <!-- CONTENT -->
+                        <tr>
+                            <td align="center" style="min-width: 590px;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;">
+
+                                    <tr><td valign="top" style="font-size: 15px;">
+                                        <div>
+                                            Dear <t t-out="object.partner_name"/>,<br/> <br/>
+                                            Please. <br/>
+                                            Kindly check the mail attachment to upload the relevant required documents <br/> <br/>
+
+                                            <t t-foreach="object.applicant_documentation_checklist" t-as="file">
+                                                <li>
+                                                    <t t-if="file.document_file.datas != False ">
+                                                        <t t-esc="file.document_type.name"/> : See attachment to download
+                                                    </t>
+                                                    <t t-esc="file.document_type.name"/>
+                                                </li>
+                                            </t>
+                                            Should you require any additional information, please contact EEDC HR support for help.<br/>
+                                            <!-- <a href='https://ictsupport.eedc.online'>Click ICT Support link</a> -->
+                                            <br /><br/>
+
+                                            Regards,<br />
+                                            --<br/>EEDC HR
+                                        </div>
+                                    </td></tr>
+                                    <tr><td style="text-align:center;">
+                                    <hr width="100%" style="background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;"/>
+                                    </td></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </td></tr>
+            </table>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
         <!-- <record id="hr_recruitment.email_template_data_applicant_congratulations" model="mail.template">
         <field name="name">Application Acknowledgement and update</field>
         <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
