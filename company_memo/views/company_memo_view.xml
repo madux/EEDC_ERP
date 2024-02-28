@@ -122,6 +122,7 @@
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                                 <field name="code"/>  
                                 <field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+                                <field name="approver_ids" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
                                 <field name="user_is_approver" invisible="1" readonly="0"/>
                                 <field name="state" invisible="1" force_save="1" readonly="0"/>
                                 <field name="is_request_completed" readonly="1" invisible="1"/>

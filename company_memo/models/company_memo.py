@@ -174,6 +174,13 @@ class Memo_Model(models.Model):
     justification_reason = fields.Html(string="Justification Reason")
     attachment_number = fields.Integer(compute='_compute_attachment_number', string='No. Attachments')
     approver_id = fields.Many2one('hr.employee', 'Approver')
+    approver_ids = fields.Many2many(
+        'hr.employee',
+        'memo_model_employee_rel',
+        'memo_id',
+        'hr_employee_id',
+        string='Approvers'
+        )
     user_is_approver = fields.Boolean(string="User is approver", compute="compute_user_is_approver")
     is_request_completed = fields.Boolean(
         string="is request completed", 
@@ -422,7 +429,8 @@ class Memo_Model(models.Model):
     @api.depends('approver_id')
     def compute_user_is_approver(self):
         for rec in self:
-            if rec.stage_id.is_approved_stage and rec.stage_id.approver_id.user_id.id == self.env.user.id:
+            if rec.stage_id.is_approved_stage and self.env.user.id in [r.user_id.id for r in rec.stage_id.approver_ids]: 
+                # self.env.uid in [r.user_id.id for r in self.stage_id.approver_ids]
                 rec.user_is_approver = True
                 rec.users_followers = [(4, self.env.user.employee_id.id)]
             else:
@@ -597,7 +605,7 @@ class Memo_Model(models.Model):
         user_exist = self.mapped('res_users').filtered(
             lambda user: user.id == self.env.uid
             )
-        if user_exist and self.stage_id.approver_id.user_id.id != self.env.uid:
+        if user_exist and self.env.user.id in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
                 ) 
@@ -638,7 +646,7 @@ class Memo_Model(models.Model):
         
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
-        args: from_website: used to decide if the recrod is 
+        args: from_website: used to decide if the record is 
         generated from the website or from odoo internal use
         """
         approver_ids = []
@@ -668,7 +676,7 @@ class Memo_Model(models.Model):
             else:
                 next_stage_id = self.stage_id.id
             approver_ids += [
-                emp.approver_id.id for emp in ms.mapped('stage_ids').filtered(
+                emp.approver_ids.ids for emp in ms.mapped('stage_ids').filtered(
                     lambda stage: stage.id == next_stage_id
                     )]
             return approver_ids, next_stage_id
@@ -692,12 +700,11 @@ class Memo_Model(models.Model):
                         self.state = "Approve"
                     else:
                         self.state = "Approve2"
-                # self.sudo().write({'approver_id': self.stage_id.approver_id.id})
                 # important: users_followers must be required in for them to see the records.
-                if self.sudo().stage_id.approver_id:
+                if self.sudo().stage_id.approver_ids:
                     self.sudo().update({
-                        'users_followers': [(4, self.sudo().stage_id.approver_id.id)],
-                        'set_staff': self.sudo().stage_id.approver_id.id
+                        'users_followers': [(4, appr.id) for appr in self.sudo().stage_id.approver_ids],
+                        'set_staff': self.sudo().stage_id.approver_ids[0].id # FIXME To be reviewed
                         })
             if self.memo_setting_id and self.memo_setting_id.stage_ids:
                 ms = self.memo_setting_id.stage_ids
@@ -709,13 +716,15 @@ class Memo_Model(models.Model):
                     self.sudo().write({
                             'state': 'Done'
                             })
-                    if last_stage.approver_id or random_memo_approver_ids:
-                        approver_id = last_stage.approver_id.id \
-                                if last_stage.approver_id else random.choice(random_memo_approver_ids) \
-                                    if random_memo_approver_ids else False
+                    if last_stage.approver_ids or random_memo_approver_ids:
+                        # approver_id = last_stage.approver_id.id \
+                        #         if last_stage.approver_id else random.choice(random_memo_approver_ids) \
+                        #             if random_memo_approver_ids else False
+                        approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
                         self.sudo().write({
-                            'approver_id': approver_id,
-                            'set_staff': approver_id
+                            'approver_id': random.choice(approver_ids),
+                            'approver_ids': [(4, appr) for appr in approver_ids],
+                            # 'set_staff': approver_id
                             })
                     # else:
                     #     raise ValidationError("""
@@ -729,7 +738,7 @@ class Memo_Model(models.Model):
         # lists2 = [y.partner_id.id for x in self.users_followers for y in x.user_id]
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
         Beneficiary = self.employee_id.name or self.user_ids.name
-        body_msg = f"""Dear {self.direct_employee_id.name or self.approver_id.name}, \n \
+        body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
         from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
         was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)} \
@@ -751,12 +760,14 @@ class Memo_Model(models.Model):
         subject = "Memo Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
-        stage_approver_list = [
+        stage_followers_list = [
             appr.work_email for appr in self.stage_id.memo_config_id.approver_ids if appr.work_email
             ] if self.stage_id.memo_config_id.approver_ids else []
-        email_list = follower_list + stage_approver_list
-        mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email \
-            or self.direct_employee_id.work_email
+        email_list = follower_list + stage_followers_list
+        # mail_to = self.approver_id.work_email or self.stage_id.approver_id.work_email \
+        #     or self.direct_employee_id.work_email
+        approver_emails = [eml.work_email for eml in self.stage_id.approver_ids]
+        mail_to = (','.join(approver_emails))
         emails = (','.join(elist for elist in email_list))
         mail_data = {
                 'email_from': email_from,
@@ -790,7 +801,7 @@ class Memo_Model(models.Model):
         memo_approver_ids = memo_settings.approver_ids
         user = self.env.user
         emloyee = self.env['hr.employee'].search([('user_id', '=', user.id)], limit=1)
-        if emloyee and emloyee.id in [emp.id for emp in memo_approver_ids] or self.stage_id.approver_id.user_id.id == self.env.uid:
+        if emloyee and emloyee.id in [emp.id for emp in memo_approver_ids] or self.env.uid in [r.user_id.id for r in self.stage_id.approver_ids]:
             return True
         else:
             return False
@@ -828,7 +839,7 @@ class Memo_Model(models.Model):
             raise ValidationError(
                 """You are not Permitted to approve a Payment Memo. 
                 Forward it to the authorized Person""")
-        if self.env.uid != self.stage_id.approver_id.user_id.id:
+        if self.env.uid not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You are not Permitted to approve this Memo. Contact the authorized Person"""
                 )
@@ -998,7 +1009,7 @@ class Memo_Model(models.Model):
                 'recruitment_mode': self.recruitment_mode,
                 'job_id': self.job_id.id,
                 'user_id': self.employee_id.user_id.id,
-                'user_to_approve_id': self.stage_id.approver_id.user_id.id,
+                'user_to_approve_id': random.choice([r.user_id.id for r in self.stage_id.approver_ids]),
                 'expected_employees': self.expected_employees,
                 'recommended_by': self.recommended_by.user_id.id,
                 'description': BeautifulSoup(self.description or "-", features="lxml").get_text(),
@@ -1393,7 +1404,7 @@ class Memo_Model(models.Model):
             payments.action_post()
 
     def Register_Payment(self):
-        if self.env.uid != self.stage_id.approver_id.user_id.id:
+        if self.env.uid in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You are not Permitted to approve this Memo. Contact the authorized Person
             """)

@@ -44,6 +44,7 @@ class MemoStage(models.Model):
     active = fields.Boolean("Active", default=True)
     is_approved_stage = fields.Boolean("Is approved stage", help="if set true, it is used to determine if this stage is the final approved stage")
     approver_id = fields.Many2one("hr.employee", string="Responsible Approver")
+    approver_ids = fields.Many2many("hr.employee", string="Responsible Approvers")
     memo_config_id = fields.Many2one("memo.config", string="Parent settings")
     loaded_from_data = fields.Boolean(string="Loaded from data", default=False)
 
@@ -179,7 +180,7 @@ class MemoConfig(models.Model):
                         for count, st in enumerate(DEFAULT_STAGES):
                             stage_id = self.env['memo.stage'].create(
                                 {'name': st,
-                                 'approver_id': department.manager_id.id if st == approval_stage else False,
+                                 'approver_ids': [(4, department.manager_id.id)] if st == approval_stage else False,
                                  'memo_config_id': memo_config.id,
                                  'is_approved_stage': True if st == approval_stage else False,
                                  'active': True,

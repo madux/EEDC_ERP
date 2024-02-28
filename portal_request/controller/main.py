@@ -2,6 +2,7 @@
 import base64
 import json
 import logging
+import random
 from multiprocessing.spawn import prepare
 import urllib.parse
 from odoo import http, fields
@@ -777,9 +778,9 @@ class PortalRequest(http.Controller):
 			)
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
-		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
+		approver_ids = [stage_obj.approver_ids.ids] if stage_obj.approver_ids else [employee_id.parent_id.id]
 		_logger.info(f'''
-			   Successfully Registered! with memo id Approver = {approver_id} \
+			   Successfully Registered! with memo id Approver = {approver_ids} \
 				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
 					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
 		# "users_followers": [
@@ -787,7 +788,7 @@ class PortalRequest(http.Controller):
 			# 	(4, employee_id.administrative_supervisor_id.id \
 			#  if employee_id.administrative_supervisor_id else False),
 			# 	(4, employee_id.id)],
-		follower_ids = [(4, approver_id)]
+		follower_ids = [(4, r) for r in approver_ids]
 		user_ids = [(4, request.env.user.id)]
 		if employee_id.administrative_supervisor_id:
 			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
@@ -795,8 +796,9 @@ class PortalRequest(http.Controller):
 			follower_ids.append((4, employee_id.parent_id.id))
 		memo_id.sudo().write({
 			'stage_id': next_stage_id, 
-			'approver_id': approver_id,
-			"direct_employee_id": approver_id, 
+			'approver_id': random.choice(approver_ids),
+			'approver_ids': [(4, r) for r in approver_ids],
+			"direct_employee_id": random.choice(approver_ids),
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
@@ -909,10 +911,11 @@ class PortalRequest(http.Controller):
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				'|','|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
+				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
 			('memo_type.memo_key', 'in', memo_type),
@@ -950,10 +953,11 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				# ('employee_id.user_id', '=', user.id),
 				('id', '=', int(id)),
-				'|','|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
+				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		requests = request_id.search(domain, limit=1)
 		memo_attachment_ids = attachment.search([
@@ -1042,8 +1046,8 @@ class PortalRequest(http.Controller):
 					stage_id = is_approved_stage[0] 
 					# is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					# filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-					current_stage_approver = request_record.sudo().stage_id.approver_id.user_id.id
-					if request.env.user.id == current_stage_approver:
+					current_stage_approvers = request_record.sudo().stage_id.approver_ids
+					if request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
 						request_record.sudo().update_final_state_and_approver()
 						request_record.sudo().write({
 							'res_users': [(4, request.env.user.id)]

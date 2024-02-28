@@ -24,6 +24,7 @@
         'views/assets.xml',
         'security/ir.model.access.csv',
         'data/memo_stage.xml',
+        'data/memo_type.xml',
         'data/ir_cron.xml' 
     ],
     'assets': {'web.assets_backend': [

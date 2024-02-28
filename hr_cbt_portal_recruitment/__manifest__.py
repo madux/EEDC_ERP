@@ -29,6 +29,7 @@
         'views/hr_applicant_view.xml',
         'views/career.xml',
         'static/src/xml/website_hr_recruitment_templates.xml',
+        'static/src/xml/hr_documentation_request.xml',
         'views/hr_employee.xml',
         'views/hr_recruitment_request.xml',
         'views/hr_recruitment_stage_inherit.xml',
@@ -48,6 +49,7 @@
     'assets': {
         'web.assets_frontend': [
         '/hr_cbt_portal_recruitment/static/src/js/recruitment_apply_form.js',
+        '/hr_cbt_portal_recruitment/static/src/js/documentation_request.js',
     ]},
     'qweb': [
         # 'static/src/xml/custom_template.xml',
