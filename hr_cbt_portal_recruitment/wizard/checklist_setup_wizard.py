@@ -47,6 +47,7 @@ class CheckListWizard(models.TransientModel):
 						'document_type': ch.id, 
 						'document_file': ch.document_file.id,
 						'applicant_id': rec.id,
+						'is_compulsory': ch.is_compulsory,
 						}) for ch in self.documentation_type_ids]
 					})
 

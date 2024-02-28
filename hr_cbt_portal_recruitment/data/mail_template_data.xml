@@ -91,7 +91,9 @@
                                             Dear <t t-out="object.partner_name"/>,<br/> <br/>
                                             Please. <br/>
                                             Kindly check the mail attachment to upload the relevant required documents <br/> <br/>
-
+                                            or use the link to upload your data 
+                                            <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a>
+                                            <br />
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">
                                                 <li>
                                                     <t t-if="file.document_file.datas != False ">
@@ -100,8 +102,8 @@
                                                     <t t-esc="file.document_type.name"/>
                                                 </li>
                                             </t>
+
                                             Should you require any additional information, please contact EEDC HR support for help.<br/>
-                                            <!-- <a href='https://ictsupport.eedc.online'>Click ICT Support link</a> -->
                                             <br /><br/>
 
                                             Regards,<br />

@@ -53,6 +53,7 @@ class WebsiteHrRecruitment(http.Controller):
 	@http.route(['/get-applicant-document'], type='json', website=True, auth="public", csrf=False)
 	def get_applicant_document(self, **post):
 		recordId = post.get('record_id')
+		_logger.info(f"{recordId} record id generated")
 		if recordId:
 			domain = [
 				('id', '=', int(recordId)),
@@ -65,15 +66,15 @@ class WebsiteHrRecruitment(http.Controller):
 					"data": {
 						'applicant_documentation_checklist_ids': [
 							{
-								'document_file_id': q.document_file.id, 
-								'document_file_name': q.document_file.name,
+								'document_file_id': q.id, 
+								'document_file_name': q.document_type.name,
 								'required': "1" if q.is_compulsory else "0"
 							}
 							for q in applicant.mapped('applicant_documentation_checklist') #.filtered(lambda x: not x.retired)
 						]
 					},
 					"message": "", 
-					}
+					} 
 			else:
 				message = "Sorry !!! No documentation exist for this applicant yet"
 				return {
@@ -84,7 +85,7 @@ class WebsiteHrRecruitment(http.Controller):
 					"message": message 
 					}
 		else:
-			message = "Sorry !!! No documentation exist for this applicant yet"
+			message = "Sorry !!! No documentation ID exist for this applicant yet"
 			return {
 				"status": False,
 				"data": {
@@ -92,6 +93,37 @@ class WebsiteHrRecruitment(http.Controller):
 				},
 				"message": message 
 				}
+		
+	@http.route(['/document_data_process'], type='http', methods=['POST'],  website=True, auth="public", csrf=False)
+	def document_data_process(self, **post):
+		"""
+		Returns:
+			json: JSON reponse
+		"""
+		_logger.info(f'Creating Portal Request data ...{post}')
+		applicant_id = request.env['hr.applicant'].sudo().search([
+			('id', '=', post.get('record_id'))], limit=1)
+		if not applicant_id:
+			return json.dumps({'status': False, 'message': "No application record found for record id provided"})
+		 
+		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
+		DataItems = []
+		DataItems = json.loads(post.get('DataItems'))
+		if DataItems:
+			_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
+		## generating attachment
+		for re in DataItems:
+			applicant_document_id = request.env['hr.applicant.documentation'].sudo().search([
+				('id', '=', re.get('DocumentId'))
+			], limit=1)
+
+			if applicant_document_id:
+				attached_file = re.get('DocumentVal')
+				datas = base64.b64encode(attached_file.read())
+				attachment_id = self.generate_attachment(f"{applicant_id.partner_name}", "Document", datas, applicant_id.id)
+				applicant_document_id.update({'applicant_submitted_document_file': attachment_id.id})
+			
+		return json.dumps({'status': True, 'message': "Form Submitted!"})
 			
 	@http.route([
 		'/complete/recruitment',

@@ -26,11 +26,54 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
             })
         },
         events: {
+
+            'click .button_doc_submit': function (ev) {
+                var list_of_fields = [];
+                    var current_btn = $(ev.target);
+                    var form = $('#msform')[0];
+                    var formData = new FormData(form);
+                    console.log('formData is ==>', formData)
+                    var DataItems = []
+                    $(`div#col-sm-docu > input.docuClass`).each(function(){
+                        var inputId = $(this).attr('id'); 
+                        console.log($(this).attr('name'))
+                        var list_item = {
+                                        'DocumentId': inputId, 
+                                        'DocumentVal': $(this).val(), 
+                                }
+                                 
+                        DataItems.push(list_item)
+                    })
+                     
+                    formData.append('DataItems', JSON.stringify(DataItems))
+                    $.ajax({
+                        type: "POST",
+                        enctype: 'multipart/form-data',
+                        url: "/document_data_process",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 800000,
+                    }).then(function(data) {
+                        console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                        window.location.href = `/portal-success`;
+                        console.log("XMLREQUEST Successful");
+                        // clearing form content
+                        // $("#build_attachment")[0].reset();
+                        $("#build_attachment").empty()
+                    }).catch(function(err) {
+                        console.log(err);
+                        alert(err);
+                    }).then(function() {
+                        console.log(".")
+                    })
+            },
+
             'click .start-documentation': function(ev){
                 let targetElement = $(ev.target).attr('id');
-                let record_id = $('#record_id').attr('id');
+                let record_id = $('.record_id').attr('id');
                 console.log(`Displays the form element and build dynamic rendering ${targetElement}`);
-                $('#build_attachment').empty()
                 this._rpc({
                     route: `/get-applicant-document`,
                     params: {
@@ -41,26 +84,31 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                         $('#build_attachment').empty()
                         alert(`Validation Error! ${data.message}`)
                     }else{
-                         
+                        console.log(`data dynamic rendering ${data.data.applicant_documentation_checklist_ids}`);
+                        $.each(data.data.applicant_documentation_checklist_ids, function(k, elm){
+                            $(`#build_attachment`).append(
+                                
+                                `<div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                    <div class="row s_col_no_resize s_col_no_bgcolor">
+                                        <label class="col-4 col-sm-auto s_website_form_label" style="width: 200px" for="Docu-${elm.document_file_name}">
+                                            <span class="s_website_form_label_content" >${elm.document_file_name}</span>
+                                        </label>
+                                        <div class="col-sm" id="col-sm-docu">
+                                            <input type="file" class="form-control s_website_form_input docuClass" labelfor="Docu-${elm.document_file_name}" name="Docuname" id="${elm.document_file_id}" required="${elm.required}"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                `
+                            )
+                        })
                     }
                 }).guardedCatch(function (error) {
                     let msg = error.message.message
                     console.log(msg)
-                    $("#existing_order").val('')
+                    $('#build_attachment').empty()
                     alert(`Unknown Error! ${msg}`)
                 });
-
-                $(`#tbody_employee`).append(
-                    `<label class="col-4 col-sm-auto s_website_form_label" style="width: 200px" for="Docu-${documentName}">
-                    <span class="s_website_form_label_content" >${documentName}</span>
-                </label>
-                
-                <div class="col-sm">
-                    <input type="file" class="form-control s_website_form_input" labelfor="${documentName}" name="${documentName}" id="${documentName}" required="${required}" multiple="1"/>
-                </div>`
-                )
-
-
+ 
                  
             },
          },

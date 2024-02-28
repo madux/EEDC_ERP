@@ -11,6 +11,7 @@ class HrApplicantDocuments(models.Model):
     applicant_submitted_document_file = fields.Many2one('ir.attachment', string='Applicant Document', attachment=True)
     # applicant_filename = fields.Char("Applicant Filename")
     applicant_id = fields.Many2one('hr.applicant', string='Applicant')
+    is_compulsory = fields.Boolean("Is Compulsory", default=False)
 
 
 class DocumentationType(models.Model):
@@ -18,3 +19,5 @@ class DocumentationType(models.Model):
 
     name = fields.Char()
     document_file = fields.Many2one('ir.attachment', string='Document File')
+    is_compulsory = fields.Boolean("Is Compulsory", default=True)
+
