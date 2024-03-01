@@ -42,17 +42,29 @@ class HrApplicantMove(models.TransientModel):
 		string="Mail Template",
 		required=False,
 	)
+	send_mail_unprogressed = fields.Boolean(
+		string="Send Non-Progression Notification?",
+	)
+	email_template_unprogressed = fields.Many2one(
+		'mail.template',
+		string="Mail Template",
+		required=False,
+		default=lambda self: self.env.ref('hr_cbt_portal_recruitment.mail_template_applicants_rejection', raise_if_not_found=False)
+	)
 
 	def action_move_applicant(self):
 		"""moves applicants to selected stage"""
 		if self.applicant_ids:
-			for rec in self.mapped('applicant_ids'):#.filtered(lambda al: not al.stage_id.hired_stage):
-				rec.write({
-					'stage_id': self.stage_id.id,
-					'is_undergoing_verification': True if self.stage_type == "is_verification_stage" else False,
-					'is_documentation_process': True if self.stage_type == "is_documentation_stage" else False,
-					})
-			self.action_send_mail()
+			# for rec in self.mapped('applicant_ids'):#.filtered(lambda al: not al.stage_id.hired_stage):
+			# 	rec.write({
+			# 		'stage_id': self.stage_id.id,
+			# 		'is_undergoing_verification': True if self.stage_type == "is_verification_stage" else False,
+			# 		'is_documentation_process': True if self.stage_type == "is_documentation_stage" else False,
+			# 		})
+			# if self.send_mail:
+			# 	self.action_send_mail()
+			if self.send_mail_unprogressed:
+				self.action_send_unprogression_email()
 		else:
 			raise ValidationError("please ensure to select applicants")
 
@@ -62,6 +74,29 @@ class HrApplicantMove(models.TransientModel):
 			self._send_mail(self.email_invite_template, email_list, self.env.user.company_id.email or self.env.user.email)
 		else:
 			raise ValidationError("Selected applicant(s) Email(s) not found")
+		
+	def action_send_unprogression_email(self):
+		selected_applicant_ids = self.mapped('applicant_ids')
+		all_applicant_ids = self.env['hr.applicant'].search([
+			('job_id', '=', selected_applicant_ids[0].job_id.id),
+			('stage_id', '=', selected_applicant_ids[0].stage_id.id),
+		]).ids
+		non_selected_applicant_ids = list(set(all_applicant_ids) - set(selected_applicant_ids.ids))
+		non_selected_applicants = self.env['hr.applicant'].browse(non_selected_applicant_ids)
+		for applicant in non_selected_applicants:
+			email_to = False
+			if applicant.email_from:
+				email_to = applicant.email_from
+			template = self.email_template_unprogressed
+			if template:
+				template.write({'email_to': email_to })
+				template.send_mail(applicant.id, True)
+		# email_list = non_selected_applicants.mapped('email_from')
+		# if email_list:
+		# 	self._send_mail(self.email_template_unprogressed, email_list, self.env.user.company_id.email or self.env.user.email)
+		# else:
+		# 	raise ValidationError("Email(s) not found for applicants. Ensure all applicant are in the same job position")
+
 
 	def _send_mail(self, template_id, email_items= None, email_from=None):
 		'''Email_to = [lists of emails], Contexts = {Dictionary} '''
@@ -70,6 +105,7 @@ class HrApplicantMove(models.TransientModel):
 		# template_id = ir_model_data.get_object_reference('inseta_etqa', with_template_id)[1]         
 		if template_id and email_to:
 			template_id.write({'email_to': email_to})
+			# raise ValidationError(self.id)
 			template_id.send_mail(self.id, True)
 			# ctx = dict()
 			# ctx.update({

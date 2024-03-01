@@ -17,6 +17,8 @@
                             <field name="email_invite_template" invisible="0" required="0" 
                             attrs="{'invisible': [('send_mail', '=', False)], 'reuired': [('send_mail', '=', True)]}"
                             domain="[('model', '=', 'hr.applicant.move.wizard')]"/>
+                            <field name="send_mail_unprogressed" />
+                            <field name="email_template_unprogressed" attrs="{'invisible': [('send_mail_unprogressed', '=', False)]}" />
 
                         </group>
                         <notebook>
