@@ -141,19 +141,19 @@
                                     <tr><td valign="top" style="font-size: 15px;">
                                         <div>
                                             Dear <t t-out="object.partner_name"/>,<br/> <br/>
-                                            Thank you for your interest in the <t t-esc="object.job_id.name"/> role at <t t-esc="object.write_uid.company_id.name"/>. We appreciate the time and effort you put into your application and for considering us as a potential employer.<br/>
+                                            Thank you for considering <t t-esc="object.write_uid.company_id.name"/> for the <t t-esc="object.job_id.name"/> role. We appreciate your interest and the effort you've invested in your application.<br/><br />
 
-                                            After careful consideration and review of all applicants, we regret to inform you that your application has not progressed to the next stage of the selection process at this time.<br/>
-                                            We received a large number of highly qualified applications, and while we were impressed with your skills and experience, we have decided to move forward with candidates whose backgrounds more<br /> closely align with our current needs.
+                                            After thorough review, we regret to inform you that your application did not progress to the next stage at this time. While we were impressed by your skills and experience, we have chosen candidates whose profiles better match our current requirements. <br /><br />
 
-                                            Please note that this decision does not necessarily reflect on your qualifications or potential. We encourage you to continue pursuing opportunities that match your skills and interests.<br />
+                                            Please note that this decision does not necessarily reflect on your qualifications or potential.<br /><br />
 
-                                            We genuinely appreciate your interest in joining our team and wish you the best of luck in your job search. We will keep your application on file for future opportunities that may arise.<br />
+                                            We sincerely appreciate your interest in joining our team. Your application will remain on file for future opportunities.<br /><br />
 
-                                            Thank you again for considering <t t-esc="object.write_uid.company_id.name"/>. If you have any questions or would like feedback on your application, please feel free to reach out to us.<br />
+                                            Thank you again for considering <t t-esc="object.write_uid.company_id.name"/>. If you have any questions or would like feedback, feel free to reach out to us.<br /><br />
 
                                             Best regards,<br />
-                                            --<br/>EEDC HR
+                                            Human Resources <br />
+                                            Enugu Electricity Distribution Company
                                         </div>
                                     </td></tr>
                                     <tr><td style="text-align:center;">

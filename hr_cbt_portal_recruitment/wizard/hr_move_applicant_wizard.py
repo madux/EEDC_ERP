@@ -89,13 +89,11 @@ class HrApplicantMove(models.TransientModel):
 				email_to = applicant.email_from
 			template = self.email_template_unprogressed
 			if template:
-				template.write({'email_to': email_to })
+				template.write({'email_to': email_to,
+					'email_from': self.env.user.email,
+					 'reply_to': self.env.user.email })
+				ctx = dict()
 				template.send_mail(applicant.id, True)
-		# email_list = non_selected_applicants.mapped('email_from')
-		# if email_list:
-		# 	self._send_mail(self.email_template_unprogressed, email_list, self.env.user.company_id.email or self.env.user.email)
-		# else:
-		# 	raise ValidationError("Email(s) not found for applicants. Ensure all applicant are in the same job position")
 
 
 	def _send_mail(self, template_id, email_items= None, email_from=None):
