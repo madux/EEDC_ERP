@@ -55,14 +55,14 @@ class HrApplicantMove(models.TransientModel):
 	def action_move_applicant(self):
 		"""moves applicants to selected stage"""
 		if self.applicant_ids:
-			# for rec in self.mapped('applicant_ids'):#.filtered(lambda al: not al.stage_id.hired_stage):
-			# 	rec.write({
-			# 		'stage_id': self.stage_id.id,
-			# 		'is_undergoing_verification': True if self.stage_type == "is_verification_stage" else False,
-			# 		'is_documentation_process': True if self.stage_type == "is_documentation_stage" else False,
-			# 		})
-			# if self.send_mail:
-			# 	self.action_send_mail()
+			for rec in self.mapped('applicant_ids'):#.filtered(lambda al: not al.stage_id.hired_stage):
+				rec.write({
+					'stage_id': self.stage_id.id,
+					'is_undergoing_verification': True if self.stage_type == "is_verification_stage" else False,
+					'is_documentation_process': True if self.stage_type == "is_documentation_stage" else False,
+					})
+			if self.send_mail:
+				self.action_send_mail()
 			if self.send_mail_unprogressed:
 				self.action_send_unprogression_email()
 		else:
