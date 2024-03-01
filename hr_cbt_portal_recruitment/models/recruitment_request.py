@@ -226,6 +226,9 @@ class HRJobRecruitmentRequest(models.Model):
 			'res_id': self.job_id.id,
 			'type': 'ir.actions.act_window',
 			'domain': [],
+			'context': {
+				'default_department_id': self.department_id.id
+			},
 			'target': 'current'
 		}
 		return ret

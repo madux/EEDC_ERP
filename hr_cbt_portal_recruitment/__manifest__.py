@@ -34,6 +34,7 @@
         'views/hr_recruitment_request.xml',
         'views/hr_recruitment_stage_inherit.xml',
         'views/hr_documentation_view.xml',
+        'views/survey_template_inherited_view.xml',
         # 'views/company_memo_inherit.xml',
         'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
@@ -44,6 +45,7 @@
         'wizard/score_sheet_export.xml',
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
+        'data/survey_email.xml',
         'views/preloader.xml',
         'data/documentation_data.xml'
 

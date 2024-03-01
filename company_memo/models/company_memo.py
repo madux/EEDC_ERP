@@ -352,7 +352,6 @@ class Memo_Model(models.Model):
     
     def send_memo_to_contacts(self):
         view_id = self.env.ref('mail.email_compose_message_wizard_form')
-        is_officer = self.determine_user_role() # returns true or false 
         return {
                 'name': 'Send memo Message',
                 'view_type': 'form',
@@ -562,24 +561,24 @@ class Memo_Model(models.Model):
                 "Sorry you are not allowed to reject /  return you own initiated memo"
                 ) 
 
-    def determine_user_role(self):
-        '''Checks if the  user is employee/administration 
-        / Memo manager / memo gm/ memo auditor / memo account
-        returns true to be used to set the To field in wizard to the person's manager'''
-        user_id = self.env['res.users'].browse([self.env.uid])
-        sys_admin = user_id.has_group("base.group_system")
-        hr_admin = user_id.has_group("hr.group_hr_manager")
-        memo_manager = user_id.has_group("company_memo.mainmemo_manager")
-        memo_audit = user_id.has_group("company_memo.mainmemo_audit")
-        memo_account = user_id.has_group("company_memo.mainmemo_account")
-        if any([sys_admin, hr_admin, memo_audit, memo_manager, memo_account]):
-            return False 
-        else:
-            if not self.employee_id.parent_id:
-                raise ValidationError(
-                    'Please ensure you have a unit manager / head manager assigned to your record !'
-                    )
-            return True
+    # def determine_user_role(self):
+    #     '''Checks if the  user is employee/administration 
+    #     / Memo manager / memo gm/ memo auditor / memo account
+    #     returns true to be used to set the To field in wizard to the person's manager'''
+    #     user_id = self.env['res.users'].browse([self.env.uid])
+    #     sys_admin = user_id.has_group("base.group_system")
+    #     hr_admin = user_id.has_group("hr.group_hr_manager")
+    #     memo_manager = user_id.has_group("company_memo.mainmemo_manager")
+    #     memo_audit = user_id.has_group("company_memo.mainmemo_audit")
+    #     memo_account = user_id.has_group("company_memo.mainmemo_account")
+    #     if any([sys_admin, hr_admin, memo_audit, memo_manager, memo_account]):
+    #         return False 
+    #     else:
+    #         if not self.employee_id.parent_id:
+    #             raise ValidationError(
+    #                 'Please ensure you have a unit manager / head manager assigned to your record !'
+    #                 )
+    #         return True
         
     def validate_memo_for_approval(self):
         item_lines = self.mapped('product_ids')
@@ -605,19 +604,16 @@ class Memo_Model(models.Model):
         user_exist = self.mapped('res_users').filtered(
             lambda user: user.id == self.env.uid
             )
-        if user_exist and self.env.user.id in [r.user_id.id for r in self.stage_id.approver_ids]:
+        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
                 ) 
         if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
-            raise ValidationError("Please add request line")
-        # users = self.env['res.users'].browse([self.env.uid])
-        # manager = users.has_group("company_memo.mainmemo_manager")
-        # admin = users.has_group("base.group_system")
+            raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
-        is_officer = self.determine_user_role() # returns true or false 
+        # is_officer = self.determine_user_role() # returns true or false 
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -629,7 +625,7 @@ class Memo_Model(models.Model):
                 'context': {
                     'default_memo_record': self.id,
                     'default_resp': self.env.uid,
-                    'default_is_officer': is_officer,
+                    # 'default_is_officer': is_officer,
                 },
             }
     """The wizard action passes the employee whom the memo was director to this function."""
@@ -654,33 +650,38 @@ class Memo_Model(models.Model):
             ('memo_type', '=', self.memo_type.id),
             ('department_id', '=', self.employee_id.department_id.id)
             ], limit=1)
-        memo_setting_ids = memo_settings
-        ms = memo_setting_ids
-        memo_setting_stages = ms.stage_ids.ids
-        if not from_website and memo_setting_stages.index(current_stage_id.id) == 0:
-            """Checks if the first index of the stages is the initial stage;
-            Adds the employee manager or supervisor at the first stage
-            """ 
-            approver_ids += [
-                self.employee_id.parent_id.id,
-                self.employee_id.administrative_supervisor_id.id
-            ]
-        _logger.info(f'Found memo_settings are {memo_settings} and stages {memo_settings.stage_ids} and current stage {current_stage_id}')
+        memo_setting_stages = memo_settings.stage_ids
+        # if not from_website and memo_setting_stages.index(current_stage_id.id) == 0:
+        #     """Checks if the first index of the stages is the initial stage;
+        #     Adds the employee manager or supervisor at the first stage
+        #     """ 
+        #     approver_ids += [
+        #         self.employee_id.parent_id.id,
+        #         self.employee_id.administrative_supervisor_id.id
+        #     ]
+        # _logger.info(f'Found memo_settings are {memo_settings} and stages {memo_settings.stage_ids} and current stage {current_stage_id}')
+        
         if memo_settings and current_stage_id:
-            mstages = memo_settings.stage_ids
-            _logger.info(f'Found stages are {mstages}')
-            last_stage = mstages[-1] if mstages else False
+            mstages = memo_settings.stage_ids # [3,6,8,9]
+            _logger.info(f'Found stages are {memo_setting_stages.ids}')
+            last_stage = mstages[-1] if mstages else False # 'e.g 9'
             if last_stage and last_stage.id != current_stage_id.id:
-                current_stage_index = memo_setting_stages.index(current_stage_id.id)
-                next_stage_id = memo_setting_stages[current_stage_index + 1] # to get the next stage
+                current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+                next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:
                 next_stage_id = self.stage_id.id
-                apps = [
-                emp.approver_ids.ids for emp in ms.mapped('stage_ids').filtered(
-                    lambda stage: stage.id == next_stage_id
-                    )]
-                for ap in apps:
-                    approver_ids.append(ap)
+            # next_stage_approvers = memo_settings.mapped('stage_ids').filtered(
+            #     lambda st: st.id == next_stage_id)
+            next_stage_record = self.env['memo.stage'].browse([next_stage_id])
+            if next_stage_record:
+                approver_ids = next_stage_record.approver_ids.ids
+            # apps = [
+            # emp.approver_ids.ids for emp in ms.mapped('stage_ids').filtered(
+            #     lambda stage: stage.id == next_stage_id
+            #     )]
+            # for ap in apps:
+            #     approver_ids.append(ap)
+            # raise ValidationError(next_stage_record.approver_ids.ids)
             return approver_ids, next_stage_id
         else:
             raise ValidationError(
@@ -1041,7 +1042,7 @@ class Memo_Model(models.Model):
             'res_id': rr_id.id,
             'type': 'ir.actions.act_window',
             'domain': [],
-            'target': 'new'
+            'target': 'current'
             }
         return ret
 

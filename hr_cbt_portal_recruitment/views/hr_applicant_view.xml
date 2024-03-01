@@ -110,7 +110,7 @@
                                 <!-- <field name="applicant_filename" invisible="1"/> -->
                             </tree>
                         </field>
-                      </page>
+                    </page>
                     <page name="panelist_score_sheet" string="Panelist Score Sheet">
                         <field name="survey_panelist_input_ids" string="Panelist Score Sheet" readonly="0">
                             <tree string="Panelist Score Sheet">
@@ -135,6 +135,9 @@
                                 </sheet> 
                             </form>
                         </field>
+                    </page>
+                    <page string='Signature request'>
+                        <field name="sign_request_ids" context="{'tree_view_ref': 'sign.sign_request_view_tree'}"/>
                     </page>
                 </notebook>
             </xpath>

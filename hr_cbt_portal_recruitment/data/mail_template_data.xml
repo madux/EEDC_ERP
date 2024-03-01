@@ -91,7 +91,20 @@
                                             Dear <t t-out="object.partner_name"/>,<br/> <br/>
                                             Please. <br/>
                                             Kindly check the mail attachment to upload the relevant required documents <br/> <br/>
-                                            or use the link to upload your data 
+                                            
+                                            You are advised to check other mail thread for fill forms and validate e-Signatures
+
+                                            <t t-foreach="object.sign_request_ids" t-as="sr">
+                                                
+                                                    <t t-if="sr.is_currently_sent">
+                                                        <li><a t-att-href="'%s' %(sr.dummy_share_link)"><t t-esc="sr.reference"/></a></li>
+                                                    </t>
+                                                
+                                            </t>
+
+                                            Once you navigate to the link, click on start icon, and fill required / optional fields 
+                                            Ensure all the forms listed here are provided:
+                                            or use the link below to upload your data from the web portal
                                             <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a>
                                             <br />
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">

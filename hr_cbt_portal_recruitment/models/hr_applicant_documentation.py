@@ -20,4 +20,7 @@ class DocumentationType(models.Model):
     name = fields.Char()
     document_file = fields.Many2one('ir.attachment', string='Document File')
     is_compulsory = fields.Boolean("Is Compulsory", default=True)
+    sign_template_id = fields.Many2one(
+		'sign.template', string='Signature Template')
+
 
