@@ -25,7 +25,7 @@
                     </button>
                 </div> -->
 
-                <xpath expr="//notebook/page[last()]">
+                <xpath expr="//notebook[last()]">
                     <page string='Application Documents' groups="hr.group_hr_user">
                         <field name="applicant_documentation_checklist" options="{'no_open': True}" readonly="1">
                             <tree>

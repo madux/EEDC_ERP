@@ -677,16 +677,7 @@ class PortalRequest(http.Controller):
 			if not memo_id:
 				_logger.info(f'memo not found')
 				return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-		# district_id =False
-		# if post.get("selectDistrict"):
-		# 	district = request.env['hr.district'].sudo().search([
-		# 		('id', '=', post.get("selectDistrict"))
-		# 		], limit=1)
-		# 	if district:
-		# 		district_id = district.id 
-		# 	else:
-		# 		district_id = memo_id.district_id.id
-		# _logger.info(f'WHAT IS DISTRICT ==> {district_id}')
+		
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)

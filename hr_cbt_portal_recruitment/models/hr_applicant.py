@@ -233,5 +233,11 @@ class Applicant(models.Model):
             for attachment in document_with_attachments:
                 attachments.append(attachment.document_file.id)
             return attachments
+        
+    def send_mail_to_hr(filename_list=False):
+        if filename_list:
+            # TODO : Send to hr officer the applicants submitted filenames
+            pass
+
 
 

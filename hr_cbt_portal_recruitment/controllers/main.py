@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 # from odoo.addons.eha_website.controllers.controllers import EhaWebsite
 import logging
 import base64
@@ -68,9 +68,14 @@ class WebsiteHrRecruitment(http.Controller):
 							{
 								'document_file_id': q.id, 
 								'document_file_name': q.document_type.name,
-								'required': "1" if q.is_compulsory else "0"
+								'required': "1" if q.is_compulsory else "0",
+								'hr_comment': q.hr_comment or "",
+								# 'hr_comment': '''<div class="alert alert-danger" role="alert">
+								#             %s<br/>
+								#         </div>'''%(q.hr_comment) if q.hr_comment else ""
+
 							}
-							for q in applicant.mapped('applicant_documentation_checklist') #.filtered(lambda x: not x.retired)
+							for q in applicant.mapped('applicant_documentation_checklist').filtered(lambda x: not x.select and x.hr_comment != 'Resubmitted')
 						]
 					},
 					"message": "", 
@@ -94,36 +99,46 @@ class WebsiteHrRecruitment(http.Controller):
 				"message": message 
 				}
 		
-	@http.route(['/document_data_process'], type='http', methods=['POST'],  website=True, auth="public", csrf=False)
+	
+		
+	@http.route(['/document-data-process'], type='http', methods=['POST'], 
+			 website=True, auth="public", csrf=False)
 	def document_data_process(self, **post):
-		"""
-		Returns:
-			json: JSON reponse
-		"""
-		_logger.info(f'Creating Portal Request data ...{post}')
+		"""""" 
+		_logger.info(
+			f"Destiny is calling {type(post.get('241'))} annd {post.get('counter_ids')}"
+		)
+		if not post.get('counter_ids'):
+			return json.dumps({'status': False, 'message': "File IDs not found"})
+		
 		applicant_id = request.env['hr.applicant'].sudo().search([
 			('id', '=', post.get('record_id'))], limit=1)
 		if not applicant_id:
-			return json.dumps({'status': False, 'message': "No application record found for record id provided"})
+			return json.dumps({'status': False, 'message': "No applicant record found for record id provided"})
 		 
-		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
-		DataItems = []
-		DataItems = json.loads(post.get('DataItems'))
-		if DataItems:
-			_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
-		## generating attachment
-		for re in DataItems:
+		counter_ids = json.loads(post.get('counter_ids')) # ['241', '345',]
+		_logger.info(f"""check counter {type(counter_ids)} AND FILE {counter_ids}===> """)
+
+		submitted_filename = []
+		for rec in counter_ids: # "241"
+			# tc = '%s' %rec
+			filedata = post.get(rec, False)
 			applicant_document_id = request.env['hr.applicant.documentation'].sudo().search([
-				('id', '=', re.get('DocumentId'))
+				('id', '=', int(rec))
 			], limit=1)
 
 			if applicant_document_id:
-				attached_file = re.get('DocumentVal')
-				datas = base64.b64encode(attached_file.read())
-				attachment_id = self.generate_attachment(f"{applicant_id.partner_name}", "Document", datas, applicant_id.id)
-				applicant_document_id.update({'applicant_submitted_document_file': attachment_id.id})
-			
-		return json.dumps({'status': True, 'message': "Form Submitted!"})
+				_logger.info(f"""ATTACHMENT DOCUMENT FOUND ALREADY===>  {applicant_document_id.id}""")
+				if filedata:
+					datas = base64.b64encode(filedata.read())
+					submitted_filename.append(filedata.filename)
+					attachment_id = self.generate_attachment(f"{applicant_id.partner_name}", f'{filedata.filename}', datas, applicant_id.id)
+					applicant_document_id.update({
+						'applicant_submitted_document_file': attachment_id.id,
+						'hr_comment': 'Resubmitted' if applicant_document_id.hr_comment else ""
+						})
+		# applicant_id.send_mail_to_hr(submitted_filename)	
+		return json.dumps({'status': True, 'data': 'successfully getting it', 'message': "Form Submitted!"})
 			
 	@http.route([
 		'/complete/recruitment',

@@ -137,86 +137,38 @@
             <field name="auto_delete" eval="True"/>
         </record>
 
-        <!-- <record id="hr_recruitment.email_template_data_applicant_congratulations" model="mail.template">
-        <field name="name">Application Acknowledgement and update</field>
-        <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
-        <field name="subject">Your Job Application: {{ object.job_id.name }}</field>
-        <field name="email_to">{{ (not object.partner_id and object.email_from or '') }}</field>
-        <field name="partner_to">{{ object.partner_id.id or '' }}</field>
-        <field name="description">Confirmation email sent to all new job applications</field>
-        <field name="body_html" type="html">
-            <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; border-collapse: collapse; margin-left: 20px;">
-            <tr>
-                <td valign="top" style="padding: 0px 10px;">
-                    <div style="font-size: 13px; margin: 0px; padding: 0px;">
-                        Hello,
-                        <br/><br/>
-                        We confirm we successfully received your application for the job
-                        "<a t-att-href="hasattr(object.job_id, 'website_url') and object.job_id.website_url or ''" style="color:#9A6C8E;"><strong t-out="object.job_id.name or ''">Experienced Developer</strong></a>" at <strong t-out="object.company_id.name or ''">YourCompany</strong>.
-                        <br/><br/>
-                        Your current stage is {{object.stage_id.name}}
-                        We will come back to you shortly.
+        <record id="mail_template_fault_documentation" model="mail.template">
+            <field name="name">Documentation Re-Upload</field>
+            <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_documentation"/>
+            <field name="subject">Notification of Fault in your Documentation</field>
+            <field name="email_to"></field>
+            <field name="description">Notification of Fault in your Documentation</field>
+            <field name="body_html" type="html">
+                <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; border-collapse: collapse; margin-left: 20px;">
+                    <tr>
+                        <td valign="top" style="padding: 0px 10px;">
+                            <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                                    Dear Applicant<br/><br/>
+                                    This is a notification that your document <strong t-out="object.document_type.name or ''"></strong> has been faulted with the following comment. <br/>
+                                    <p>
+                                    Comments: <strong t-out="object.hr_comment"></strong> <br/>
 
-                        <div t-if="'website_url' in object.job_id and object.job_id.website_url" style="padding: 16px 8px 16px 8px;">
-                            <a t-att-href="object.job_id.website_url"
-                                style="background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;">Job Description</a>
-                        </div>
-
-                        <hr width="97%" style="background-color: rgb(204,204,204); border: medium none; clear: both; display: block; font-size: 0px; min-height: 1px; line-height: 0; margin: 16px 0px 16px 0px;"/>
-                        <t t-if="object.user_id">
-                            <h3 style="color:#9A6C8E;"><strong>Your Contact:</strong></h3>
-                            <p>
-                                <strong t-out="object.user_id.name or ''">Maduka Sopulu</strong><br/>
-                                <span>Email: <t t-out="object.user_id.email or ''">admin@yourcompany.example.com</t></span><br/>
-                                <span>Phone: <t t-out="object.user_id.phone or ''">+1 650-123-4567</t></span>
-                            </p>
-                            <hr width="97%" style="background-color: rgb(204,204,204); border: medium none; clear: both; display: block; font-size: 0px; min-height: 1px; line-height: 0; margin: 16px 0px 16px 0px;"/>
-                        </t>
-
-                        <h3 style="color:#9A6C8E;"><strong>What is the next step?</strong></h3>
-                        We usually <strong>answer applications within a few days.</strong><br/><br/>
-                        Feel free to <strong>contact us if you want a faster
-                        feedback</strong> or if you don't get news from us
-                        quickly enough (just reply to this email).
-
-                        <hr width="97%" style="background-color: rgb(204,204,204); border: medium none; clear: both; display: block; font-size: 0px; min-height: 1px; line-height: 0; margin: 17px 0px 16px 0px;"/>
-                        <t t-set="location" t-value="''" />
-                        <t t-if="object.job_id.address_id.name">
-                            <strong t-out="object.job_id.address_id.name or ''">Teksa SpA</strong><br/>
-                        </t>
-                        <t t-if="object.job_id.address_id.street">
-                            <t t-out="object.job_id.address_id.street or ''">Puerto Madero 9710</t><br/>
-                            <t t-set="location" t-value="object.job_id.address_id.street"/>
-                        </t>
-                        <t t-if="object.job_id.address_id.street2">
-                            <t t-out="object.job_id.address_id.street2 or ''">Of A15, Santiago (RM)</t><br/>
-                            <t t-set="location" t-value="'%s, %s' % (location, object.job_id.address_id.street2)"/>
-                        </t>
-                        <t t-if="object.job_id.address_id.city">
-                            <t t-out="object.job_id.address_id.city or ''">Pudahuel</t>,
-                            <t t-set="location" t-value="'%s, %s' % (location, object.job_id.address_id.city)"/>
-                        </t>
-                        <t t-if="object.job_id.address_id.state_id.name">
-                            <t t-out="object.job_id.address_id.state_id.name or ''">C1</t>,
-                            <t t-set="location" t-value="'%s, %s' % (location, object.job_id.address_id.state_id.name)"/>
-                        </t>
-                        <t t-if="object.job_id.address_id.zip">
-                            <t t-out="object.job_id.address_id.zip or ''">98450</t>
-                            <t t-set="location" t-value="'%s, %s' % (location, object.job_id.address_id.zip)"/>
-                        </t>
-                        <br/>
-                        <t t-if="object.job_id.address_id.country_id.name">
-                            <t t-out="object.job_id.address_id.country_id.name or ''">Argentina</t><br/>
-                            <t t-set="location" t-value="'%s, %s' % (location, object.job_id.address_id.country_id.name)"/>
-                        </t>
-                        <br/>
-                    </div>
-                </td>
-            </tr>
-        </table></field>
-        <field name="auto_delete" eval="True"/>
-        <field name="lang">{{ object.partner_id.lang or '' }}</field>
-    </record> -->
-
+                                        <!-- <div class="col-lg-12" t-raw="object.hr_comment"/>
+                                        <t t-esc="object.hr_comment"/>
+                                        <t t-esc="object.is_compulsory"/>
+                                        ${ctx['hr_comment']} -->
+                                    </p>
+                                    Please use the link below review the comments and reupload the document<br/>
+                                    <a class="btn btn-secondary" t-att-href="'/documentation-request/%s'%(object.applicant_id.id)">Click here</a><br/>
+                                     <br/>
+                                </p><br/>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
     </data>
 </odoo>
