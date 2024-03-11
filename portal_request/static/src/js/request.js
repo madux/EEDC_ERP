@@ -19,6 +19,9 @@ odoo.define('portal_request.portal_request', function (require) {
     const setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
+    // if ($("#msform")){
+    //     $("#msform")[0].reset();
+    // }
 
     const NonItemRequest = [
         'server_access', 

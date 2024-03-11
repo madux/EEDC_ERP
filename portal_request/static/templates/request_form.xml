@@ -149,7 +149,7 @@
                                                     <small class="text-muted "> (#<span t-field="req.code"/>) </small>
                                                 </div>
                                                 <div class="col-3 text-truncate">
-                                                    <t t-if="req.state == 'Sent' and req.stage_id.approver_ids.user_id.id in current_user" >
+                                                    <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
                                                         <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
                                                          <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
                                                             Approve
@@ -215,10 +215,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <t t-if="req.employee_id.administrative_supervisor_id.user_id.id == current_user">
+                            <t t-if="current_user in [req.employee_id.administrative_supervisor_id.user_id.id, req.employee_id.parent_id.user_id.id]">
                                 <div class="div_supervisor_comment_message o_portal_chatter_composer_body mb32 mt32">
                                     <div class="o_portal_messages_container mt32" data-anchor="true">
-                                    <h4><strong>Supervisor's comments</strong></h4>
+                                    <h4><strong>Supervisor / Manager's comments</strong></h4>
                                         <textarea rows="4" name="supervisor_comment_message" id="supervisor_comment_message" class="form-control" placeholder="Write a message..."></textarea>
                                     </div>
                                     <div class="mt8">

@@ -670,19 +670,10 @@ class Memo_Model(models.Model):
                 next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:
                 next_stage_id = self.stage_id.id
-            # next_stage_approvers = memo_settings.mapped('stage_ids').filtered(
-            #     lambda st: st.id == next_stage_id)
             next_stage_record = self.env['memo.stage'].browse([next_stage_id])
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
-            # apps = [
-            # emp.approver_ids.ids for emp in ms.mapped('stage_ids').filtered(
-            #     lambda stage: stage.id == next_stage_id
-            #     )]
-            # for ap in apps:
-            #     approver_ids.append(ap)
-            # raise ValidationError(next_stage_record.approver_ids.ids)
-            return approver_ids, next_stage_id
+            return approver_ids, next_stage_record.id
         else:
             raise ValidationError(
                 "Please ensure to configure the Memo type for the employee department"

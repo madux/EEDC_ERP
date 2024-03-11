@@ -706,7 +706,7 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": self.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
+			"memo_type": request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
 			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
@@ -767,25 +767,17 @@ class PortalRequest(http.Controller):
 			memo_id.memo_type.memo_key, 
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
+		_logger.info(f'''initial stage come be {stage_id} ''')
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
-		approver_ids = [stage_obj.approver_ids.ids] if stage_obj.approver_ids else [employee_id.parent_id.id]
-		_logger.info(f'''
-			   Successfully Registered! with memo id Approver = {approver_ids} \
-				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
-					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
-		# "users_followers": [
-			# 	(4, employee_id.parent_id.id), 
-			# 	(4, employee_id.administrative_supervisor_id.id \
-			#  if employee_id.administrative_supervisor_id else False),
-			# 	(4, employee_id.id)],
+		approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
 		follower_ids = [(4, r) for r in approver_ids]
 		user_ids = [(4, request.env.user.id)]
 		if employee_id.administrative_supervisor_id:
 			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
 		if employee_id.parent_id:
 			follower_ids.append((4, employee_id.parent_id.id))
-		memo_id.sudo().write({
+		memo_id.sudo().update({
 			'stage_id': next_stage_id, 
 			'approver_id': random.choice(approver_ids),
 			'approver_ids': [(4, r) for r in approver_ids],
@@ -794,6 +786,11 @@ class PortalRequest(http.Controller):
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
 		})
+		_logger.info(f'''
+			   Successfully Registered! with memo id Approver = {approver_ids} \
+				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
+		 
 		memo_id.confirm_memo(
 				memo_id.direct_employee_id or employee_id.parent_id.id, 
 				post.get("description", ""),
@@ -957,6 +954,7 @@ class PortalRequest(http.Controller):
 			])
 		values = {
 			'req': requests,
+			# 'req': requests,
 			'current_user': user.id,
 			'record_attachment_ids': memo_attachment_ids,
 			}
@@ -1044,7 +1042,11 @@ class PortalRequest(http.Controller):
 							'res_users': [(4, request.env.user.id)]
 							})
 					else:
-						request_record.write({'state': 'Sent', 'stage_id': stage_id})
+						return {
+						"status": True,
+						"message": "You are not allowed to approve this document", 
+						}
+						# request_record.write({'state': 'Sent', 'stage_id': stage_id})
 					body_msg = f"""
 					Dear Sir / Madam <br/>\
 					I wish to notify you that a memo with description \n <br/>\
@@ -1058,7 +1060,7 @@ class PortalRequest(http.Controller):
 				else:
 					return {
 					"status": False, 
-					"message": "No stage configured or found for this request. Contact admin", 
+					"message": "No stage configured as approved stage. Contact admin", 
 					}
 			else:
 				return {
@@ -1089,17 +1091,27 @@ class PortalRequest(http.Controller):
 			_logger.info(f"retriving memo update {post.get('supervisor_comment')}...")
 			if post.get('supervisor_comment', ''):
 				body = plaintext2html(post.get('supervisor_comment'))
-				message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
-				request_record.write({
-					'supervisor_comment': message,
+				value = {
 					'is_supervisor_commented': True,
 					'state': 'Refuse' if status == 'Refuse' else request_record.state,
 					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
-					})
+					}
+				
+				if request_record.employee_id.administrative_supervisor_id:
+					message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
+					value.update({
+						'supervisor_comment': message
+						})
+				else:
+					message = manager_message +"\n"+ "By: " + request.env.user.name + ':'+ body
+					value.update({
+						'manager_comment': message
+						})
+				request_record.write(value)
 				body_msg = f"""
 					Dear Sir / Madam, <br/>
 					I wish to notify you that a memo with the reference #{request_record.code} \n <br/>\
-					has been commented by the supervisor. <br/>\
+					has been commented by the supervisor / manager. <br/>\
 					Kindly {get_url(request_record.id)}"""
 				request_record.mail_sending_direct(body_msg) 
 				request_record.message_post(body=body)
@@ -1107,24 +1119,24 @@ class PortalRequest(http.Controller):
 						"status": True,
 						"message": "Comment successfully Updated",
 						}
-			elif post.get('manager_comment'):
-				body = plaintext2html(post.get('manager_comment'))
-				message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
-				request_record.write({
-					'manager_comment': message,
-					'state': 'Refuse' if status == 'Refuse' else request_record.state,
-					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
-					})
-				body_msg = f"""
-					Dear Sir / Madam, <br/>
-					I wish to notify you that a memo with description \n <br/>\
-					has been commented by the Manager. <br/>\
-					Kindly {get_url(request_record.id)}"""
-				request_record.message_post(body=body)
-				return {
-						"status": True,
-						"message": "Comment successfully Updated",
-						}
+			# elif post.get('manager_comment'):
+			# 	body = plaintext2html(post.get('manager_comment'))
+			# 	message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
+			# 	request_record.write({
+			# 		'manager_comment': message,
+			# 		'state': 'Refuse' if status == 'Refuse' else request_record.state,
+			# 		'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
+			# 		})
+			# 	body_msg = f"""
+			# 		Dear Sir / Madam, <br/>
+			# 		I wish to notify you that a memo with description \n <br/>\
+			# 		has been commented by the Manager. <br/>\
+			# 		Kindly {get_url(request_record.id)}"""
+			# 	request_record.message_post(body=body)
+			# 	return {
+			# 			"status": True,
+			# 			"message": "Comment successfully Updated",
+			# 			}
 			else:
 				_logger.info(f"xxxxxx not updated")
 				return {
