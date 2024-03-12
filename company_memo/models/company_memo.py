@@ -320,7 +320,7 @@ class Memo_Model(models.Model):
         'memo_invoice_rel',
         'memo_invoice_id',
         'invoice_memo_id',
-        string='Invoice', 
+        string='Invoicve', 
         store=True,
         domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
         )
