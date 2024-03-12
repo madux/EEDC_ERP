@@ -69,7 +69,7 @@
             
             <p style="text-align: left; font-weight: bold; font-size: 16px;"><b>Dear, </b> <span t-field="o.set_staff.name"/></p>
             <br/>
-            <h4 style="font-weight: bold; text-align: center;font-size: 16px;"><u>Notification For <span t-field="o.memo_type"/> </u></h4>
+            <h4 style="font-weight: bold; text-align: center;font-size: 16px;"><u>Notification For <span t-field="o.memo_type.name"/> </u></h4>
             <strong style="text-align: justify; font-family: 'Times New Roman', Times, serif; font-size: 16px;">Memo Subject:  </strong><span style="text-align: justify; font-family: 'Times New Roman', Times, serif; font-size:16px;" t-field="o.name"/><br/>
           
             <!-- <t t-if="o.reason_back">
@@ -80,7 +80,7 @@
                 <strong style="text-align: justify; font-family: 'Times New Roman', Times, serif; font-size: 18px;">Comments:  </strong><br/><span style="text-align: justify; font-family: 'Times New Roman', Times, serif; font-size:18px;" t-raw="o.comments"/><br/>
             </t> -->
 
-            <t t-if="o.memo_type=='Payment'">
+            <t t-if="o.memo_type.memo_key=='Payment'">
               <table style="width: 100%; text-align: left;">
                   <tr>
                       <th>VENDOR</th>

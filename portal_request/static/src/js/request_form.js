@@ -140,9 +140,11 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         console.log('updating Approval status => '+ JSON.stringify(data))
                         // $('#successful_alert').show()
                         alert(data.message);
+                        $('#div_supervisor_comment_message').addClass('d-none');
                         window.location.href = `/my/request/view/${targetElementId}`
                     }else{
                         alert(data.message);
+                        return false;
                     }
                     
                 }).guardedCatch(function (error) {

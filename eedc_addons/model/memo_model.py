@@ -10,3 +10,22 @@ class MemoModel(models.Model):
         'memo_id', 
         string='Employee Transfer Lines'
         )
+    
+    district_id = fields.Many2one("hr.district", string="District ID")
+
+
+class Requestline(models.Model):
+    _inherit = 'request.line'
+
+    district_id = fields.Many2one("hr.district", string="District ID")
+
+
+class AccountAccount(models.Model):
+    _inherit = 'account.account'
+
+    district_id = fields.Many2one('hr.district', string="District")
+
+class AccountMoveReversal(models.TransientModel):
+    _inherit = 'account.move.reversal'
+
+    district_id = fields.Many2one('hr.district', string="District")
