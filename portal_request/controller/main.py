@@ -2,6 +2,7 @@
 import base64
 import json
 import logging
+import random
 from multiprocessing.spawn import prepare
 import urllib.parse
 from odoo import http, fields
@@ -119,12 +120,13 @@ class PortalRequest(http.Controller):
 	def portal_request(self):
 		"""Request portal for employee / portal users
 		"""
+		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
-			# "product_ids": request.env["product.product"].sudo().search([
-			# 	('detailed_type', 'in', ['consu', 'product'])
-			# 	]),
-			"district_ids": request.env["hr.district"].sudo().search([]),
+			# "district_ids": request.env["hr.district"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
+			"memo_key_ids": request.env["memo.type"].sudo().search([
+				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
+				]),
 		}
 		return request.render("portal_request.portal_request_template", vals)
 	 
@@ -301,7 +303,7 @@ class PortalRequest(http.Controller):
 		if employee_id and employee_id.department_id:
 			# check if user is from external company, restrict them from using internal applications 
 			memo_setting_id = request.env['memo.config'].sudo().search([
-				('memo_type', '=', request_option),
+				('memo_type.memo_key', '=', request_option),
 				('department_id', '=', employee_id.department_id.id)
 				], limit=1) 
 			if not memo_setting_id or not memo_setting_id.stage_ids:
@@ -351,7 +353,7 @@ class PortalRequest(http.Controller):
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('memo_type', '=', 'cash_advance'),
+				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
 				('state', '=', 'Done') 
 			]
@@ -402,7 +404,7 @@ class PortalRequest(http.Controller):
 				'''this should only return the request cash advance that has
 				  been approved and taken out from the account side
 				'''
-				domain += [('state', 'in', ['Done']), ('memo_type', 'in', ['cash_advance'])]
+				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
@@ -419,7 +421,7 @@ class PortalRequest(http.Controller):
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
 								if memo_request.product_ids else memo_request.amountfig,
-						'district_id': memo_request.employee_id.ps_district_id.id,
+						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
 						'product_ids': [
 							{'id': q.product_id.id, 
@@ -448,7 +450,7 @@ class PortalRequest(http.Controller):
 						'work_email': "",
 						'subject': "",
 						'description': "",
-						'district_id': "",
+						# 'district_id': "",
 						'request_date': "",
 						'product_ids': "",
 					},
@@ -604,13 +606,7 @@ class PortalRequest(http.Controller):
 			if product:
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
-				]
-				# if district:
-				# 	district_id = request.env['hr.district'].browse([int(district)])
-				# 	if district_id:
-				# 		domain = [
-				# 			('branch_id', '=', district_id.branch_id.id) 
-				# 		]
+				] 
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
@@ -643,7 +639,7 @@ class PortalRequest(http.Controller):
 				"message": "Please ensure you select a product line", 
 				}
 
-	# total_availability = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 	
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
 		attachment = request.env['ir.attachment'].sudo()
@@ -681,16 +677,7 @@ class PortalRequest(http.Controller):
 			if not memo_id:
 				_logger.info(f'memo not found')
 				return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-		district_id =False
-		if post.get("selectDistrict"):
-			district = request.env['hr.district'].sudo().search([
-				('id', '=', post.get("selectDistrict"))
-				], limit=1)
-			if district:
-				district_id = district.id 
-			else:
-				district_id = memo_id.district_id.id
-		_logger.info(f'WHAT IS DISTRICT ==> {district_id}')
+		
 		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
 		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
@@ -719,7 +706,8 @@ class PortalRequest(http.Controller):
 		"""
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
+			"memo_type": request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
+			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
 			"name": post.get("subject", ''),
@@ -728,7 +716,7 @@ class PortalRequest(http.Controller):
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
-			"district_id": district_id,
+			# "district_id": district_id,
 			"applicationChange": True if post.get("applicationChange") == "on" else False,
 			"enhancement": True if post.get("enhancement") == "on" else False,
 			"datapatch": True if post.get("datapatch") == "on" else False,
@@ -776,35 +764,33 @@ class PortalRequest(http.Controller):
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
-			memo_id.memo_type, 
+			memo_id.memo_type.memo_key, 
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
+		_logger.info(f'''initial stage come be {stage_id} ''')
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
-		approver_id = stage_obj.approver_id.id if stage_obj else employee_id.parent_id.id
-		_logger.info(f'''
-			   Successfully Registered! with memo id Approver = {approver_id} \
-				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
-					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
-		# "users_followers": [
-			# 	(4, employee_id.parent_id.id), 
-			# 	(4, employee_id.administrative_supervisor_id.id \
-			#  if employee_id.administrative_supervisor_id else False),
-			# 	(4, employee_id.id)],
-		follower_ids = [(4, approver_id)]
+		approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
+		follower_ids = [(4, r) for r in approver_ids]
 		user_ids = [(4, request.env.user.id)]
 		if employee_id.administrative_supervisor_id:
 			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
 		if employee_id.parent_id:
 			follower_ids.append((4, employee_id.parent_id.id))
-		memo_id.sudo().write({
+		memo_id.sudo().update({
 			'stage_id': next_stage_id, 
-			'approver_id': approver_id,
-			"direct_employee_id": approver_id, 
+			'approver_id': random.choice(approver_ids),
+			'approver_ids': [(4, r) for r in approver_ids],
+			"direct_employee_id": random.choice(approver_ids),
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
 		})
+		_logger.info(f'''
+			   Successfully Registered! with memo id Approver = {approver_ids} \
+				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
+		 
 		memo_id.confirm_memo(
 				memo_id.direct_employee_id or employee_id.parent_id.id, 
 				post.get("description", ""),
@@ -848,16 +834,16 @@ class PortalRequest(http.Controller):
 			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
-			district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
+			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 
-			if employee_id and transfer_dept_id and role_id and district_id:
+			if employee_id and transfer_dept_id and role_id:#and district_id:
 				transfer_line.create({
 					'memo_id': memo_id.id,
 					'employee_id': employee_id.id, 
 					'transfer_dept': transfer_dept_id.id,
 					'current_dept_id': employee_id.department_id.id,
 					'new_role': role_id.id,
-					'new_district': district_id.id, 
+					# 'new_district': district_id.id, 
 				})
 			counter += 1
 
@@ -901,23 +887,26 @@ class PortalRequest(http.Controller):
 			sessions['start'] = 0 
 			sessions['end'] = 10
 		
+		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
+		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
 					else ['employee_update'] if type in ['employee_update'] \
 						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
 							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
-								else ['Internal', 'employee_update', 'server_access', 'procurement_request', 'vehicle_request', 'material_request', 'leave_request', 'soe', 'cash_advance', 'payment_request', 'Loan']
+								else all_memo_type_keys
 		request_id = request.env['memo.model'].sudo()
 		domain = [
 				('active', '=', True),
-				'|','|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
+				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
-			('memo_type', 'in', memo_type),
+			('memo_type.memo_key', 'in', memo_type),
 		]
 		if search_param:
 			# if request.httprequest:
@@ -952,10 +941,11 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				# ('employee_id.user_id', '=', user.id),
 				('id', '=', int(id)),
-				'|','|','|',('employee_id.user_id', '=', user.id),
+				'|','|','|','|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
+				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		requests = request_id.search(domain, limit=1)
 		memo_attachment_ids = attachment.search([
@@ -964,6 +954,7 @@ class PortalRequest(http.Controller):
 			])
 		values = {
 			'req': requests,
+			# 'req': requests,
 			'current_user': user.id,
 			'record_attachment_ids': memo_attachment_ids,
 			}
@@ -1044,14 +1035,18 @@ class PortalRequest(http.Controller):
 					stage_id = is_approved_stage[0] 
 					# is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					# filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-					current_stage_approver = request_record.sudo().stage_id.approver_id.user_id.id
-					if request.env.user.id == current_stage_approver:
+					current_stage_approvers = request_record.sudo().stage_id.approver_ids
+					if request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
 						request_record.sudo().update_final_state_and_approver()
 						request_record.sudo().write({
 							'res_users': [(4, request.env.user.id)]
 							})
 					else:
-						request_record.write({'state': 'Sent', 'stage_id': stage_id})
+						return {
+						"status": True,
+						"message": "You are not allowed to approve this document", 
+						}
+						# request_record.write({'state': 'Sent', 'stage_id': stage_id})
 					body_msg = f"""
 					Dear Sir / Madam <br/>\
 					I wish to notify you that a memo with description \n <br/>\
@@ -1065,7 +1060,7 @@ class PortalRequest(http.Controller):
 				else:
 					return {
 					"status": False, 
-					"message": "No stage configured or found for this request. Contact admin", 
+					"message": "No stage configured as approved stage. Contact admin", 
 					}
 			else:
 				return {
@@ -1096,17 +1091,27 @@ class PortalRequest(http.Controller):
 			_logger.info(f"retriving memo update {post.get('supervisor_comment')}...")
 			if post.get('supervisor_comment', ''):
 				body = plaintext2html(post.get('supervisor_comment'))
-				message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
-				request_record.write({
-					'supervisor_comment': message,
+				value = {
 					'is_supervisor_commented': True,
 					'state': 'Refuse' if status == 'Refuse' else request_record.state,
 					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
-					})
+					}
+				
+				if request_record.employee_id.administrative_supervisor_id:
+					message = supervisor_message +"\n"+ "By: " + request.env.user.name + ':'+ body
+					value.update({
+						'supervisor_comment': message
+						})
+				else:
+					message = manager_message +"\n"+ "By: " + request.env.user.name + ':'+ body
+					value.update({
+						'manager_comment': message
+						})
+				request_record.write(value)
 				body_msg = f"""
 					Dear Sir / Madam, <br/>
 					I wish to notify you that a memo with the reference #{request_record.code} \n <br/>\
-					has been commented by the supervisor. <br/>\
+					has been commented by the supervisor / manager. <br/>\
 					Kindly {get_url(request_record.id)}"""
 				request_record.mail_sending_direct(body_msg) 
 				request_record.message_post(body=body)
@@ -1114,24 +1119,24 @@ class PortalRequest(http.Controller):
 						"status": True,
 						"message": "Comment successfully Updated",
 						}
-			elif post.get('manager_comment'):
-				body = plaintext2html(post.get('manager_comment'))
-				message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
-				request_record.write({
-					'manager_comment': message,
-					'state': 'Refuse' if status == 'Refuse' else request_record.state,
-					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
-					})
-				body_msg = f"""
-					Dear Sir / Madam, <br/>
-					I wish to notify you that a memo with description \n <br/>\
-					has been commented by the Manager. <br/>\
-					Kindly {get_url(request_record.id)}"""
-				request_record.message_post(body=body)
-				return {
-						"status": True,
-						"message": "Comment successfully Updated",
-						}
+			# elif post.get('manager_comment'):
+			# 	body = plaintext2html(post.get('manager_comment'))
+			# 	message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
+			# 	request_record.write({
+			# 		'manager_comment': message,
+			# 		'state': 'Refuse' if status == 'Refuse' else request_record.state,
+			# 		'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
+			# 		})
+			# 	body_msg = f"""
+			# 		Dear Sir / Madam, <br/>
+			# 		I wish to notify you that a memo with description \n <br/>\
+			# 		has been commented by the Manager. <br/>\
+			# 		Kindly {get_url(request_record.id)}"""
+			# 	request_record.message_post(body=body)
+			# 	return {
+			# 			"status": True,
+			# 			"message": "Comment successfully Updated",
+			# 			}
 			else:
 				_logger.info(f"xxxxxx not updated")
 				return {

@@ -9,3 +9,4 @@ from . import recruitment_request
 from . import hr_applicant_documentation
 from . import panelist
 from . import hr_recruitment_stage_inherit
+from . import sign_request
