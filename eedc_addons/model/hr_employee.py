@@ -12,6 +12,9 @@ _logger = logging.getLogger(__name__)
 class HrEmployeeBase(models.AbstractModel):
     _inherit = "hr.employee.base"
     
+    first_name = fields.Char(string="First name", required=True, copy=False)
+    middle_name = fields.Char(string="Middle name", copy=False)
+    last_name = fields.Char("Surname", required=True, copy=False)
     house_address = fields.Char(string='House Address', groups="base.group_user")
     age = fields.Char(string='Age', groups="base.group_user")
     local_government = fields.Many2one('res.lga', string='LGA')
