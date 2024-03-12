@@ -123,33 +123,11 @@ class Applicant(models.Model):
         readonly=True, 
         # compute="compute_verification_process",
         )
-    applicant_documentation_checklist = fields.One2many(
-        'hr.applicant.documentation', 
-        'applicant_id', 
-        string='Checklists'
-        ) 
-    
-    sign_request_ids = fields.One2many(
-		'sign.request', 
-        'applicant_id', 
-        string='Documents to sign')
-    
+    applicant_documentation_checklist = fields.One2many('hr.applicant.documentation', 'applicant_id', string='Checklists') 
+
     audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
     stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
 
-    def create_employee_from_applicant(self):
-        res = super().create_employee_from_applicant()
-        res['context']['default_first_name'] = self.first_name
-        res['context']['default_name'] = f"{self.first_name or ''} {self.middle_name} {self.last_name}"
-        res['context']['default_middle_name'] = self.middle_name
-        res['context']['default_last_name'] = self.last_name
-        res['context']['default_department_id'] = self.department_id.id
-        res['context']['default_phone'] = self.partner_phone
-        res['context']['default_private_email'] = self.email_from
-        res['context']['default_job_title'] = self.job_id.name
-        res['context']['default_applicant_documentation_checklist'] = self.applicant_documentation_checklist
-        return res
-    
     @api.depends('job_id')
     def _compute_request_id(self):
         requests = self.env['hr.job.recruitment.request'].search([
@@ -233,11 +211,5 @@ class Applicant(models.Model):
             for attachment in document_with_attachments:
                 attachments.append(attachment.document_file.id)
             return attachments
-        
-    def send_mail_to_hr(filename_list=False):
-        if filename_list:
-            # TODO : Send to hr officer the applicants submitted filenames
-            pass
-
 
 

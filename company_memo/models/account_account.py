@@ -10,5 +10,5 @@ from odoo import http
 class AccountAccount(models.Model):
     _inherit = 'account.account'
 
-    # district_id = fields.Many2one('hr.district', string="District")
+    district_id = fields.Many2one('hr.district', string="District")
     

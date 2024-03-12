@@ -5,4 +5,3 @@ from . import import_applicants
 from . import hr_recruitment_sign_document
 from . import score_sheet_export
 from . import checklist_setup_wizard
-from . import hr_confirmation_wizard

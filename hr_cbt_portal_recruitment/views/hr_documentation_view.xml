@@ -7,10 +7,7 @@
           <field name="arch" type="xml">
             <tree string="Documentation type">
               <field name="name" required="1"/>
-              <field name="document_file" required="0"/>
-              <field name="sign_template_id" required="0"/>
-
-              <field name="is_compulsory" required="0"/>
+              <field name="document_file" required="1"/>
             </tree>
           </field>
         </record>
@@ -28,10 +25,7 @@
                         <field name="name" required="1"/>
                     </group>
                     <group>
-                        <field name="document_file" required="0"/>
-                        <field name="sign_template_id" required="0"/>
-                        <field name="is_compulsory" required="0"/>
-                        
+                        <field name="document_file" required="1"/>
                     </group>
                 </group>
                 <notebook>
@@ -49,7 +43,7 @@
             <field name="view_mode">form</field>
             <field name="target">current</field>
             <field name="view_mode">tree,form</field>
-            <!-- <fi neld name="view_id" ref="view_maach_export_form"/> -->
+            <!-- <field name="view_id" ref="view_maach_export_form"/> -->
         </record>
 
           <menuitem id="menu_documentation_type" name="Documentation type" parent="hr_recruitment.menu_hr_recruitment_root" action="action_documentation_type" sequence="99"/>

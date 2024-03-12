@@ -25,7 +25,5 @@ access_documentation_type_id,access_documentation_type,model_documentation_type,
 access_panelist_score_sheet_id,access_panelist_score_sheet,model_panelist_score_sheet,,1,1,1,1
 access_score_sheet_export_id,access_score_sheet_export,model_score_sheet_export,,1,1,1,1
 access_checklist_setup_wizard_id,access_checklist_setup_wizard,model_checklist_setup_wizard,,1,1,1,1
-access_hr_confirm_wizard_id,access_hr_confirm_wizard,model_hr_confirm_wizard,,1,1,1,1
-
 
 

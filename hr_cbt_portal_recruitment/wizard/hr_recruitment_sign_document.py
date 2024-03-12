@@ -77,9 +77,9 @@ class CBTRecruitmentSignWizard(models.TransientModel):
         for applicant in self.applicant_ids:
             applicant_email = applicant.partner_id.email or applicant.email_from
             if applicant.partner_id and applicant_email:
-                for st in sign_templates_applicant_ids:
+                for sign_template_id in sign_templates_applicant_ids:
                     sign_values.append((
-                        st,
+                        sign_template_id,
                         [{
                             'role_id': self.applicant_role_id.id,
                             'partner_id': applicant.partner_id.id
@@ -89,16 +89,16 @@ class CBTRecruitmentSignWizard(models.TransientModel):
                 # know the records that have been sent for documentation
                 applicant.is_documentation_process = True
         sign_requests = self.sudo().env['sign.request'].create([{
-            'template_id': srv[0].id,
+            'template_id': sign_request_values[0].id,
             'request_item_ids': [Command.create({
                 'partner_id': signer['partner_id'],
                 'role_id': signer['role_id'],
-            }) for signer in srv[1]],
-            'reference': _('Signature Request - %s', srv[0].name),
+            }) for signer in sign_request_values[1]],
+            'reference': _('Signature Request - %s', sign_request_values[0].name),
             'subject': self.subject,
             'message': self.message,
             'attachment_ids': [(4, attachment.copy().id) for attachment in self.attachment_ids], # Attachments may not be bound to multiple sign requests
-        } for srv in sign_values])
+        } for sign_request_values in sign_values])
         sign_requests.message_subscribe(partner_ids=self.cc_partner_ids.ids)
         if not self.check_access_rights('write', raise_exception=False):
             sign_requests = sign_requests.sudo()

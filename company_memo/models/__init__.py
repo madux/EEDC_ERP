@@ -8,4 +8,3 @@ from . import account_account
 from . import account_move
 from . import purchase_order
 from . import stock_picking
-from . import hr_employee

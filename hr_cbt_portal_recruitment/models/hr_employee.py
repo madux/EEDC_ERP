@@ -28,14 +28,7 @@ class HrEmployeeBase(models.AbstractModel):
     _inherit = "hr.employee.base"
 
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", index=True)
-    applicant_documentation_checklist = fields.Many2many(
-        'hr.applicant.documentation', 
-        'hr_employee_documentation_rel', 
-        'employee_id', 
-        'hr_documentation_id', 
-        string='Documentations'
-        ) 
-    
+
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
