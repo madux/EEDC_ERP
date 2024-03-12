@@ -91,22 +91,7 @@
                                             Dear <t t-out="object.partner_name"/>,<br/> <br/>
                                             Please. <br/>
                                             Kindly check the mail attachment to upload the relevant required documents <br/> <br/>
-                                            
-                                            You are advised to check other mail thread for fill forms and validate e-Signatures
 
-                                            <t t-foreach="object.sign_request_ids" t-as="sr">
-                                                
-                                                    <t t-if="sr.is_currently_sent">
-                                                        <li><a t-att-href="'%s' %(sr.dummy_share_link)"><t t-esc="sr.reference"/></a></li>
-                                                    </t>
-                                                
-                                            </t>
-
-                                            Once you navigate to the link, click on start icon, and fill required / optional fields 
-                                            Ensure all the forms listed here are provided:
-                                            or use the link below to upload your data from the web portal
-                                            <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a>
-                                            <br />
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">
                                                 <li>
                                                     <t t-if="file.document_file.datas != False ">
@@ -115,8 +100,8 @@
                                                     <t t-esc="file.document_type.name"/>
                                                 </li>
                                             </t>
-
                                             Should you require any additional information, please contact EEDC HR support for help.<br/>
+                                            <!-- <a href='https://ictsupport.eedc.online'>Click ICT Support link</a> -->
                                             <br /><br/>
 
                                             Regards,<br />
@@ -136,38 +121,7 @@
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
-        <record id="mail_template_fault_documentation" model="mail.template">
-            <field name="name">Documentation Re-Upload</field>
-            <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_documentation"/>
-            <field name="subject">Notification of Fault in your Documentation</field>
-            <field name="email_to"></field>
-            <field name="description">Notification of Fault in your Documentation</field>
-            <field name="body_html" type="html">
-                <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; border-collapse: collapse; margin-left: 20px;">
-                    <tr>
-                        <td valign="top" style="padding: 0px 10px;">
-                            <div style="margin: 0px; padding: 0px; font-size: 13px;">
-                                <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                                    Dear Applicant<br/><br/>
-                                    This is a notification that your document <strong t-out="object.document_type.name or ''"></strong> has been faulted with the following comment. <br/>
-                                    <p>
-                                    Comments: <strong t-out="object.hr_comment"></strong> <br/>
-                                        <!-- <div class="col-lg-12" t-raw="object.hr_comment"/>
-                                        <t t-esc="object.hr_comment"/>
-                                        <t t-esc="object.is_compulsory"/>
-                                        ${ctx['hr_comment']} -->
-                                    </p>
-                                    Please use the link below review the comments and reupload the document<br/>
-                                    <a class="btn btn-secondary" t-att-href="'/documentation-request/%s'%(object.applicant_id.id)">Click here</a><br/>
-                                     <br/>
-                                </p><br/>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </field>
-            <field name="auto_delete" eval="True"/>
-        </record>
+
         <record id="mail_template_applicants_rejection" model="mail.template">
             <field name="name"> Rejection Email </field>
             <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
@@ -296,7 +250,6 @@
         <field name="auto_delete" eval="True"/>
         <field name="lang">{{ object.partner_id.lang or '' }}</field>
     </record> -->
-
 
     </data>
 </odoo>

@@ -9,7 +9,7 @@
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
 
-    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts', 'hr_holidays', 'hr_recruitment'], #, 'account_payment_invoice_online_payment_patch'],
+    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts'],
     'data': [
         'security/security_group.xml', 
         'sequence/sequence.xml',
@@ -24,7 +24,6 @@
         'views/assets.xml',
         'security/ir.model.access.csv',
         'data/memo_stage.xml',
-        'data/memo_type.xml',
         'data/ir_cron.xml' 
     ],
     'assets': {'web.assets_backend': [
