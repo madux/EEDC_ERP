@@ -19,6 +19,9 @@ odoo.define('portal_request.portal_request', function (require) {
     const setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
+    // if ($("#msform")){
+    //     $("#msform")[0].reset();
+    // }
 
     const NonItemRequest = [
         'server_access', 
@@ -1002,7 +1005,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             var phone = data.data.phone;   
                             var subject = data.data.subject; 
                             var description = data.data.description; 
-                            var district_id = data.data.district_id; 
+                            // var district_id = data.data.district_id; 
                             var request_date = data.data.request_date; 
                             var amount = data.data.amount; 
                             var state = data.data.state; 
@@ -1014,7 +1017,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             // $("#description").val(description)
                             $("#description").attr('required', false)
                             // $("#description").removeClass('required', false)
-                            $("#selectDistrict").val(district_id).trigger('change')
+                            // $("#selectDistrict").val(district_id).trigger('change')
                             $("#request_status").val(state)
                             $("#amount_fig").val(formatCurrency(amount))
                             $('#amount_fig').attr("readonly", false); 

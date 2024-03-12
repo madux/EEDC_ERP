@@ -27,7 +27,8 @@
                                             <field name="sequence" widget="handle"/>
                                             <field name="name"/>
                                             <field name="id"/>
-                                            <field name="approver_id" options="{'no_create':True, 'no_open': False}"/>
+                                            <!-- <field name="approver_id" options="{'no_create':True, 'no_open': False}"/> -->
+                                            <field name="approver_ids" string="Employees for Follow up" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                                             <field name="is_approved_stage"/>
                                             <field name="memo_config_id" force_save="1" invisible="0" options="{'no_create':True, 'no_open': False}"/>
                                             <field name="active"/>
@@ -84,9 +85,10 @@
                             <field name="active" default="1"/> 
                         </group>
                         <group>
-                            <field name="approver_id" required="0"/> 
+                            <!-- <field name="approver_id" required="0"/> -->
+                            <field name="approver_ids" string="Approvers" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/> 
                             <field name="is_approved_stage" default="0"/> 
-                            <field name="memo_config_id" readonly="1" required="1" force_save="1" string="Parent setting"/> 
+                            <field name="memo_config_id" readonly="1" force_save="1" string="Parent setting"/> 
                         </group>
                     </group>
                 </form>
@@ -100,6 +102,35 @@
         </record>
         <menuitem id="memo_stage_configuration" name="Stage(s)"
             parent="memo_configuration" action="memo_stage_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
+        
+        <record id="memo_tpye_form" model="ir.ui.view">
+            <field name="name">Memo type Setting</field>
+            <field name="model">memo.type</field>
+            <field name="arch" type="xml">
+                <form string="Memo type">
+                    <header>
+                    </header>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/> 
+                            <field name="memo_key" required="1"/> 
+                            <field name="allow_for_publish" required="1"/> 
+                        </group>
+                        <group>
+                            <field name="active" default="1"/> 
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="memo_type_action">
+            <field name="name">Memo Type</field>
+            <field name="res_model">memo.type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="memo_type_configuration" name="Memo Type(s)"
+            parent="memo_configuration" action="memo_type_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
         
     </data>
 </odoo>

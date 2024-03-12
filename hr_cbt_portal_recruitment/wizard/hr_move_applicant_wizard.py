@@ -52,8 +52,25 @@ class HrApplicantMove(models.TransientModel):
 		default=lambda self: self.env.ref('hr_cbt_portal_recruitment.mail_template_applicants_rejection', raise_if_not_found=False)
 	)
 
+	def documentation_validation(self):
+		"""Get all applicants that is yet to complete his signatures"""
+		if self.stage_id.hired_stage:
+			applicants_documents_not_fully_signed = self.mapped('applicant_ids').filtered(
+				lambda applicant: applicant.mapped('sign_request_ids').filtered(lambda sg: sg.state != 'signed' and sg.is_currently_sent == True)
+			)
+			if applicants_documents_not_fully_signed:
+				applicant_names = [app.partner_name for app in applicants_documents_not_fully_signed]
+				raise ValidationError(
+					"""The following applicants have not fully signed there documents, 
+					kindly remove the applicant before proceeding to move them to hired stage
+					%s
+					""" % (',\n'.join(applicant_names))
+					)
+		 
+
 	def action_move_applicant(self):
 		"""moves applicants to selected stage"""
+		self.documentation_validation()
 		if self.applicant_ids:
 			for rec in self.mapped('applicant_ids'):#.filtered(lambda al: not al.stage_id.hired_stage):
 				rec.write({
@@ -102,18 +119,6 @@ class HrApplicantMove(models.TransientModel):
 		# ir_model_data = self.env['ir.model.data']
 		# template_id = ir_model_data.get_object_reference('inseta_etqa', with_template_id)[1]         
 		if template_id and email_to:
-			template_id.write({'email_to': email_to})
-			# raise ValidationError(self.id)
+			template_id.write({'email_to': email_to}) 
 			template_id.send_mail(self.id, True)
-			# ctx = dict()
-			# ctx.update({
-			#     'default_model': 'inseta.learner.register',
-			#     'default_res_id': self.id,
-			#     'default_use_template': bool(template_id),
-			#     'default_template_id': template_id,
-			#     'default_composition_mode': 'comment',
-			# })
-			# template_rec = self.env['mail.template'].browse(template_id)
-			# if email_to:
-			#     template_rec.write({'email_to': email_to})
-			# template_rec.with_context(ctx).send_mail(self.id, True)
+ 
