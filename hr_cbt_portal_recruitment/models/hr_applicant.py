@@ -234,10 +234,40 @@ class Applicant(models.Model):
                 attachments.append(attachment.document_file.id)
             return attachments
         
-    def send_mail_to_hr(filename_list=False):
+    def send_mail_to_hr(self, filename_list=False, applicant_id=False):
         if filename_list:
             # TODO : Send to hr officer the applicants submitted filenames
-            pass
+            template_to_use = 'mail_template_hr_documentation_notification'
 
+            template = self.env.ref(f'hr_cbt_portal_recruitment.{template_to_use}')
+            if template:
+                hr_email = 'hr@eedc.com'
+                
+                # ctx = dict()
+                # ctx.update({
+                #     'default_model': 'hr.applicant',
+                #     'default_res_id': applicant_id,
+                #     'default_use_template': bool(template),
+                #     'default_template_id': template.id,
+                #     'default_composition_mode': 'comment',
+                #     # 'default_list': filename_list
+                #             })
+                # template.write({
+                #     'email_to': hr_email,
+                #     'email_from': 'system_notif@eedc.com'
+                #     })
+                # template.with_context(ctx).send_mail([applicant_id], False)
+
+                
+                msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following document.. <br/>\
+                <br/>Kindly to Review<br/> <br/>Thanks".format()
+                mail_data = {
+                    'email_from': 'system_notification@eedc.com',
+                    'subject': 'Notification of Fault in your Documentation',
+                    'email_to': hr_email,
+                    'body_html': msg_body
+                }
+            mail_id = self.env['mail.mail'].create(mail_data)
+            self.env['mail.mail'].send(mail_id)
 
 
