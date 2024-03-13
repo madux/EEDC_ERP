@@ -62,6 +62,9 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                         console.log('trying to upload documentation ')
                     }
                 });
+                // function showThankYouMessage() {
+                //     $('#thank-you-message').removeClass('d-none');
+                // }
                 xmlRequest.done(function (data) {
                     let result = JSON.stringify(data);
                     console.log(`Recieving response from server => ${result.status} //// ${result}`)
@@ -69,11 +72,12 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                         // alert(`Validation Error:  ${result.message}`);
                         // return false;
                     // }else{
-                    window.location.href = `/portal-success`;
+                    window.location.href = `/documentation-success`;
                     console.log("XMLREQUEST Successful");
                     // clearing form content
                     $("#msformidocs")[0].reset();
                     $("#build_attachment").empty()
+                    // showThankYouMessage();
                         
                     // }
                 });
@@ -210,20 +214,21 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                                 $(`#build_attachment`).append(
                                     `<div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                         <div class="row s_col_no_resize s_col_no_bgcolor">
-                                            <label class="col-4 col-sm-auto s_website_form_label" style="width: 200px" for="Docu-${elm.document_file_name}">
+                                            <label class="col-5 col-sm-5 s_website_form_label" style="min-width: 200px" for="Docu-${elm.document_file_name}">
                                                 <span class="s_website_form_label_content" >${elm.document_file_name}</span>
                                             </label>
-                                            <div class="col-sm" id="col-sm-docu">
+                                            <div class="col-4 col-sm-4" id="col-sm-docu">
                                                 <input type="file" class="form-control s_website_form_input docuClass" labelfor="Docu-${elm.document_file_name}" name="Docuname" id="${elm.document_file_id}" required="${elm.required}"/>
                                             </div>
                                         </div>
-                                        <div class="${$.inArray(elm.hr_comment, ['', 'Resubmitted']) !== -1  ? 'd-none': 'alert alert-danger'}" role="alert">
+                                        <div class="${$.inArray(elm.hr_comment, ['', 'Resubmitted']) !== -1  ? 'd-none': 'alert alert-danger'}" role="alert" style="font-size: 14px;">
                                             ${elm.hr_comment}<br/>
                                         </div>
                                     </div>
                                     `
                                 )
                             })
+                            $('.s_website_form_submit').addClass('text-center'); 
                             $('#s_website_form_submit_div').removeClass('d-none')
                             $(`#show-if-no-documentation`).addClass('d-none')
                             console.log("There is data to display")

@@ -222,3 +222,7 @@ class WebsiteHrRecruitment(http.Controller):
 			# applicant = request.env['hr.applicant'].sudo().create(vals)
 			# _logger.info('Applicant record Successfully Registered!')
 			return http.request.render('website_hr_recruitment.thankyou')
+		
+	@http.route(["/documentation-success"], type='http', auth='public', website=True, website_published=True)
+	def documentation_success(self): 
+		return request.render("hr_cbt_portal_recruitment.hr_documentation_success_template", {})
