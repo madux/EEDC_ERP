@@ -241,26 +241,30 @@ class Applicant(models.Model):
         
     def send_mail_to_hr(self, filename_list=False, applicant_id=False):
         if filename_list:
-            mail_from = 'system_notification@eedc.com'
-            hr_email = 'hr@eedc.com'
-            applicant_name = applicant_id.name if applicant_id else ""
-            subject = "Upload Notification: {}".format(applicant_name)
-            msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following documents: <br/>"\
-            "<ul>"
-            for filename in filename_list:
-                msg_body += f"<li>{filename}</li>"
-            msg_body += "</ul><br/>Open {}<br/><br/>Thanks"
-            
-            applicant_url = self.get_url(applicant_id.id)
-            msg_body = msg_body.format(applicant_name, applicant_url)
-            mail_data = {
-                'email_from': mail_from,
-                'subject': subject,
-                'email_to': hr_email,
-                'body_html': msg_body
-            }
-            mail_id = self.env['mail.mail'].create(mail_data)
-            self.env['mail.mail'].send(mail_id)
+
+            mail_from = self.env['ir.config_parameter'].sudo()\
+                .get_param('hr_cbt_portal_recruitment.system_email') or applicant_id.email_from #'system_notification@eedc.com'
+            hr_email = self.env['ir.config_parameter'].sudo()\
+                .get_param('hr_cbt_portal_recruitment.company_hr_email') #'hr@eedc.com'
+            if mail_from and hr_email:
+                applicant_name = applicant_id.name if applicant_id else ""
+                subject = "Applicant Document Upload Notification: {}".format(applicant_name)
+                msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following documents: <br/>"\
+                "<ul>"
+                for filename in filename_list:
+                    msg_body += f"<li>{filename}</li>"
+                msg_body += "</ul><br/>Open {}<br/><br/>Thanks"
+                
+                applicant_url = self.get_url(applicant_id.id)
+                msg_body = msg_body.format(applicant_name, applicant_url)
+                mail_data = {
+                    'email_from': mail_from,
+                    'subject': subject,
+                    'email_to': hr_email,
+                    'body_html': msg_body
+                }
+                mail_id = self.env['mail.mail'].create(mail_data)
+                self.env['mail.mail'].send(mail_id)
             # template_to_use = 'mail_template_hr_documentation_notification'
 
             # template = self.env.ref(f'hr_cbt_portal_recruitment.{template_to_use}')

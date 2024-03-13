@@ -48,7 +48,8 @@
         'data/mail_template_data.xml',
         'data/survey_email.xml',
         'views/preloader.xml',
-        'data/documentation_data.xml'
+        'data/documentation_data.xml',
+        'data/ir_config_parameter.xml'
 
     ],
     'assets': {
