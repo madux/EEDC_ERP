@@ -137,7 +137,7 @@ class WebsiteHrRecruitment(http.Controller):
 						'applicant_submitted_document_file': attachment_id.id,
 						'hr_comment': 'Resubmitted' if applicant_document_id.hr_comment else ""
 						})
-		# applicant_id.send_mail_to_hr(submitted_filename)	
+		applicant_id.send_mail_to_hr(submitted_filename, applicant_id)	
 		return json.dumps({'status': True, 'data': 'successfully getting it', 'message': "Form Submitted!"})
 			
 	@http.route([
@@ -222,3 +222,7 @@ class WebsiteHrRecruitment(http.Controller):
 			# applicant = request.env['hr.applicant'].sudo().create(vals)
 			# _logger.info('Applicant record Successfully Registered!')
 			return http.request.render('website_hr_recruitment.thankyou')
+		
+	@http.route(["/documentation-success"], type='http', auth='public', website=True, website_published=True)
+	def documentation_success(self): 
+		return request.render("hr_cbt_portal_recruitment.hr_documentation_success_template", {})

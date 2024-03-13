@@ -168,6 +168,38 @@
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
+        <record id="mail_template_hr_documentation_notification" model="mail.template">
+            <field name="name">HR Notification for Documentation Upload</field>
+            <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
+            <field name="subject">Notification for new Documentation Upload: "{{object.name}}"</field>
+            <field name="email_to"></field>
+            <field name="description">Notification of Fault in your Documentation</field>
+            <field name="body_html" type="html">
+                <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; border-collapse: collapse; margin-left: 20px;">
+                    <tr>
+                        <td valign="top" style="padding: 0px 10px;">
+                            <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                                    Dear HR<br/><br/>
+                                    This is a notification that the applicant <t t-esc="object.name"/>  has uploaded the following document. <br/>
+                                    
+                                    <ul>
+                                        <t t-foreach="ctx.get('default_list')" t-as="item">
+                                            <li>
+                                                <t t-esc="item"/>
+                                            </li>
+                                        </t>
+                                    </ul>
+                                    
+                                     <br/>
+                                </p><br/>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
         <record id="mail_template_applicants_rejection" model="mail.template">
             <field name="name"> Rejection Email </field>
             <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
