@@ -62,9 +62,6 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                         console.log('trying to upload documentation ')
                     }
                 });
-                // function showThankYouMessage() {
-                //     $('#thank-you-message').removeClass('d-none');
-                // }
                 xmlRequest.done(function (data) {
                     let result = JSON.stringify(data);
                     console.log(`Recieving response from server => ${result.status} //// ${result}`)
@@ -77,7 +74,6 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                     // clearing form content
                     $("#msformidocs")[0].reset();
                     $("#build_attachment").empty()
-                    // showThankYouMessage();
                         
                     // }
                 });

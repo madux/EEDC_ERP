@@ -63,12 +63,6 @@
                                 <div class="alert alert-info d-none" id="show-if-no-documentation" role="alert">
                                     No documentation to upload<br/>
                                 </div>
-                                <style>
-                                    /* Custom CSS for button styling */
-                                    .start-documentation {
-                                        width: auto;
-                                    }
-                                </style>                    
                                 
                                 <div class="text-center mt-3" id="start_documentation_div">
                                     <div class="alert alert-info" role="alert">
@@ -79,10 +73,7 @@
                                     <a class="btn btn-secondary start-documentation" id="start-documentation" style="display: inline-block; margin-top: 10px;">
                                         Click to Start Documentation
                                     </a>
-                                </div>
-                                <div id="thank-you-message" class="alert alert-success d-none">
-                                    Thank you for the documentation!
-                                </div>                           
+                                </div>                        
                             </div>
                             
                         </div>
