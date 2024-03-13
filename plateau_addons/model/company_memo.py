@@ -1,0 +1,15 @@
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+
+
+class CompanyMemo(models.Model):
+    _inherit = "memo.model"
+
+    company_id = fields.Many2one(
+        'res.company', 
+        default=lambda s: s.env.user.company_id.id,
+        string='Company'
+        )
+    
+    
+     

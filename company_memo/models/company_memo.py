@@ -351,6 +351,8 @@ class Memo_Model(models.Model):
         )
     
     def send_memo_to_contacts(self):
+        if not self.partner_ids:
+            raise ValidationError('No partner is select, check to ensure your memo option is in "All or Selected"')
         view_id = self.env.ref('mail.email_compose_message_wizard_form')
         return {
                 'name': 'Send memo Message',

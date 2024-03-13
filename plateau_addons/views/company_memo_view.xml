@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="memo_model_form_view_plateau_addons">
+            <field name="name">memo view inherited for plateau state addons</field>
+            <field name="model">memo.model</field>
+            <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='currency_id']" position="before">
+                    <field name="company_id" string="Company" invisible="0" readonly="1" required="1"
+                    options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                </xpath>
+            </field>
+        </record>
+ 
+        
+    </data>
+</odoo>
