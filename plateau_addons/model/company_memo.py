@@ -11,5 +11,8 @@ class CompanyMemo(models.Model):
         string='Company'
         )
     
+    branch_id = fields.Many2one('multi.branch', string='Section/Branch',
+                                default=lambda self: self.env.user.branch_id.id, required=False)
+    
     
      

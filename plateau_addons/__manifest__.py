@@ -4,7 +4,7 @@
     'author': "Maduka Sopulu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize base modules',
-    'depends': ['base', 'account', 'account_accountant', 'currency_rate_live', 'company_memo'],
+    'depends': ['base', 'account', 'account_accountant', 'currency_rate_live', 'company_memo', 'ik_multi_branch'],
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
         'security/ir.model.access.csv',

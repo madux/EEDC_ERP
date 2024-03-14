@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='currency_id']" position="before">
-                    <field name="company_id" string="Company" invisible="0" readonly="1" required="1"
+                    <field name="branch_id" string="MDA" invisible="0" readonly="1" required="1"
                     options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                 </xpath>
             </field>

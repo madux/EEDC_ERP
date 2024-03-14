@@ -129,6 +129,15 @@
             <field name="date_end">2023-12-30</field>
         </record>
         
+        <record model="hr.level" id="hr_level_jm">
+            <field name="name">JM</field>
+        </record>
+        <record model="hr.level" id="hr_level_mm">
+            <field name="name">MM</field>
+        </record>
+        <record model="hr.level" id="hr_level_sm">
+            <field name="name">SM</field>
+        </record>
         
         <!-- <record model="pms.year" id="pms_year_2023_qrt3">
             <field name="name">July - Sept 2023 [3rd Quarterly]</field>

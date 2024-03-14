@@ -11,6 +11,8 @@ class HREMployeeTransfer(models.Model):
         'employee_transfer_id', 
         string='Transfer Details'
         )
+    memo_id = fields.Many2one('memo.model', string='Memo Id')
+    
 
     
     def update_transfer_details(self):

@@ -40,7 +40,7 @@
     ],
     'assets': {'web.assets_backend': [
         '/hr_pms/static/src/js/dashboard.js',
-        '/hr_pms/static/src/js/hr_pms_fields.js',
+        # '/hr_pms/static/src/js/hr_pms_fields.js',
     ]},
     "active": False,
     'application': True,

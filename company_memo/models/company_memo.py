@@ -713,21 +713,11 @@ class Memo_Model(models.Model):
                             'state': 'Done'
                             })
                     if last_stage.approver_ids or random_memo_approver_ids:
-                        # approver_id = last_stage.approver_id.id \
-                        #         if last_stage.approver_id else random.choice(random_memo_approver_ids) \
-                        #             if random_memo_approver_ids else False
                         approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
                         self.sudo().write({
-                            'approver_id': random.choice(approver_ids),
+                            # 'approver_id': random.choice(approver_ids),
                             'approver_ids': [(4, appr) for appr in approver_ids],
-                            # 'set_staff': approver_id
                             })
-                    # else:
-                    #     raise ValidationError("""
-                    #                           Please contact admin to link the final validation Personnel 
-                    #                           for this request. Go to memo setting for the memo type and department 
-                    #                           to link the final stage approver or employees for final validation
-                    #                           """)
 
     def confirm_memo(self, employee, comments, from_website=False): 
         # user_id = self.env['res.users'].search([('id','=',self.env.user.id)])
@@ -871,8 +861,26 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
+
+        elif self.memo_type.memo_key == "employee_update":
+            return self.generate_employee_update_request()
         else:
             pass
+
+    def generate_employee_update_request(self, body_msg=False):
+        employee_ids = [rec.employee_id.id for rec in self.employee_transfer_line_ids]
+        return {
+              'name': 'Employee Transfer',
+              'view_type': 'form',
+              "view_mode": 'form',
+              'res_model': 'hr.employee.transfer',
+              'type': 'ir.actions.act_window',
+              'target': 'new',
+              'context': {
+                  'default_employee_ids': employee_ids,
+                  'default_employee_transfer_lines': self.employee_transfer_line_ids.ids
+              },
+        }
 
     def generate_stock_material_request(self, body_msg, body):
         stock_picking_type_out = self.env.ref('stock.picking_type_out')
@@ -910,7 +918,7 @@ class Memo_Model(models.Model):
             """Check if the user is enlisted as the approver for memo type"""
             view_id = self.env.ref('stock.view_picking_form').id
             ret = {
-                'name': "Purchase Order",
+                'name': "Stock Request",
                 'view_mode': 'form',
                 'view_id': view_id,
                 'view_type': 'form',
@@ -1320,40 +1328,45 @@ class Memo_Model(models.Model):
     #         return inv
     #     return inv
     def validate_account_invoices(self):
+        if not self.invoice_ids:
+            raise ValidationError("Please ensure the invoice lines are added")
+
         invalid_record = self.mapped('invoice_ids').filtered(lambda s: not s.partner_id or not s.payment_journal_id)
         if invalid_record:
             raise ValidationError("Partner, Payment journal must be selected. Also ensure the status is in draft")
         
     def action_post_and_vallidate_payment(self): # Register Payment
         self.validate_account_invoices()
+        outbound_payment_method = self.env['account.payment.method'].sudo().search(
+                [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
         for count, rec in enumerate(self.invoice_ids, 1):
             if not rec.invoice_line_ids:
                 raise ValidationError(
                     f'Invoice at line {count} does not have move lines'
-                    )   
+                    ) 
             else:
                 if rec.payment_state == 'not_paid': 
                     if rec.state == 'draft':
                         rec.action_post()
-        outbound_payment_method = self.env['account.payment.method'].sudo().search(
-                [('code', '=', 'manual'), ('payment_type', '=', 'outbound')], limit=1)
-        payment_method = 2
-        journal_id = rec.payment_journal_id
-        if journal_id:
-            payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
-                journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
-                    if outbound_payment_method else payment_method
-        payments = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=self.invoice_ids.ids).create({
-                'group_payment': False,
-                'payment_method_line_id': payment_method,
-            })._create_payments()
-        self.finalize_payment()
+        
+            payment_method = 2
+            journal_id = rec.payment_journal_id
+            if journal_id:
+                payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
+                    journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
+                        if outbound_payment_method else payment_method
+            payments = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=self.invoice_ids.ids).create({
+                    'group_payment': False,
+                    'payment_method_line_id': payment_method,
+                })._create_payments()
+            self.finalize_payment()
 
     def finalize_payment(self):
         if self.invoice_ids:
             allpaid_invoice = self.mapped('invoice_ids').filtered(lambda s: s.payment_state in ['paid', 'in_payment'])
             if allpaid_invoice:
                 self.state = "Done"
+                self.update_final_state_and_approver()
         else:
             self.state = "Done"
  

@@ -344,6 +344,7 @@ class PortalRequest(http.Controller):
 		
 	@http.route(['/check-cash-retirement'], type='json', website=True, auth="user", csrf=False)
 	def check_cash_retirement(self, **post):
+		_logger.info(f"Cash advance posting: {post}")
 		user = request.env.user 
 		request_type = post.get('request_type')
 		staff_num = post.get('staff_num')
@@ -487,7 +488,7 @@ class PortalRequest(http.Controller):
 		})
 
 	@http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
-	def get_portal_product(self, **post):
+	def get_portal_employee(self, **post):
 		request_type_option = post.get('request_type')
 		if request_type_option:
 			if request_type_option == "employee":
@@ -785,6 +786,7 @@ class PortalRequest(http.Controller):
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
+			'memo_type_key': memo_id.memo_type.memo_key,
 		})
 		_logger.info(f'''
 			   Successfully Registered! with memo id Approver = {approver_ids} \
@@ -809,6 +811,8 @@ class PortalRequest(http.Controller):
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
+					'memo_type': memo_id.memo_type.id,
+					'memo_type_key': memo_id.memo_type.memo_key,
 					'product_id': product_id.id, 
 					#int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,

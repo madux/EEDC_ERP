@@ -61,22 +61,24 @@
                     <!-- <field name="employee_ids" widget="many2many_tags"/> -->
                 </group>
                 <notebook>
-                    <page string="Transfer Details" name="transfer_details_page">
+                    <page string="Employee Details" name="transfer_details_page">
                         <field name="employee_ids" widget="one2many_list">
                             <tree>
                                 <!-- <field name="employee_transfer_history" /> -->
+                                <field name="name" />
                                 <field name="department_id" />
-                                <field name="age" />
-                                <field name="state_id" />
-                                <field name="employee_transfer_history">
-                                    <tree editable="bottom">
-                                        <field name="employee_id" />
-                                        <!-- <field name="current_dept_id"/>
-                                        <field name="new_role"/>
-                                        <field name="transfer_dept"/>
-                                        <field name="new_district"/> -->
-                                    </tree>
-                                </field>
+                                <field name="employee_number" />
+                            </tree>
+                        </field>
+                    </page>
+                    <page string="Transfer Details" name="transfer_details_page">
+                        <field name="employee_transfer_lines" widget="one2many_list">
+                            <tree editable="bottom">
+                                <field name="employee_id"/>
+                                <field name="current_dept_id" readonly="1"/>
+                                <field name="transfer_dept"/>
+                                <field name="new_role"/>
+                                <field name="new_district"/>
                             </tree>
                         </field>
                     </page>

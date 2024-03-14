@@ -830,6 +830,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#existing_ref_label').text("Existing Ref #");
                 $('#div_existing_order').addClass('d-none');
                 clearAllElement();
+                let self = this;
                 // checkConfiguredStages(this, selectedTarget);
                 let staff_num = $('#staff_id').val();
                 this._rpc({
@@ -899,7 +900,8 @@ odoo.define('portal_request.portal_request', function (require) {
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if(selectedTarget == "cash_advance"){
                             var staff_num = $('#staff_id').val();
-                            this._rpc({
+                            console.log('fuckinng thissss', self);
+                            self._rpc({
                                 route: `/check-cash-retirement`,
                                 params: {
                                     'staff_num': staff_num,
@@ -1082,7 +1084,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     ev.preventDefault();
                     $(ev.target).val()
                     var selectRequestOption = $('#selectRequestOption');
-                    if (!selectRequestOption.val() == "employee_update"){
+                    if (selectRequestOption.val() != "employee_update"){
                         console.log("Building product row with form data=> ", setProductdata)
                         buildProductRow(selectRequestOption.val())
                     }
@@ -1144,7 +1146,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     //     }
                     // )
                     let selectRequestOptionValue = $('#selectRequestOption').val()
-                    if(!selectRequestOptionValue === 'employee_update'){
+                    if(selectRequestOptionValue != 'employee_update'){
                         $(`#tbody_product > tr.prod_row`).each(function(){
                             var row_co = $(this).attr('row_count') 
                             var list_item = {
