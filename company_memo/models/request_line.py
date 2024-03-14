@@ -4,7 +4,6 @@ from odoo import models, fields, api, _
 class RequestLine(models.Model):
     _name = "request.line"
 
-
     memo_id = fields.Many2one(
         "memo.model", 
         string="Memo ID"

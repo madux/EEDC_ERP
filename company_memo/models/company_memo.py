@@ -1106,6 +1106,8 @@ class Memo_Model(models.Model):
                     }) for pr in self.product_ids],
                 })
             self.move_id = inv.id
+            self.state = "Done"
+            self.update_final_state_and_approver()
             return self.record_to_open(
             "account.move", 
             view_id,
@@ -1116,74 +1118,73 @@ class Memo_Model(models.Model):
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments")
         
     def generate_soe_entries(self):
-        # self.follower_messages(body)
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
-            self.write({
-                'state': 'Approve2'
-            })
-            # """Check if the user is enlisted as the approver for memo type
-            # if approver is an account officer, system generates move and open the exact record"""
-            # view_id = self.env.ref('account.view_move_form').id
-            # journal_id = self.env['account.journal'].search(
-            # [('type', '=', 'sale'),
-            #  ('code', '=', 'INV')
-            #  ], limit=1)
-            # # 5000 - 3000
-            # account_move = self.env['account.move'].sudo()
-            # inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-            # if not inv:
-            #     partner_id = self.employee_id.user_id.partner_id
-            #     inv = account_move.create({ 
-            #         'memo_id': self.id,
-            #         'ref': self.code,
-            #         'origin': self.code,
-            #         'partner_id': partner_id.id,
-            #         'company_id': self.env.user.company_id.id,
-            #         'currency_id': self.env.user.company_id.currency_id.id,
-            #         # Do not set default name to account move name, because it
-            #         # is unique 
-            #         'name': f"SOE {self.code}",
-            #         'move_type': 'out_receipt',
-            #         'invoice_date': fields.Date.today(),
-            #         'date': fields.Date.today(),
-            #         'journal_id': journal_id.id,
-            #         'invoice_line_ids': [(0, 0, {
-            #                 'name': pr.product_id.name if pr.product_id else pr.description,
-            #                 'ref': f'{self.code}: {pr.product_id.name}',
-            #                 'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-            #                 'price_unit': pr.used_total,
-            #                 'quantity': pr.used_qty,
-            #                 'discount': 0.0,
-            #                 'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-            #                 'product_id': pr.product_id.id if pr.product_id else None,
-            #         }) for pr in self.product_ids],
-            #     })
-                # for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-                #     cash_advance_amount = self.env['account.move.line'].search([
-                #         ('code', '=', pr.code)
-                #         ], limit=1) # locating the existing cash_advance_line to get the initial request amount
-                #     if cash_advance_amount:
-                #         approved_cash_advance_amount = cash_advance_amount.price_unit
-                #         balance_remaining = approved_cash_advance_amount - pr.used_total # e.g 5000 - 3000 = 2000
-                #         inv.invoice_line_ids = [(0, 0, {
-                #                 'name': pr.product_id.name if pr.product_id else pr.description,
-                #                 'ref': f'{self.code}: {pr.product_id.name}',
-                #                 'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                #                 'price_unit': balance_remaining, # pr.used_total,
-                #                 'quantity': pr.used_qty,
-                #                 'discount': 0.0,
-                #                 'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                #                 'product_id': pr.product_id.id if pr.product_id else None,
-                #         })]
-                #         pr.update({'retired': True}) # updating the Line as retired
-            # self.update_inventory_product_quantity()
-                # return self.record_to_open(
-                # "account.move", 
-                # view_id,
-                # inv.id,
-                # f"Journal Entry SOE - {inv.name}"
-                # ) 
+             
+            """Check if the user is enlisted as the approver for memo type
+            if approver is an account officer, system generates move and open the exact record"""
+            view_id = self.env.ref('account.view_move_form').id
+            journal_id = self.env['account.journal'].search(
+            [('type', '=', 'sale'),
+             ('code', '=', 'INV')
+             ], limit=1)
+            # 5000 - 3000
+            account_move = self.env['account.move'].sudo()
+            inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            if not inv:
+                partner_id = self.employee_id.user_id.partner_id
+                inv = account_move.create({ 
+                    'memo_id': self.id,
+                    'ref': self.code,
+                    'origin': self.code,
+                    'partner_id': partner_id.id,
+                    'company_id': self.env.user.company_id.id,
+                    'currency_id': self.env.user.company_id.currency_id.id,
+                    # Do not set default name to account move name, because it
+                    # is unique 
+                    'name': f"SOE {self.code}",
+                    'move_type': 'out_receipt',
+                    'invoice_date': fields.Date.today(),
+                    'date': fields.Date.today(),
+                    'journal_id': journal_id.id,
+                    'invoice_line_ids': [(0, 0, {
+                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'ref': f'{self.code}: {pr.product_id.name}',
+                            'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                            'price_unit': pr.used_amount,
+                            'quantity': pr.used_qty,
+                            'discount': 0.0,
+                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                            'product_id': pr.product_id.id if pr.product_id else None,
+                    }) for pr in self.product_ids],
+                })
+                for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
+                    cash_advance_amount = self.env['account.move.line'].search([
+                        ('code', '=', pr.code)
+                        ], limit=1) # locating the existing cash_advance_line to get the initial request amount
+                    if cash_advance_amount:
+                        approved_cash_advance_amount = cash_advance_amount.price_unit
+                        balance_remaining = approved_cash_advance_amount - pr.used_amount # e.g 5000 - 3000 = 2000
+                        inv.invoice_line_ids = [(0, 0, {
+                                'name': pr.product_id.name if pr.product_id else pr.description,
+                                'ref': f'{self.code}: {pr.product_id.name}',
+                                'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                                'price_unit': balance_remaining, # pr.used_total,
+                                'quantity': pr.used_qty,
+                                'discount': 0.0,
+                                'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                                'product_id': pr.product_id.id if pr.product_id else None,
+                        })]
+                        pr.update({'retired': True}) # updating the Line as retired
+            self.update_inventory_product_quantity()
+            self.state = "Done"
+            self.update_final_state_and_approver()
+            return self.record_to_open(
+            "account.move", 
+            view_id,
+            inv.id,
+            f"Journal Entry SOE - {inv.name}"
+            ) 
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments")
          

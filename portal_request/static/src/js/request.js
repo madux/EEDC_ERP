@@ -934,8 +934,6 @@ odoo.define('portal_request.portal_request', function (require) {
                             }); 
                         }
                         else if(selectedTarget == "soe"){
-                            // $('#amount_section').removeClass('d-none');
-                            // $('#amount_fig').attr("required", true); 
                             displayNonLeaveElement()
                             $('.add_item').addClass('d-none')
                             $('#product_form_div').removeClass('d-none'); 
