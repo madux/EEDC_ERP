@@ -9,7 +9,7 @@ class EmployeeImport(models.Model):
     _name = 'employees.import'
 
     file = fields.Binary(string="Excel File", required=True)
-    description = fields.Char(max_length="255", readonly=True)
+    description = fields.Char(readonly=True)
     state = fields.Selection(
         selection=[
             ("new", "New"),

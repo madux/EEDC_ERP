@@ -13,7 +13,7 @@ class Forward_Wizard(models.TransientModel):
     next_stage_id = fields.Many2one('memo.stage', 'Next stage')
     is_approver = fields.Selection([('yes', 'Yes'),('no', 'No')],default="", string="Is Approver")
     users_followers = fields.Many2many('hr.employee', string='Add followers')
-    is_officer = fields.Boolean(string="Is Officer", helps="Checks if the current user is a normal officer")
+    is_officer = fields.Boolean(string="Is Officer", help="Checks if the current user is a normal officer")
     is_approver_stage = fields.Boolean(string="Is Approval stage", help="Used to determine if the last one is approver stage")
     all_superior_ids = fields.Many2many('hr.employee',string="Employees for approvals",compute="_load_all_superior_ids") 
 

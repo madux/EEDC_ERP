@@ -134,7 +134,7 @@ class Applicant(models.Model):
         'applicant_id', 
         string='Documents to sign')
     
-    audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
+    audited = fields.Boolean(default=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
     stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
 
     def create_employee_from_applicant(self):
