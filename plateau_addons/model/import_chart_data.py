@@ -19,6 +19,7 @@ class ImportPLCharts(models.TransientModel):
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
+
     account_type = fields.Selection(
         selection=[
             ("asset_receivable", "Receivable"),
@@ -43,14 +44,28 @@ class ImportPLCharts(models.TransientModel):
         string="Account Type", tracking=True,
         required=True,
     )
+    journal_type = fields.Selection(
+        selection=[
+            ("purchase", "Purchase"),
+            ("sale", "Sale"),
+            ("bank", "Bank"),
+            ("cash", "Cash"),
+            ("off_balance", "Off-Balance Sheet"),
+        ],
+        string="Journal Type", tracking=True,
+        required=True,
+    )
+
+    default_account = fields.Many2one('account.account', string="Default account")
 
     def create_chart_of_account(self, name, code):
         account_chart_obj = self.env['account.account']
-        if name:
-            account_existing = account_chart_obj.search([('name', '=', name.strip().title())], limit = 1)
+        if name and code:
+            account_existing = account_chart_obj.search([('code', '=', int(code))], limit = 1)
             account = account_chart_obj.create({
-                        "name": name.strip().title(),
-                        "code": code,
+                        "name": name.strip().upper(),
+                        "code": int(code),
+                        "reconcile": True,
                         "account_type": self.account_type,
                     }) if not account_existing else account_existing
             return account
@@ -69,33 +84,85 @@ class ImportPLCharts(models.TransientModel):
             return company
         else:
             return None
+        
+    # def create_journal(self, name, company_registry):
+    #     if name and company_registry:
+    #         company_obj = self.env['res.company']
+    #         company = company_obj.search([('company_registry', '=', company_registry)], limit=1)
+    #         if not company:
+    #             company = self.env['res.company'].create({
+    #                 'name': name,
+    #                 'company_registry': company_registry,
+    #             })
+    #         return company
+    #     else:
+    #         return None
 
-    def generate_analytic_plan(self, company):
+    def generate_analytic_plan(self, partner):
         analytic_account_plan = self.env['account.analytic.plan'].sudo()
-        if company:
-            account_existing = analytic_account_plan.search([('code', '=', company.company_registry)], limit = 1)
+        if partner:
+            account_existing = analytic_account_plan.search([('code', '=', partner.vat)], limit = 1)
             account = analytic_account_plan.create({
-                        "name": company.name,
-                        "code": company.company_registry,
-                        "company_id": company.id,
+                        "name": partner.name,
+                        "code": partner.vat,
                         "default_applicability": 'optional',
                     }) if not account_existing else account_existing
             return account
         else:
             return None
+
+    def create_contact(self, name, code):
+        if name and code:
+            partner = self.env['res.partner'].search([('vat', '=', code)], limit=1)
+            if not partner:
+                partner = self.env['res.partner'].create({
+                    'name': name,
+                    'vat': code,
+                })
+            return partner
+        else:
+            return None
         
-    def create_analytic_account(self, company):
+    def create_branch(self, name, code):
+        if name and code:
+            branch = self.env['multi.branch'].search([('code', '=', code)], limit=1)
+            if not branch:
+                branch = self.env['multi.branch'].create({
+                    'name': name,
+                    'code': code,
+                })
+            return branch
+        else:
+            return None
+        
+    def create_analytic_account(self, name, partner, branch):
         analytic_account = self.env['account.analytic.account'].sudo()
-        if company:
-            plan_id = self.generate_analytic_plan(company)
-            account_existing = analytic_account.search([('code', '=',company.company_registry)], limit = 1)
+        if partner:
+            plan_id = self.generate_analytic_plan(partner)
+            account_existing = analytic_account.search([('code', '=',partner.vat)], limit = 1)
             account = analytic_account.create({
-                        "name": company.name.strip().title() +' - '+ company.company_registry,
-                        "partner_id": company.partner_id.id,
-                        "company_id": company.id,
+                        "name": name, #partner.name.strip().title() +' - '+ partner.vat,
+                        "partner_id": partner.id,
+                        "branch_id": branch.id,
+                        "company_id": self.env.user.company_id.id,
                         "plan_id": plan_id.id if plan_id else False,
                     }) if not account_existing else account_existing
             return account
+        else:
+            return None
+        
+    def create_journal(self, code, name, branch, account):
+        if name and code:
+            journal_obj =  self.env['account.journal']
+            account_journal_existing = journal_obj.search([('code', '=',code)], limit = 1)
+            journal = journal_obj.create({
+                'name': name,
+                'type': self.journal_type,
+                'code': code,
+                'branch_id': branch.id,
+                'default_account_id': self.default_account.id
+            }) if not account_journal_existing else account_journal_existing
+            return journal
         else:
             return None
 
@@ -150,11 +217,19 @@ class ImportPLCharts(models.TransientModel):
         success_records = []
         unsuccess_records = []
         for row in file_data:
-            if row[0]:
+            if row[0] and row[1] and row[5] and row[2]:
                 account_id = self.create_chart_of_account(row[5], row[2])
-                company_id = self.create_company(row[1].strip(), row[0])
-                analytic_account_id = self.create_analytic_account(company_id)
-                kwargs = {'code': row[0], 'description': row[3]}
+                _logger.info(
+                    f"Surviving thiws ganme {row} and {account_id.name}"
+                )
+                partner = self.create_contact(row[1].strip(), row[0])
+                branch = self.create_branch(row[1].strip(), row[0])
+                journal = self.create_journal(row[0], row[1], branch, account_id)
+                account_id.update({
+                    'allowed_journal_ids': [(4, journal.id)]
+                })
+                self.create_analytic_account(row[3], partner, branch)
+                # kwargs = {'code': row[0], 'description': row[3]}
                 # vendor_bill = self.create_vendor_bill(company_id, account_id, analytic_account_id, row, kwargs)
                 _logger.info(f'data artifacts generated: {account_id.name}')
                 count += 1

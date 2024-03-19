@@ -18,9 +18,12 @@
 
                     <field name="data_file" filename="filename" widget="binary"/>
                     <field name="account_type" required="1"/>
+                    <field name="journal_type" required="1"/>
+                    <field name="default_account" required="1"/>
+
                 </group>
                 <footer>
-                    <button name="import_records_action" string="Import Applicants Record" type="object"  class="oe_highlight"/>
+                    <button name="import_records_action" string="Import Account Record" type="object"  class="oe_highlight"/>
                     or
                     <button string="Cancel" class="oe_link" special="cancel"/>
                 </footer>

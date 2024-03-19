@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE xml>
+<odoo>
+    <data>
+        <record id="account_major_user" model="res.groups">
+            <field name="name">Top Account User</field>
+            <field name="category_id" ref="base.module_category_accounting_accounting"/>
+             <!-- <field name="users" eval="[(4, ref('base.group_system'))]"/> -->
+			<field name="implied_ids" eval="[
+            (4, ref('base.group_system')),
+            (4, ref('account.group_account_manager')),
+            ]" />
+        </record>
+    </data>
+</odoo>

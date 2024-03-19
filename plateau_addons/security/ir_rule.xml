@@ -2,27 +2,6 @@
 <!DOCTYPE xml>
 <odoo>
     <data>
-        
-	    <record id="memo_user_see_own_company_rule" model="ir.rule">
-            <field name="name">Memo User See Own Company Record</field>
-            <field name="model_id" ref="model_memo_model"/>
-            <field name="groups" eval="[(6, 0, [ref('base.group_user')])]"/>
-            <field name="domain_force">[
-            '|',('company_id.id','=', user.company_id.id),
-            ('company_id.id','in', user.company_id.ids),
-            ]</field>
-        </record>
-
-        <record id="account_move_user_see_own_company_rule" model="ir.rule">
-            <field name="name">Memo User See Own Company Record</field>
-            <field name="model_id" ref="model_memo_model"/>
-            <field name="groups" eval="[(6, 0, [ref('company_memo.mainmemo_officer')])]"/>
-            <field name="domain_force">[
-            '|',('company_id.id','=', user.company_id.id),
-            ('company_id.id','in', user.company_id.ids),
-            ]</field>
-        </record>
-
         <record id="manager_memo_see_all_record" model="ir.rule">
             <field name="name">General Account Users See All Memo Records</field>
             <field name="model_id" ref="model_memo_model"/>
@@ -50,25 +29,5 @@
             <field name="domain_force">[(1,'=',1)]</field>
         </record>
 
-        <record id="hr_employee_comp_rule" model="ir.rule">
-            <field name="name">Employee multi company rule x</field>
-            <field name="model_id" ref="hr.model_hr_employee"/>
-            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
-             <field name="groups" eval="[(6, 0, [ref('plateau_addons.main_company_admin')])]"/>
-        </record>
-
-        <!-- <record id="main_company_see_all_emloyee_rule" model="ir.rule">
-            <field name="name">Main Company Admin see Department multi company rule: Please set user to group "Main Company Admin" </field>
-            <field name="model_id" ref="hr.model_hr_department"/>
-            <field name="domain_force">['|',('company_id','=',False),('company_id', 'not in', company_ids)]</field>
-            <field name="groups" eval="[(6, 0, [ref('plateau_addons.main_company_admin')])]"/>
-        </record>
-
-        <record id="main_company_see_all_emloyee_rule" model="ir.rule">
-            <field name="name">Main Company Admin see employee multi company rule: Please set user to group "Main Company Admin" </field>
-            <field name="model_id" ref="hr.model_hr_employee"/>
-            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
-            <field name="groups" eval="[(6, 0, [ref('plateau_addons.main_company_admin')])]"/>
-        </record> -->
     </data>
 </odoo>

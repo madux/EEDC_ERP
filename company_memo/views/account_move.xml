@@ -12,10 +12,10 @@
                 <xpath expr="//field[@name='ref']" position="after">
                     <field name="memo_id" readonly="1" force_save="1"/>
                     <field name="origin" required="0"/>
-                    <field name="payment_journal_id" required="0"/>
+                    <field name="journal_id" required="0"/>
                     <field name="move_type" required="0" invisible="1"/>
                 </xpath>
-                <xpath expr="//field[@name='payment_journal_id']" position="after">
+                <xpath expr="//field[@name='journal_id']" position="after">
                     <field name="move_type" required="0" invisible="0" readonly="0"/>
                     <field name="example_invalid" invisible="1"/>
                 </xpath>

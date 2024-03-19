@@ -11,11 +11,11 @@
                 <form string="Memo Record">
                 <header>
                     <button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
-                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request', 'employee_update']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request', 'employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
                     <button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
                     <button name="action_post_and_vallidate_payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/>
                     <!-- MEMO THINGS -->
-                    <button name="send_memo_to_contacts" string="Send Memo" type="object" class="oe_highlight" confirm="Are you sure you want to make send memo?" attrs="{'invisible':['|','|', ('user_is_approver','!=',True), ('state','not in',['Approve2']), ('memo_type_key','not in',['internal', 'Internal'])]}"/>
+                    <button name="send_memo_to_contacts" string="Send Memo" type="object" class="oe_highlight" confirm="Are you sure you want to make send memo?" attrs="{'invisible':['|','|', '|', ('user_is_approver','!=',True), ('state','not in',['Approve2']), ('memo_type_key','not in',['internal', 'Internal']), ('internal_memo_option','not in',['all', 'selected'])]}"/>
                     <!-- MEMO THINGS -->
                     <!-- <button name="Register_Payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('is_request_completed','=', True),('memo_type_key','not in',['Payment'])]}"/> -->
                     <button name="complete_memo_transactions" string="Generate &amp; Comfirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type_key','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
@@ -76,12 +76,12 @@
                             <group name="normal_memo_group1">
                     <!-- MEMO THINGS -->
                                 <field name = "internal_memo_option" string="Memo Option" 
-                                    attrs="{'invisible': [('memo_type_key', 'not in', ['Internal', 'internal'])],
-                                    'required': [('user_is_approver', '=', True),('memo_type_key', 'in', ['Internal', 'internal'])]}"
-                                    readonly="0"/>
+                                    attrs="{'invisible': [('memo_type_key', 'not in', ['Internal', 'internal'])], 'readonly':[('state','not in',['submit'])]}" readonly="0"/>
+                                    <!-- 'required': [('user_is_approver', '=', True),('memo_type_key', 'in', ['Internal', 'internal'])]}" -->
+                                    <!-- /> -->
                                  <field name = "partner_ids" string="Reciepients" widget="many2many_tags" 
-                                attrs="{'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', 'not in', ['all']), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
-                                readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                                attrs="{'readonly':[('state','not in',['submit'])], 'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', '=', 'selected'), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
+                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                     <!-- MEMO THINGS -->
                                 <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'readonly':[('state','not in',['submit'])]}"/>
                                 <field name="phone" readonly="1"/>
@@ -115,6 +115,9 @@
                                 <field name="project_id" attrs="{'readonly':[('state','not in',['submit'])]}" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
                                 <field widget="binary" height="64" name="file_upload" filename="file_namex" required="0" invisible="1" string="Upload File" />
                                 <field name="file_namex" invisible="1"/> 
+                                <field name="to_create_document" invisible="0"/> 
+                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)]}"/> 
+                                <field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)]}"/> 
                                
                                 <!-- <field name = "employee_ids" string="Employee Reciepients" 
                                 widget="many2many_tags" attrs="{'invisible': [('internal_memo_all_employee_option', '!=', 'employees')], 'required': [('internal_memo_all_employee_option', '=', 'employee')]}" 
@@ -169,7 +172,7 @@
                                          
                                         <field name="ref" string="Ref" invisible="0"/>  
                                         <field name="date" string="Date" invisible="0"/> 
-                                        <field name="payment_journal_id" string="Payment journal" required="0"/>  
+                                        <field name="journal_id" string="Payment journal" required="0"/>  
                                         <field name="amount_total" string="Amount" invisible="0"/> 
                                         <field name="state" string="Status" invisible="0"/> 
                                         <button name="action_post" string="Post" class="oe_highlight btn-sm" type="object" attrs="{'invisible':[('memo_state','not in',['Approve'])]}" 
@@ -303,6 +306,8 @@
                             <filter name="Approve" string="Approve" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
                             <filter name="Sent" string="Sent" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
                             <filter name="Done" string="Done" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
+                            <!-- <filter name="group_to_create_document" string='Document Request' domain="[('to_create_document','=', True)]" context="{'group_by' : 'to_create_document'}"/> -->
+                            <filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
                             <filter name="Date" string="Date" icon="terp-personal" domain="[]" context="{'group by':'date'}" />
                         </group>
                 </search>
@@ -343,6 +348,14 @@
            <!-- <field name="domain">[('is_house','=',True)]</field>
             <field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
             <field name="search_view_id" ref="view_building_type_search_filter"/> -->
+             <field name="view_mode">tree,form</field>
+        </record>
+        <record model="ir.actions.act_window" id="internal_memo_model_document_action">
+            <field name="name">Documents Request</field>
+            <field name="res_model">memo.model</field>
+            <field name="type">ir.actions.act_window</field>
+           <field name="domain">[('to_create_document','=',True)]</field>
+            <field name="context">{'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
              <field name="view_mode">tree,form</field>
         </record>
 
@@ -393,10 +406,10 @@
             <field name="url">/my/requests</field>
             <field name="target">new</field>
         </record>
-
+         
 
         <menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
-            parent="internal_memo_menu_model_main2" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
+            parent="internal_memo_menu_model_main2" sequence="3" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
             <menuitem id="internal_memo_menu_model2" sequence= "1" name="Memo Requests"
             parent="internal_memo_menu_model_1" action="internal_memo_model_action" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
 
@@ -412,6 +425,11 @@
             <menuitem id="internal_memo_model_id_refuse" name="Refuse"
             parent="internal_memo_menu_model_1" sequence= "5" action = "memo_model_refuse_action"/>
         
+        <menuitem id="internal_memo_document_menu_model" name="Document Request"
+            parent="internal_memo_menu_model_main2" sequence="4"/>
+            <menuitem id="internal_memo_menu_document_request" sequence= "5" name="Requests"
+            parent="internal_memo_document_menu_model" action="internal_memo_model_document_action"/>
+
         <menuitem parent="internal_memo_menu_model_main2" id="menu_memo_website_request" name="Website Request(s)" action="action_memo_open_my_request_url" sequence="5"/>
 
     </data>

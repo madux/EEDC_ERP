@@ -75,7 +75,7 @@ class Memo_Model(models.Model):
         'memo.type',
         string='Memo type',
         required=True,
-        copy=False,
+        copy=True,
         domain=lambda self: self.get_publish_memo_types(),
         )
     memo_type_key = fields.Char('Memo type key', readonly=True)
@@ -131,6 +131,11 @@ class Memo_Model(models.Model):
         store=True,
         readonly=True
         )
+    
+    to_create_document = fields.Boolean(
+        'Registered in Document Management',
+        default=False,
+        help="Used to create in Document Management")
     
     # @api.onchange('cash_advance_reference')
     # def cash_advance_reference(self):
@@ -338,17 +343,26 @@ class Memo_Model(models.Model):
      
     internal_memo_option = fields.Selection(
         [
+        ("none", ""), 
         ("all", "All"), 
         ("selected", "Selected"),
         ], string="All / Selected")
+    memo_category_id = fields.Many2one('memo.category', string="Category") 
+    document_folder = fields.Many2one('documents.folder', string="Document folder")
     
     partner_ids = fields.Many2many(
         'res.partner', 
         'memo_res_partner_rel',
         'memo_res_partner_id',
         'memo_partner_id',
-        string='Partners', 
+        string='Reciepients', 
         )
+
+    @api.constrains('document_folder')
+    def check_next_reoccurance_constraint(self):
+        if self.document_folder and self.document_folder.next_reoccurance_date:
+            if fields.Date.today() < self.document_folder.next_reoccurance_date:
+                raise ValidationError(f'You cannot submit this document because the todays date is lesser than the reoccurence date {self.document_folder.next_reoccurance_date}')
     
     def send_memo_to_contacts(self):
         if not self.partner_ids:
@@ -539,7 +553,6 @@ class Memo_Model(models.Model):
             rec.write({
                 'state': "submit", 
                 'direct_employee_id': False, 
-                'partner_id':False, 
                 'users_followers': False,
                 'set_staff': False,
                 })
@@ -865,7 +878,46 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "employee_update":
             return self.generate_employee_update_request()
         else:
-            pass
+            document_message = "Also check related documentation on the document management system" if self.to_create_document else ""
+            body_msg = f"""Dear sir / Madam, \n \
+            <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
+            from {self.employee_id.name} (Department: {self.employee_id.department_id.name or "-"}) \
+            was sent to you for review / approval. <br/> {document_message} <br/> <br/>
+            Kindly {self.get_url(self.id)} \
+            <br/> Yours Faithfully<br/>{self.env.user.name}"""
+            self.state = "Done"
+            self.update_final_state_and_approver()
+            self.direct_employee_id = False
+            self.generate_document_management()
+            self.mail_sending_direct(body_msg)
+
+    def generate_document_management(self):
+        if self.to_create_document:
+            document_obj = self.env['documents.document'].sudo()
+            document_folder_obj = self.env['documents.folder'].sudo()
+            attach_document_ids = self.env['ir.attachment'].sudo().search([
+                ('res_id', '=', self.id), 
+                ('res_model', '=', self._name)
+            ])
+            document_folder = document_folder_obj.search([('id', '=', self.document_folder.id)])
+            if document_folder:
+                for att in attach_document_ids:
+                    document = document_obj.create({
+                        'name': self.name,
+                        'folder_id': document_folder.id,
+                        'attachment_id': att.id,
+                        'memo_category_id': self.memo_category_id.id,
+                        'owner_id': self.env.user.id,
+                        'is_shared': True,
+                        'submitted_date': fields.Date.today(),
+                    })
+                    document_folder.update({'document_ids': [(4, document.id)]})
+                document_folder.update_next_occurrence_date()
+            else:
+                raise ValidationError("""
+                                      Ops! No documentation folder setup available for the requester department. 
+                                      Contact admin to configure """
+                                      )
 
     def generate_employee_update_request(self, body_msg=False):
         employee_ids = [rec.employee_id.id for rec in self.employee_transfer_line_ids]
@@ -1332,7 +1384,7 @@ class Memo_Model(models.Model):
         if not self.invoice_ids:
             raise ValidationError("Please ensure the invoice lines are added")
 
-        invalid_record = self.mapped('invoice_ids').filtered(lambda s: not s.partner_id or not s.payment_journal_id)
+        invalid_record = self.mapped('invoice_ids').filtered(lambda s: not s.partner_id or not s.journal_id) # payment_journal_id
         if invalid_record:
             raise ValidationError("Partner, Payment journal must be selected. Also ensure the status is in draft")
         
@@ -1351,7 +1403,7 @@ class Memo_Model(models.Model):
                         rec.action_post()
         
             payment_method = 2
-            journal_id = rec.payment_journal_id
+            journal_id = rec.journal_id # payment_journal_id
             if journal_id:
                 payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
                     journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
