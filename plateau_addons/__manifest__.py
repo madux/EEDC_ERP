@@ -11,5 +11,6 @@
         'security/ir_rule.xml',
         'views/view_import_chart_data.xml', 
         'views/company_memo_view.xml', 
+        'views/account_view.xml', 
     ],
 }

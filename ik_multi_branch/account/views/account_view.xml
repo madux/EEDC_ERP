@@ -22,11 +22,42 @@
             <field name="inherit_id" ref="account.view_account_journal_form"/>
             <field name="arch" type="xml">
                 <field name="code" position="after">
+                    <!-- <field name="is_main_account_user" string="Is main user"/> -->
                     <field name="allowed_branch_ids" string="Allowed Branch" widget="many2many_tags"/>
                 </field>
             </field>
         </record>
 
+        <!-- <record id="account.open_account_journal_dashboard_kanban" model="ir.actions.act_window">
+            <field name="name">Accounting Dashboard Branch</field>
+            <field name="res_model">account.journal</field>
+            <field name="view_mode">kanban,form</field>
+            <field name="view_id" ref="account.account_journal_dashboard_kanban_view"/>
+            <field name="usage">menu</field>
+            <field name="context">{'search_default_dashboard':1}</field>
+            <field name="domain">[]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_neutral_face">
+                    This is the accounting dashboard
+                </p><p>
+                    If you have not installed a chart of account, please install one first.<br/>
+                <a class="btn-link" type="action" name="%(account.open_account_charts_modules)d" tabindex="-1">Browse available countries.</a>
+                </p>
+            </field>
+        </record> -->
+
+
+         
+        <!-- <menuitem id="menu_board_journal_for_non_top_user" name="All Journal transactions"
+            parent="account_accountant.menu_accounting" sequence="2" action="ik_multi_branch.ir_action_server_account_transaction"
+            groups="ik_multi_branch.account_major_user"/> -->
+         <!-- <menuitem id="menu_board_journal_for_non_top_user" name="All Journal transactions"
+            parent="account_accountant.menu_accounting" sequence="2" action="ik_multi_branch.ir_action_server_account_transaction"
+            groups="account.group_account_manager,account.group_account_invoice,account.group_account_readonly"/>
+           -->
+<!-- <field name="groups_id" eval="[(6, 0, [
+            ref('ik_multi_branch.account_major_user'),
+            ])]"/> -->
         <!--group customer receipts by branch-->
         <!-- <record id="view_voucher_filter_extended" model="ir.ui.view">
             <field name="name">account.voucher.select.extended</field>

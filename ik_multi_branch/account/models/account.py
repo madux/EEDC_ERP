@@ -30,11 +30,19 @@ class AccountPartialReconcile(models.Model):
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
+
     branch_id = fields.Many2one(
         'multi.branch', 'MDA Sector', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
 
     allowed_branch_ids = fields.Many2many(
-        'multi.branch', string='MDA Sectors', required=False)
+        'multi.branch', string='MDA Sectors', required=False) 
+
+
+class AccountBatchPayment(models.Model):
+    _inherit = "account.batch.payment"
+
+    branch_id = fields.Many2one(
+        'multi.branch', 'MDA Sector', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
 
 
 class AccountAnalyticLine(models.Model):
