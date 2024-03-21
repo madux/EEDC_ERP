@@ -9,7 +9,8 @@
                 
                 <xpath expr="//button[@name='action_see_actions']" position="after">
                     <button name="check_due_submission" type="object" class="oe_stat_button" icon="fa-book">
-                        <div class="o_field_widget o_stat_info">
+                        <div class="o_field_wi
+                        dget o_stat_info">
                             <span class="o_stat_value"><field name="number_failed_submission"/></span>
                             <span class="o_stat_text">Due documents</span>
                         </div>

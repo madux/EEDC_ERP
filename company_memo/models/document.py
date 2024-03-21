@@ -23,7 +23,7 @@ class DocumentFolder(models.Model):
         string="Category")
     
     next_reoccurance_date = fields.Date(
-        string="Next reoccurance date")#, compute="get_reoccurance_date")
+        string="Next reoccurance date", compute="get_reoccurance_date")
     
     interval_period = fields.Integer(
         string="interval period", default=1)
@@ -31,7 +31,9 @@ class DocumentFolder(models.Model):
     submission_maximum_range = fields.Integer(
         string="Maximum submission range", default=2)
     number_failed_submission = fields.Integer(
-        string="Failed submission", help='update incrementally if the interval btw the current date and next submission date exceeds the maximum date of submission')
+        string="Failed submission", 
+        help='''update incrementally if the interval btw the current date and next 
+        submission date exceeds the maximum date of submission''')
     number_successful_submission = fields.Integer(
         string="Successful submission", 
         compute="count_submitted_documents",
@@ -59,7 +61,7 @@ class DocumentFolder(models.Model):
         string="Success rating")
     
     average_submission_rate = fields.Float(
-        string="Average submission rate", default=2)
+        string="Average submission rate")
     
     number_of_awaiting = fields.Integer(
         string="Awaiting Submission",

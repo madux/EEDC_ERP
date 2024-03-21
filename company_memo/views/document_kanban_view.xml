@@ -45,13 +45,13 @@
                                           <a name="action_view_success_rate" type="object" title="Ratio of documents successfully raised and approved within the submission date" class="justify-content-between flex-nowrap d-inline-flex w-100">
                                               <span>Success Rate</span>
                                               <span class="ms-3">
-                                                  <field name="success_rate"/> %
+                                                  <field name="success_rate"/>
                                               </span>
                                           </a>
                                       </div>
-                                      <div class="mb4">
+                                      <!-- <div class="mb4">
                                           <a name="action_view_avg" type="object" title="Average Submission rate" class="justify-content-between flex-nowrap d-inline-flex w-100">
-                                              <span>Average Rating</span>
+                                              <span>Average</span>
                                               <span class="ms-3">
                                                   <b>
                                                       <strong class="fa fa-fw mt4 fa-smile-o text-success fw-bolder" t-if="record.number_successful_submission &gt;= 4" title="Average Rating: Satisfied" role="img" aria-label="Happy face"/>
@@ -61,7 +61,7 @@
                                                   <field name="average_submission_rate" nolabel="1" widget="percentage"/>
                                               </span>
                                           </a>
-                                      </div>
+                                      </div> -->
                                   </div>
                                   <div class="row pt-5">
                                         <div class="col border-start">
