@@ -20,7 +20,7 @@
           <field name="arch" type="xml">
             <form string="Score sheet Export">
               <header>
-                  <button name="method_export" type='object' string="Export &amp; Download" class="oe_highlight"/>
+                  <button name="method_export" type='object' string="Export &amp; Download: " class="oe_highlight"/>
               </header>
               <sheet>
                 <group>

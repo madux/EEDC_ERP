@@ -234,10 +234,65 @@ class Applicant(models.Model):
                 attachments.append(attachment.document_file.id)
             return attachments
         
-    def send_mail_to_hr(filename_list=False):
+    def get_url(self, id):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        base_url += "/web#id=%s&model=hr.applicant&view_type=form" % (id)
+        return "<a href={}> </b>Applicant<a/>. ".format(base_url)
+        
+    def send_mail_to_hr(self, filename_list=False, applicant_id=False):
         if filename_list:
-            # TODO : Send to hr officer the applicants submitted filenames
-            pass
 
+            mail_from = self.env['ir.config_parameter'].sudo()\
+                .get_param('hr_cbt_portal_recruitment.system_email') or applicant_id.email_from #'system_notification@eedc.com'
+            hr_email = self.env['ir.config_parameter'].sudo()\
+                .get_param('hr_cbt_portal_recruitment.company_hr_email') #'hr@eedc.com'
+            if mail_from and hr_email:
+                applicant_name = applicant_id.name if applicant_id else ""
+                subject = "Applicant Document Upload Notification: {}".format(applicant_name)
+                msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following documents: <br/>"\
+                "<ul>"
+                for filename in filename_list:
+                    msg_body += f"<li>{filename}</li>"
+                msg_body += "</ul><br/>Open {}<br/><br/>Thanks"
+                
+                applicant_url = self.get_url(applicant_id.id)
+                msg_body = msg_body.format(applicant_name, applicant_url)
+                mail_data = {
+                    'email_from': mail_from,
+                    'subject': subject,
+                    'email_to': hr_email,
+                    'body_html': msg_body
+                }
+                mail_id = self.env['mail.mail'].create(mail_data)
+                self.env['mail.mail'].send(mail_id)
+            # template_to_use = 'mail_template_hr_documentation_notification'
+
+            # template = self.env.ref(f'hr_cbt_portal_recruitment.{template_to_use}')
+            # if template:
+            #     hr_email = 'hr@eedc.com'
+                
+                # ctx = dict()
+                # ctx.update({
+                #     'default_model': 'hr.applicant',
+                #     'default_res_id': applicant_id,
+                #     'default_use_template': bool(template),
+                #     'default_template_id': template.id,
+                #     'default_composition_mode': 'comment',
+                #     # 'default_list': filename_list
+                #             })
+                # template.write({
+                #     'email_to': hr_email,
+                #     'email_from': 'system_notif@eedc.com'
+                #     })
+                # template.with_context(ctx).send_mail([applicant_id], False)
+
+                
+                # msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following document: <br/>\
+                # <br/>Kindly to Review<br/> <br/>Thanks".format()
+                # msg_body = "Dear HR, <br/>This is a notification that the applicant {} has uploaded the following documents: <br/>"\
+                # "<ul>"
+                # for filename in filename_list:
+                #     msg_body += f"<li>{filename}</li>"
+                # msg_body += "</ul><br/>Kindly review.<br/><br/>Thanks"
 
 
