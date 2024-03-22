@@ -7,7 +7,16 @@ class MemoConfigDuplicationWizard(models.TransientModel):
 
     dept_ids = fields.Many2many('hr.department', string="Departments", required='1')
     dummy_memo_stage_ids = fields.Many2many('dummy.memo.stage', 'duplication_wizard_id')
-    
+    employees_follow_up_ids = fields.Many2many('hr.employee',
+                                               'hr_employee_wizard_rel',
+                                                'approvers_id',
+                                                'config_wizard_id',
+                                                string='Employees to Follow up')
+    allowed_companies_ids = fields.Many2many('res.partner',
+                                         'res_partner_wizard_rel'
+                                         'allowed_companies_id',
+                                         'res_partner_wizard_id', 
+                                         string='Allowed Companies')
 
     @api.model
     def default_get(self, fields):
@@ -42,7 +51,8 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                 new_config = self.env['memo.config'].create({
                 'department_id': dept.id,
                 'memo_type': memo_config.memo_type.id,
-                'approver_ids': [(6, 0, memo_config.approver_ids.ids)],
+                'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
+                'allowed_for_company_ids': self.allowed_companies_ids
                 })
                 if self.dummy_memo_stage_ids:
                     for sequence, stage in enumerate(self.dummy_memo_stage_ids, 900): 

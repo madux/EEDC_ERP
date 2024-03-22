@@ -215,8 +215,8 @@ class MemoConfig(models.Model):
             'type': 'ir.actions.act_window',
             'target': 'new',
             'context': {
-                # 'default_employees_follow_up': self.approver_ids.ids,
-                # 'default_allowed_companies': self.allowed_for_company_ids.ids,
+                'default_employees_follow_up_ids': self.approver_ids.ids,
+                'default_allowed_companies_ids': self.allowed_for_company_ids.ids,
                 # 'default_stage_ids': self.stage_ids.ids,
             },
         }
