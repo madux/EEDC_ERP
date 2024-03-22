@@ -190,21 +190,6 @@ class MemoConfig(models.Model):
                             stages.append(stage_id.id)
                         memo_config.stage_ids = [(6, 0, stages)]
 
-    # def custom_duplicate(self):
-    #     return {
-    #           'name': 'Duplicate Memo Config',
-    #           'view_type': 'form',
-    #           "view_mode": 'form',
-    #           'res_model': 'memo.config.duplication.wizard',
-    #           'type': 'ir.actions.act_window',
-    #           'target': 'new',
-    #           'context': {
-    #               'default_employees_follow_up': self.approver_ids,
-    #               'default_allowed_companies': self.allowed_for_company_ids,
-    #               'default_stage_ids': self.stage_ids,
-    #           },
-    #    
-    #  }
     
     def custom_duplicate(self):
         return {
@@ -217,7 +202,6 @@ class MemoConfig(models.Model):
             'context': {
                 'default_employees_follow_up_ids': self.approver_ids.ids,
                 'default_allowed_companies_ids': self.allowed_for_company_ids.ids,
-                # 'default_stage_ids': self.stage_ids.ids,
             },
         }
 

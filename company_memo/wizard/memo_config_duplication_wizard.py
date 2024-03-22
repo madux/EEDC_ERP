@@ -86,7 +86,6 @@ class DummyMemoStage(models.TransientModel):
     _name = 'dummy.memo.stage'
 
     duplication_wizard_id = fields.Many2one('memo.config.duplication.wizard', string='Duplication Wizard')
-    memo_stage_id = fields.Many2one('memo.stage')
     name = fields.Char(string="Stage Name")
     sequence = fields.Integer(string="Sequence")
     active = fields.Boolean(string="Active")
