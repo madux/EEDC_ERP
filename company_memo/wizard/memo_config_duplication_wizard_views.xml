@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_memo_config_duplication_wizard_form" model="ir.ui.view">
+        <field name="name">memo.config.duplication.wizard.form</field>
+        <field name="model">memo.config.duplication.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Duplicate Memo Configuration">
+                <group>
+                    <field name="dept_id"/>
+                </group>
+                <notebook>
+                    <page name="Stages" string="Stages">
+                        <field name="dummy_memo_stage_ids" nolabel="1" widget="one2many_list">
+                            <tree editable="top">
+                                <field name="name"/>
+                                <field name="sequence"/>
+                                <!-- <field name="approver_ids"/> -->
+                                <field name="is_approved_stage"/>
+                            </tree>
+                        </field>    
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="duplicate_memo_config" string="Duplicate" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
