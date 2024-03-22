@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <form string="Duplicate Memo Configuration">
                 <group>
-                    <field name="dept_id"/>
+                    <field name="dept_ids" widget="many2many_tags" />
                 </group>
                 <notebook>
                     <page name="Stages" string="Stages">
@@ -14,7 +14,7 @@
                             <tree editable="top">
                                 <field name="name"/>
                                 <field name="sequence"/>
-                                <!-- <field name="approver_ids"/> -->
+                                <field name="approver_ids" widget="many2many_tags"/>
                                 <field name="is_approved_stage"/>
                             </tree>
                         </field>    
