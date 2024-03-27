@@ -51,6 +51,8 @@ class HrJob(models.Model):
 
     job_section_descriptions = fields.Many2many('description.sections') # Table objects for storing different sections of descriptions
 
+    job_section_proficiency_scale = fields.Many2many('skill.proficiency.scale', string='Proficiency Scale')
+
 
     class hrJobDescriptionSection(models.Model):
         _name = 'description.sections'
@@ -75,3 +77,16 @@ class HrJob(models.Model):
         description = fields.Char()
         section_description = fields.Many2one('description.sections')
 
+    
+    class hrJobSillProficiencyScale(models.Model):
+        _name = 'skill.proficiency.scale'
+
+        skill = fields.Char(string='Skill', required=True)
+        scale = fields.Integer(string='Scale', default=4)
+        scale_selection = fields.Selection([('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5')],
+                                    string='Scale Selection', default='1')
+
+        @api.constrains('scale_selection')
+        def _scale_selection_constrain(self):
+            if self.scale_selection not in ['1', '2', '3', '4', '5']:
+                self.scale_selection = '1'
