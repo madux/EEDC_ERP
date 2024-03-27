@@ -88,5 +88,6 @@ class HrJob(models.Model):
 
         @api.constrains('scale_selection')
         def _scale_selection_constrain(self):
-            if self.scale_selection not in ['1', '2', '3', '4', '5']:
-                self.scale_selection = '1'
+            for record in self:
+                if record.scale_selection not in ['1', '2', '3', '4', '5']:
+                    record.scale_selection = '1'
