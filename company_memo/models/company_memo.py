@@ -685,7 +685,7 @@ class Memo_Model(models.Model):
             pass
         else:
             # updating the next stage
-            approver_ids, next_stage_id= self.get_next_stage_artifact(self.stage_id)
+            approver_ids, next_stage_id = self.get_next_stage_artifact(self.stage_id)
             self.stage_id = next_stage_id
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:

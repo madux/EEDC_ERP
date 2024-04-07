@@ -1025,11 +1025,16 @@ class PortalRequest(http.Controller):
 					"message": "No stage configured or found for this request. Contact admin", 
 					}
 			elif status in ["Approve"]:
-				if not (request_record.supervisor_comment or request_record.manager_comment):
-					return {
-						"status": False, 
-						"message": "Please Ensure to provide manager's or supervisor's comment", 
-						}
+				"""First check if the server """
+				# approver_ids, stage = request_record.get_next_stage_artifact()
+				current_stage_approvers = request_record.sudo().stage_id.approver_ids
+				# user_employeeid = request.env.user.employee_id.id
+				if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
+					if not (request_record.supervisor_comment or request_record.manager_comment):
+						return {
+							"status": False, 
+							"message": "Please Ensure to provide manager's or supervisor's comment", 
+							}
 			
 				is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					filtered(lambda appr: appr.is_approved_stage == True) 
@@ -1037,7 +1042,6 @@ class PortalRequest(http.Controller):
 					stage_id = is_approved_stage[0] 
 					# is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					# filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-					current_stage_approvers = request_record.sudo().stage_id.approver_ids
 					if request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
 						request_record.sudo().update_final_state_and_approver()
 						request_record.sudo().write({
