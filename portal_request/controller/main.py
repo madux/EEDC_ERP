@@ -123,9 +123,14 @@ class PortalRequest(http.Controller):
 		"""Request portal for employee / portal users
 		"""
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
 			# "district_ids": request.env["hr.district"].sudo().search([]),
+			# "district_ids": request.env["hr.district"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
+			"memo_key_ids": request.env["memo.type"].sudo().search([
+				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
+				]),
 			"memo_key_ids": request.env["memo.type"].sudo().search([
 				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
 				]),
@@ -356,6 +361,7 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
 				('memo_type.memo_key', '=', 'cash_advance'),
+				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
 				('state', '=', 'Done') 
 			]
@@ -407,6 +413,7 @@ class PortalRequest(http.Controller):
 				  been approved and taken out from the account side
 				'''
 				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
+				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
@@ -423,6 +430,7 @@ class PortalRequest(http.Controller):
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
 								if memo_request.product_ids else memo_request.amountfig,
+						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
 						'product_ids': [
@@ -452,6 +460,7 @@ class PortalRequest(http.Controller):
 						'work_email': "",
 						'subject': "",
 						'description': "",
+						# 'district_id': "",
 						# 'district_id': "",
 						'request_date': "",
 						'product_ids': "",
@@ -609,6 +618,7 @@ class PortalRequest(http.Controller):
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
 				] 
+				] 
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
@@ -641,6 +651,7 @@ class PortalRequest(http.Controller):
 				"message": "Please ensure you select a product line", 
 				}
 
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 	
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
@@ -719,6 +730,7 @@ class PortalRequest(http.Controller):
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
 			# "district_id": district_id,
+			# "district_id": district_id,
 			"applicationChange": True if post.get("applicationChange") == "on" else False,
 			"enhancement": True if post.get("enhancement") == "on" else False,
 			"datapatch": True if post.get("datapatch") == "on" else False,
@@ -766,6 +778,7 @@ class PortalRequest(http.Controller):
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
+			memo_id.memo_type.memo_key, 
 			memo_id.memo_type.memo_key, 
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
@@ -837,7 +850,9 @@ class PortalRequest(http.Controller):
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
 			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
+			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 
+			if employee_id and transfer_dept_id and role_id:#and district_id:
 			if employee_id and transfer_dept_id and role_id:#and district_id:
 				transfer_line.create({
 					'memo_id': memo_id.id,
@@ -845,6 +860,7 @@ class PortalRequest(http.Controller):
 					'transfer_dept': transfer_dept_id.id,
 					'current_dept_id': employee_id.department_id.id,
 					'new_role': role_id.id,
+					# 'new_district': district_id.id, 
 					# 'new_district': district_id.id, 
 				})
 			counter += 1
@@ -891,12 +907,15 @@ class PortalRequest(http.Controller):
 		
 		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
 		
+		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
+		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
 					else ['employee_update'] if type in ['employee_update'] \
 						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
 							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
+								else all_memo_type_keys
 								else all_memo_type_keys
 		request_id = request.env['memo.model'].sudo()
 		domain = [
@@ -908,6 +927,7 @@ class PortalRequest(http.Controller):
 				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
+			('memo_type.memo_key', 'in', memo_type),
 			('memo_type.memo_key', 'in', memo_type),
 		]
 		if search_param:
