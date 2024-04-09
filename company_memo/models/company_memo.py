@@ -111,7 +111,7 @@ class Memo_Model(models.Model):
                                 ('Sent', 'Sent'),
                                 ('Approve', 'Waiting For Payment / Confirmation'),
                                 ('Approve2', 'Memo Approved'),
-                                ('Done', 'Awaiting System Validation'),
+                                ('Done', 'Completed'),
                                 ('Refuse', 'Refused'),
                               ], string='Status', index=True, readonly=True,
                              copy=False, default='submit',
@@ -244,9 +244,8 @@ class Memo_Model(models.Model):
     active = fields.Boolean('Active', default=True)
 
     product_ids = fields.One2many('request.line', 'memo_id', string ='Products') 
-    leave_start_date = fields.Datetime('Leave Start Date',  default=fields.Date.today())
+    leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
-
     request_date = fields.Datetime('Request Start Date')
     request_end_date = fields.Datetime('Request End Date')
 
@@ -848,6 +847,8 @@ class Memo_Model(models.Model):
         self.update_final_state_and_approver()
         self.sudo().write({'res_users': [(4, users.id)]})
         return self.generate_memo_artifacts(body_msg, body)
+    
+     
   
     def generate_memo_artifacts(self, body_msg, body):
         if self.memo_type.memo_key == "material_request":
@@ -869,6 +870,9 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
+        # elif self.memo_type.memo_key == "employee_update":
+        #     return self.generate_employee_transfer(body_msg)
+        #     # self.mail_sending_direct(body_msg)
         else:
             pass
 

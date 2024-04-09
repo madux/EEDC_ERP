@@ -618,7 +618,6 @@ class PortalRequest(http.Controller):
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
 				] 
-				] 
 				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
 				# should_bypass_reservation : False
@@ -717,9 +716,11 @@ class PortalRequest(http.Controller):
 		<b>Description: </b> {post.get("description", "")}<br/>
 		<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
 		"""
+		memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
+			"memo_type": memo_type.id,
+			"memo_type_key": memo_type.memo_key,
 			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
@@ -849,18 +850,17 @@ class PortalRequest(http.Controller):
 			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
-			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
+			district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 
-			if employee_id and transfer_dept_id and role_id:#and district_id:
-			if employee_id and transfer_dept_id and role_id:#and district_id:
+			if employee_id and transfer_dept_id and role_id: 
 				transfer_line.create({
 					'memo_id': memo_id.id,
 					'employee_id': employee_id.id, 
 					'transfer_dept': transfer_dept_id.id,
 					'current_dept_id': employee_id.department_id.id,
 					'new_role': role_id.id,
-					# 'new_district': district_id.id, 
+					'new_district': district_id.id,
 					# 'new_district': district_id.id, 
 				})
 			counter += 1
@@ -915,7 +915,6 @@ class PortalRequest(http.Controller):
 					else ['employee_update'] if type in ['employee_update'] \
 						else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
 							if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
-								else all_memo_type_keys
 								else all_memo_type_keys
 		request_id = request.env['memo.model'].sudo()
 		domain = [

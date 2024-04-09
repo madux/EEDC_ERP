@@ -18,6 +18,10 @@ class HREMployeeTransfer(models.Model):
         copy=False,
         readonly=True
     )
+    memo_id = fields.Many2one(
+        "memo.model", 
+        string="Memo ID"
+        )
 
     transfer_date = fields.Date('Initiation Date',
                                 default=lambda self: fields.Date.context_today(self),
@@ -48,6 +52,7 @@ class HREMployeeTransfer(models.Model):
                 'job_id': tf_line.new_role.id if tf_line.new_role else tf_line.employee_id.job_id.id,
                 'ps_district_id': tf_line.new_district.id if tf_line.new_district else tf_line.employee_id.ps_district_id.id,
             })
+        self.memo_id.finalize_employee_transfer()
 
 class HREmployeeTransferLine(models.Model):
     _name = 'hr.employee.transfer.line'
