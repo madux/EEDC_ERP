@@ -496,9 +496,9 @@ class PortalRequest(http.Controller):
 				"more": True,
 			}
 		})
-
+	
 	@http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
-	def get_portal_product(self, **post):
+	def get_portal_employee(self, **post):
 		request_type_option = post.get('request_type')
 		if request_type_option:
 			if request_type_option == "employee":
@@ -552,7 +552,64 @@ class PortalRequest(http.Controller):
 				"pagination": {
 					"more": True,
 				}
-			})	
+			})
+
+	# @http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
+	# def get_portal_employee(self, **post):
+	# 	request_type_option = post.get('request_type')
+	# 	if request_type_option:
+	# 		if request_type_option == "employee":
+	# 			employeeItems = json.loads(post.get('employeeItems'))
+	# 			_logger.info(f'Employeeitemmms {employeeItems}')
+	# 			domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems])]
+	# 			employees = request.env["hr.employee"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name} - {item.employee_number}'} for item in employees],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})	
+	# 		elif request_type_option == "department":
+	# 			domain = [('active', '=', True)]
+	# 			departments = request.env["hr.department"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		elif request_type_option == "role":
+	# 			domain = [('active', '=', True)]
+	# 			departments = request.env["hr.job"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		elif request_type_option == "district":
+	# 			domain = []
+	# 			departments = request.env["hr.district"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		else:	
+	# 			return json.dumps({
+	# 				"results": [{"id": '',"text": '',}],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})	
+	# 	else:
+	# 		return json.dumps({
+	# 			"results": [{"id": '',"text": ''}],
+	# 			"pagination": {
+	# 				"more": True,
+	# 			}
+	# 		})	
 
 	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
@@ -779,7 +836,6 @@ class PortalRequest(http.Controller):
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
-			memo_id.memo_type.memo_key, 
 			memo_id.memo_type.memo_key, 
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)

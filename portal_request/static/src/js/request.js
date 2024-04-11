@@ -19,9 +19,9 @@ odoo.define('portal_request.portal_request', function (require) {
     const setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
-    // if ($("#msform")){
-    //     $("#msform")[0].reset();
-    // }
+    if ($("#msform")[0] !== undefined){
+        $("#msform")[0].reset();
+    }
 
     const NonItemRequest = [
         'server_access', 
@@ -251,7 +251,6 @@ odoo.define('portal_request.portal_request', function (require) {
         // $('textarea').autoResize();
         scrollTable(); // used to scroll to the next level when add a line
     }
-
 
     localStorage.setItem('SelectedProductItems', "[]")
 
@@ -1082,7 +1081,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     ev.preventDefault();
                     $(ev.target).val()
                     var selectRequestOption = $('#selectRequestOption');
-                    if (!selectRequestOption.val() == "employee_update"){
+                    if (selectRequestOption.val() !== "employee_update"){
                         console.log("Building product row with form data=> ", setProductdata)
                         buildProductRow(selectRequestOption.val())
                     }
@@ -1245,13 +1244,14 @@ odoo.define('portal_request.portal_request', function (require) {
                         cache: false,
                         timeout: 800000,
                     }).then(function(data) {
-                        console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                        window.location.href = `/portal-success`;
-                        console.log("XMLREQUEST Successful");
                         // clearing form content
                         $("#msform")[0].reset();
                         $("#tbody_product").empty()
                         $("#tbody_employee").empty()
+                        console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                        window.location.href = `/portal-success`;
+                        console.log("XMLREQUEST Successful");
+                        
                     }).catch(function(err) {
                         console.log(err);
                         alert(err);

@@ -111,5 +111,6 @@
 			</field>
 		</record>
         <menuitem id="menu_vehicle_setting_menu" name="Vehicle Settings" sequence="10" parent="portal_request.menu_portal_request" action="portal_request.action_vehicle_product_id"/>
+        <menuitem id="menu_vehicle_setting_product_menu" name="Vehicle Settings" sequence="3" parent="stock.menu_stock_inventory_control" action="portal_request.action_vehicle_product_id"/>
     </data>
 </odoo> 
