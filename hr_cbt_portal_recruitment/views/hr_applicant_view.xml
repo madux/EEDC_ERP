@@ -191,4 +191,23 @@
         ])]"/>
         <field name="code">action=model.sudo().send_applicants_checklist()</field>
     </record>
+
+    <record id="ir_action_server_applicants_for_audit" model="ir.actions.server">
+        <field name="name">Applicants for Audit</field>
+        <field name="type">ir.actions.server</field>
+        <field name="model_id" ref="hr_recruitment.model_hr_applicant" />
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(6, 0, [
+        ref('hr_cbt_portal_recruitment.group_hr_recruitment_audit_id')
+        ])]"/>
+        <field name="code">action=model.sudo().get_filtered_audit_stage_menu()</field>
+    </record>
+
+    <menuitem
+            id="hr_applicant_audit_menu"
+            name="Applicants for Audit"
+            action="hr_cbt_portal_recruitment.ir_action_server_applicants_for_audit"
+            groups="hr_cbt_portal_recruitment.group_hr_recruitment_audit_id"
+            parent="hr_recruitment.menu_crm_case_categ0_act_job"
+            sequence="10"/>
 </odoo>

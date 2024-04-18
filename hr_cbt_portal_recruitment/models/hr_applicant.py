@@ -295,4 +295,26 @@ class Applicant(models.Model):
                 #     msg_body += f"<li>{filename}</li>"
                 # msg_body += "</ul><br/>Kindly review.<br/><br/>Thanks"
 
+    def get_filtered_function(self,  **kwargs):
+        view_id_form = self.env.ref('hr_recruitment.hr_applicant_view_form')
+        view_id_tree = self.env.ref('hr_recruitment.crm_case_tree_view_job')
+        view_id_kanban = self.env.ref('hr_recruitment.hr_kanban_view_applicant')
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Applicant for auditing'),
+            'res_model': 'hr.applicant',
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'view_id': view_id_tree.id,
+            'views': [(view_id_kanban.id, 'kanban'), (view_id_tree.id, 'tree'), (view_id_form.id,'form')],
+            'target': 'current',
+            'domain': kwargs.get('mydomain')
+            }
+    
+    def get_filtered_audit_stage_menu(self):
+        audit_applicants = self.env['hr.applicant'].search([
+            ('stage_id', '=', self.env.ref('hr_cbt_portal_recruitment.hr_recruitment_stage_audit_check').id)
+            ])
+        return self.get_filtered_function(mydomain = [('id', 'in', [rec.id for rec in audit_applicants])] if audit_applicants else [('id', '=', 0)]) 
+
 

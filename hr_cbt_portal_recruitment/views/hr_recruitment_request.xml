@@ -255,6 +255,7 @@
 		<menuitem id="to_recruitment_request_root_menu"
 			name="Recruitment Requests"
 			parent="hr_recruitment.menu_hr_recruitment_root" sequence="90"
+			groups="group_hr_recruitment_officer_id"
 			/>
 
 		<menuitem id="to_recruitment_request_menu"
