@@ -6,7 +6,7 @@
             id="menu_hr_cbt_survey"
             name="CBT"
             sequence="10"
-            groups="group_hr_recruitment_officer_id,group_hr_recruitment_admin_id"
+            groups="hr_cbt_portal_recruitment.group_hr_recruitment_officer_id,hr_cbt_portal_recruitment.group_hr_recruitment_admin_id"
             parent="hr_recruitment.menu_hr_recruitment_root"
             />
 
