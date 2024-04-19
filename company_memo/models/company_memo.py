@@ -350,7 +350,7 @@ class Memo_Model(models.Model):
         string='Reciepients', 
         )
     
-         
+    document_folder = fields.Many2one('documents.folder', string="Document folder")
     to_create_document = fields.Boolean(
         'Registered in Document Management',
         default=False,
