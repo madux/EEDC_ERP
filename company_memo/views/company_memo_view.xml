@@ -153,6 +153,8 @@
                                         <field name="note" string="Note" invisible="0"/> 
                                         <field name="source_location_id" string="Source Location" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
                                         <field name="dest_location_id" string="Destination Location" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>
+                                        <field name="distance_from" string="From" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
+                                        <field name="distance_to" string="To" attrs="{'readonly':[('state','in',['draft'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
                                         <field name="retired" string="Retired" attrs="{'column_invisible': [('memo_type_key', 'not in', ['soe'])]}"/>
                                     </tree>
                                 </field>

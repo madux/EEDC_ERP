@@ -243,7 +243,7 @@ class Memo_Model(models.Model):
     loan_reference = fields.Integer(string="Loan Ref")
     active = fields.Boolean('Active', default=True)
 
-    product_ids = fields.One2many('request.line', 'memo_id', string ='Products') 
+    product_ids = fields.One2many('request.line', 'memo_id', string ='Request Line') 
     leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
     request_date = fields.Datetime('Request Start Date')

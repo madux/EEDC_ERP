@@ -823,8 +823,11 @@ class PortalRequest(http.Controller):
 			if post.get("selectRequestOption") != "employee_update":
 				self.generate_request_line(DataItems, memo_id)
 		
-			elif post.get("selectRequestOption") == "employee_update":
+			else:
+				# post.get("selectRequestOption") == "employee_update":
 				self.generate_employee_transfer_line(DataItems, memo_id)
+		else:
+			raise ValidationError("Haaaaaahaaaaaa no dsta item")
 		
 		## generating attachment
 		if 'other_docs' in request.params:
@@ -891,6 +894,8 @@ class PortalRequest(http.Controller):
 					'note': rec.get('note'),
 					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
 					'to_retire': rec.get('line_checked'),
+					'distance_from': rec.get('distance_from'),
+					'distance_to': rec.get('distance_to'),
 				})
 			counter += 1
 

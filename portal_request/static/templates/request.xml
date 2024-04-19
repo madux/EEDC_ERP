@@ -512,10 +512,10 @@
                                                             <th id="description_line" width="10%">
                                                                 Description
                                                             </th>
-                                                            <th width="5%">
+                                                            <th id="req_qty_label" width="5%">
                                                                 <label>Request Qty</label>
                                                             </th>
-                                                            <th width="10%">
+                                                            <th id="unit_price_label" width="10%">
                                                                 <label>Unit Price</label>
                                                             </th>
                                                             <th id="used_qty_for_soe" width="5%">
@@ -524,10 +524,16 @@
                                                             <th id="used_amount_for_soe" width="10%">
                                                                 <label>Used Amount</label>
                                                             </th>
-                                                            <th width="10%">
+                                                            <th id="note_label" width="10%">
                                                                 <label>Note</label>
                                                             </th>
-                                                            <th width="5%">
+                                                            <th class="d-none" id="distance_from" width="20%">
+                                                                <label>Distance From</label>
+                                                            </th>
+                                                            <th class="d-none" id="distance_to" width="20%">
+                                                                <label>Distance to</label>
+                                                            </th>
+                                                            <th id="delete_label" width="5%">
                                                                 <label>X</label>
                                                             </th>
                                                             

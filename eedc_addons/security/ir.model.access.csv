@@ -5,4 +5,4 @@ access_hr_academic_id,hr_academic_name,eedc_addons.model_hr_academic,,1,1,1,1
 access_hr_rank_id,hr_rank_name,eedc_addons.model_hr_rank,,1,1,1,1
 access_res_lga_id,res_lga_name,eedc_addons.model_res_lga,,1,1,1,1
 access_hr_employee_transfer_id,hr_employee_transfer_name,eedc_addons.model_hr_employee_transfer,,1,1,1,0
-access_hr_employee_transfer_line_id,hr_hr_employee_transfer_line_name,eedc_addons.model_hr_employee_transfer_line,hr.group_hr_manager,1,1,1,0
+access_hr_employee_transfer_line_id,hr_hr_employee_transfer_line_name,eedc_addons.model_hr_employee_transfer_line,,1,1,1,0
