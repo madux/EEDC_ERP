@@ -24,6 +24,8 @@
     ],
 
     'data': [
+        'data/data.xml',
+        'security/security_view.xml',
         'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
@@ -45,6 +47,8 @@
         'wizard/hr_recruitment_sign_view.xml',
         'wizard/score_sheet_export.xml',
         'security/ir.model.access.csv',
+        # 'security/security_view.xml',
+        'security/ir_rule.xml',
         'data/mail_template_data.xml',
         'data/survey_email.xml',
         'views/preloader.xml',

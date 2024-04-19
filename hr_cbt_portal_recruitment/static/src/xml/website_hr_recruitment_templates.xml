@@ -69,6 +69,27 @@
                                     </p>
                                 </div>
                                 <div class="col-lg-3 offset-lg-1 pb32">
+                                    <t t-if="job.job_section_proficiency_scale">
+                                        <t t-foreach="job.job_section_proficiency_scale" t-as="line">
+                                            <div class="s_rating pb8" data-vcss="001" data-icon="fa-star" data-snippet="s_rating">
+                                                <h6 class="s_rating_title"><t t-esc="line.skill"/></h6>
+                                                <div class="s_rating_icons o_not_editable">
+                                                    <span class="s_rating_active_icons text-primary">
+                                                        <t t-foreach="range(int(line.scale_selection))" t-as="i">
+                                                            <i class="fa fa-star"/>
+                                                        </t>
+                                                    </span>
+                                                    <span class="s_rating_inactive_icons text-primary">
+                                                        <t t-foreach="range(5 - int(line.scale_selection))" t-as="i">
+                                                            <i class="fa fa-star-o"/>
+                                                        </t>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </t>                    
+                                    </t>
+                                </div>                
+                                <!-- <div class="col-lg-3 offset-lg-1 pb32">
                                     <div class="s_rating pb8" data-vcss="001" data-icon="fa-star" data-snippet="s_rating">
                                         <h6 class="s_rating_title">Customer Relationship</h6>
                                         <div class="s_rating_icons o_not_editable">
@@ -112,7 +133,7 @@
                                             </span>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </section>

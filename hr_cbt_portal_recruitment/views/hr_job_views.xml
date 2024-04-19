@@ -36,6 +36,24 @@
                   </tree>
                 </field>
             </page>
+            <page string="Skills Proficiency Scale" name="skills_proficiency_scale">
+              <field name="job_section_proficiency_scale" domain="[('id', '=', None)]">
+                  <form>
+                      <group>
+                        <group>
+                          <field name="skill" />
+                        </group>
+                          <group>
+                            <field name="scale_selection" widget="radio" options="{'horizontal': true}"/>
+                          </group>
+                      </group>
+                  </form>
+                  <tree>
+                      <field name="skill" />
+                      <field name="scale_selection" widget="radio" options="{'horizontal': true}"/>
+                  </tree>
+              </field>
+          </page>                    
           </xpath>
       </field>
     </record>

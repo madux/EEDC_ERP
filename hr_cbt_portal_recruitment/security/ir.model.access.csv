@@ -16,6 +16,7 @@ access_hr_job_recruitment_request_id,access_user_hr_job_recruitment_request,mode
 
 access_description_sections_id,access_description_sections,model_description_sections,,1,1,1,1
 access_job_descriptions_id,access_job_descriptions,model_job_descriptions,,1,1,1,1
+access_skill_proficiency_scale_id,access_skill_proficiency_scale,model_skill_proficiency_scale,,1,1,1,1
 
 access_panelist_score_sheet_id,access_panelist_score_sheet,model_panelist_score_sheet,,1,1,1,1
 access_cbt_recruitment_sign_wizard_id,access_cbt_recruitment_sign_wizard,model_cbt_recruitment_sign_wizard,,1,1,1,1
@@ -26,6 +27,11 @@ access_panelist_score_sheet_id,access_panelist_score_sheet,model_panelist_score_
 access_score_sheet_export_id,access_score_sheet_export,model_score_sheet_export,,1,1,1,1
 access_checklist_setup_wizard_id,access_checklist_setup_wizard,model_checklist_setup_wizard,,1,1,1,1
 access_hr_confirm_wizard_id,access_hr_confirm_wizard,model_hr_confirm_wizard,,1,1,1,1
+
+access_hr_applicant_id,access_hr_applicant,model_hr_applicant,hr_cbt_portal_recruitment.group_hr_recruitment_audit_id,1,1,0,0
+
+access_hr_recruitment_stage_id,access_hr_recruitment_stage,model_hr_recruitment_stage,hr_cbt_portal_recruitment.group_hr_recruitment_audit_id,1,1,0,0
+
 
 
 

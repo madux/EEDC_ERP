@@ -53,6 +53,6 @@
             <!-- <field name="view_id" ref="view_maach_export_form"/> -->
         </record>
 
-          <menuitem id="menu_score_sheet_export" name="Score Sheet Export" parent="hr_recruitment.menu_hr_recruitment_root" action="action_score_sheet_export" sequence="98"/>
+          <menuitem id="menu_score_sheet_export" name="Score Sheet Export" parent="hr_recruitment.menu_hr_recruitment_root" groups="group_hr_recruitment_officer_id" action="action_score_sheet_export" sequence="98"/>
     </data>
 </odoo>
