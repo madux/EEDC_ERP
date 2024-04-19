@@ -298,7 +298,6 @@ class Applicant(models.Model):
     def get_filtered_function(self,  **kwargs):
         view_id_form = self.env.ref('hr_recruitment.hr_applicant_view_form')
         view_id_tree = self.env.ref('hr_recruitment.crm_case_tree_view_job')
-        view_id_kanban = self.env.ref('hr_recruitment.hr_kanban_view_applicant')
         return {
             'type': 'ir.actions.act_window',
             'name': _('Applicant for auditing'),
@@ -306,7 +305,7 @@ class Applicant(models.Model):
             'view_type': 'form',
             'view_mode': 'tree,form',
             'view_id': view_id_tree.id,
-            'views': [(view_id_kanban.id, 'kanban'), (view_id_tree.id, 'tree'), (view_id_form.id,'form')],
+            'views': [(view_id_tree.id, 'tree'), (view_id_form.id,'form')],
             'target': 'current',
             'domain': kwargs.get('mydomain')
             }
