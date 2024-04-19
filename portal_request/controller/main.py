@@ -123,9 +123,14 @@ class PortalRequest(http.Controller):
 		"""Request portal for employee / portal users
 		"""
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
 			# "district_ids": request.env["hr.district"].sudo().search([]),
+			# "district_ids": request.env["hr.district"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
+			"memo_key_ids": request.env["memo.type"].sudo().search([
+				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
+				]),
 			"memo_key_ids": request.env["memo.type"].sudo().search([
 				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
 				]),
@@ -356,6 +361,7 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
 				('memo_type.memo_key', '=', 'cash_advance'),
+				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
 				('state', '=', 'Done') 
 			]
@@ -407,6 +413,7 @@ class PortalRequest(http.Controller):
 				  been approved and taken out from the account side
 				'''
 				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
+				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
@@ -423,6 +430,7 @@ class PortalRequest(http.Controller):
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
 								if memo_request.product_ids else memo_request.amountfig,
+						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						# 'district_id': memo_request.employee_id.ps_district_id.id,
 						'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
 						'product_ids': [
@@ -452,6 +460,7 @@ class PortalRequest(http.Controller):
 						'work_email': "",
 						'subject': "",
 						'description': "",
+						# 'district_id': "",
 						# 'district_id': "",
 						'request_date': "",
 						'product_ids': "",
@@ -487,9 +496,9 @@ class PortalRequest(http.Controller):
 				"more": True,
 			}
 		})
-
+	
 	@http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
-	def get_portal_product(self, **post):
+	def get_portal_employee(self, **post):
 		request_type_option = post.get('request_type')
 		if request_type_option:
 			if request_type_option == "employee":
@@ -543,7 +552,64 @@ class PortalRequest(http.Controller):
 				"pagination": {
 					"more": True,
 				}
-			})	
+			})
+
+	# @http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
+	# def get_portal_employee(self, **post):
+	# 	request_type_option = post.get('request_type')
+	# 	if request_type_option:
+	# 		if request_type_option == "employee":
+	# 			employeeItems = json.loads(post.get('employeeItems'))
+	# 			_logger.info(f'Employeeitemmms {employeeItems}')
+	# 			domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems])]
+	# 			employees = request.env["hr.employee"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name} - {item.employee_number}'} for item in employees],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})	
+	# 		elif request_type_option == "department":
+	# 			domain = [('active', '=', True)]
+	# 			departments = request.env["hr.department"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		elif request_type_option == "role":
+	# 			domain = [('active', '=', True)]
+	# 			departments = request.env["hr.job"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		elif request_type_option == "district":
+	# 			domain = []
+	# 			departments = request.env["hr.district"].sudo().search(domain)
+	# 			return json.dumps({
+	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})
+	# 		else:	
+	# 			return json.dumps({
+	# 				"results": [{"id": '',"text": '',}],
+	# 				"pagination": {
+	# 					"more": True,
+	# 				}
+	# 			})	
+	# 	else:
+	# 		return json.dumps({
+	# 			"results": [{"id": '',"text": ''}],
+	# 			"pagination": {
+	# 				"more": True,
+	# 			}
+	# 		})	
 
 	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
@@ -642,6 +708,7 @@ class PortalRequest(http.Controller):
 				}
 
 	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
 	
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
 		attachment = request.env['ir.attachment'].sudo()
@@ -706,9 +773,11 @@ class PortalRequest(http.Controller):
 		<b>Description: </b> {post.get("description", "")}<br/>
 		<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
 		"""
+		memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
 		vals = {
 			"employee_id": employee_id.id,
-			"memo_type": request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1).id,
+			"memo_type": memo_type.id,
+			"memo_type_key": memo_type.memo_key,
 			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
 			"email": post.get("email_from"),
 			"phone": post.get("phone_number"),
@@ -718,6 +787,7 @@ class PortalRequest(http.Controller):
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
+			# "district_id": district_id,
 			# "district_id": district_id,
 			"applicationChange": True if post.get("applicationChange") == "on" else False,
 			"enhancement": True if post.get("enhancement") == "on" else False,
@@ -753,8 +823,11 @@ class PortalRequest(http.Controller):
 			if post.get("selectRequestOption") != "employee_update":
 				self.generate_request_line(DataItems, memo_id)
 		
-			elif post.get("selectRequestOption") == "employee_update":
+			else:
+				# post.get("selectRequestOption") == "employee_update":
 				self.generate_employee_transfer_line(DataItems, memo_id)
+		else:
+			raise ValidationError("Haaaaaahaaaaaa no dsta item")
 		
 		## generating attachment
 		if 'other_docs' in request.params:
@@ -821,6 +894,8 @@ class PortalRequest(http.Controller):
 					'note': rec.get('note'),
 					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
 					'to_retire': rec.get('line_checked'),
+					'distance_from': rec.get('distance_from'),
+					'distance_to': rec.get('distance_to'),
 				})
 			counter += 1
 
@@ -836,15 +911,17 @@ class PortalRequest(http.Controller):
 			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
+			district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 			# district_id = district.browse([int(rec.get('new_district'))]) if rec.get('new_district') else False
 
-			if employee_id and transfer_dept_id and role_id:#and district_id:
+			if employee_id and transfer_dept_id and role_id: 
 				transfer_line.create({
 					'memo_id': memo_id.id,
 					'employee_id': employee_id.id, 
 					'transfer_dept': transfer_dept_id.id,
 					'current_dept_id': employee_id.department_id.id,
 					'new_role': role_id.id,
+					'new_district': district_id.id,
 					# 'new_district': district_id.id, 
 				})
 			counter += 1
@@ -891,6 +968,8 @@ class PortalRequest(http.Controller):
 		
 		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
 		
+		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
+		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
@@ -908,6 +987,7 @@ class PortalRequest(http.Controller):
 				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
+			('memo_type.memo_key', 'in', memo_type),
 			('memo_type.memo_key', 'in', memo_type),
 		]
 		if search_param:
@@ -1025,11 +1105,16 @@ class PortalRequest(http.Controller):
 					"message": "No stage configured or found for this request. Contact admin", 
 					}
 			elif status in ["Approve"]:
-				if not (request_record.supervisor_comment or request_record.manager_comment):
-					return {
-						"status": False, 
-						"message": "Please Ensure to provide manager's or supervisor's comment", 
-						}
+				"""First check if the server """
+				# approver_ids, stage = request_record.get_next_stage_artifact()
+				current_stage_approvers = request_record.sudo().stage_id.approver_ids
+				# user_employeeid = request.env.user.employee_id.id
+				if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
+					if not (request_record.supervisor_comment or request_record.manager_comment):
+						return {
+							"status": False, 
+							"message": "Please Ensure to provide manager's or supervisor's comment", 
+							}
 			
 				is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					filtered(lambda appr: appr.is_approved_stage == True) 
@@ -1037,7 +1122,6 @@ class PortalRequest(http.Controller):
 					stage_id = is_approved_stage[0] 
 					# is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
 					# filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-					current_stage_approvers = request_record.sudo().stage_id.approver_ids
 					if request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
 						request_record.sudo().update_final_state_and_approver()
 						request_record.sudo().write({

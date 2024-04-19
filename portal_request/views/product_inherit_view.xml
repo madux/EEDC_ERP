@@ -30,11 +30,18 @@
                                 <field name="is_vehicle_product" invisible="0"/>
                                 <field name="vehicle_plate_number" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)], 'required': [('is_vehicle_product', '=', True)]}"/>
                                 <field name="vehicle_reg_number" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
-                            </group>
-                            <group name="group_general">
+                                <field name="current_mileage" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
                                 <field name="vehicle_color" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)], 'required': [('is_vehicle_product', '=', True)]}"/>
                                 <field name="vehicle_make" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)], 'required': [('is_vehicle_product', '=', True)]}"/>
                                 <field name="vehicle_model" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)], 'required': [('is_vehicle_product', '=', True)]}"/>
+                            </group>
+                            <group name="group_general">
+                                <field name="maximum_trip_due_for_maintenance" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
+                                <field name="total_distance_covered" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
+                                <field name="last_service_by" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
+                                <field name="last_driven_by" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
+                                <field name="not_to_be_moved" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
+                                <field name="vehicle_status" invisible="0" attrs="{'invisible': [('is_vehicle_product', '=', False)]}"/>
                             </group>
                         </group>
                     </page>
@@ -111,5 +118,6 @@
 			</field>
 		</record>
         <menuitem id="menu_vehicle_setting_menu" name="Vehicle Settings" sequence="10" parent="portal_request.menu_portal_request" action="portal_request.action_vehicle_product_id"/>
+        <menuitem id="menu_vehicle_setting_product_menu" name="Vehicle Settings" sequence="3" parent="stock.menu_stock_inventory_control" action="portal_request.action_vehicle_product_id"/>
     </data>
 </odoo> 

@@ -14,28 +14,72 @@ _logger = logging.getLogger(__name__)
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
+    # @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
+    # def check_duplicate_vehicle_props(self):
+    #     self.ensure_one()
+    #     product = self.env['product.template'].sudo()
+    #     for rec in self:
+    #         duplicate = product.search([('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
+    #         if len([r for r in duplicate]) > 1:
+    #             raise ValidationError("Product with same vehicle plate number already existing")
+    #         duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
+    #         if len([r for r in duplicate_vp]) > 1:
+    #             raise ValidationError("Product with same vehicle registration number already existing")
+    #         duplicate_name = product.search([('name', '=', rec.name)], limit=2)
+    #         if len([r for r in duplicate_name]) > 1:
+    #             raise ValidationError("Product with same vehicle name already existing")
+
     @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
     def check_duplicate_vehicle_props(self):
         self.ensure_one()
         product = self.env['product.template'].sudo()
         for rec in self:
-            duplicate = product.search([('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
-            if len([r for r in duplicate]) > 1:
-                raise ValidationError("Product with same vehicle plate number already existing")
-            duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
-            if len([r for r in duplicate_vp]) > 1:
-                raise ValidationError("Product with same vehicle registration number already existing")
-            duplicate_name = product.search([('name', '=', rec.name)], limit=2)
-            if len([r for r in duplicate_name]) > 1:
-                raise ValidationError("Product with same vehicle name already existing")
+            if rec.vehicle_plate_number:
+                duplicate = product.search([('is_vehicle_product', '=', True),('vehicle_plate_number', '=', rec.vehicle_plate_number)])
+                if len([r for r in duplicate]) > 1:
+                    raise ValidationError("Product with same vehicle plate number already existing")
+            if rec.vehicle_reg_number:
+                duplicate_vp = product.search([
+                    ('is_vehicle_product', '=', True),
+                    ('vehicle_reg_number', '=', rec.vehicle_reg_number)])
+                if len([r for r in duplicate_vp]) > 1:
+                    raise ValidationError("Product with same vehicle registration number already existing")
+            if rec.name:
+                duplicate_name = product.search([('name', '=', rec.name)], limit=2)
+                if len([r for r in duplicate_name]) > 1:
+                    raise ValidationError("Product with same vehicle name already existing")
     
     is_vehicle_product = fields.Boolean("Is vehicle", default=False)
     vehicle_plate_number = fields.Char("Vehicle Plate Number")
     vehicle_reg_number = fields.Char("Vehicle Reg Number")
+    
     vehicle_color = fields.Char("Vehicle Color")
     vehicle_model = fields.Char("Vehicle Model")
     vehicle_make = fields.Char("Vehicle Make")
     is_available = fields.Char("Is Available")
+
+    maximum_trip_due_for_maintenance = fields.Integer("Maximum trip due for maintenance")
+    total_distance_covered = fields.Integer("Total distance covered",
+                                                       help="Total distance covered as of the time of use"
+                                                       )
+    current_mileage = fields.Integer("Current Mileage")
+    last_service_by = fields.Char("Last serviced by")
+    last_driven_by = fields.Char("Last driven by")
+    not_to_be_moved = fields.Boolean("No to be moved")
+    vehicle_status = fields.Selection(
+        [
+            ("Active", "Active"),
+            ("Faulty", "Faulty"),
+            ("Salvaged", "Salvaged"),
+            ("Long_used", "Long used"),
+            ("Deprecated", "Deprecated"),
+            ("Damaged", "Damaged"),
+            
+        ], 
+        readonly=False,
+        default="Active",
+        store=True,
+    )
 
     @api.onchange('is_vehicle_product')
     def onchange_is_vehicle_product(self):

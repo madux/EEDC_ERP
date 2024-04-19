@@ -17,7 +17,7 @@ class RequestLine(models.Model):
         string="Product code", 
         related="product_id.default_code"
         )
-    description = fields.Char(
+    description = fields.Text(
         string="Description"
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
@@ -32,6 +32,13 @@ class RequestLine(models.Model):
     state = fields.Char(string="State")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
+
+    distance_from = fields.Text(
+        string="From"
+        )
+    distance_to = fields.Text(
+        string="Destination"
+        )
     # memo_type = fields.Selection(
     #     [
     #     ("Payment", "Payment"), 

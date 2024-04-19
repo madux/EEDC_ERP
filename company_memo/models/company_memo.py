@@ -111,7 +111,7 @@ class Memo_Model(models.Model):
                                 ('Sent', 'Sent'),
                                 ('Approve', 'Waiting For Payment / Confirmation'),
                                 ('Approve2', 'Memo Approved'),
-                                ('Done', 'Awaiting System Validation'),
+                                ('Done', 'Completed'),
                                 ('Refuse', 'Refused'),
                               ], string='Status', index=True, readonly=True,
                              copy=False, default='submit',
@@ -243,10 +243,9 @@ class Memo_Model(models.Model):
     loan_reference = fields.Integer(string="Loan Ref")
     active = fields.Boolean('Active', default=True)
 
-    product_ids = fields.One2many('request.line', 'memo_id', string ='Products') 
-    leave_start_date = fields.Datetime('Leave Start Date',  default=fields.Date.today())
+    product_ids = fields.One2many('request.line', 'memo_id', string ='Request Line') 
+    leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
-
     request_date = fields.Datetime('Request Start Date')
     request_end_date = fields.Datetime('Request End Date')
 
@@ -685,7 +684,7 @@ class Memo_Model(models.Model):
             pass
         else:
             # updating the next stage
-            approver_ids, next_stage_id= self.get_next_stage_artifact(self.stage_id)
+            approver_ids, next_stage_id = self.get_next_stage_artifact(self.stage_id)
             self.stage_id = next_stage_id
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
@@ -848,6 +847,8 @@ class Memo_Model(models.Model):
         self.update_final_state_and_approver()
         self.sudo().write({'res_users': [(4, users.id)]})
         return self.generate_memo_artifacts(body_msg, body)
+    
+     
   
     def generate_memo_artifacts(self, body_msg, body):
         if self.memo_type.memo_key == "material_request":
@@ -869,6 +870,9 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
+        # elif self.memo_type.memo_key == "employee_update":
+        #     return self.generate_employee_transfer(body_msg)
+        #     # self.mail_sending_direct(body_msg)
         else:
             pass
 
