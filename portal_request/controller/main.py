@@ -860,6 +860,7 @@ class PortalRequest(http.Controller):
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
+			'memo_type_key': memo_id.memo_type.memo_key,
 		})
 		_logger.info(f'''
 			   Successfully Registered! with memo id Approver = {approver_ids} \
@@ -884,6 +885,8 @@ class PortalRequest(http.Controller):
 			if product_id:
 				request.env['request.line'].sudo().create({
 					'memo_id': memo_id.id,
+					'memo_type': memo_id.memo_type.id,
+					'memo_type_key': memo_id.memo_type.memo_key,
 					'product_id': product_id.id, 
 					#int(rec.get('product_id')) if rec.get('product_id') else False,
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,

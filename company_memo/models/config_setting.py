@@ -190,7 +190,6 @@ class MemoConfig(models.Model):
                             stages.append(stage_id.id)
                         memo_config.stage_ids = [(6, 0, stages)]
 
-    
     def custom_duplicate(self):
         return {
             'name': 'Duplicate Memo Config',
@@ -205,3 +204,10 @@ class MemoConfig(models.Model):
             },
         }
 
+
+class MemoCategory(models.Model):
+    _name = "memo.category"
+    _description = "Memo document Category"
+
+    name = fields.Char('Name')
+    
