@@ -52,6 +52,6 @@
             <!-- <fi neld name="view_id" ref="view_maach_export_form"/> -->
         </record>
 
-          <menuitem id="menu_documentation_type" name="Documentation type" parent="hr_recruitment.menu_hr_recruitment_root" action="action_documentation_type" sequence="99"/>
+          <menuitem id="menu_documentation_type" name="Documentation type" parent="hr_recruitment.menu_hr_recruitment_root" groups="group_hr_recruitment_officer_id" action="action_documentation_type" sequence="99"/>
     </data>
 </odoo>

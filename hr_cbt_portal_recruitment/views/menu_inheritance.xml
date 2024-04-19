@@ -1,11 +1,18 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <data noupdate="0">
+
+        <!-- This is recruitment main menu. Include new group you want to see Recruitment module -->
+        <record id="hr_recruitment.menu_hr_recruitment_root" model="ir.ui.menu">
+            <field name="name">Recruitment</field>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_recruitment.group_hr_recruitment_user'), ref('hr_recruitment.group_hr_recruitment_interviewer'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_audit_id')])]"/>
+        </record>
     
         <menuitem
             id="menu_hr_cbt_survey"
             name="CBT"
             sequence="10"
+            groups="hr_cbt_portal_recruitment.group_hr_recruitment_officer_id,hr_cbt_portal_recruitment.group_hr_recruitment_admin_id"
             parent="hr_recruitment.menu_hr_recruitment_root"
             />
 
@@ -55,6 +62,26 @@
             sequence="130"
             groups="survey.group_survey_user"
             web_icon="survey,static/description/icon.svg"/>
+
+        <record id="hr_recruitment.menu_hr_recruitment_configuration" model="ir.ui.menu">
+            <field name="name">Configuration</field>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id')])]"/>
+        </record>
+
+        <record id="hr_recruitment.report_hr_recruitment" model="ir.ui.menu">
+            <field name="name">Reporting</field>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id')])]"/>
+        </record>
+
+        <record id="hr_recruitment.menu_crm_case_categ_all_app" model="ir.ui.menu">
+            <field name="name">All Applications</field>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id')])]"/>
+        </record>
+
+        <record id="hr_recruitment.menu_hr_job_position" model="ir.ui.menu">
+            <field name="name">By Job Positions</field>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id')])]"/>
+        </record>
 
     </data>
     

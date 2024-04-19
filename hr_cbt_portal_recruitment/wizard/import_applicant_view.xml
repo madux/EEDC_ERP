@@ -53,6 +53,7 @@
             id="menu_import_applicants_records"
             name="Import Applicants"
             parent="hr_recruitment.menu_hr_recruitment_root"
+            groups="group_hr_recruitment_officer_id"
             action="hr_cbt_portal_recruitment.action_wizard_hr_import_applicants"
             sequence="102"/>
 

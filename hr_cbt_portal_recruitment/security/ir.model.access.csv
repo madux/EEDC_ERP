@@ -28,5 +28,10 @@ access_score_sheet_export_id,access_score_sheet_export,model_score_sheet_export,
 access_checklist_setup_wizard_id,access_checklist_setup_wizard,model_checklist_setup_wizard,,1,1,1,1
 access_hr_confirm_wizard_id,access_hr_confirm_wizard,model_hr_confirm_wizard,,1,1,1,1
 
+access_hr_applicant_id,access_hr_applicant,model_hr_applicant,hr_cbt_portal_recruitment.group_hr_recruitment_audit_id,1,1,0,0
+
+access_hr_recruitment_stage_id,access_hr_recruitment_stage,model_hr_recruitment_stage,hr_cbt_portal_recruitment.group_hr_recruitment_audit_id,1,1,0,0
+
+
 
 
