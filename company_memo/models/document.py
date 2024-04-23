@@ -157,7 +157,19 @@ class DocumentFolder(models.Model):
                         rec.number_failed_submission += 1
 
     def action_view_documents(self):
-        pass 
+        view_id = self.env.ref('documents.document_view_kanban').id
+        submitted_documents = self.document_ids
+        ret = {
+                'name': "Documents",
+                'view_mode': 'form',
+                'view_id': view_id,
+                'view_type': 'kanban',
+                'res_model': 'documents.document', 
+                'type': 'ir.actions.act_window',
+                'domain': [('id', 'in', submitted_documents.ids)],
+                'target': 'current'
+                }
+        return ret  
 
     def action_view_success_rate(self):
         pass
@@ -166,11 +178,53 @@ class DocumentFolder(models.Model):
         pass
 
     def action_view_number_of_awaiting(self):
-        pass
+        view_id = self.env.ref('company_memo.tree_memo_model_view2').id
+        memo = self.env['memo.model'].search([
+            ('document_folder', '=', self.id), 
+            ('state', '=', 'submit')])
+        ret = {
+                'name': "Document requests",
+                'view_mode': 'tree',
+                'view_id': view_id,
+                'view_type': 'kanban',
+                'res_model': 'memo.model', 
+                'type': 'ir.actions.act_window',
+                'domain': [('id', 'in', [rec.id for rec in memo])],
+                'target': 'current'
+                }
+        return ret  
 
     def action_view_open_documents(self):
-        pass
+        view_id = self.env.ref('company_memo.tree_memo_model_view2').id
+        memo = self.env['memo.model'].search([
+            ('document_folder', '=', self.id), 
+            ('state', '=', 'Sent')])  
+        ret = {
+                'name': "Document requests",
+                'view_mode': 'tree',
+                'view_id': view_id,
+                'view_type': 'kanban',
+                'res_model': 'memo.model', 
+                'type': 'ir.actions.act_window',
+                'domain': [('id', 'in', [rec.id for rec in memo])],
+                'target': 'current'
+                }
+        return ret  
 
     def action_view_closed_documents(self):
-        pass
+        view_id = self.env.ref('company_memo.tree_memo_model_view2').id
+        memo = self.env['memo.model'].search([
+            ('document_folder', '=', self.id), 
+            ('state', '=', 'Done')])
+        ret = {
+                'name': "Documents",
+                'view_mode': 'tree',
+                'view_id': view_id,
+                'view_type': 'kanban',
+                'res_model': 'memo.model', 
+                'type': 'ir.actions.act_window',
+                'domain': [('id', 'in', [rec.id for rec in memo])],
+                'target': 'current'
+                }
+        return ret
 

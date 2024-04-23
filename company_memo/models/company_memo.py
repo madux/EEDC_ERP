@@ -334,14 +334,12 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('res_model', '=', 'memo.model')]"
         )
-     
     internal_memo_option = fields.Selection(
         [
         ("none", ""),
         ("all", "All"), 
         ("selected", "Selected"),
         ], string="All / Selected")
-    
     partner_ids = fields.Many2many(
         'res.partner', 
         'memo_res_partner_rel',
@@ -349,7 +347,6 @@ class Memo_Model(models.Model):
         'memo_partner_id',
         string='Reciepients', 
         )
-    
     document_folder = fields.Many2one('documents.folder', string="Document folder")
     to_create_document = fields.Boolean(
         'Registered in Document Management',
@@ -363,7 +360,9 @@ class Memo_Model(models.Model):
     def check_next_reoccurance_constraint(self):
         if self.document_folder and self.document_folder.next_reoccurance_date:
             if fields.Date.today() < self.document_folder.next_reoccurance_date:
-                raise ValidationError(f'You cannot submit this document because the todays date is lesser than the reoccurence date {self.document_folder.next_reoccurance_date}')
+                pass
+                # raise ValidationError(f'''You cannot submit this document because the todays date is
+                #                        lesser than the reoccurence date {self.document_folder.next_reoccurance_date}''')
     
     def send_memo_to_contacts(self):
         if not self.partner_ids:

@@ -19,7 +19,7 @@
                             <field name="employee_ids" widget="one2many_list">
                                 <tree editable="bottom">
                                 <field name="name" />
-                                <field name="department_id" />
+                                <!-- <field name="department_id" /> -->
                                 <field name="employee_number" /> 
                                 </tree>
                             </field>
