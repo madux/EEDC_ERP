@@ -650,7 +650,6 @@ class Memo_Model(models.Model):
         return initial_stage_id
         
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
-        # raise ValidationError(self.stage_id.name)
         """
         args: from_website: used to decide if the record is 
         generated from the website or from odoo internal use

@@ -27,7 +27,7 @@
                     <button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
                     <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
                     <field name="computed_stage_ids" invisible="1" />
-                    <field name="stage_id" widget="statusbar" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
+                    <field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
                 </header>
                     <sheet>
                         <div class="row">
