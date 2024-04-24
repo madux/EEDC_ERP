@@ -17,7 +17,7 @@
                             
                             <!-- <field name = "users_followers" widget="many2many_tags" required="0"/> -->
                             <!-- <field name="amountfig"/> -->
-                            <field name="is_approver"/>
+                            <field name="is_approver" invisible="1" />
                             <field name="all_superior_ids" widget="many2many_tags"/>
                             <field name="date"/>
                             <!-- <field name="next_stage_id"/> -->

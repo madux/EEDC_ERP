@@ -366,7 +366,17 @@ class Memo_Model(models.Model):
                     'default_body_html': self.description,
                     'default_body': self.description,
                 },
-            } 
+            }
+
+    computed_stage_ids = fields.Many2many('memo.stage', compute='_compute_stage_ids', store=True)
+
+    @api.depends('stage_id.memo_config_id')
+    def _compute_stage_ids(self):
+        for record in self:
+            if record.stage_id.memo_config_id:
+                record.computed_stage_ids = record.stage_id.memo_config_id.stage_ids
+            else:
+                record.computed_stage_ids = False 
     # MEMO THINGS 
     
     ################################
@@ -378,7 +388,7 @@ class Memo_Model(models.Model):
                 ('department_id', '=', self.employee_id.department_id.id)
                 ]
         else:
-            domain=[('id', '=', [])]
+            domain=[('id', '=', 0)]
         return domain
     
     @api.onchange('invoice_ids')
