@@ -359,10 +359,11 @@ class Memo_Model(models.Model):
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
         if self.document_folder and self.document_folder.next_reoccurance_date:
-            if fields.Date.today() < self.document_folder.next_reoccurance_date:
-                pass
-                # raise ValidationError(f'''You cannot submit this document because the todays date is
-                #                        lesser than the reoccurence date {self.document_folder.next_reoccurance_date}''')
+            difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
+            # if fields.Date.today() < self.document_folder.next_reoccurance_date:
+            if difference_of_days_for_submission not in range(0, 7): # one week to submission
+                raise ValidationError(f'''You cannot submit this document because todays date is
+                                       lesser than the reoccurence date {self.document_folder.next_reoccurance_date}''')
     
     def send_memo_to_contacts(self):
         if not self.partner_ids:
@@ -917,6 +918,8 @@ class Memo_Model(models.Model):
                 ('res_id', '=', self.id), 
                 ('res_model', '=', self._name)
             ])
+            if not attach_document_ids:
+                raise ValidationError("No document attached")
             document_folder = document_folder_obj.search([('id', '=', self.document_folder.id)])
             if document_folder:
                 for att in attach_document_ids:
@@ -925,9 +928,10 @@ class Memo_Model(models.Model):
                         'folder_id': document_folder.id,
                         'attachment_id': att.id,
                         'memo_category_id': self.memo_category_id.id,
+                        'memo_id': self.id,
                         'owner_id': self.env.user.id,
                         'is_shared': True,
-                        'submitted_date': fields.Date.today(),
+                        'submitted_date': self.date # fields.Date.today(),
                     })
                     document_folder.update({'document_ids': [(4, document.id)]})
                 document_folder.update_next_occurrence_date()
@@ -1688,3 +1692,31 @@ class Memo_Model(models.Model):
         for delete in self.filtered(lambda delete: delete.state in ['Sent','Approve2', 'Approve']):
             raise ValidationError(_('You cannot delete a Memo which is in %s state.') % (delete.state,))
         return super(Memo_Model, self).unlink()
+    
+    @api.model
+    def retrieve_dashboard(self):
+        """ This function returns the values to populate the custom dashboard in
+            the purchase order views.
+        """
+        result = {
+            'all_to_send': 0,
+            'all_waiting': 0,
+            'all_late': 0,
+            'my_to_send': 0,
+            'my_waiting': 0,
+            'my_late': 0,
+            'all_avg_order_value': 0,
+            'all_avg_days_to_purchase': 0,
+            'all_total_last_7_days': 0,
+            'all_sent_rfqs': 0,
+        } 
+        # easy counts
+        mo = self.env['memo.model']
+        result['all_to_send'] = mo.search_count([('state', '=', 'draft')])
+        result['my_to_send'] = mo.search_count([('state', '=', 'done')])
+        # result['all_waiting'] = po.search_count([('state', '=', 'sent'), ('date_order', '>=', fields.Datetime.now())])
+        # result['my_waiting'] = po.search_count([('state', '=', 'sent'), ('date_order', '>=', fields.Datetime.now()), ('user_id', '=', self.env.uid)])
+        # result['all_late'] = po.search_count([('state', 'in', ['draft', 'sent', 'to approve']), ('date_order', '<', fields.Datetime.now())])
+        # result['my_late'] = po.search_count([('state', 'in', ['draft', 'sent', 'to approve']), ('date_order', '<', fields.Datetime.now()), ('user_id', '=', self.env.uid)])
+
+        return result

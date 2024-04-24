@@ -7,6 +7,7 @@ class Document(models.Model):
     _inherit = 'documents.document'
 
     memo_category_id = fields.Many2one('memo.category', string="Category") 
+    memo_id = fields.Many2one('memo.model', string="Memo") 
     submitted_date = fields.Date(
         string="submitted date")
 
@@ -30,6 +31,8 @@ class DocumentFolder(models.Model):
 
     submission_maximum_range = fields.Integer(
         string="Maximum submission range", default=2)
+    submission_minimum_range = fields.Integer(
+        string="Minimum submission range", default=2)
     number_failed_submission = fields.Integer(
         string="Failed submission", 
         help='''update incrementally if the interval btw the current date and next 
@@ -116,8 +119,8 @@ class DocumentFolder(models.Model):
     def get_reoccurance_date(self):
         # TODO to be consider
         for rec in self:
-            if rec.period_type and rec.interval_period:
-                interval = rec.interval_period
+            interval = rec.interval_period or 0
+            if rec.period_type:
                 recurrance_date = rec.next_reoccurance_date if rec.next_reoccurance_date else fields.Date.today()
                 if rec.period_type == 'months':
                     rec.next_reoccurance_date = recurrance_date + relativedelta(months=interval)

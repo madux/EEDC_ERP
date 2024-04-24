@@ -20,7 +20,7 @@
         'views/memo_config_view.xml',
         'views/account_account_view.xml',
         'views/account_move.xml',
-        'views/document_view.xml',
+        'views/docum.xml',
         'views/document_kanban_view.xml',
         'wizard/return_memo_wizard_view.xml',
         'reports/report_memo.xml',
