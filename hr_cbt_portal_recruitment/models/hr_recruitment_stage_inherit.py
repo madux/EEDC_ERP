@@ -16,3 +16,5 @@ class hrRecruitmentStageInherit(models.Model):
         ],
         string='Stage Type'
     )
+
+    active = fields.Boolean(default=True)

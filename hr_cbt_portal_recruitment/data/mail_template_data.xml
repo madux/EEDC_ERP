@@ -13,7 +13,7 @@
                         Dear <t t-out="object.partner_id.name or 'Applicant'">Applicant</t><br/><br/>
                         You have been invited to take an assessment/test as part of your job application.
                         <div style="margin: 16px 0px 16px 0px;">
-                            <a t-att-href="(object.get_start_url())"
+                            <a t-att-href="'%s%s' % (object.get_base_url(),object.get_start_url())"
                                 style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
                                 Start Test
                             </a>
@@ -105,7 +105,9 @@
                                             Once you navigate to the link, click on start icon, and fill required / optional fields 
                                             Ensure all the forms listed here are provided:
                                             or use the link below to upload your data from the web portal
-                                            <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a>
+                                            <!-- <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a> -->
+                                            <a t-att-href="'%s/documentation-request/%s/' %(object.get_base_url(), object.id)">Click to upload</a>
+
                                             <br />
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">
                                                 <li>

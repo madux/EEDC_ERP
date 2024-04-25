@@ -11,7 +11,7 @@
                             <field name="documentation_type_ids" required="1" widget="many2many_tags"/>
                         </group>
                         <group>
-                            <field name="sign_template_ids" required="1" widget="many2many_tags"/>
+                            <field name="sign_template_ids" required="0" widget="many2many_tags"/>
                         </group>
                         <notebook>
                             <page name="Applicants_move" string="Applicants">
