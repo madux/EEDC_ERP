@@ -167,7 +167,7 @@ class Applicant(models.Model):
                 rec.test_passed = False
 
     def get_base_url(self):
-        base_url = 	http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
         return base_url
 
     @api.depends("survey_panelist_input_ids")
