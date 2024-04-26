@@ -117,15 +117,12 @@ class OfficeDashboard(http.Controller):
         2. Create a new memo of type document request,
         3. Approve the memo, 
         4. Reset the next occurrence and try again
-        
         '''
 		hr_department = request.env['hr.department'].sudo()
 		department_total_progress = []
 		departments = []
 		if memo_type_param == "document_request":
 			document_folders = request.env['documents.folder'].search([])
-			# documents_document = request.env['documents.document'].sudo()# .search([])
-
 			total_document_folders = len(document_folders) # 5
 			document_ratio = 100 / total_document_folders # == 20
 			# document_ratio = float_round(document_ratio, precision_rounding=2)
@@ -140,7 +137,6 @@ class OfficeDashboard(http.Controller):
 					maximum_date = doc.next_reoccurance_date + relativedelta(days=doc.submission_maximum_range)
 					docu_ids = doc.mapped('document_ids')
 					if docu_ids:
-						# raise ValidationError(hr_department.browse(department).id)
 						submitted_documents_document = docu_ids.filtered(
 							lambda su: su.submitted_date >= min_date and su.submitted_date <= maximum_date and su.memo_id.dept_ids.id == hr_department.browse(department).id if su.submitted_date else False
 						) # check if the submitted document is within the min date and maximum date and count it as +1
@@ -148,36 +144,7 @@ class OfficeDashboard(http.Controller):
 							department_submission += len(submitted_documents_document)
 				dept_document_ratio = int(department_submission * document_ratio) # total to display 4 * 20 == 80
 				department_total_progress.append(dept_document_ratio)
-				# raise ValidationError(f"""{min_date},{maximum_date},  ==> ratio =={document_ratio} ===={department_submission} === {dept_document_ratio}""" )
 		return department_total_progress, [hr_department.browse(dp).name for dp in list(set(departments))]
- 
-
-	 
-
-	
-	# def get_url(self, id, name):
-    #     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-    #     base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
-    #     return "<a href={}> </b>Click<a/>. ".format(base_url)
-	
-	
-	# def get_documents_to_upload(self):
-	# 	document_folders = request.env['documents.folder'].sudo()
-	# 	document_count = 0
-	# 	today =  fields.Date.today()
-	# 	for rec in document_folders:
-	# 		_logger.info(f"{rec.name} fuckker")
-	# 		if (rec.next_reoccurance_date >= fields.Date.today()): # 6 > 4
-	# 			days_before_reoccurence = abs(fields.Date.today() - rec.next_reoccurance_date).days # 2 days to the next reoccurence date
-	# 			date_from = today + relativedelta(days=-7)  # 7 days from today 
-	# 			date_to = rec.next_reoccurance_date + relativedelta(days=2) # 2 days after reoccurance_date i.e 8th
-	# 			if days_before_reoccurence in range(0, 7): # 7 days to 
-	# 				document_within_range = rec.mapped('document_ids').filtered(
-	# 					lambda s: s.submitted_date >= date_from and s.submitted_date <= date_to
-	# 				)
-	# 				if not document_within_range:
-	# 					document_count += 1
-	# 	return document_count + 4
 
 	@http.route(["/memo-records"], type='http', auth='user', website=True, website_published=True)
 	def open_related_record_view(self):

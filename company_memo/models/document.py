@@ -1,9 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 from dateutil.relativedelta import relativedelta
-# from .tools import (
-#     float_repr, float_round, float_compare, float_is_zero, human_size, 
-# )
+
 
 class Document(models.Model):
     _inherit = 'documents.document'
@@ -78,7 +76,10 @@ class DocumentFolder(models.Model):
 
     def get_awaiting_submission(self):
         for t in self:
-            memo = self.env['memo.model'].search([('document_folder', '=', t.id), ('state', '=', 'submit')])
+            memo = self.env['memo.model'].search([
+                ('document_folder', '=', t.id), 
+                ('state', '=', 'submit')
+                ])
             if t.name:
                 t.number_of_awaiting = len([rec.id for rec in memo]) if memo else 0
             else:
@@ -110,10 +111,6 @@ class DocumentFolder(models.Model):
                 self.next_reoccurance_date = recurrance_date + relativedelta(years=interval)
             elif self.period_type == 'days':
                 self.next_reoccurance_date = recurrance_date + relativedelta(days=interval)
-            # elif self.period_type == 'minutes':
-            #     rec.next_reoccurance_date = recurrance_date + relativedelta(minutes=interval)
-            # elif rec.period_type == 'hours':
-            #     rec.next_reoccurance_date = recurrance_date + relativedelta(hours=interval)
         else:
             self.next_reoccurance_date = False
 
@@ -130,10 +127,6 @@ class DocumentFolder(models.Model):
                     rec.next_reoccurance_date = recurrance_date + relativedelta(years=interval)
                 elif rec.period_type == 'days':
                     rec.next_reoccurance_date = recurrance_date + relativedelta(days=interval)
-                # elif rec.period_type == 'minutes':
-                #     rec.next_reoccurance_date = recurrance_date + relativedelta(minutes=interval)
-                # elif rec.period_type == 'hours':
-                #     rec.next_reoccurance_date = recurrance_date + relativedelta(hours=interval)
             else:
                 rec.next_reoccurance_date = False
 
@@ -161,7 +154,6 @@ class DocumentFolder(models.Model):
                     if not document_within_range:
                         rec.number_failed_submission += 1
 
-    # def get_xy_data(self, memo_type_param == "document_request"):
     def get_xy_data(self):
         '''Test for document charts
         1. configure document folder with occurrence and min and max range set to 2 . ie two days
@@ -191,7 +183,6 @@ class DocumentFolder(models.Model):
                 maximum_date = doc.next_reoccurance_date + relativedelta(days=doc.submission_maximum_range)
                 docu_ids = doc.mapped('document_ids')
                 if docu_ids:
-                    # raise ValidationError(hr_department.browse(department).id)
                     submitted_documents_document = docu_ids.filtered(
                         lambda su: su.submitted_date >= min_date and su.submitted_date <= maximum_date and su.memo_id.dept_ids.id == hr_department.browse(department).id if su.submitted_date else False
                     ) # check if the submitted document is within the min date and maximum date and count it as +1
@@ -199,8 +190,6 @@ class DocumentFolder(models.Model):
                         department_submission += len(submitted_documents_document)
             dept_document_ratio = int(department_submission * document_ratio) # total to display 4 * 20 == 80
             department_total_progress.append(dept_document_ratio)
-            # raise ValidationError(f"""{min_date},{maximum_date},  ==> ratio =={document_ratio} ===={department_submission} === {dept_document_ratio}""" )
-        # raise ValidationError(f"""DEPARTMENT COMPUTATION {department_total_progress}""" )
         return department_total_progress, [hr_department.browse(dp).name for dp in list(set(departments))]
 
     def action_view_documents(self):
