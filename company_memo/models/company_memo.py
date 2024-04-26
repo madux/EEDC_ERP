@@ -6,6 +6,7 @@ from odoo import http
 import random
 from lxml import etree
 from bs4 import BeautifulSoup
+from dateutil.relativedelta import relativedelta
 
 import logging
 
@@ -361,9 +362,10 @@ class Memo_Model(models.Model):
         if self.document_folder and self.document_folder.next_reoccurance_date:
             difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
             # if fields.Date.today() < self.document_folder.next_reoccurance_date:
-            if difference_of_days_for_submission not in range(0, 7): # one week to submission
-                raise ValidationError(f'''You cannot submit this document because todays date is
-                                       lesser than the reoccurence date {self.document_folder.next_reoccurance_date}''')
+            if difference_of_days_for_submission not in range(0, self.document_folder.submission_minimum_range): # one week to submission
+                start = self.document_folder.next_reoccurance_date +  relativedelta(days=-self.document_folder.submission_minimum_range)
+                end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+                raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
     
     def send_memo_to_contacts(self):
         if not self.partner_ids:
@@ -611,13 +613,17 @@ class Memo_Model(models.Model):
                      )
 
     def forward_memo(self):
+        if self.to_create_document:
+            attach_document_ids = self.env['ir.attachment'].sudo().search([
+                    ('res_id', '=', self.id), 
+                    ('res_model', '=', self._name)
+                ])
+            if not attach_document_ids:
+                raise ValidationError("Please kindly attach documents since this is a document submission request")
         if self.memo_type.memo_key == "Payment" and self.mapped('invoice_ids').filtered(
             lambda s: s.mapped('invoice_line_ids').filtered(lambda x: x.price_unit <= 0)
         ):
             raise ValidationError("All invoice line must have a price amount greater than 0")
-        # if self.state == "submit":
-        #     if not self.env.user.id == self.employee_id.user_id.id:#  or self.env.uid != self.create_uid:
-        #         raise ValidationError('You cannot forward a memo at draft state because you are not the initiator')
         user_exist = self.mapped('res_users').filtered(
             lambda user: user.id == self.env.uid
             )
@@ -629,6 +635,8 @@ class Memo_Model(models.Model):
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
+        
+
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         # is_officer = self.determine_user_role() # returns true or false 
         return {
@@ -919,7 +927,7 @@ class Memo_Model(models.Model):
                 ('res_model', '=', self._name)
             ])
             if not attach_document_ids:
-                raise ValidationError("No document attached")
+                raise ValidationError("Please kindly attach documents since this is a document submission request")
             document_folder = document_folder_obj.search([('id', '=', self.document_folder.id)])
             if document_folder:
                 for att in attach_document_ids:
@@ -1621,10 +1629,23 @@ class Memo_Model(models.Model):
             memo_rec = self.env['memo.model'].search([('code', '=', rec.communication)])
             if memo_rec:
                 memo_rec.state = "Done"
+
+    """line 4 - 7 checks if the current user is the initiator of the memo, 
+    if true, raises warning error else: it opens the wizard"""
+
+    def return_validator(self):
+        user_exist = self.mapped('res_users').filtered(
+            lambda user: user.id == self.env.uid
+            )
+        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+            raise ValidationError(
+                """Sorry you are not allowed to reject /  return you own initiated memo"""
+                )
         
     def return_memo(self):
         msg = "You have initially forwarded this memo. Kindly use the cancel button or wait for approval"
-        self.validator(msg)
+        # self.validator(msg)
+        self.return_validator()
         default_sender = self.mapped('res_users')
         last_sender = self.env['hr.employee'].search([('user_id', '=', default_sender[-1].id)]).id if default_sender else False
         return {

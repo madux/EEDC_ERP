@@ -7,6 +7,11 @@
             <field name="inherit_id" ref="documents.folder_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_see_actions']" position="after">
+                    <button name="get_xy_data" type="object" class="oe_stat_button" icon="fa-book">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_text">test data</span>
+                        </div>
+                    </button>
                     <button name="check_due_submission" type="object" class="oe_stat_button" icon="fa-book">
                         <div class="o_field_widget o_stat_info">
                             <span class="o_stat_value"><field name="number_failed_submission"/></span>

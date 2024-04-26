@@ -25,6 +25,7 @@
         '/maach_dashboard/static/src/js/plugins/smooth-scrollbar.min.js',
         '/maach_dashboard/static/src/js/plugins/chartjs.min.js',
         '/maach_dashboard/static/src/css/dashboard.css',
+        '/maach_dashboard/views/dashboard_menu.xml',
         ],
         # 'web.assets_backend': [
         #         'maach_dashboard/static/src/components/**/*',

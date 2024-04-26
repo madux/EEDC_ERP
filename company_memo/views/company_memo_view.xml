@@ -28,7 +28,7 @@
                     <button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object" class="btn-primary"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
-                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['submit','Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
+                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
                     <field name="stage_id" widget="statusbar" readonly="0" options="{'clickable': '1'}"/>
                 </header>
                     <sheet>
@@ -79,13 +79,14 @@
                             <group name="normal_memo_group1">
                     <!-- MEMO THINGS -->
                                 <field name = "internal_memo_option" string="Memo Option" 
-                                    attrs="{'invisible': [('memo_type_key', 'not in', ['Internal', 'internal'])], 'readonly':[('state','not in',['submit'])]}" readonly="0"/>
+                                    attrs="{'invisible': ['|',('memo_type_key', 'not in', ['Internal', 'internal']), ('to_create_document', '=', True)], 'readonly':[('state','not in',['submit'])]}" readonly="0"/>
 
                                  <field name = "partner_ids" string="Reciepients" widget="many2many_tags" 
                                 attrs="{'readonly':[('state','not in',['submit'])], 'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', '=', 'selected'), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                     <!-- MEMO THINGS -->
-                                <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+                                <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
+                                <!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
                                 <field name="phone" readonly="1"/>
                                 <field name="email" readonly="1"/>
                                 <field name="memo_setting_id" invisible="1" force_save="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
@@ -102,7 +103,7 @@
                                 <field name="soe_advance_reference" attrs="{'invisible':[('memo_type_key','!=', 'cash_advance')]}"/>
                                 <field name="currency_id" invisible="1"/>
                                 <field name="move_id" invisible="1"/>
-                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                                <field name = "users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
                                 <field name="active" invisible="1" groups="base.group_system"/>
                             </group> 
@@ -117,17 +118,18 @@
                                 <field name="project_id" attrs="{'readonly':[('state','not in',['submit'])]}" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
                                 <field widget="binary" height="64" name="file_upload" filename="file_namex" required="0" invisible="1" string="Upload File" />
                                 <field name="file_namex" invisible="1"/> 
-                                <field name="to_create_document" invisible="0"/> 
-                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)]}"/> 
-                                <field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)]}"/>
-                               
+                                <field name="to_create_document" invisible="1"/> 
+                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
+                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                                <field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
+                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                                 <!-- <field name = "employee_ids" string="Employee Reciepients" 
                                 widget="many2many_tags" attrs="{'invisible': [('internal_memo_all_employee_option', '!=', 'employees')], 'required': [('internal_memo_all_employee_option', '=', 'employee')]}" 
                                 invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />  -->
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
                                 <field name="code"/>  
                                 <field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
-                                <field name="approver_ids" invisible="0" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+                                <field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
                                 <field name="user_is_approver" invisible="1" readonly="0"/>
                                 <field name="state" invisible="1" force_save="1" readonly="0"/>
                                 <field name="is_request_completed" readonly="1" invisible="1"/>
@@ -258,7 +260,8 @@
                             </page>
 
                             <page name='attachment' string='Attachments'>
-                                <field name="attachment_ids" string = "Attachment" context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
+                                <field name="attachment_ids" string = "Attachment" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"
+                                context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
                                     <tree string="Attachment">
                                         <field name="name" string="Name"/> 
                                         <field name="datas" filename="name" string="File"/>
@@ -432,7 +435,7 @@
 
             <menuitem id="internal_memo_document_menu_model" name="Document Request"
             parent="internal_memo_menu_model_main2" sequence="4"/>
-            <menuitem id="internal_memo_menu_document_request" sequence= "5" name="Requests"
+            <menuitem id="internal_memo_menu_document_request" sequence= "5" name="Submission Requests"
             parent="internal_memo_document_menu_model" action="internal_memo_model_document_action"/>
             
         <menuitem parent="internal_memo_menu_model_main2" id="menu_memo_website_request" name="Website Request(s)" action="action_memo_open_my_request_url" sequence="5"/>

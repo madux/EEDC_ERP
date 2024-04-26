@@ -14,8 +14,6 @@ odoo.define('maach_dashboard.dashboard_content', function (require) {
             var self = this;
             return this._super.apply(this, arguments).then(function(){
                 console.log("started form request")
-                // var y_data_chart = JSON.parse($('#y_data_for_chart').text())
-                // var x_data_chart = JSON.parse($('#x_data_for_chart').text())
                 var y_data_chart = $('#y_data_for_chart').text()
                 var x_data_chart = $('#x_data_for_chart').text()
                 console.log('Y====> ', JSON.parse(y_data_chart).data)
@@ -28,16 +26,16 @@ odoo.define('maach_dashboard.dashboard_content', function (require) {
                     new Chart(ctx, {
                         type: 'bar',
                         data: {
-                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                        labels: x_data_chart_array, //['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
                         //   labels: x_data_chart,
                         datasets: [{
-                            label: "Sales",
+                            label: "Document Progress Rate",
                             tension: 0.4,
                             borderWidth: 0,
                             borderRadius: 4,
                             borderSkipped: false,
                             backgroundColor: "#fff",
-                            data: [450, 200, 100, 220, 500, 800],
+                            data: y_data_chart_array, // [450, 200, 100, 220, 500, 800],
                             maxBarThickness: 10,
                             hoverBorderColor: "orange",
                             }, ],
@@ -116,7 +114,7 @@ odoo.define('maach_dashboard.dashboard_content', function (require) {
                             borderWidth: 3,
                             backgroundColor: gradientStroke1,
                             fill: true,
-                            data: [50, 40, 300, 220, 500, 250, 400, 230, 500],
+                            data: y_data_chart_array, //[50, 40, 300, 220, 500, 250, 400, 230, 500],
                             maxBarThickness: 6
 
                         },
@@ -205,6 +203,16 @@ odoo.define('maach_dashboard.dashboard_content', function (require) {
             'click .btn-close-success': function(ev){
                 $('#successful_alert').hide()
 
+            },
+            'click .searchdashboardbtn': function(ev){
+                console.log("dashboard searching ");
+                var search_panel = $("#searchdashboard_val")
+                var memo_type = $("#memotypedashboard")
+                var get_search_query = search_panel.val();
+                var memo_type_val = memo_type.val() != undefined || '' ? '/'+memo_type.val() : '';
+                // empty the search panel value
+                search_panel.val("");
+                window.location.href = `/office-dashboard/${get_search_query}${memo_type_val}`
             },
          },
     });

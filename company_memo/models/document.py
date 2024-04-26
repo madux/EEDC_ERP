@@ -1,7 +1,9 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 from dateutil.relativedelta import relativedelta
-
+# from .tools import (
+#     float_repr, float_round, float_compare, float_is_zero, human_size, 
+# )
 
 class Document(models.Model):
     _inherit = 'documents.document'
@@ -158,6 +160,48 @@ class DocumentFolder(models.Model):
                     )
                     if not document_within_range:
                         rec.number_failed_submission += 1
+
+    # def get_xy_data(self, memo_type_param == "document_request"):
+    def get_xy_data(self):
+        '''Test for document charts
+        1. configure document folder with occurrence and min and max range set to 2 . ie two days
+        2. Create a new memo of type document request,
+        3. Approve the memo, 
+        4. Reset the next occurrence and try again
+        
+        '''
+        hr_department = self.env['hr.department'].sudo()
+        department_total_progress = []
+        departments = []
+        # if memo_type_param == "document_request":
+        document_folders = self.env['documents.folder'].search([])
+        # documents_document = request.env['documents.document'].sudo()# .search([])
+
+        total_document_folders = len(document_folders) # 5
+        document_ratio = 100 / total_document_folders # == 20
+        # document_ratio = float_round(document_ratio, precision_rounding=2)
+        for document in document_folders:
+            """Get all the departments in documents folder"""
+            departments += [dep.id for dep in document.department_ids]
+        for department in list(set(departments)): # set to remove duplicates
+            department_submission = 0 
+            for doc in document_folders:
+                '''get the min date of submission before reoccurence and that after reoccurence date'''
+                min_date = doc.next_reoccurance_date + relativedelta(days=-doc.submission_minimum_range)
+                maximum_date = doc.next_reoccurance_date + relativedelta(days=doc.submission_maximum_range)
+                docu_ids = doc.mapped('document_ids')
+                if docu_ids:
+                    # raise ValidationError(hr_department.browse(department).id)
+                    submitted_documents_document = docu_ids.filtered(
+                        lambda su: su.submitted_date >= min_date and su.submitted_date <= maximum_date and su.memo_id.dept_ids.id == hr_department.browse(department).id if su.submitted_date else False
+                    ) # check if the submitted document is within the min date and maximum date and count it as +1
+                    if submitted_documents_document:
+                        department_submission += len(submitted_documents_document)
+            dept_document_ratio = int(department_submission * document_ratio) # total to display 4 * 20 == 80
+            department_total_progress.append(dept_document_ratio)
+            # raise ValidationError(f"""{min_date},{maximum_date},  ==> ratio =={document_ratio} ===={department_submission} === {dept_document_ratio}""" )
+        # raise ValidationError(f"""DEPARTMENT COMPUTATION {department_total_progress}""" )
+        return department_total_progress, [hr_department.browse(dp).name for dp in list(set(departments))]
 
     def action_view_documents(self):
         view_id = self.env.ref('documents.document_view_kanban').id
