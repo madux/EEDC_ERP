@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from odoo import http
 from datetime import date, datetime
 from odoo import models, fields
 from odoo.exceptions import ValidationError
@@ -60,3 +60,8 @@ class CBTscheduleWizard(models.TransientModel):
         return self.survey_id.action_send_survey(
             self.email_invite_template, self.panelist_ids
             )
+    
+    def get_base_url(self):
+        base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        return base_url
+

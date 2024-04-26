@@ -365,21 +365,18 @@ class Memo_Model(models.Model):
                     'default_body': self.description,
                 },
             }
+ 
+    computed_stage_ids = fields.Many2many('memo.stage', compute='_compute_stage_ids', store=True)
 
-    # @api.onchange('cash_advance_reference')
-    # def cash_advance_reference(self):
-    #     raise ValidationError('dere')
-    #     if self.cash_advance_reference:
-    #         raise ValidationError('dere')
-    #         # if not self.employee_id:
-    #         for rec in self.cash_advance_reference.mapped('product_ids').filtered(lambda s: s.retired == False):
-    #             self.product_ids = [(0, 0, {
-    #                 'memo_id': rec.id,
-    #                 'product_id': rec.product_id.id,
-    #                 'description': rec.description,
-    #                 'amount_total': rec.amount_total,
-    #             })]
-
+    @api.depends('stage_id.memo_config_id')
+    def _compute_stage_ids(self):
+        for record in self:
+            if record.stage_id.memo_config_id:
+                record.computed_stage_ids = record.stage_id.memo_config_id.stage_ids
+            else:
+                record.computed_stage_ids = False 
+    # MEMO THINGS 
+    
     def _get_related_stage(self):
         if self.memo_type:
             domain = [
@@ -387,7 +384,7 @@ class Memo_Model(models.Model):
                 ('department_id', '=', self.employee_id.department_id.id)
                 ]
         else:
-            domain=[('id', '=', [])]
+            domain=[('id', '=', 0)]
         return domain
     
     @api.onchange('invoice_ids')

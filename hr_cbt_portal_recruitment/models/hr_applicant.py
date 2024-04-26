@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from odoo import http
 from datetime import date, datetime
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
@@ -167,6 +167,9 @@ class Applicant(models.Model):
             else:
                 rec.test_passed = False
 
+    def get_base_url(self):
+        base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        return base_url
 
     @api.depends("survey_panelist_input_ids")
     def compute_panel_list(self):
@@ -214,7 +217,7 @@ class Applicant(models.Model):
                     'default_no_attachment': record.mapped('applicant_documentation_checklist')\
                             .filtered(lambda data: not data.document_file)
                             })
-                template.write({
+                template.sudo().write({
                     'email_to': email_to,
                     'attachment_ids': [(6, 0, self.generate_document_checklist_attachment(record))],
                     })
