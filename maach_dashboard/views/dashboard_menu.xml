@@ -1,0 +1,11 @@
+<odoo>
+    <data>
+        <record id="menu_portal_my_requests_dashboard" model="website.menu">
+            <field name="name">My Dashboard</field>
+            <field name="url">/office-dashboard</field>
+            <field name="parent_id" ref="company_memo.menu_portal_request_applications" />
+            <field name="website_id" ref="website.default_website" />
+            <field name="sequence" type="int">3</field>
+        </record>
+    </data>
+</odoo>

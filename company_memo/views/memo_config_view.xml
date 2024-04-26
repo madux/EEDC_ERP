@@ -89,7 +89,7 @@
                             <!-- <field name="approver_id" required="0"/> -->
                             <field name="approver_ids" string="Approvers" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/> 
                             <field name="is_approved_stage" default="0"/> 
-                            <field name="memo_config_id" readonly="1" force_save="1" string="Parent setting"/> 
+                            <field name="memo_config_id" readonly="1" force_save="1" string="Parent setting" required="1"/>  
                         </group>
                     </group>
                 </form>

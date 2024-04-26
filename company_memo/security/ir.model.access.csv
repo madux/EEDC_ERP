@@ -15,3 +15,5 @@ access_memo_stage,memo_stage_user_name,company_memo.model_memo_stage,,1,1,1,1
 access_memo_type,memo_type_user_name,company_memo.model_memo_type,,1,1,1,1
 access_memo_config_duplication_wizard,memo_config_duplication_wizard_name,model_memo_config_duplication_wizard,,1,1,1,1
 access_dummy_memo_stage,dummy_memo_stage_name,model_dummy_memo_stage,,1,1,1,1
+access_memo_account_move,memo_account_move_user_name,account.model_account_move,company_memo.mainmemo_officer,1,1,1,0
+access_memo_category,memo_memo_category_user_name,company_memo.model_memo_category,,1,1,1,1

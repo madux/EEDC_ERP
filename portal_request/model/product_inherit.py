@@ -35,13 +35,11 @@ class ProductTemplate(models.Model):
         product = self.env['product.template'].sudo()
         for rec in self:
             if rec.vehicle_plate_number:
-                duplicate = product.search([('is_vehicle_product', '=', True),('vehicle_plate_number', '=', rec.vehicle_plate_number)])
+                duplicate = product.search([('is_vehicle_product', '=', rec.vehicle_plate_number),('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
                 if len([r for r in duplicate]) > 1:
                     raise ValidationError("Product with same vehicle plate number already existing")
             if rec.vehicle_reg_number:
-                duplicate_vp = product.search([
-                    ('is_vehicle_product', '=', True),
-                    ('vehicle_reg_number', '=', rec.vehicle_reg_number)])
+                duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
                 if len([r for r in duplicate_vp]) > 1:
                     raise ValidationError("Product with same vehicle registration number already existing")
             if rec.name:

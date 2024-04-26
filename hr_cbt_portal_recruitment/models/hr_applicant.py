@@ -134,7 +134,7 @@ class Applicant(models.Model):
         'applicant_id', 
         string='Documents to sign')
     
-    audited = fields.Boolean(defalt=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
+    audited = fields.Boolean(default=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
     stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
 
     def create_employee_from_applicant(self):
@@ -147,7 +147,8 @@ class Applicant(models.Model):
         res['context']['default_phone'] = self.partner_phone
         res['context']['default_private_email'] = self.email_from
         res['context']['default_job_title'] = self.job_id.name
-        res['context']['default_applicant_documentation_checklist'] = self.applicant_documentation_checklist
+        res['context']['default_applicant_documentation_checklist'] = [(6, 0, [doc.id for doc in self.applicant_documentation_checklist])]
+        # res['context']['default_applicant_documentation_checklist'] = self.applicant_documentation_checklist
         return res
     
     @api.depends('job_id')

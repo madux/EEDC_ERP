@@ -8,7 +8,7 @@ class HrApplicantDocuments(models.Model):
 	document_type = fields.Many2one('documentation.type')
 	document_file = fields.Many2one('ir.attachment', string='Document File')
 	select = fields.Boolean("Confirmed", default=False)
-	applicant_submitted_document_file = fields.Many2one('ir.attachment', string='Applicant Document', attachment=True)
+	applicant_submitted_document_file = fields.Many2one('ir.attachment', string='Applicant Document')
 	applicant_id = fields.Many2one('hr.applicant', string='Applicant')
 	is_compulsory = fields.Boolean("Is Compulsory", default=False)
 	hr_comment = fields.Text("HR comment")

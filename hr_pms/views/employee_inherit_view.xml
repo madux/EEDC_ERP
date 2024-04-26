@@ -35,12 +35,12 @@
                                 <button name="reset_employee_user_password" type="object" string="Reset user login" required="0" groups="base.group_system,hr.group_hr_manager"/>
                             </group> 
                             <group> 
-                                <field name="grade_id" required="0" options="{'no_create': True,'no_open': True}"/>
-                                <field name="level_id" required="0" options="{'no_create': True,'no_open': True}"/>
-                                <field name="unit_id" required="0" options="{'no_create': True,'no_open': True}"/>
-                                <field name="work_unit_id" required="0" options="{'no_create': True,'no_open': True}"/>
-                                <field name="ps_district_id" required="0" options="{'no_create': True,'no_open': True}"/>
-                                <field name="hr_region_id" required="0" options="{'no_create': True,'no_open': True}"/>
+                                <field name="grade_id" required="0" options="{'no_create': True,'no_open': False}"/>
+                                <field name="level_id" required="1" options="{'no_create': True,'no_open': True}"/>
+                                <field name="unit_id" required="0" options="{'no_create': True,'no_open': False}"/>
+                                <field name="work_unit_id" required="0" options="{'no_create': True,'no_open': False}"/>
+                                <field name="ps_district_id" required="0" options="{'no_create': True,'no_open': False}"/>
+                                <field name="hr_region_id" required="0" options="{'no_create': True,'no_open': False}"/>
                             </group> 
                         </group> 
                     </page>
