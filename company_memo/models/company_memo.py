@@ -36,7 +36,6 @@ class Memo_Model(models.Model):
 
     def action_get_attachment_view(self):
         self.ensure_one()
-        # res = self.env['ir.actions.act_window'].xml_id('base', 'action_attachment')
         res = self.sudo().env.ref('base.action_attachment')
         res['domain'] = [('res_model', '=', 'memo.model'), ('res_id', 'in', self.ids)]
         res['context'] = {'default_res_model': 'memo.model', 'default_res_id': self.id}
@@ -70,7 +69,6 @@ class Memo_Model(models.Model):
         memo_configs = self.env['memo.config'].search([('active', '=', True)])
         memo_type_ids = [r.memo_type.id for r in memo_configs]
         return [('id', 'in', memo_type_ids)]
-     
     
     memo_type = fields.Many2one(
         'memo.type',
@@ -83,7 +81,6 @@ class Memo_Model(models.Model):
     name = fields.Char('Subject', size=400)
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
-    # district_id = fields.Many2one("hr.district", string="District ID")
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
     set_staff = fields.Many2one('hr.employee', string = 'Employee')
     demo_staff = fields.Integer(string='User',
@@ -132,21 +129,6 @@ class Memo_Model(models.Model):
         store=True,
         readonly=True
         )
-    
-    # @api.onchange('cash_advance_reference')
-    # def cash_advance_reference(self):
-    #     raise ValidationError('dere')
-    #     if self.cash_advance_reference:
-    #         raise ValidationError('dere')
-    #         # if not self.employee_id:
-    #         for rec in self.cash_advance_reference.mapped('product_ids').filtered(lambda s: s.retired == False):
-    #             self.product_ids = [(0, 0, {
-    #                 'memo_id': rec.id,
-    #                 'product_id': rec.product_id.id,
-    #                 'description': rec.description,
-    #                 'amount_total': rec.amount_total,
-    #             })]
-
     soe_advance_reference = fields.Many2one('memo.model', 'SOE ref.')
     cash_advance_reference = fields.Many2one(
         'memo.model', 
@@ -253,8 +235,7 @@ class Memo_Model(models.Model):
     leave_type_id = fields.Many2one('hr.leave.type', string="Leave type")
     memo_setting_id = fields.Many2one(
         'memo.config', 
-        string="Memo config id", 
-        # related="stage_id.memo_config_id"
+        string="Memo config id",  
         )
     
     ###############3 RECRUITMENT ##### 
@@ -323,9 +304,7 @@ class Memo_Model(models.Model):
         string='Invoice', 
         store=True,
         domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
-        )
-    
-    # MEMO THINGS 
+        ) 
     attachment_ids = fields.Many2many(
         'ir.attachment', 
         'memo_ir_attachment_rel',
@@ -361,7 +340,6 @@ class Memo_Model(models.Model):
     def check_next_reoccurance_constraint(self):
         if self.document_folder and self.document_folder.next_reoccurance_date:
             difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
-            # if fields.Date.today() < self.document_folder.next_reoccurance_date:
             if difference_of_days_for_submission not in range(0, self.document_folder.submission_minimum_range): # one week to submission
                 start = self.document_folder.next_reoccurance_date +  relativedelta(days=-self.document_folder.submission_minimum_range)
                 end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
@@ -386,10 +364,21 @@ class Memo_Model(models.Model):
                     'default_body_html': self.description,
                     'default_body': self.description,
                 },
-            } 
-    # MEMO THINGS 
-    
-    ################################
+            }
+
+    # @api.onchange('cash_advance_reference')
+    # def cash_advance_reference(self):
+    #     raise ValidationError('dere')
+    #     if self.cash_advance_reference:
+    #         raise ValidationError('dere')
+    #         # if not self.employee_id:
+    #         for rec in self.cash_advance_reference.mapped('product_ids').filtered(lambda s: s.retired == False):
+    #             self.product_ids = [(0, 0, {
+    #                 'memo_id': rec.id,
+    #                 'product_id': rec.product_id.id,
+    #                 'description': rec.description,
+    #                 'amount_total': rec.amount_total,
+    #             })]
 
     def _get_related_stage(self):
         if self.memo_type:
@@ -560,12 +549,7 @@ class Memo_Model(models.Model):
                 'users_followers': False,
                 'set_staff': False,
                 })
-
-    # def get_url(self, id, name):
-    #     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-    #     base_url += '/web#id=%d&view_type=form&model=%s' % (id, name)
-    #     return "<a href={}> </b>Click<a/>. ".format(base_url)
-
+ 
     def get_url(self, id):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
         base_url += "/my/request/view/%s" % (id)
@@ -638,7 +622,6 @@ class Memo_Model(models.Model):
         
 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
-        # is_officer = self.determine_user_role() # returns true or false 
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -650,7 +633,6 @@ class Memo_Model(models.Model):
                 'context': {
                     'default_memo_record': self.id,
                     'default_resp': self.env.uid,
-                    # 'default_is_officer': is_officer,
                 },
             }
     """The wizard action passes the employee whom the memo was director to this function."""
@@ -676,16 +658,6 @@ class Memo_Model(models.Model):
             ('department_id', '=', self.employee_id.department_id.id)
             ], limit=1)
         memo_setting_stages = memo_settings.stage_ids
-        # if not from_website and memo_setting_stages.index(current_stage_id.id) == 0:
-        #     """Checks if the first index of the stages is the initial stage;
-        #     Adds the employee manager or supervisor at the first stage
-        #     """ 
-        #     approver_ids += [
-        #         self.employee_id.parent_id.id,
-        #         self.employee_id.administrative_supervisor_id.id
-        #     ]
-        # _logger.info(f'Found memo_settings are {memo_settings} and stages {memo_settings.stage_ids} and current stage {current_stage_id}')
-        
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
             _logger.info(f'Found stages are {memo_setting_stages.ids}')
@@ -880,8 +852,6 @@ class Memo_Model(models.Model):
         self.update_final_state_and_approver()
         self.sudo().write({'res_users': [(4, users.id)]})
         return self.generate_memo_artifacts(body_msg, body)
-    
-     
   
     def generate_memo_artifacts(self, body_msg, body):
         if self.memo_type.memo_key == "material_request":
@@ -903,15 +873,9 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "server_access":
             self.update_memo_type_approver()
             self.mail_sending_direct(body_msg)
-
-        # elif self.memo_type.memo_key == "employee_update":
-        #     return self.generate_employee_transfer(body_msg)
-        #     # self.mail_sending_direct(body_msg)
         elif self.memo_type.memo_key == "employee_update":
             return self.generate_employee_update_request()
-        
         else:
-            # pass
             document_message = "Also check related documentation on the document management system" if self.to_create_document else ""
             body_msg = f"""Dear sir / Madam, \n \
             <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
@@ -946,7 +910,7 @@ class Memo_Model(models.Model):
                         'memo_id': self.id,
                         'owner_id': self.env.user.id,
                         'is_shared': True,
-                        'submitted_date': self.date # fields.Date.today(),
+                        'submitted_date': self.date 
                     })
                     document_folder.update({'document_ids': [(4, document.id)]})
                 document_folder.update_next_occurrence_date()
@@ -1018,12 +982,6 @@ class Memo_Model(models.Model):
                 'target': 'current'
                 }
             return ret
-            # return self.record_to_open(
-            #     "stock.picking", 
-            #     view_id,
-            #     stock.id,
-            #     f"Stock - {stock.name}"
-            #     )
 
     def generate_stock_procurement_request(self, body_msg, body):
         """
@@ -1081,7 +1039,6 @@ class Memo_Model(models.Model):
         # TODO: generate fleet asset
         self.state = 'Done'
         self.is_request_completed = True
-        # self.sudo().update_final_state_and_approver()
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
 
@@ -1438,50 +1395,7 @@ class Memo_Model(models.Model):
         # self.message_post(body=body)
         # self.message_post(body=body, 
         # subtype='mt_comment',message_type='notification',partner_ids=followers)
-     
-    # def generate_move_entriesxx(self):
-    #     '''pr: product obj'''
-    #     # journal_id = self.env['account.journal'].search([
-    #     #     '|',('type', '=', 'cash'),
-    #     #     ('type', '=', 'bank'),
-    #     #     ], limit=1)
-    #     journal_id = self.env['account.journal'].search(
-    #         [('type', '=', 'purchase'),
-    #          ('code', '=', 'BILL')
-    #          ], limit=1
-    #     )
-    #     account_move = self.env['account.move'].sudo()
-    #     inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-    #     if not inv:
-    #         partner_id = self.employee_id.user_id.partner_id
-    #         inv = account_move.create({ 
-    #             'memo_id': self.id,
-    #             'ref': self.code,
-    #             'origin': self.code,
-    #             'partner_id': partner_id.id,
-    #             'company_id': self.env.user.company_id.id,
-    #             'currency_id': self.env.user.company_id.currency_id.id,
-    #             # Do not set default name to account move name, because it is unique 
-    #             'name': f"CASH ADV/ {self.code}",
-    #             'move_type': 'in_receipt',
-    #             'date': fields.Date.today(),
-    #             'journal_id': journal_id.id,
-    #             'invoice_line_ids': [(0, 0, {
-    #                     'name': pr.product_id.name,
-    #                     'ref': f'{self.code}: {pr.product_id.name}',
-    #                     'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-    #                     'price_unit': pr.amount_total,
-    #                     'quantity': pr.quantity_available,
-    #                     'discount': 0.0,
-    #                     'product_uom_id': pr.product_id.uom_id.id,
-    #                     'product_id': pr.product_id.id,
-    #             }) for pr in self.product_ids],
-    #         })
-    #         # inv.post()
-    #         # self.validate_invoice_and_post_journal(journal_id.id, inv)
-    #     else:
-    #         return inv
-    #     return inv
+    
     def validate_account_invoices(self):
         if not self.invoice_ids:
             raise ValidationError("Please ensure the invoice lines are added")
@@ -1528,7 +1442,6 @@ class Memo_Model(models.Model):
                 available_payment_method_lines = journal_id._get_available_payment_method_lines(payment_type)
             else:
                 available_payment_method_lines = False
-
             # Select the first available one by default.
             if available_payment_method_lines:
                 payment_method_line_id = available_payment_method_lines[0]._origin
@@ -1547,7 +1460,6 @@ class Memo_Model(models.Model):
                 payment_method = journal_id.outbound_payment_method_line_ids[0].id if \
                     journal_id.outbound_payment_method_line_ids else outbound_payment_method.id \
                         if outbound_payment_method else payment_method
-                
             payment_method_line_id = self.get_payment_method_line_id('outbound', journal_id)
             payment_vals = {
                 'date': fields.Date.today(),
@@ -1650,11 +1562,10 @@ class Memo_Model(models.Model):
                 )
         
     def return_memo(self):
-        msg = "You have initially forwarded this memo. Kindly use the cancel button or wait for approval"
-        # self.validator(msg)
         self.return_validator()
         default_sender = self.mapped('res_users')
-        last_sender = self.env['hr.employee'].search([('user_id', '=', default_sender[-1].id)]).id if default_sender else False
+        last_sender = self.env['hr.employee'].search([
+            ('user_id', '=', default_sender[-1].id)]).id if default_sender else False
         return {
               'name': 'Reason for Return',
               'view_type': 'form',
@@ -1686,7 +1597,6 @@ class Memo_Model(models.Model):
                 order.status_progress = random.randint(98, 100)
             else:
                 order.status_progress = random.randint(0, 1) # 100 / len(order.state)
-    
     expiry_mail_sent = fields.Boolean(default=False, copy=False)
 
     @api.model
@@ -1695,8 +1605,6 @@ class Memo_Model(models.Model):
         System should check all requests end date expired, and send message
         to server admin or followers. 
         """
-        # for record in self:
-        
         expired_memos = self.env['memo.model'].search([
             ('request_end_date', '<', fields.Datetime.now()),
             ('expiry_mail_sent', '=', False),
@@ -1711,10 +1619,6 @@ class Memo_Model(models.Model):
                 """
                 exp.mail_sending_direct(body_msg)
                 exp.expiry_mail_sent = True
-                # request_followers = [
-                #     eml.work_email for eml in exp.memo_setting_id.approver_ids if eml.work_email
-                #     ]
-        
 
     def unlink(self):
         for delete in self.filtered(lambda delete: delete.state in ['Sent','Approve2', 'Approve']):
@@ -1742,9 +1646,4 @@ class Memo_Model(models.Model):
         mo = self.env['memo.model']
         result['all_to_send'] = mo.search_count([('state', '=', 'draft')])
         result['my_to_send'] = mo.search_count([('state', '=', 'done')])
-        # result['all_waiting'] = po.search_count([('state', '=', 'sent'), ('date_order', '>=', fields.Datetime.now())])
-        # result['my_waiting'] = po.search_count([('state', '=', 'sent'), ('date_order', '>=', fields.Datetime.now()), ('user_id', '=', self.env.uid)])
-        # result['all_late'] = po.search_count([('state', 'in', ['draft', 'sent', 'to approve']), ('date_order', '<', fields.Datetime.now())])
-        # result['my_late'] = po.search_count([('state', 'in', ['draft', 'sent', 'to approve']), ('date_order', '<', fields.Datetime.now()), ('user_id', '=', self.env.uid)])
-
         return result
