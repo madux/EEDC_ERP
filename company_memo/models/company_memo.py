@@ -751,7 +751,14 @@ class Memo_Model(models.Model):
                     #                           for this request. Go to memo setting for the memo type and department 
                     #                           to link the final stage approver or employees for final validation
                     #                           """)
-
+    # def confirm_server_validation(self):
+    #     if self.env.user.id in [app.user_id.id for app in self.memo_setting_id.approver_ids]:
+    #         # send mail to all the requester, and co. 
+    #         pass
+             
+    #     else:
+    #         raise ValidationError("You are not responsible to perform this action...  contact admin to review")
+                        
     def confirm_memo(self, employee, comments, from_website=False): 
         # user_id = self.env['res.users'].search([('id','=',self.env.user.id)])
         # lists2 = [y.partner_id.id for x in self.users_followers for y in x.user_id]
