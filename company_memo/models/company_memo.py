@@ -409,10 +409,8 @@ class Memo_Model(models.Model):
                     memo_setting_stage = ms.stage_ids[0]
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
-                    self.memo_type_key = self.memo_type.memo_key 
-                    # self.res_users = [
-                    #     (4, self.employee_id.administrative_supervisor_id.user_id.id),
-                    #     ]
+                    self.memo_type_key = self.memo_type.memo_key  
+                    self.requested_department_id = self.employee_id.department_id.id
                     self.users_followers = [
                         (4, self.employee_id.administrative_supervisor_id.id),
                         ] 
@@ -421,6 +419,7 @@ class Memo_Model(models.Model):
                     self.stage_id = False
                     self.memo_setting_id = False
                     self.memo_type_key = False
+                    self.requested_department_id = False
                     msg = f"No stage configured for department {department_id.name} and selected memo type. Please contact administrator"
                     return {'warning': {
                                 'title': "Validation",
@@ -609,17 +608,18 @@ class Memo_Model(models.Model):
             if not attach_document_ids:
                 raise ValidationError("Please kindly attach documents since this is a document submission request")
         if self.memo_type.memo_key == "Payment" and self.mapped('invoice_ids').filtered(
-            lambda s: s.mapped('invoice_line_ids').filtered(lambda x: x.price_unit <= 0)
-        ):
+            lambda s: s.mapped('invoice_line_ids').filtered(
+                lambda x: x.price_unit <= 0)):
             raise ValidationError("All invoice line must have a price amount greater than 0")
         # user_exist = self.mapped('res_users').filtered(
         #     lambda user: user.id == self.env.uid
         #     )
         # if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
-        if self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        
+        if self.stage_id.approver_ids and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
-                ) 
+                )
         if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
