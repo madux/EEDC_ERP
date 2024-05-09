@@ -612,10 +612,11 @@ class Memo_Model(models.Model):
             lambda s: s.mapped('invoice_line_ids').filtered(lambda x: x.price_unit <= 0)
         ):
             raise ValidationError("All invoice line must have a price amount greater than 0")
-        user_exist = self.mapped('res_users').filtered(
-            lambda user: user.id == self.env.uid
-            )
-        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        # user_exist = self.mapped('res_users').filtered(
+        #     lambda user: user.id == self.env.uid
+        #     )
+        # if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        if self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
                 ) 
@@ -623,8 +624,6 @@ class Memo_Model(models.Model):
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
-        
-
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         return {
                 'name': 'Forward Memo',

@@ -23,7 +23,6 @@
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
                     <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
-                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
                     <field name="computed_stage_ids" invisible="1" />
                     <field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
                 </header>
