@@ -96,5 +96,24 @@
             <field name="groups" eval="[(6, 0, [ref('base.group_system')])]"/>
             <field name="domain_force">[(1,'=',1)]</field>
         </record> -->
+
+        <record id="module_category_documents_management_system" model="ir.module.category">
+            <field name="name">Documents Mgt System</field>
+            <field name="description">Allows you to manage your documents and make dcoument requests.</field>
+            <field name="sequence">1</field>
+        </record>
+
+        <record id="group_documents_mgt_user" model="res.groups">
+            <field name="name">User</field>
+            <!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/> -->
+            <field name="category_id" ref="company_memo.module_category_documents_management_system"/>
+        </record>
+
+        <record id="group_documents_mgt_manager" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="company_memo.module_category_documents_management_system"/>
+            <field name="implied_ids" eval="[(4, ref('group_documents_mgt_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
     </data>
 </odoo>

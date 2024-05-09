@@ -15,6 +15,7 @@
         'security/security_group.xml', 
         'sequence/sequence.xml',
         'views/company_memo_view.xml',
+        'wizard/doc_mgt_config_wizard.xml',
         'views/res_users.xml',
         'views/memo_forward_view.xml',
         'views/memo_config_view.xml',
