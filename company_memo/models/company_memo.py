@@ -136,7 +136,7 @@ class Memo_Model(models.Model):
     date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
-    res_users = fields.Many2many('res.users', string='Approvers') #, default=_default_employee)
+    res_users = fields.Many2many('res.users', string='Reviewers/Processors') #, default=_default_employee)
     comments = fields.Text('Comments', default="-")
     supervisor_comment = fields.Html('Supervisor Comments', default="")
     manager_comment = fields.Html('Manager Comments', default="")
@@ -547,10 +547,17 @@ class Memo_Model(models.Model):
                 'set_staff': False,
                 })
  
+    # def get_url(self, id):
+    #     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+    #     base_url += "/my/request/view/%s" % (id)
+    #     return "<a href={}> </b>Click<a/>. ".format(base_url)
+    
     def get_url(self, id):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        base_url += "/my/request/view/%s" % (id)
-        return "<a href={}> </b>Click<a/>. ".format(base_url)
+        internal_path = "/web#id={}&model=memo.model&view_type=form".format(id)
+        internal_url = base_url + internal_path
+        return "<a href='{}'>Click</a>".format(internal_url)
+
     
     """line 4 - 7 checks if the current user is the initiator of the memo, 
     if true, raises warning error else: it opens the wizard"""
