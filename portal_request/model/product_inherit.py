@@ -13,39 +13,6 @@ _logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
-
-    # @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
-    # def check_duplicate_vehicle_props(self):
-    #     self.ensure_one()
-    #     product = self.env['product.template'].sudo()
-    #     for rec in self:
-    #         duplicate = product.search([('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
-    #         if len([r for r in duplicate]) > 1:
-    #             raise ValidationError("Product with same vehicle plate number already existing")
-    #         duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
-    #         if len([r for r in duplicate_vp]) > 1:
-    #             raise ValidationError("Product with same vehicle registration number already existing")
-    #         duplicate_name = product.search([('name', '=', rec.name)], limit=2)
-    #         if len([r for r in duplicate_name]) > 1:
-    #             raise ValidationError("Product with same vehicle name already existing")
-
-    @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
-    def check_duplicate_vehicle_props(self):
-        self.ensure_one()
-        product = self.env['product.template'].sudo()
-        for rec in self:
-            if rec.vehicle_plate_number:
-                duplicate = product.search([('is_vehicle_product', '=', rec.vehicle_plate_number),('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
-                if len([r for r in duplicate]) > 1:
-                    raise ValidationError("Product with same vehicle plate number already existing")
-            if rec.vehicle_reg_number:
-                duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
-                if len([r for r in duplicate_vp]) > 1:
-                    raise ValidationError("Product with same vehicle registration number already existing")
-            if rec.name:
-                duplicate_name = product.search([('name', '=', rec.name)], limit=2)
-                if len([r for r in duplicate_name]) > 1:
-                    raise ValidationError("Product with same vehicle name already existing")
     
     is_vehicle_product = fields.Boolean("Is vehicle", default=False)
     vehicle_plate_number = fields.Char("Vehicle Plate Number")
@@ -57,8 +24,7 @@ class ProductTemplate(models.Model):
     is_available = fields.Char("Is Available")
 
     maximum_trip_due_for_maintenance = fields.Integer("Maximum trip due for maintenance")
-    total_distance_covered = fields.Integer("Total distance covered",
-                                                       help="Total distance covered as of the time of use"
+    total_distance_covered = fields.Integer("Total distance covered", help="Total distance covered as of the time of use"
                                                        )
     current_mileage = fields.Integer("Current Mileage")
     last_service_by = fields.Char("Last serviced by")
@@ -88,3 +54,21 @@ class ProductTemplate(models.Model):
     def onchange_vehicle_plate_number(self):
         if self.vehicle_plate_number:
             self.default_code = self.vehicle_plate_number
+
+    @api.onchange('vehicle_plate_number', 'vehicle_reg_number', 'name')
+    def check_duplicate_vehicle_props(self):
+        self.ensure_one()
+        product = self.env['product.template'].sudo()
+        for rec in self:
+            if rec.vehicle_plate_number:
+                duplicate = product.search([('is_vehicle_product', '=', rec.vehicle_plate_number),('vehicle_plate_number', '=', rec.vehicle_plate_number)], limit=2)
+                if len([r for r in duplicate]) > 1:
+                    raise ValidationError("Product with same vehicle plate number already existing")
+            if rec.vehicle_reg_number:
+                duplicate_vp = product.search([('vehicle_reg_number', '=', rec.vehicle_reg_number)], limit=2)
+                if len([r for r in duplicate_vp]) > 1:
+                    raise ValidationError("Product with same vehicle registration number already existing")
+            if rec.name:
+                duplicate_name = product.search([('name', '=', rec.name)], limit=2)
+                if len([r for r in duplicate_name]) > 1:
+                    raise ValidationError("Product with same vehicle name already existing")

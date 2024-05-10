@@ -479,6 +479,11 @@ class Memo_Model(models.Model):
         else:
             self.dept_ids = False
             # self.district_id = self.employee_id.ps_district_id.id
+
+    vehicle_trip_ids = fields.One2many(
+        'memo.fleet',
+        string="Fleets trips",
+        )
     
     @api.depends('employee_id')
     def compute_employee_supervisor(self):
@@ -711,33 +716,15 @@ class Memo_Model(models.Model):
                     self.sudo().write({
                             'state': 'Done'
                             })
-                    if last_stage.approver_ids or random_memo_approver_ids:
-                        # approver_id = last_stage.approver_id.id \
-                        #         if last_stage.approver_id else random.choice(random_memo_approver_ids) \
-                        #             if random_memo_approver_ids else False
+                    if last_stage.approver_ids or random_memo_approver_ids: 
                         approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
                         self.sudo().write({
                             'approver_id': random.choice(approver_ids),
                             'approver_ids': [(4, appr) for appr in approver_ids],
                             # 'set_staff': approver_id
                             })
-                    # else:
-                    #     raise ValidationError("""
-                    #                           Please contact admin to link the final validation Personnel 
-                    #                           for this request. Go to memo setting for the memo type and department 
-                    #                           to link the final stage approver or employees for final validation
-                    #                           """)
-    # def confirm_server_validation(self):
-    #     if self.env.user.id in [app.user_id.id for app in self.memo_setting_id.approver_ids]:
-    #         # send mail to all the requester, and co. 
-    #         pass
-             
-    #     else:
-    #         raise ValidationError("You are not responsible to perform this action...  contact admin to review")
-                        
-    def confirm_memo(self, employee, comments, from_website=False): 
-        # user_id = self.env['res.users'].search([('id','=',self.env.user.id)])
-        # lists2 = [y.partner_id.id for x in self.users_followers for y in x.user_id]
+                
+    def confirm_memo(self, employee, comments, from_website=False):  
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
         Beneficiary = self.employee_id.name or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
@@ -1038,9 +1025,41 @@ class Memo_Model(models.Model):
             #         po.id,
             #         f"Purchase Order - {po.name}"
             #         )
-
+    def check_available_fleet_before_assignment(self, productid):
+        available_fleet = self.env['product.product'].sudo().search([
+                ('is_available', '=', True),
+                ('id', '=', productid.id)
+            ])
+        if available_fleet:
+            return True
+        return False
+            
     def generate_vehicle_request(self, body_msg):
         # TODO: generate fleet asset
+        # vehicle_trip_ids
+        Fleet = self.env['memo.fleet'].sudo()
+        self.vehicle_trip_ids = False
+        unavailable_fleets = []
+        for line in self.product_ids:
+            available = self.check_available_fleet_before_assignment(line.product_id)
+            if available:
+                Fleet_id = Fleet.create({
+                    'memo_id': self.id,
+                    'vehicle_assigned': line.product_id.id,
+                    'driver_assigned': False,
+                    'source_location_id': line.distance_from,
+                    'source_destination_id': line.distance_to,
+                })
+            else:
+                unavailable_fleets.append(line.product_id.vehicle_plate_number or line.product_id.name)
+        unavail_fleets = ','.join(unavailable_fleets)
+        return {'warning': {
+                        'title': "Unavailable fleets",
+                        'message':f"""The requested fleets with name / Reg number are (is) not available: See below; {unavail_fleets}""",
+                    }
+            }
+
+
         self.state = 'Done'
         self.is_request_completed = True
         self.update_memo_type_approver()

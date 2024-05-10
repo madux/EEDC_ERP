@@ -34,10 +34,12 @@ class RequestLine(models.Model):
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
 
     distance_from = fields.Text(
-        string="From"
+        string="From",
+        help="For vehicle request use"
         )
     distance_to = fields.Text(
-        string="Destination"
+        string="Destination",
+        help="For vehicle request use"
         )
     # memo_type = fields.Selection(
     #     [
