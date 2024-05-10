@@ -12,7 +12,7 @@
     'author': "EEDC Ltd.",
     'license': 'LGPL-3',
     'category': 'Uncategorized',
-    'sequence': 1000,
+    'sequence': 10,
     'version': '0.1',
 
     'depends': [
