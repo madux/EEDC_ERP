@@ -192,20 +192,27 @@
                                     <sheet>
                                         <group>
                                             <group>
-                                                <field name="requested_department_id" string="Requesting Department" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
-                                                <field name="job_tmp" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="job_id" string="Job Position" attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type_key','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
-                                                <field name="established_position" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="recruitment_mode" string="Recruitment Mode" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="qualification" string="Qualification" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="requested_department_id" 
+                                                string="Requesting Department" 
+                                                attrs="{'required':[('memo_type_key','in',['recruitment_request'])], 'readonly': [('state', '!=', 'submit')]}"
+                                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                                                <field name="job_tmp" attrs="{'required':[('memo_type_key','in',['recruitment_request'])], 'readonly': [('state', '!=', 'submit')]}"/> 
+                                                <field name="job_id" string="Job Position" 
+                                                attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type_key','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
+                                                <field name="established_position" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="recruitment_mode" string="Recruitment Mode" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="qualification" string="Qualification" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')], 'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
                                                 <field name="age_required" string="Required Age" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
                                             </group>
                                             <group>
-                                                <field name="years_of_experience" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="expected_employees" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="recommended_by"/>
+                                                <field name="years_of_experience" attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="expected_employees" attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="recommended_by" attrs="{'readonly': [('state', '!=', 'submit')]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                                                  <!-- attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/>  -->
-                                                <field name="date_expected" string="Deadline Date"/>
+                                                <field name="date_expected" string="Deadline Date" attrs="{'readonly': [('state', '!=', 'submit')]}"/>
                                                  <!-- attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/>  -->
                                             </group>
                                         </group>
