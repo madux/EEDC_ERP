@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
-    <data noupdate="0">
+    <data>
     
         <record id="hr_recruitment_stage_request_initiation" model="hr.recruitment.stage">
             <field name="name">Request initiation</field>
@@ -61,7 +61,23 @@
             <field name="sequence">15</field>
             <field name="fold">False</field>
             <field name="hired_stage">False</field>
-        </record>        
+        </record>
+        
+        <record id="hr_recruitment.stage_job1" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job2" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job3" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job4" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job5" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
     
     </data>
     
