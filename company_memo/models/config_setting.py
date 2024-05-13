@@ -92,6 +92,27 @@ class MemoConfig(models.Model):
         domain=lambda self: self.get_publish_memo_types()
         )
     
+    @api.onchange('active')
+    def onchange_active(self):
+        fleet_group = self.env.ref(
+                        'company_memo.group_memo_fleet'
+                    )
+        approvers = []
+        for app in self.stage_ids:
+            if app.approver_ids:
+                approvers += [r.user_id.id for r in app.approver_ids]
+        if self.active:
+            if self.memo_type:
+                if self.memo_type.memo_key == "vehicle_request":
+                    fleet_group.users = [(4, usr) for usr in approvers]
+            else:
+                raise ValidationError("Please select memo type!")
+            self.active = True
+        else:
+            fleet_group.users = [(3, usr) for usr in approvers]
+            self.active = False
+
+
     approver_ids = fields.Many2many(
         'hr.employee',
         'hr_employee_memo_config_rel',
@@ -210,4 +231,11 @@ class MemoCategory(models.Model):
     _description = "Memo document Category"
 
     name = fields.Char('Name')
+
+
+class MemoDialog(models.TransientModel):
+    _name = "memo.dialog"
+    _description = "Model to hold dialog messages "
+
+    name = fields.Text('Message', readonly=True)
     

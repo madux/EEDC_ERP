@@ -27,6 +27,8 @@
         'views/assets.xml',
         'security/ir.model.access.csv',
         'data/memo_stage.xml',
+        'views/memo_fleet.xml',
+        'views/memo_fleet maintainance.xml',
         'data/memo_type.xml',
         'data/ir_cron.xml',
         'wizard/memo_config_duplication_wizard_views.xml'

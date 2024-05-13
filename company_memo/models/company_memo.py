@@ -226,12 +226,15 @@ class Memo_Model(models.Model):
     loan_reference = fields.Integer(string="Loan Ref")
     active = fields.Boolean('Active', default=True)
 
-    product_ids = fields.One2many('request.line', 'memo_id', string ='Request Line') 
+    product_ids = fields.One2many(
+        'request.line', 
+        'memo_id', 
+        string ='Request Line',
+    )
     leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
     request_date = fields.Datetime('Request Start Date')
     request_end_date = fields.Datetime('Request End Date')
-
     leave_type_id = fields.Many2one('hr.leave.type', string="Leave type")
     memo_setting_id = fields.Many2one(
         'memo.config', 
@@ -481,7 +484,9 @@ class Memo_Model(models.Model):
 
     vehicle_trip_ids = fields.One2many(
         'memo.fleet',
+        'memo_id',
         string="Fleets trips",
+        store=True
         )
     
     @api.depends('employee_id')
@@ -849,7 +854,7 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
         elif self.memo_type.memo_key == "vehicle_request":
-            self.generate_vehicle_request(body_msg) 
+            return self.generate_vehicle_request(body_msg) 
         elif self.memo_type.memo_key == "recruitment_request":
             self.generate_recruitment_request(body_msg) 
         elif self.memo_type.memo_key == "leave_request":
@@ -1032,38 +1037,67 @@ class Memo_Model(models.Model):
         if available_fleet:
             return True
         return False
+
+    def check_driver_assignment(self):
+        not_assigned_driver = self.mapped('product_ids').filtered(
+            lambda d:not d.driver_assigned
+            )
+        if not_assigned_driver:
+            raise ValidationError(
+                "All vehicle request line must be assigned to a driver"
+                )
             
     def generate_vehicle_request(self, body_msg):
-        # TODO: generate fleet asset
-        # vehicle_trip_ids
+        
+        # generate fleet asset
         Fleet = self.env['memo.fleet'].sudo()
         self.vehicle_trip_ids = False
-        unavailable_fleets = []
-        for line in self.product_ids:
+        fleet_trips, unavailable_fleets = [], []
+        for count, line in enumerate(self.product_ids, 1):
+            self.check_driver_assignment()
             available = self.check_available_fleet_before_assignment(line.product_id)
             if available:
-                Fleet_id = Fleet.create({
-                    'memo_id': self.id,
-                    'vehicle_assigned': line.product_id.id,
-                    'driver_assigned': False,
-                    'source_location_id': line.distance_from,
-                    'source_destination_id': line.distance_to,
-                })
+                vals= {'memo_id': self.id,
+                        'vehicle_assigned': line.product_id.id,
+                        'driver_assigned': line.driver_assigned.id,
+                        'source_location_id': line.distance_from,
+                        'source_destination_id': line.distance_to,
+                        'active': True,
+                        'code': self.code + str(self.id) + str(count), # REF00701
+                }
+                if line.fleet_id:
+                    fleet_id = line.fleet_id
+                    line.fleet_id.update(vals)
+                else:
+                    fleet_id = Fleet.create(vals)
+                    line.update({
+                        'fleet_id': fleet_id.id
+                        })
+                self.vehicle_trip_ids = [(4, fleet_id.id)]
+                fleet_trips.append(fleet_id.id)
             else:
                 unavailable_fleets.append(line.product_id.vehicle_plate_number or line.product_id.name)
-        unavail_fleets = ','.join(unavailable_fleets)
-        return {'warning': {
-                        'title': "Unavailable fleets",
-                        'message':f"""The requested fleets with name / Reg number are (is) not available: See below; {unavail_fleets}""",
-                    }
-            }
-
-
+        unavail_fleets = '\n,'.join(unavailable_fleets)
+        warning_message = f"""Warning : The requested fleets with name / Reg number are (is) not available: See below; {unavail_fleets} """ if unavail_fleets else '',
         self.state = 'Done'
         self.is_request_completed = True
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
-
+        if unavailable_fleets:
+            dialog = self.env['memo.dialog'].sudo().create({
+                'name': warning_message
+            })
+            return {
+            'name': f"Warning:",
+            'view_mode': 'form',
+            # 'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'memo.dialog',
+            'res_id': dialog.id,
+            'type': 'ir.actions.act_window',
+            'target': 'new'
+            }
+        
     def generate_recruitment_request(self, body_msg=False):
         """
         Create HR job application ready for publication 

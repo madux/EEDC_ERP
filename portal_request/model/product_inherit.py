@@ -21,7 +21,7 @@ class ProductTemplate(models.Model):
     vehicle_color = fields.Char("Vehicle Color")
     vehicle_model = fields.Char("Vehicle Model")
     vehicle_make = fields.Char("Vehicle Make")
-    is_available = fields.Char("Is Available")
+    is_available = fields.Boolean("Is Available?")
 
     maximum_trip_due_for_maintenance = fields.Integer("Maximum trip due for maintenance")
     total_distance_covered = fields.Integer("Total distance covered", help="Total distance covered as of the time of use"
