@@ -15,9 +15,7 @@ class DocMgtConfigWizard(models.TransientModel):
         else:
             return False
     
-    memo_type_id = fields.Many2one("memo.type", compute="_compute_memo_type_id", inverse="_inverse_memo_type_id")#, default="_default_memo_type_id")
-    # memo_type_id = fields.Many2one(related="doc_mgt_config_id.memo_type_id")
-    
+    memo_type_id = fields.Many2one("memo.type", compute="_compute_memo_type_id", inverse="_inverse_memo_type_id")
     
     memo_config_ids = fields.Many2many("memo.config",
                                        "memo_config_wizard_rel",
@@ -72,8 +70,6 @@ class DocMgtConfigWizard(models.TransientModel):
     def default_get(self, fields):
         res = super(DocMgtConfigWizard, self).default_get(fields)
         rec = self.env['doc.mgt.config'].search([], limit=1)
-        # if not rec:
-        #     rec = self.env['doc.mgt.config'].sudo().create({})
         if rec:
             rec_dict = {'doc_mgt_config_id': rec.id}
             if rec.memo_type_id:

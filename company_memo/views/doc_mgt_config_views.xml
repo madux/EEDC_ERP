@@ -54,7 +54,7 @@
             id="doc_mgt_config_menu"
             name="Memo Config2S"
             action="company_memo.doc_mgt_config_action"
-            groups="company_memo.group_documents_mgt_manager"
+            groups="documents.group_documents_manager"
             parent="documents.Config"
             sequence="10"/>
 

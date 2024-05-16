@@ -462,9 +462,9 @@
 
         <!-- Document Mgt Requests Menu -->
         <menuitem id="internal_document_request_menu_model" name="Document Request"
-            parent="documents.menu_root" groups="company_memo.group_documents_mgt_user" sequence="-1"/>
+            parent="documents.menu_root" groups="documents.group_documents_user" sequence="-1"/>
         <menuitem id="internal_document_request" sequence= "2" name="Submission Requests"
-        parent="internal_document_request_menu_model" groups="company_memo.group_documents_mgt_user" action="internal_memo_model_document_action2"/>
+        parent="internal_document_request_menu_model" groups="documents.group_documents_user" action="internal_memo_model_document_action2"/>
 
     </data>
 </odoo>

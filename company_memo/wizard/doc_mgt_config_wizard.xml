@@ -11,7 +11,6 @@
                         <field name="memo_type_id"/>
                     </group>
                     <group>
-                        <!-- <field name="doc_mgt_config_id" /> -->
                     </group>
                 </group>
                 <notebook>
@@ -21,7 +20,6 @@
                                 <tree>
                                     <field name="memo_type"/>
                                     <field name="department_id"/>
-                                    <!-- <field name="stage_ids"/> -->
                                 </tree>
                             </field>
                         </group>
@@ -43,21 +41,11 @@
          <field name="target">new</field>
     </record>
 
-    <!-- <record id="doc_mgt_config_action" model="ir.actions.act_window">
-        <field name="name">Request Stages/Approvers</field>
-        <field name="res_model">doc.mgt.config</field>
-        <field name="view_mode">form</field>
-        <field name="domain">[]</field>
-        <field name="context">{}</field>
-        <field name="res_id">1</field>
-        <field name="target">current</field>
-    </record> -->
-
     <menuitem
             id="doc_mgt_config_menu"
             name="Memo Config"
             action="company_memo.doc_mgt_config_action"
-            groups="company_memo.group_documents_mgt_manager"
+            groups="documents.group_documents_manager"
             parent="documents.Config"
             sequence="10"/>
 
