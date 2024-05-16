@@ -106,7 +106,7 @@
 
         <function name="write" model="ir.model.data">
             <function name="search" model="ir.model.data">
-                <value eval="[('name', '=like', 'group_documents_%'), ('model', '=', 'res.groups')]"/>
+                <value eval="[('name', 'in', ['group_documents_user','group_documents_manager']), ('model', '=', 'res.groups')]"/>
             </function>
             <value eval="{'noupdate': False}"/>
         </function>
@@ -126,7 +126,7 @@
 
         <function name="write" model="ir.model.data">
             <function name="search" model="ir.model.data">
-                <value eval="[('name', '=like', 'group_documents_%'), ('model', '=', 'res.groups')]"/>
+                <value eval="[('name', '=like', ['documents.group_documents_user','documents.group_documents_manager']), ('model', '=', 'res.groups')]"/>
             </function>
             <value eval="{'noupdate': True}"/>
         </function>

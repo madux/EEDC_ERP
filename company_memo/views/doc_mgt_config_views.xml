@@ -52,7 +52,7 @@
 
     <menuitem
             id="doc_mgt_config_menu"
-            name="Memo Config2S"
+            name="Memo Config"
             action="company_memo.doc_mgt_config_action"
             groups="documents.group_documents_manager"
             parent="documents.Config"
