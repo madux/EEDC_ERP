@@ -97,7 +97,7 @@ class HRJobRecruitmentRequest(models.Model):
 	state = fields.Selection([
 				  ('draft', 'Draft'),
 				  ('refused', 'Refused'),
-				  ('confirmed', 'Waiting Approval'),
+				  ('confirmed', 'Confirmed'),
 				  ('accepted', 'Approved'),
 				  ('recruiting', 'In Recruitment'),
 				  ('done', 'Done'),
@@ -175,44 +175,44 @@ class HRJobRecruitmentRequest(models.Model):
 			rec.applicant_ready_for_verification_ids = False
 	
 	def action_start_recruit(self):
-		if self.user_to_approve_id.id != self.env.user.id:
-			raise ValidationError("Ops! You are not responsible for starting this job postition recruitment")
-		else:
-			requirements = {
-			'age_required': {
-					'name': 'Age Required - ',
-					'value': self.age_required,
-					},
-			'qualification': {
-				'name': 'Qualification - ',
-				'value': self.requirements or "-",
+		# if self.user_to_approve_id.id != self.env.user.id:
+		# 	raise ValidationError("Ops! You are not responsible for starting this job postition recruitment")
+		# else:
+		requirements = {
+		'age_required': {
+				'name': 'Age Required - ',
+				'value': self.age_required,
 				},
-			'years_of_experience': {
-				'name': 'Years of Experience - ',
-				'value': self.years_of_experience or "-",
-				},
-			'deadline': {
-				'name': 'Deadline - ',
-				'value': self.date_expected or "-",
-				}
-			} 
-			self.job_id.sudo().write({
-			'name': self.job_id.name,
-			'department_id': self.job_id.department_id.id,
-			'no_of_recruitment': self.expected_employees,
-			'request_id': self.id,
-			'close_date': self.date_expected,
-			'description': BeautifulSoup(self.memo_id.description or "-", features="lxml").get_text(),
-			'job_section_descriptions': [(
-				0,0, {
-				'title': 'Requirement / Must Have',
-				'job_descriptions': [(0, 0, {'description': f"{requirements[vl_key]['name']} {requirements.get(vl_key).get('value')}"}) for vl_key in requirements],
-				}
-				)],
-			})
-			# set the request templatre to in recruiting stage 
-		#     raise ValidationError("sds")
-			self.state='recruiting'
+		'qualification': {
+			'name': 'Qualification - ',
+			'value': self.requirements or "-",
+			},
+		'years_of_experience': {
+			'name': 'Years of Experience - ',
+			'value': self.years_of_experience or "-",
+			},
+		'deadline': {
+			'name': 'Deadline - ',
+			'value': self.date_expected or "-",
+			}
+		} 
+		self.job_id.sudo().write({
+		'name': self.job_id.name,
+		'department_id': self.job_id.department_id.id,
+		'no_of_recruitment': self.expected_employees,
+		'request_id': self.id,
+		'close_date': self.date_expected,
+		'description': BeautifulSoup(self.memo_id.description or "-", features="lxml").get_text(),
+		'job_section_descriptions': [(
+			0,0, {
+			'title': 'Requirement / Must Have',
+			'job_descriptions': [(0, 0, {'description': f"{requirements[vl_key]['name']} {requirements.get(vl_key).get('value')}"}) for vl_key in requirements],
+			}
+			)],
+		})
+		# set the request templatre to in recruiting stage 
+	#     raise ValidationError("sds")
+		self.state='recruiting'
 
 	def action_open_and_publish(self):
 		"""this method enables the recruiter to publish """

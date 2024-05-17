@@ -336,13 +336,37 @@ class Memo_Model(models.Model):
     submitted_date = fields.Date(
         string="submitted date")
     
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(Memo_Model, self).default_get(fields_list)
+        
+        if 'is_doc_mgt_request' in self._context:
+            val = self._context.get('is_doc_mgt_request')
+            if val == True:
+                doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
+                if doc_mgt_config and doc_mgt_config.memo_type_id:
+                    memo_type_id = doc_mgt_config.memo_type_id.id
+                    defaults['memo_type'] = memo_type_id
+        
+        return defaults
+    
+    # @api.constrains('document_folder')
+    # def check_next_reoccurance_constraint(self):
+    #     if self.document_folder and self.document_folder.next_reoccurance_date:
+    #         difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
+    #         if difference_of_days_for_submission not in range(0, self.document_folder.submission_minimum_range): # one week to submission
+    #             start = self.document_folder.next_reoccurance_date +  relativedelta(days=-self.document_folder.submission_minimum_range)
+    #             end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+    #             raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
+
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
+        start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
+        end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+        today_date = fields.Date.today()
         if self.document_folder and self.document_folder.next_reoccurance_date:
-            difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
-            if difference_of_days_for_submission not in range(0, self.document_folder.submission_minimum_range): # one week to submission
-                start = self.document_folder.next_reoccurance_date +  relativedelta(days=-self.document_folder.submission_minimum_range)
-                end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+            deadline_interval = (today_date >= start and today_date <= end)
+            if not deadline_interval:
                 raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
     
     def send_memo_to_contacts(self):
@@ -409,10 +433,8 @@ class Memo_Model(models.Model):
                     memo_setting_stage = ms.stage_ids[0]
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
-                    self.memo_type_key = self.memo_type.memo_key 
-                    # self.res_users = [
-                    #     (4, self.employee_id.administrative_supervisor_id.user_id.id),
-                    #     ]
+                    self.memo_type_key = self.memo_type.memo_key  
+                    self.requested_department_id = self.employee_id.department_id.id
                     self.users_followers = [
                         (4, self.employee_id.administrative_supervisor_id.id),
                         ] 
@@ -421,6 +443,7 @@ class Memo_Model(models.Model):
                     self.stage_id = False
                     self.memo_setting_id = False
                     self.memo_type_key = False
+                    self.requested_department_id = False
                     msg = f"No stage configured for department {department_id.name} and selected memo type. Please contact administrator"
                     return {'warning': {
                                 'title': "Validation",
@@ -609,22 +632,22 @@ class Memo_Model(models.Model):
             if not attach_document_ids:
                 raise ValidationError("Please kindly attach documents since this is a document submission request")
         if self.memo_type.memo_key == "Payment" and self.mapped('invoice_ids').filtered(
-            lambda s: s.mapped('invoice_line_ids').filtered(lambda x: x.price_unit <= 0)
-        ):
+            lambda s: s.mapped('invoice_line_ids').filtered(
+                lambda x: x.price_unit <= 0)):
             raise ValidationError("All invoice line must have a price amount greater than 0")
-        user_exist = self.mapped('res_users').filtered(
-            lambda user: user.id == self.env.uid
-            )
-        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        # user_exist = self.mapped('res_users').filtered(
+        #     lambda user: user.id == self.env.uid
+        #     )
+        # if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        
+        if self.stage_id.approver_ids and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """You cannot forward this memo again unless returned / cancelled!!!"""
-                ) 
+                )
         if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
-        
-
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         return {
                 'name': 'Forward Memo',

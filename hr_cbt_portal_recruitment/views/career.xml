@@ -274,7 +274,7 @@
                                                 <span class="s_website_form_mark"> *</span>
                                             </label>
                                             <div class="col-sm">
-                                                <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="1" required="1"/>
+                                                <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="true" required="1"/>
                                             </div>
                                         </div>
                                     </div>

@@ -23,7 +23,6 @@
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
                     <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
-                    <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
                     <field name="computed_stage_ids" invisible="1" />
                     <field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
                 </header>
@@ -115,7 +114,7 @@
                                 <field widget="binary" height="64" name="file_upload" filename="file_namex" required="0" invisible="1" string="Upload File" />
                                 <field name="file_namex" invisible="1"/> 
                                 <field name="to_create_document" invisible="1"/> 
-                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
+                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'readonly':[('state','not in',['submit'])]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                                 <field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
@@ -193,20 +192,27 @@
                                     <sheet>
                                         <group>
                                             <group>
-                                                <field name="requested_department_id" string="Requesting Department" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
-                                                <field name="job_tmp" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="job_id" string="Job Position" attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type_key','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
-                                                <field name="established_position" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="recruitment_mode" string="Recruitment Mode" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="qualification" string="Qualification" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="requested_department_id" 
+                                                string="Requesting Department" 
+                                                attrs="{'required':[('memo_type_key','in',['recruitment_request'])], 'readonly': [('state', '!=', 'submit')]}"
+                                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+                                                <field name="job_tmp" attrs="{'required':[('memo_type_key','in',['recruitment_request'])], 'readonly': [('state', '!=', 'submit')]}"/> 
+                                                <field name="job_id" string="Job Position" 
+                                                attrs="{'invisible':[('state','not in',['Done', 'Approve', 'Approve2'])], 'required':[('memo_type_key','in',['recruitment_request']), ('state','in',['Done', 'Approve', 'Approve2'])]}"/> 
+                                                <field name="established_position" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="recruitment_mode" string="Recruitment Mode" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="qualification" string="Qualification" 
+                                                attrs="{'readonly': [('state', '!=', 'submit')], 'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
                                                 <field name="age_required" string="Required Age" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
                                             </group>
                                             <group>
-                                                <field name="years_of_experience" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="expected_employees" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="recommended_by"/>
+                                                <field name="years_of_experience" attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="expected_employees" attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="recommended_by" attrs="{'readonly': [('state', '!=', 'submit')]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                                                  <!-- attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/>  -->
-                                                <field name="date_expected" string="Deadline Date"/>
+                                                <field name="date_expected" string="Deadline Date" attrs="{'readonly': [('state', '!=', 'submit')]}"/>
                                                  <!-- attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/>  -->
                                             </group>
                                         </group>
@@ -353,6 +359,19 @@
              <field name="view_mode">tree,form</field>
         </record>
 
+        <record model="ir.actions.act_window" id="internal_memo_model_document_action2">
+            <field name="name">Documents Request</field>
+            <field name="res_model">memo.model</field>
+            <field name="type">ir.actions.act_window</field>
+           <field name="domain">[('to_create_document','=',True)]</field>
+            <field name="context">{'search_default_group_to_create_document': 1, 
+                'default_to_create_document': True, 
+                'is_doc_mgt_request': True
+            }
+            </field>
+             <field name="view_mode">tree,form</field>
+        </record>
+
         <record model="ir.actions.act_window" id="internal_memo_model_action">
             <field name="name">Internal Memo Request</field>
             <field name="res_model">memo.model</field>
@@ -411,6 +430,10 @@
             <field name="target">new</field>
         </record>
 
+        <record id="documents.menu_root" model="ir.ui.menu">
+            <field name="name">Documents Mgt System</field>
+            <field name="groups_id" eval="[(6, 0, [ref('documents.group_documents_user')])]"/>
+        </record>
 
         <menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
         parent="internal_memo_menu_model_main2" sequence="3" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
@@ -436,6 +459,12 @@
             parent="internal_memo_document_menu_model" action="internal_memo_model_document_action"/>
             
         <menuitem parent="internal_memo_menu_model_main2" id="menu_memo_website_request" name="Website Request(s)" action="action_memo_open_my_request_url" sequence="5"/>
+
+        <!-- Document Mgt Requests Menu -->
+        <menuitem id="internal_document_request_menu_model" name="Document Request"
+            parent="documents.menu_root" groups="documents.group_documents_user" sequence="-1"/>
+        <menuitem id="internal_document_request" sequence= "2" name="Submission Requests"
+        parent="internal_document_request_menu_model" groups="documents.group_documents_user" action="internal_memo_model_document_action2"/>
 
     </data>
 </odoo>
