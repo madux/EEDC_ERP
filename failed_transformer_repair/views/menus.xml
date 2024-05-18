@@ -14,8 +14,14 @@
 
     <menuitem
         id="failed_transformer_movement_menu"
-        name="name"
+        name="Failed Transformer Movement"
         action="failed_transformer_repair.failed_transformer_movement_action"
+        parent="failed_transformer_repair_menu"
+        sequence="10"/>
+
+    <menuitem
+        id="setting_menu"
+        name="Setting"
         parent="failed_transformer_repair_menu"
         sequence="10"/>
 
@@ -23,6 +29,14 @@
         id="transformer_menu"
         name="Transformer"
         action="failed_transformer_repair.transformer_action"
-        parent="failed_transformer_repair_menu"
+        parent="setting_menu"
+        sequence="1"/>
+
+    <menuitem
+        id="issue_stage_menu"
+        name="Stages"
+        action="failed_transformer_repair.issue_stage_action"
+        parent="setting_menu"
         sequence="10"/>
+        
 </odoo>

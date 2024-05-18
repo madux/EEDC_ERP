@@ -4,7 +4,7 @@
     'description': 'This module is about failed transformer',
     'version': '0.1',
     'depends': [
-        'base','hr'
+        'base','hr','mail'
     ],
     'data': [
         'security/ir.model.access.csv',

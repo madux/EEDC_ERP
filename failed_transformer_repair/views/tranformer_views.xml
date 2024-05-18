@@ -40,7 +40,7 @@
     </record>
 
     <record id="transformer_action" model="ir.actions.act_window">
-        <field name="name">Action Name</field>
+        <field name="name">Transformer</field>
         <field name="res_model">transformer</field>
         <field name="view_mode">tree,form</field>
         <field name="domain">[]</field>
