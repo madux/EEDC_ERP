@@ -2,6 +2,7 @@ from odoo import api, models, fields
 
 class FailedTransformerMovement(models.Model):
     _name = 'failed.transformer.issue'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Failed Transformer Issue'
 
     transformer_id = fields.Many2one('transformer')
@@ -12,7 +13,7 @@ class FailedTransformerMovement(models.Model):
     transformer_serialno = fields.Char(related='transformer_id.serial_number')
     substation = fields.Many2one(related='transformer_id.sub_station')
     oil_weight = fields.Integer(related='transformer_id.oil_weight')
-    transformer_impedance = fields.Integer(related='transformer_id.impedance')
+    transformer_impedance = fields.Float(related='transformer_id.impedance')
     transformer_date_of_manufacture = fields.Date(related='transformer_id.date_of_manufacture')
     state = fields.Selection(
         selection=[
@@ -27,12 +28,31 @@ class FailedTransformerMovement(models.Model):
     movement_direction = fields.Boolean(string='Current Movement Direction')
 
     movement_ids = fields.One2many('failed.transformer.movement', 'issue_id')
-    present_location = fields.Char(compute='_compute_present_location')
+    present_location = fields.Char()
+    issue_description = fields.Text()
+    checklist = fields.One2many('dsm.checklist','issue_id')
+    repair_type = fields.Selection(
+        selection=[
+            ('pending', 'pending'),
+            ('internal', 'Internal'),
+            ('Exteranl', 'External')
+        ],
+        default='pending',
+        string = 'Repair type'
+    )
+
+    stage_id = fields.Many2one('issue.stage', default='pending')
+    stage_ids = fields.Many2many('issue.stage', default=lambda self: self._default_stage_ids())
 
     reporting_officer_incoming = fields.Many2one('hr.employee')
     reporting_officer_incoming_phone = fields.Char()
     reporting_officer_outgoing = fields.Many2one('hr.employee')
     reporting_officer_outgoing_phone = fields.Char()
+
+    @api.model
+    def _default_stage_ids(self):
+        stage_ids = self.env['issue.stage'].search([]).ids
+        return stage_ids if stage_ids else False
 
     @api.depends('movement_ids')
     def _compute_present_location(self):
@@ -49,3 +69,31 @@ class FailedTransformerMovement(models.Model):
     location = fields.Char()
     create_date = fields.Datetime(default=fields.Datetime.now)
     transformer_id = fields.Many2one('transformer') 
+
+class DSM_Checklist(models.Model):
+    _name = 'dsm.checklist'
+
+    """
+    This is tthe Distribution Substation Maintenance Substation Checklist
+    """
+
+    issue_id  = fields.Many2one('failed.transformer.issue')
+    item = fields.Char()
+    status = fields.Selection(
+        selection=[('pending', 'Pending'),
+                   ('completed', 'Completed')
+                   ],
+                   default='pending'
+    )
+
+
+    
+    class IssueStage(models.Model):
+        _name = 'issue.stage'
+        """
+        This class tracks the issue as it moves from OMS that created it to Workshop Manager and then back to the
+        transformer destination OMS and vice versa
+        """
+
+        name = fields.Char()
+        officer = fields.Many2one('res.users')
