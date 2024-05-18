@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="failed_transformer_movement_view_tree" model="ir.ui.view">
+        <field name="name">failed.transformer.issue.view.tree</field>
+        <field name="model">failed.transformer.issue</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="date_registered" />
+                <field name="transformer_name" />
+                <field name="transformer_rating" />
+                <field name="state" />
+                <field name="movement_direction" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="failed_transformer_movement_view_form" model="ir.ui.view">
+        <field name="name">failed.transformer.issue.view.form</field>
+        <field name="model">failed.transformer.issue</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="transformer_id" />
+                            <field name="transformer_name" />
+                            <field name="transformer_serialno" />
+                            <field name="transformer_rating" />
+                            <field name="substation" />
+                            <field name="oil_weight" />
+                            <field name="transformer_impedance" />
+                            <field name="transformer_date_of_manufacture" />
+                        </group>
+                        <group>
+                            <field name="state" />
+                            <field name="movement_direction" />
+                            <!-- <field name="location_address" /> -->
+
+                            <field name="reporting_officer_incoming" />
+                            <field name="reporting_officer_incoming_phone" />
+                            <field name="reporting_officer_outgoing" />
+                            <field name="reporting_officer_outgoing_phone" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="failed_transformer_issue_action" model="ir.actions.act_window">
+        <field name="name">Action Name</field>
+        <field name="res_model">failed.transformer.issue</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <record id="failed_transformer_movement_action" model="ir.actions.act_window">
+        <field name="name">Failed Transformer Movement</field>
+        <field name="res_model">failed.transformer.movement</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+    
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_transformer_user,access_transformer_user,model_transformer,base.group_user,1,1,1,1
+access_failed_transformer_issue_user,access_failed_transformer_issue_user,model_failed_transformer_issue,base.group_user,1,1,1,1
+access_transformer_failed_movement_user,access_failed_transformer_movement_user,model_failed_transformer_movement,base.group_user,1,1,1,1
