@@ -5,7 +5,7 @@
         <!-- This is recruitment main menu. Include new group you want to see Recruitment module -->
         <record id="hr_recruitment.menu_hr_recruitment_root" model="ir.ui.menu">
             <field name="name">Recruitment</field>
-            <field name="groups_id" eval="[(6, 0, [ref('hr_recruitment.group_hr_recruitment_user'), ref('hr_recruitment.group_hr_recruitment_interviewer'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_audit_id')])]"/>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_recruitment.group_hr_recruitment_user'), ref('hr_recruitment.group_hr_recruitment_interviewer'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_audit_id'), ref('base.group_user')])]"/>
         </record>
     
         <menuitem
@@ -75,12 +75,12 @@
 
         <record id="hr_recruitment.menu_crm_case_categ_all_app" model="ir.ui.menu">
             <field name="name">All Applications</field>
-            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id')])]"/>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id'), ref('base.group_user')])]"/>
         </record>
 
         <record id="hr_recruitment.menu_hr_job_position" model="ir.ui.menu">
             <field name="name">By Job Positions</field>
-            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id')])]"/>
+            <field name="groups_id" eval="[(6, 0, [ref('hr_cbt_portal_recruitment.group_hr_recruitment_officer_id'), ref('hr_cbt_portal_recruitment.group_hr_recruitment_admin_id'), ref('base.group_user')])]"/>
         </record>
 
     </data>

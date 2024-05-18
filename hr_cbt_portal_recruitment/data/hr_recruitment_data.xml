@@ -61,7 +61,38 @@
             <field name="sequence">15</field>
             <field name="fold">False</field>
             <field name="hired_stage">False</field>
-        </record>        
+        </record>
+        
+        <function name="write" model="ir.model.data">
+            <function name="search" model="ir.model.data">
+                <value eval="[('name', '=like', 'stage_job_'), ('model', '=', 'hr.recruitment.stage')]"/>
+            </function>
+            <value eval="{'noupdate': False}"/>
+        </function>
+
+        <record id="hr_recruitment.stage_job1" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job2" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job3" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job4" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+        <record id="hr_recruitment.stage_job5" model="hr.recruitment.stage">
+            <field name="active">0</field>
+        </record>
+
+        <function name="write" model="ir.model.data">
+            <function name="search" model="ir.model.data">
+                <value eval="[('name', '=like', 'stage_job_'), ('model', '=', 'hr.recruitment.stage')]"/>
+            </function>
+            <value eval="{'noupdate': True}"/>
+        </function>
+        
     
     </data>
     
