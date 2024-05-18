@@ -11,19 +11,20 @@ class Transformer(models.Model):
     dss_type = fields.Selection(
         selection=[('public', 'Public'),
                    ('private', 'Private'),
-                   ('bulk', 'Bulk')]  # Corrected the casing of 'bulk'
+                   ('bulk', 'Bulk')]
     )
     dss_make = fields.Char()
     dss_capacity = fields.Integer()
     rating = fields.Integer()
     oil_weight = fields.Integer('Oil Weight (Kg)')
-    impedance = fields.Integer()  # Corrected the casing of 'Integer'
+    impedance = fields.Integer()
     date_of_manufacture = fields.Date()
     location_address = fields.Char('Location Address')
-    failed_transformer_movement_ids = fields.One2many('failed.transformer.issue', 'transformer_id')  # Changed field name to plural
+    failed_transformer_issue_ids = fields.One2many('failed.transformer.issue', 'transformer_id')
+    failed_transformer_movement_ids = fields.One2many('failed.transformer.movement', 'transformer_id')
 
 class InjectionSubstation(models.Model):
     _name = 'injection.substation'
     _description = 'Injection Substation'
 
-    name = fields.Char('Substation', required=True)  # Added required attribute
+    name = fields.Char('Substation', required=True)

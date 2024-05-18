@@ -8,14 +8,21 @@
     <menuitem
         id="failed_transformer_issues_menu"
         name="Failed Transformer Issues"
-        action ="failed_transformer_issue_action"
+        action ="failed_transformer_repair.failed_transformer_issue_action"
         parent="failed_transformer_repair_menu"
         sequence="1"/>
 
     <menuitem
         id="failed_transformer_movement_menu"
         name="name"
-        action="failed_transformer_movement_action"
+        action="failed_transformer_repair.failed_transformer_movement_action"
+        parent="failed_transformer_repair_menu"
+        sequence="10"/>
+
+    <menuitem
+        id="transformer_menu"
+        name="Transformer"
+        action="failed_transformer_repair.transformer_action"
         parent="failed_transformer_repair_menu"
         sequence="10"/>
 </odoo>
