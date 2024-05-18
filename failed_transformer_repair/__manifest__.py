@@ -2,8 +2,9 @@
     'name': 'Failed transformer Repair',
     'summary': 'This tracks the movement of failed transformer',
     'description': 'This module is about failed transformer',
+    'version': '0.1',
     'depends': [
-        'base'
+        'base','hr'
     ],
     'data': [
         'security/ir.model.access.csv',

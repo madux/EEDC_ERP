@@ -34,7 +34,7 @@
                         <group>
                             <field name="state" />
                             <field name="movement_direction" />
-                            <!-- <field name="location_address" /> -->
+                            <field name="present_location" />
 
                             <field name="reporting_officer_incoming" />
                             <field name="reporting_officer_incoming_phone" />
@@ -48,7 +48,7 @@
     </record>
 
     <record id="failed_transformer_issue_action" model="ir.actions.act_window">
-        <field name="name">Action Name</field>
+        <field name="name">Failed transformer Issue</field>
         <field name="res_model">failed.transformer.issue</field>
         <field name="view_mode">tree,form</field>
         <field name="domain">[]</field>
