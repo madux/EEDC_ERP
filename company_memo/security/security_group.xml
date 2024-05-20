@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE xml>
 <odoo>
-    <data>
+    <data noupdate="0">
         <record model="ir.module.category" id="category_main_memo_app_group">
            <field name="name">Memo Application</field>
            <field name="description">Memo Application</field>
@@ -12,7 +12,8 @@
             <field name="name">User</field>
             <field name="category_id" ref="category_main_memo_app_group"/>
              <!-- <field name="users" eval="[(4, ref('base.group_user'))]"/> -->
-			<field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
+			<!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]" /> -->
+            <!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]" /> -->
         </record>
 
         <record id="base.group_user" model="res.groups">
@@ -100,5 +101,38 @@
             <field name="groups" eval="[(6, 0, [ref('base.group_system')])]"/>
             <field name="domain_force">[(1,'=',1)]</field>
         </record> -->
+
+        <record id="module_category_documents_management_system" model="ir.module.category">
+            <field name="name">Documents Mgt System</field>
+            <field name="description">Allows you to manage your documents and make dcoument requests.</field>
+            <field name="sequence">34</field>
+        </record>
+
+        <function name="write" model="ir.model.data">
+            <function name="search" model="ir.model.data">
+                <value eval="[('name', 'in', ['group_documents_user','group_documents_manager']), ('model', '=', 'res.groups')]"/>
+            </function>
+            <value eval="{'noupdate': False}"/>
+        </function>
+
+        <record id="documents.group_documents_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="company_memo.module_category_documents_management_system"/>
+            <!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/> -->
+        </record>
+
+        <record id="documents.group_documents_manager" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="company_memo.module_category_documents_management_system"/>
+            <!-- <field name="implied_ids" eval="[(4, ref('documents.group_documents_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/> -->
+        </record>
+
+        <function name="write" model="ir.model.data">
+            <function name="search" model="ir.model.data">
+                <value eval="[('name', '=like', ['documents.group_documents_user','documents.group_documents_manager']), ('model', '=', 'res.groups')]"/>
+            </function>
+            <value eval="{'noupdate': True}"/>
+        </function>
     </data>
 </odoo>

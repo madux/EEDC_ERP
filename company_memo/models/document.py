@@ -72,7 +72,8 @@ class DocumentFolder(models.Model):
           compute="get_awaiting_submission")
     color = fields.Integer("Color Index", default=0)
     opened_documents = fields.Integer("Opened", default=0, compute="get_unapproved_submission")
-    closed_documents = fields.Integer("Completed", default=0, compute="get_completed_submission") 
+    closed_documents = fields.Integer("Completed", default=0, compute="get_completed_submission")
+    active = fields.Boolean("Active",default=True)
 
     def get_awaiting_submission(self):
         for t in self:

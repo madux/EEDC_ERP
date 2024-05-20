@@ -20,3 +20,7 @@ access_memo_category,memo_memo_category_user_name,company_memo.model_memo_catego
 access_memo_fleet,memo_fleet_name,company_memo.model_memo_fleet,,1,1,1,1
 access_memo_dialog,memo_dialog_name,company_memo.model_memo_dialog,,1,1,1,1
 access_memo_fleet_maintenance,memo_fleet_maintenance_name,company_memo.model_memo_fleet_maintenance,,1,1,1,1
+access_doc_mgt_config_admin,doc_mgt_config_admin,company_memo.model_doc_mgt_config,documents.group_documents_manager,1,1,1,1
+access_doc_mgt_config_wizard_admin,doc_mgt_config_wizard_admin,company_memo.model_doc_mgt_config_wizard,documents.group_documents_manager,1,1,1,1
+
+access_doc_mgt_config_user,doc_mgt_config_user,company_memo.model_doc_mgt_config,,1,1,0,0
