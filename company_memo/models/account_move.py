@@ -13,6 +13,14 @@ class AccountMoveMemo(models.Model):
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
     origin = fields.Char(string="Source")
+    stage_invoice_name = fields.Char(
+        string="Stage invoice name", 
+        store=True,
+        help="Used to track if invoice is from the stage configuration",
+        )
+    stage_invoice_required = fields.Boolean(string="Stage invoice required?", store=True,
+        help="Used to track if invoice is required based on the stage configuration")
+    is_locked = fields.Boolean(string="Is locked", default=False)
     memo_state = fields.Char(string="Memo state", compute="compute_memo_state")
     payment_journal_id = fields.Many2one(
         'account.journal', 

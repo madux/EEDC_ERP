@@ -13,3 +13,4 @@ from . import hr_employee
 from . import document
 from . import product_template
 from . import doc_mgt_config
+from . import ir_attachment

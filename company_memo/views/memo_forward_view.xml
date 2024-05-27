@@ -19,13 +19,16 @@
                             <!-- <field name="amountfig"/> -->
                             <field name="is_approver" invisible="1" />
                             <field name="all_superior_ids" widget="many2many_tags"/>
-                            <field name="date"/>
-                            <!-- <field name="next_stage_id"/> -->
                         </group>
                         <group> 
+                            <field name="has_conditional_stage" readonly="1" invisible="1"/>
+                            <field name="dummy_conditional_stage_ids" invisible="1"/>
+                            <field name="conditional_stage_id" domain="[('id', 'in', dummy_conditional_stage_ids or False)]" attrs="{'invisible': [('has_conditional_stage', '=', False)], 'required': [('has_conditional_stage', '=', True)]}" 
+                            options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                            <field name="date"/>
                             
-                            <field name="description_two" required="0" placeholder="Please Add Comment ..." colspan="20"/>
                         </group>
+                        <field name="description_two" required="0" placeholder="Please Add Comment ..." colspan="20"/>
                                 
                     <footer>
                         <button name="forward_memo" type="object" string="Forward" class="oe_highlight"/>

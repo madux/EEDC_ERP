@@ -4,6 +4,7 @@ class FailedTransformerMovement(models.Model):
     _name = 'failed.transformer.issue'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Failed Transformer Issue'
+    _rec_name = "transformer_id"
 
     transformer_id = fields.Many2one('transformer')
     transformer_name = fields.Char(related='transformer_id.name')
@@ -65,8 +66,10 @@ class FailedTransformerMovement(models.Model):
     _name = 'failed.transformer.movement'
     _description = 'Movement Log'
 
+    memo_id = fields.Many2one('memo.model')
     issue_id = fields.Many2one('failed.transformer.issue')
     location = fields.Char()
+    destination_location = fields.Char()
     create_date = fields.Datetime(default=fields.Datetime.now)
     transformer_id = fields.Many2one('transformer') 
 

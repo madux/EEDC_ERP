@@ -317,6 +317,15 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('res_model', '=', 'memo.model')]"
         )
+    memo_sub_stage_ids = fields.Many2many(
+        'memo.sub.stage', 
+        'memo_sub_stage_rel',
+        'memo_sub_stage_id',
+        'memo_id',
+        string='Sub Stages', 
+        store=True,
+        )
+    
     internal_memo_option = fields.Selection(
         [
         ("none", ""),
@@ -330,6 +339,11 @@ class Memo_Model(models.Model):
         'memo_partner_id',
         string='Reciepients', 
         )
+    has_sub_stage = fields.Boolean(
+        'Has Sub stage', 
+        default=False, 
+        store=True,
+        )
     document_folder = fields.Many2one('documents.folder', string="Document folder")
     to_create_document = fields.Boolean(
         'Registered in Document Management',
@@ -338,7 +352,61 @@ class Memo_Model(models.Model):
     memo_category_id = fields.Many2one('memo.category', string="Category") 
     submitted_date = fields.Date(
         string="submitted date")
+    computed_stage_ids = fields.Many2many('memo.stage', compute='_compute_stage_ids', store=True)
+    stage_to_skip = fields.Many2one(
+        'memo.stage', 
+        string='Stage to skip', 
+        store=True,
+        help="Used to determine stage not to be included in this memo"
+        )
     
+    client_id = fields.Many2one('res.partner', 'Client')
+    po_ids = fields.Many2many('purchase.order', 
+                              store=True)
+    so_ids = fields.Many2many('sale.order', 
+                              store=True)
+
+    def validate_po_line(self):
+        # if self.memo_setting_id.project_type == 'procurement' or self.memo_type_key == "procurement_request":
+        '''if the stage requires PO confirmation'''
+        self.procurement_confirmation()
+
+    def procurement_confirmation(self):
+        if self.stage_id.require_po_confirmation:
+            if not self.po_ids:
+                raise ValidationError("Please enter purchase order lines")
+            else:
+                po_without_lines = self.mapped('po_ids').filtered(
+                    lambda tot: tot.amount_total < 1
+                )
+                if po_without_lines:
+                    raise ValidationError("Please kindly ensure that all purchase order lines are added with price amount")
+
+            po_without_confirmation = self.mapped('po_ids').filtered(
+                    lambda st: st.state in ['draft', 'sent']
+                )
+            if po_without_confirmation:
+                raise ValidationError(
+                    """All POs must be confirmed at this stage. To avoid errors, 
+                    Please kindly go through each PO to confirm them""")
+        if self.stage_id.require_bill_payment: 
+            '''Checks if the PO is expecting a picking count and there is no pickings '''
+            without_picking_reciept = self.mapped('po_ids').filtered(
+                    lambda st: st.incoming_picking_count > 0 and not st.picking_ids
+                )
+            if without_picking_reciept:
+                raise ValidationError('Please ensure all PO(s) has been recieved before Vendor Bill is generated')
+            for po in self.mapped('po_ids'):
+                if po.mapped('picking_ids').filtered(
+                    lambda st: st.state != "done"
+                ):
+                    raise ValidationError("Please ensure all PO picking / receipts are marked done before vendor bill is generated")
+            po_without_invoice_payment = self.mapped('po_ids').filtered(
+                    lambda st: st.invoice_status not in ['invoiced']
+                )
+            if po_without_invoice_payment:
+                raise ValidationError("Please kindly create and pay the bills for each PO lines")
+
     @api.model
     def default_get(self, fields_list):
         defaults = super(Memo_Model, self).default_get(fields_list)
@@ -353,21 +421,22 @@ class Memo_Model(models.Model):
         
         return defaults
     
-    # @api.constrains('document_folder')
-    # def check_next_reoccurance_constraint(self):
-    #     if self.document_folder and self.document_folder.next_reoccurance_date:
-    #         difference_of_days_for_submission = abs(fields.Date.today() - self.document_folder.next_reoccurance_date).days
-    #         if difference_of_days_for_submission not in range(0, self.document_folder.submission_minimum_range): # one week to submission
-    #             start = self.document_folder.next_reoccurance_date +  relativedelta(days=-self.document_folder.submission_minimum_range)
-    #             end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
-    #             raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
-
+    @api.depends('stage_id.memo_config_id')
+    def _compute_stage_ids(self):
+        for record in self:
+            if record.stage_id.memo_config_id:
+                record.computed_stage_ids = record.stage_id.memo_config_id.mapped('stage_ids').filtered(
+                    lambda publish: publish.publish_on_dashboard
+                )
+            else:
+                record.computed_stage_ids = False
+                
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
-        start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
-        end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
         today_date = fields.Date.today()
         if self.document_folder and self.document_folder.next_reoccurance_date:
+            start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
+            end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
             deadline_interval = (today_date >= start and today_date <= end)
             if not deadline_interval:
                 raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
@@ -393,15 +462,13 @@ class Memo_Model(models.Model):
                 },
             }
  
-    computed_stage_ids = fields.Many2many('memo.stage', compute='_compute_stage_ids', store=True)
-
-    @api.depends('stage_id.memo_config_id')
-    def _compute_stage_ids(self):
-        for record in self:
-            if record.stage_id.memo_config_id:
-                record.computed_stage_ids = record.stage_id.memo_config_id.stage_ids
-            else:
-                record.computed_stage_ids = False 
+    # @api.depends('stage_id.memo_config_id')
+    # def _compute_stage_ids(self):
+    #     for record in self:
+    #         if record.stage_id.memo_config_id:
+    #             record.computed_stage_ids = record.stage_id.memo_config_id.stage_ids
+    #         else:
+    #             record.computed_stage_ids = False 
     # MEMO THINGS 
     
     def _get_related_stage(self):
@@ -632,8 +699,65 @@ class Memo_Model(models.Model):
                      """Please ensure all request lines 
                      has a source location and quantity greater than 0"""
                      )
+    def validate_compulsory_document(self):
+        """Check if compulsory documents have uploaded"""  
+        attachments = self.mapped('attachment_ids').filtered(
+                    lambda iv: not iv.datas
+                )
+        if attachments:
+            for count, doc in enumerate(attachments, 1):
+                isn = doc.name.split('/')
+                doc_name = isn[0] if isn else '-'
+                matching_attachment = self.stage_id.mapped('required_document_line').filtered(
+                    lambda dc: dc.name == doc_name
+                )
+                matching_stage_doc = matching_attachment and matching_attachment[0]
+                if matching_stage_doc.compulsory and not doc.datas:
+                    raise ValidationError(
+                        f"""
+                        Attachment with name '{doc.stage_document_name}' at line {count} does not have any data attached
+                        """
+                        )
+    def validate_sub_stage(self):
+        for count, rec in enumerate(self.memo_sub_stage_ids, 1):
+            if not rec.sub_stage_done:
+                raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
+    
+    def validate_invoice_line(self):
+        '''Check all invoice in draft and check if 
+        the current stage that matches it is compulsory
+        if compulsory, system validates it'''
+        
+        invoice_ids = self.mapped('invoice_ids').filtered(
+                    lambda iv: iv.state in ['draft']
+                )
+        if invoice_ids:
+            for count, inv in enumerate(invoice_ids, 1):
+                isn = inv.stage_invoice_name.split('/') if inv.stage_invoice_name else False
+                inv_stage_name = isn[0] if isn else '-'
+                matching_stage_invoice = self.stage_id.mapped('required_invoice_line').filtered(
+                    lambda rinv: rinv.name == inv_stage_name
+                )
+                matching_stage_invoice = matching_stage_invoice and matching_stage_invoice[0]
+                if matching_stage_invoice.compulsory:
+                    if inv.payment_state not in ['paid', 'partial', 'in_payment']:
+                        raise ValidationError(f"Invoice at line {count} must be posted and paid before proceeding")
+                    invoice_line = inv.mapped('invoice_line_ids')
+                    if not invoice_line:
+                        raise ValidationError(f"Add at least one invoice billing line at line {count}")
+                    invoice_line_without_price = inv.mapped('invoice_line_ids').filtered(
+                        lambda s: s.price_unit <= 0
+                        )
+                    if invoice_line_without_price:
+                        raise ValidationError(f"All invoice line must have a price amount greater than 0 at line {count}")
+                # else:
+                #     self.invoice_ids = [(3, inv.id)]
 
-    def forward_memo(self):
+    def forward_memo(self): 
+        # self.validate_po_line()
+        self.validate_compulsory_document()
+        self.validate_sub_stage()
+        self.validate_invoice_line()
         if self.to_create_document:
             attach_document_ids = self.env['ir.attachment'].sudo().search([
                     ('res_id', '=', self.id), 
@@ -659,6 +783,7 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
+        condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -670,6 +795,8 @@ class Memo_Model(models.Model):
                 'context': {
                     'default_memo_record': self.id,
                     'default_resp': self.env.uid,
+                    'default_dummy_conditional_stage_ids': [(6, 0, condition_stages)],
+                    'default_has_conditional_stage': True if self.stage_id.memo_has_condition else False,
                 },
             }
     """The wizard action passes the employee whom the memo was director to this function."""
@@ -684,6 +811,35 @@ class Memo_Model(models.Model):
             initial_stage_id= self.env.ref('company_memo.memo_initial_stage')
         return initial_stage_id
         
+    # def get_next_stage_artifact(self, current_stage_id, from_website=False):
+    #     """
+    #     args: from_website: used to decide if the record is 
+    #     generated from the website or from odoo internal use
+    #     """
+    #     approver_ids = []
+    #     memo_settings = self.env['memo.config'].sudo().search([
+    #         ('memo_type', '=', self.memo_type.id),
+    #         ('department_id', '=', self.employee_id.department_id.id)
+    #         ], limit=1)
+    #     memo_setting_stages = memo_settings.stage_ids
+    #     if memo_settings and current_stage_id:
+    #         mstages = memo_settings.stage_ids # [3,6,8,9]
+    #         _logger.info(f'Found stages are {memo_setting_stages.ids}')
+    #         last_stage = mstages[-1] if mstages else False # 'e.g 9'
+    #         if last_stage and last_stage.id != current_stage_id.id:
+    #             current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+    #             next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
+    #         else:
+    #             next_stage_id = self.stage_id.id
+    #         next_stage_record = self.env['memo.stage'].browse([next_stage_id])
+    #         if next_stage_record:
+    #             approver_ids = next_stage_record.approver_ids.ids
+    #         return approver_ids, next_stage_record.id
+    #     else:
+    #         raise ValidationError(
+    #             "Please ensure to configure the Memo type for the employee department"
+    #             )
+
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
         args: from_website: used to decide if the record is 
@@ -694,7 +850,9 @@ class Memo_Model(models.Model):
             ('memo_type', '=', self.memo_type.id),
             ('department_id', '=', self.employee_id.department_id.id)
             ], limit=1)
-        memo_setting_stages = memo_settings.stage_ids
+        memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
+            lambda skp: skp.id != self.stage_to_skip.id
+        )
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
             _logger.info(f'Found stages are {memo_setting_stages.ids}')
@@ -713,14 +871,205 @@ class Memo_Model(models.Model):
                 "Please ensure to configure the Memo type for the employee department"
                 )
     
-    def update_final_state_and_approver(self, from_website=False):
+    # def update_final_state_and_approver(self, from_website=False):
+    #     if from_website:
+    #         # if from website args: prevents the update of stages and approvers 
+    #         pass
+    #     else:
+    #         # updating the next stage
+    #         approver_ids, next_stage_id = self.get_next_stage_artifact(self.stage_id)
+    #         self.stage_id = next_stage_id
+    #         # determining the stage to update the already existing state used to hide or display some components
+    #         if self.stage_id:
+    #             if self.stage_id.is_approved_stage:
+    #                 if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
+    #                     self.state = "Approve"
+    #                 else:
+    #                     self.state = "Approve2"
+    #             # important: users_followers must be required in for them to see the records.
+    #             if self.sudo().stage_id.approver_ids:
+    #                 self.sudo().update({
+    #                     'users_followers': [(4, appr.id) for appr in self.sudo().stage_id.approver_ids],
+    #                     'set_staff': self.sudo().stage_id.approver_ids[0].id # FIXME To be reviewed
+    #                     })
+    #         if self.memo_setting_id and self.memo_setting_id.stage_ids:
+    #             ms = self.memo_setting_id.stage_ids
+    #             last_stage = ms[-1]
+    #             # if id of next stage is the same with the id of the last stage of memo setting stages, 
+    #             # write stage to done
+    #             random_memo_approver_ids = [rec.id for rec in self.memo_setting_id.approver_ids if rec]
+    #             if last_stage.id == next_stage_id:
+    #                 self.sudo().write({
+    #                         'state': 'Done'
+    #                         })
+    #                 if last_stage.approver_ids or random_memo_approver_ids: 
+    #                     approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
+    #                     self.sudo().write({
+    #                         'approver_id': random.choice(approver_ids),
+    #                         'approver_ids': [(4, appr) for appr in approver_ids],
+    #                         # 'set_staff': approver_id
+    #                         })
+    def generate_sub_stage_artifacts(self, stage_id):
+        sub_stage_ids = stage_id.sub_stage_ids
+        self.has_sub_stage = True if stage_id.sub_stage_ids else False
+        self.sudo().write({
+                'memo_sub_stage_ids': [(3, exist_stage.id) for exist_stage in self.memo_sub_stage_ids],
+                })
+        if sub_stage_ids:
+            for stg in sub_stage_ids:
+                sub_stage = self.env['memo.sub.stage'].sudo().create({
+                    'name': stg.name,
+                    'memo_id': self.id,
+                    'sub_stage_id': stg.id,
+                    'approver_ids': stg.approver_ids.ids,
+                    'description': stg.description,
+                })
+                invoices, documents = self.generate_required_artifacts(stg, sub_stage, '')
+                sub_stage.sudo().write({
+                'invoice_ids': [(4, iv) for iv in invoices],
+                'attachment_ids': [(4, dc) for dc in documents]
+                })
+                
+                self.sudo().write({
+                'memo_sub_stage_ids': [(4, sub_stage.id)],
+                })
+
+    def function_generate_attachment(self, **kwargs):
+        attachment_name, report_binary, mimetype,document_name, compulsory = kwargs.get('attachment_name'),\
+            kwargs.get('report_binary'), kwargs.get('mimetype'), kwargs.get('document_name'), \
+            kwargs.get('compulsory')
+        code = kwargs.get('code')
+        attachObj = self.env['ir.attachment']
+        attachid = attachObj.search([('stage_document_name', '=', document_name),('code', '=', code)], limit=1) # recasting this means you must recast this line above
+        if not attachid:
+            attachid = attachObj.create({
+                'name': attachment_name,
+                # 'type': 'binary',
+                'datas': report_binary,
+                'store_fname': attachment_name,
+                'res_model': self._name,
+                'res_id': self.id,
+                'mimetype': mimetype,
+                'stage_document_name': document_name,
+                'stage_document_required': compulsory,
+                'code': code,
+                'memo_id': self.id,
+            })
+        return attachid
+    
+    def function_generate_move_entries(self, **kwargs):
+        # is_config_approver = self.determine_if_user_is_config_approver()
+        # if is_config_approver:
+        """Check if the user is enlisted as the approver for memo type
+        if approver is an account officer, system generates move and open the exact record"""
+        # purchase payment journal
+        movetype = kwargs.get('movetype')
+        purchase_journal_id = self.env['account.journal'].search(
+        [('type', '=', 'purchase'),
+            ('code', '=', 'BILL')
+            ], limit=1)
+        sale_journal_id = self.env['account.journal'].search(
+        [('type', '=', 'sale'), ('code', '=', 'INV')], limit=1)
+        journal_id = purchase_journal_id if movetype == 'in_invoice' else sale_journal_id
+        if not journal_id:
+            raise ValidationError(
+                "No journal configured for accounting, kindly contact admin to create one."
+                )
+        invoice_name = kwargs.get('invoice_name') or "-"
+        invoice_required = kwargs.get('invoice_required')
+        account_move = self.env['account.move'].sudo()
+        # Please be careful not to remove this name below, 
+        # name = f"EXP-P/{invoice_name}/{kwargs.get('code')}"
+        prefix = 'P000001' if movetype == 'in_invoice' else 'S000001'
+        suffix = '100' if self.memo_type_key in ['import_process', 'export_process'] else '200'
+        domain = ('move_type', '=', 'in_invoice') if movetype == 'in_invoice' else ('move_type', '=', 'out_invoice')
+        last_invoice = self.env['account.move'].search(
+            [('name', 'ilike', prefix), domain], 
+            order="create_date desc", 
+            limit=1
+            )
+        
+        if last_invoice:
+            lastinv = last_invoice.name.split('-')
+            suffix = int(lastinv[1]) + 1 if len(lastinv) > 1 else suffix
+        prefix_code = f"{prefix}-{suffix}"  
+        name = prefix_code
+        inv = account_move.search([('name', '=', name)], limit=1) # recasting this means you must recast this line above
+        if not inv:
+            partner_id = self.client_id
+            # self.employee_id.user_id.partner_id or self.env.user.company_id.partner_id
+            inv = account_move.create({ 
+                'memo_id': self.id,
+                'ref': name, #f'{prefix_code}-{self.code}',
+                'origin': self.code,
+                'partner_id': partner_id.id,
+                'company_id': self.env.user.company_id.id,
+                'currency_id': self.env.user.company_id.currency_id.id,
+                # Do not set default name to account move name, because it
+                'name': name,
+                'move_type': movetype,
+                'invoice_date': fields.Date.today(),
+                'date': fields.Date.today(),
+                'journal_id': journal_id.id,
+                'stage_invoice_name': invoice_name or '',
+                'stage_invoice_required': invoice_required if invoice_required else False,
+            })
+        return inv
+             
+    def generate_required_artifacts(self, stage_id, obj, code=''):
+        """This generate invoice lines from the configure stage"""
+        stage_invoice_line = stage_id.mapped('required_invoice_line')
+        stage_document_line = stage_id.mapped('required_document_line')
+        invoices, documents= [], []
+        if stage_invoice_line:
+            if not self.client_id:
+                raise ValidationError("Client / Partner must be selected before invoice validation")
+            for stage_inv in stage_invoice_line:
+                already_existing_stage_invoice_line = obj.mapped('invoice_ids').filtered(
+                    lambda exist: exist.stage_invoice_name == stage_inv.name and exist.state not in ['posted'])
+                if not already_existing_stage_invoice_line:
+                    movetype = 'in_invoice' if stage_inv.move_type == 'vendor' else 'out_invoice'
+                    invid = self.function_generate_move_entries(
+                        invoice_name = f"{stage_inv.name}/{self.id}/{self.stage_id.id}", invoice_required=stage_inv.compulsory, code=code, movetype=movetype)
+                    
+                    invoices.append(invid.id)
+
+        if stage_document_line:
+            for stage_doc in stage_document_line:
+                already_existing_stage_document_line = obj.mapped('attachment_ids').filtered(
+                    lambda exist: exist.stage_document_name == stage_doc.name)
+                if not already_existing_stage_document_line:
+                    doc_name = f"EXP-P/{stage_doc.name}/{code}"
+                    # ref = str(self.id)[] if str(self.id).startswith('NewId') else self.id
+                    docid = self.function_generate_attachment(
+                        attachment_name=stage_doc.name, 
+                        report_binary = False, 
+                        mimetype = False,
+                        document_name = f"{stage_doc.name}-{self.id}-{stage_id.id}", 
+                        compulsory=stage_doc.compulsory,
+                        code=code
+                        )
+                    documents.append(docid.id)
+            # self.sudo().write({
+            #     'attachment_ids': [(4, dc) for dc in documents]
+            #     })
+        return invoices, documents, 
+
+    def update_final_state_and_approver(self, from_website=False, default_stage=False):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
             pass
         else:
             # updating the next stage
-            approver_ids, next_stage_id = self.get_next_stage_artifact(self.stage_id)
+            approver_ids = self.get_next_stage_artifact(self.stage_id)[0] 
+            next_stage_id= default_stage or self.get_next_stage_artifact(self.stage_id)[1] 
             self.stage_id = next_stage_id
+            invoices, documents = self.generate_required_artifacts(self.stage_id, self, self.code)
+            self.sudo().write({
+                'invoice_ids': [(4, iv) for iv in invoices],
+                'attachment_ids': [(4, dc) for dc in documents]
+                })
+            self.generate_sub_stage_artifacts(self.stage_id)
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
                 if self.stage_id.is_approved_stage:
@@ -744,15 +1093,34 @@ class Memo_Model(models.Model):
                     self.sudo().write({
                             'state': 'Done'
                             })
-                    if last_stage.approver_ids or random_memo_approver_ids: 
+                    if last_stage.approver_ids or random_memo_approver_ids:
                         approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
                         self.sudo().write({
-                            'approver_id': random.choice(approver_ids),
+                            # 'approver_id': random.choice(approver_ids),
                             'approver_ids': [(4, appr) for appr in approver_ids],
-                            # 'set_staff': approver_id
                             })
+    
+    def lock_artifacts_from_modification(self):
+        attachments = self.mapped('attachment_ids')
+        invoices = self.mapped('invoice_ids')
+        for att in attachments:
+            att.is_locked = True
+
+        for inv in invoices:
+            inv.is_locked = True
+        
+        if self.memo_sub_stage_ids:
+            for sub in self.memo_sub_stage_ids:
+                attachments = sub.mapped('attachment_ids')
+                invoices = sub.mapped('invoice_ids')
+                for subatt in attachments:
+                    subatt.is_locked = True
+
+                for subinv in invoices:
+                    subinv.is_locked = True
                 
-    def confirm_memo(self, employee, comments, from_website=False):  
+    # def confirm_memo(self, employee, comments, from_website=False): 
+    def confirm_memo(self, employee, comments, from_website=False, default_stage_id=False): 
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
         Beneficiary = self.employee_id.name or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
@@ -761,7 +1129,13 @@ class Memo_Model(models.Model):
         was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)} \
         <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.direct_employee_id = False 
-        self.update_final_state_and_approver(from_website)
+        self.lock_artifacts_from_modification() # first locks already generated artifacts to avoid further modification
+        # self.update_final_state_and_approver(from_website)
+        if default_stage_id:
+            # first set the stage id and then update
+            self.update_final_state_and_approver(from_website, default_stage_id)
+        else:
+            self.update_final_state_and_approver(from_website)
         self.mail_sending_direct(body_msg)
         body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(
             type,
