@@ -7,38 +7,37 @@
             <field name="arch" type="xml">
                 <form string="Move Applicants">
                     <group>
-                        <group>
+                        <group colspan="2">
                             <field name="stage_id" required="1"/>
                             <field name="stage_type" required="0"/>
                             <field name="interview_date" attrs="{'invisible': [('stage_type', '!=', 'is_interview_stage')], 'required': [('stage_type', '=', 'is_interview_stages')]}"/>
+                        
+                            
                         </group>
-                        <group>
-                            <field name="send_mail"/>
-                            <field name="email_invite_template" invisible="0" required="0" 
-                            attrs="{'invisible': [('send_mail', '=', False)], 'reuired': [('send_mail', '=', True)]}"
-                            domain="[('model', '=', 'hr.applicant.move.wizard')]"/>
-                            <field name="send_mail_unprogressed" />
-                            <field name="email_template_unprogressed" attrs="{'invisible': [('send_mail_unprogressed', '=', False)]}" />
-
+                        <group colspan="2">
+                        <field name="send_mail"/>
+                            <field name="email_invite_template" invisible="0" required="0" attrs="{'invisible': [('send_mail', '=', False)], 'required': [('send_mail', '=', True)]}" domain="[('model', '=', 'hr.applicant.move.wizard')]"/>
+                            <field name="send_mail_unprogressed"/>
+                            <field name="email_template_unprogressed" attrs="{'invisible': [('send_mail_unprogressed', '=', False)]}"/>
                         </group>
-                        <notebook>
-                            <page name="Applicants_move" string="Applicants">
-                                <field name="applicant_ids" context="{
-                                    'form_view_ref': 'hr_recruitment.hr_applicant_view_form', 
-                                    }">
-                                    <tree string="Applicants">
-                                        <field name="partner_name"/>
-                                        <field name="email_from"/>
-                                        <field name="partner_phone"/>
-                                        <field name="type_id"/>
-                                        <field name="job_id"/>
-                                        <field name="stage_id"/>
-                                    </tree>
-                                </field>
-                            </page>
-                        </notebook>
+                          
                     </group>
-                    
+                    <notebook>
+                        <page name="Applicants_move" string="Applicants">
+                            <field name="applicant_ids" context="{
+                                'form_view_ref': 'hr_recruitment.hr_applicant_view_form', 
+                                }">
+                                <tree string="Applicants">
+                                    <field name="partner_name"/>
+                                    <field name="email_from"/>
+                                    <field name="partner_phone"/>
+                                    <field name="type_id"/>
+                                    <field name="job_id"/>
+                                    <field name="stage_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
                     <footer>
                         <button type="object" name="action_move_applicant"
                             string="Confirm" class="oe_highlight"/>
@@ -49,7 +48,7 @@
         </record> 
 
         <record id="move_applicants_wizard_action" model="ir.actions.act_window">
-            <field name="name">Move Applicants to Next Stage</field>
+            <field name="name">1. Move Applicants to Next Stage</field>
             <field name="res_model">hr.applicant.move.wizard</field>
             <field name="view_mode">form</field>
             <field name="context">{'default_applicant_ids': active_ids}</field>

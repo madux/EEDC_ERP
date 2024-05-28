@@ -180,7 +180,7 @@
     </record>
 
     <record id="ir_action_server_pms_mail" model="ir.actions.server">
-        <field name="name">Send Documentation from Checklist</field>
+        <field name="name">5. Re-Send Documentation Checklist</field>
         <field name="type">ir.actions.server</field>
         <field name="model_id" ref="hr_recruitment.model_hr_applicant" />
         <field name="binding_model_id" ref="hr_recruitment.model_hr_applicant" />
