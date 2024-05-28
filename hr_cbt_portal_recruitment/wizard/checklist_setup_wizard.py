@@ -46,7 +46,7 @@ class CheckListWizard(models.TransientModel):
 					name=applicant.partner_name, 
 					phone=applicant.partner_phone,
 					email=applicant.email_from)
-				applicant.partner_id = partner_id.id if partner_id else False
+				applicant.partner_id = partner_id if partner_id else False
 				'''Checks if the document type is already existing with data'''
 				if partner_id:
 					applicant.applicant_documentation_checklist = False
