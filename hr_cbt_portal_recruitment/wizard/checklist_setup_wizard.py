@@ -38,6 +38,7 @@ class CheckListWizard(models.TransientModel):
 			sign_template_ids = self.sign_template_ids
 			sign_request = self.env['sign.request'].sudo()
 			sign_values = []
+			
 			for applicant in self.mapped('applicant_ids'): 
 				'''Checks if the document type is already existing with data'''
 				applicant.applicant_documentation_checklist = False
@@ -76,6 +77,7 @@ class CheckListWizard(models.TransientModel):
 						'template_id': srv[0].id,
 						'applicant_id': applicant.id,
 						'applicant_id': applicant.id,
+						'state': 'shared',
 						'request_item_ids': [Command.create({
 							'partner_id': signer['partner_id'],
 							'role_id': signer['role_id'],
