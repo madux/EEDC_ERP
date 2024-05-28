@@ -40,12 +40,12 @@ class CheckListWizard(models.TransientModel):
 			sign_values = []
 			
 			for applicant in self.mapped('applicant_ids'): 
-				if not applicant.partner_email:
+				if not applicant.email_from:
 					raise ValidationError(f"{applicant.name} must have an email address setup") 
 				partner_id = self.env['memo.model'].create_contact(
 					name=applicant.partner_name, 
 					phone=applicant.partner_phone,
-					email=applicant.partner_email)
+					email=applicant.email_from)
 				applicant.partner_id = partner_id.id if partner_id else False
 				'''Checks if the document type is already existing with data'''
 				if partner_id:
