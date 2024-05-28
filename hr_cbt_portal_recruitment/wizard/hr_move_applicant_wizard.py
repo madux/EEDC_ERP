@@ -76,7 +76,7 @@ class HrApplicantMove(models.TransientModel):
 				for pnl in uncompleted_score_sheets:
 					pnl_uncompleted = pnl.mapped('survey_user_input_ids').filtered(lambda st: st.state != 'done')
 					if pnl_uncompleted:
-						raise ValidationError(f"Applicant with name {applicant.name} at line {count} Score-Sheet has not been completely signed by the following panelists; {pnl.panelist_id.name}")
+						raise ValidationError(f"Line {count}: Applicant with name {applicant.partner_name}'s Score-Sheet has not been completely signed by the following panelists; {pnl.panelist_id.name}")
 
 	def action_move_applicant(self):
 		"""moves applicants to selected stage"""
