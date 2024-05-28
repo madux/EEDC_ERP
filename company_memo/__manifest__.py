@@ -23,7 +23,7 @@
         'views/account_move.xml',
         'views/docum.xml',
         'views/document_kanban_view.xml',
-        # 'data/document_mgt_system_data.xml',
+        'data/document_mgt_system_data.xml',
         'wizard/return_memo_wizard_view.xml',
         'reports/report_memo.xml',
         'views/assets.xml',
