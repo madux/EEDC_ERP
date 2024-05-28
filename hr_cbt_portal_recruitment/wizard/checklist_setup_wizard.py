@@ -40,7 +40,7 @@ class CheckListWizard(models.TransientModel):
 			sign_values = []
 			
 			for applicant in self.mapped('applicant_ids'): 
-				if not applicant.email:
+				if not applicant.partner_email:
 					raise ValidationError(f"{applicant.name} must have an email address setup") 
 				partner_id = self.env['memo.model'].create_contact(
 					name=applicant.partner_name, 
