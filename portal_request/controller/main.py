@@ -826,8 +826,8 @@ class PortalRequest(http.Controller):
 			else:
 				# post.get("selectRequestOption") == "employee_update":
 				self.generate_employee_transfer_line(DataItems, memo_id)
-		else:
-			raise ValidationError("Haaaaaahaaaaaa no dsta item")
+		# else:
+		# 	raise ValidationError("Haaaaaahaaaaaa no dsta item")
 		
 		## generating attachment
 		if 'other_docs' in request.params:

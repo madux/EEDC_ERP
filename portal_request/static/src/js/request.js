@@ -1309,7 +1309,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         // $("#tbody_product").empty()
                         // $("#tbody_employee").empty()
                         // console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                        // window.location.href = `/portal-success`;
+                        window.location.href = `/portal-success`;
                         console.log("XMLREQUEST Successful====", DataItems);
                         
                     }).catch(function(err) {
