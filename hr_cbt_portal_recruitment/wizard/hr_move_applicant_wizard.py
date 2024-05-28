@@ -68,14 +68,14 @@ class HrApplicantMove(models.TransientModel):
 					)
 	
 	def stage_move_validation(self):
-		if self.stage_id.stage_type == "documentation":
-			applicant_with_score_sheets = self.mapped('applicant_ids').filtered(
-				lambda sc: sc.survey_panelist_input_ids)
-			for count, applicant in enumerate(applicant_with_score_sheets, 1):
-				uncompleted_score_sheets = applicant.mapped('survey_user_input_ids').filtered(lambda st: st.state != 'done')
-				if uncompleted_score_sheets:
-					panelists = ',\n'.join([p.panelist_id.name for p in uncompleted_score_sheets])
-					raise ValidationError(f"Applicant with name {applicant.name} at line {count} Score-Sheet has not been completely signed by the following panelists; {panelists}")
+		# if self.stage_id.stage_type == "documentation":
+		applicant_with_score_sheets = self.mapped('applicant_ids').filtered(
+			lambda sc: sc.survey_panelist_input_ids)
+		for count, applicant in enumerate(applicant_with_score_sheets, 1):
+			uncompleted_score_sheets = applicant.mapped('survey_user_input_ids').filtered(lambda st: st.state != 'done')
+			if uncompleted_score_sheets:
+				panelists = ',\n'.join([p.panelist_id.name for p in uncompleted_score_sheets])
+				raise ValidationError(f"Applicant with name {applicant.name} at line {count} Score-Sheet has not been completely signed by the following panelists; {panelists}")
 
 	def action_move_applicant(self):
 		"""moves applicants to selected stage"""
