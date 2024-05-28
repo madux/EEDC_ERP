@@ -361,10 +361,11 @@ class Memo_Model(models.Model):
 
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
-        start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
-        end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
-        today_date = fields.Date.today()
+        
         if self.document_folder and self.document_folder.next_reoccurance_date:
+            start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
+            end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+            today_date = fields.Date.today()
             deadline_interval = (today_date >= start and today_date <= end)
             if not deadline_interval:
                 raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
@@ -1021,7 +1022,7 @@ class Memo_Model(models.Model):
         if not existing_po:
             vals = {
                 'date_order': self.date,
-                'picking_type_id': stock_picking_type_in.id,
+                # 'picking_type_id': stock_picking_type_in.id,
                 'origin': self.code,
                 'memo_id': self.id,
                 'partner_id': self.employee_id.user_id.partner_id.id,
