@@ -40,57 +40,64 @@ class CheckListWizard(models.TransientModel):
 			sign_values = []
 			
 			for applicant in self.mapped('applicant_ids'): 
+				if not applicant.email:
+					raise ValidationError(f"{applicant.name} must have an email address setup") 
+				partner_id = self.create_contact(
+					name=applicant.partner_name, 
+					phone=applicant.partner_phone,
+					email=applicant.partner_email)
+				applicant.partner_id = partner_id.id if partner_id else False
 				'''Checks if the document type is already existing with data'''
-				applicant.applicant_documentation_checklist = False
-				if applicant.applicant_documentation_checklist or applicant.sign_request_ids:
-					applicant.write({
-						'applicant_documentation_checklist': [(3, re.id) for re in applicant.applicant_documentation_checklist],
-						})
+				if partner_id:
+					applicant.applicant_documentation_checklist = False
+					if applicant.applicant_documentation_checklist or applicant.sign_request_ids:
+						applicant.write({
+							'applicant_documentation_checklist': [(3, re.id) for re in applicant.applicant_documentation_checklist],
+							})
+						
+					if applicant.sign_request_ids:
+						# (1, ID, { values }) -- Command.update({...})
+						# for ap_sgn in applicant.sign_request_ids: 
+						applicant.write({
+							'sign_request_ids': [(1, re.id, {'is_currently_sent': False}) for re in applicant.sign_request_ids],
+							})
+					for ch in self.documentation_type_ids:
+						applicant.write({
+							'applicant_documentation_checklist': [(0, 0, {
+								'document_type': ch.id, 
+								'document_file': ch.document_file.id,
+								'applicant_id': applicant.id,
+								'is_compulsory': ch.is_compulsory,
+								})]
+							})
+						
+						# TODO : generate sign requests for each and every applicant and send the link to the mail template
+					for st in sign_template_ids:
+						sign_values.append((
+							st,
+							[{
+								'role_id': 1,
+								'partner_id': applicant.partner_id.id
+							}]
+						))
+					for srv in sign_values:
+						sr = sign_request.create([{
+							'template_id': srv[0].id,
+							'applicant_id': applicant.id, 
+							'request_item_ids': [Command.create({
+								'partner_id': signer['partner_id'],
+								'role_id': signer['role_id'],
+							}) for signer in srv[1]],
+							'reference': _('Applicant Signature Request - %s', srv[0].name),
+							'subject': 'Applicant Signature Request',
+							'message': "Please kindly click on the button to fill and sign all document as provided.",
+						}])
+						# 'attachment_ids': [(4, attachment.copy().id) for attachment in self.attachment_ids], # Attachments may not be bound to multiple sign requests
+						# } for srv in sign_values])
+						dummy_share_link = "%s/sign/document/mail/%s/%s" % (sr.get_base_url(), sr.id, sr.request_item_ids[0].sudo().access_token)
+						sr.write({'dummy_share_link': dummy_share_link, 'is_currently_sent': True})
 					
-				if applicant.sign_request_ids:
-					# (1, ID, { values }) -- Command.update({...})
-					# for ap_sgn in applicant.sign_request_ids: 
-					applicant.write({
-						'sign_request_ids': [(1, re.id, {'is_currently_sent': False}) for re in applicant.sign_request_ids],
-						})
-				for ch in self.documentation_type_ids:
-					applicant.write({
-						'applicant_documentation_checklist': [(0, 0, {
-							'document_type': ch.id, 
-							'document_file': ch.document_file.id,
-							'applicant_id': applicant.id,
-							'is_compulsory': ch.is_compulsory,
-							})]
-						})
-					
-					# TODO : generate sign requests for each and every applicant and send the link to the mail template
-				for st in sign_template_ids:
-					sign_values.append((
-						st,
-						[{
-							'role_id': 1,
-							'partner_id': applicant.partner_id.id
-						}]
-					))
-				for srv in sign_values:
-					sr = sign_request.create([{
-						'template_id': srv[0].id,
-						'applicant_id': applicant.id,
-						'state': 'shared',
-						'request_item_ids': [Command.create({
-							'partner_id': signer['partner_id'],
-							'role_id': signer['role_id'],
-						}) for signer in srv[1]],
-						'reference': _('Applicant Signature Request - %s', srv[0].name),
-						'subject': 'Applicant Signature Request',
-						'message': "Please kindly click on the button to fill and sign all document as provided.",
-					}])
-					# 'attachment_ids': [(4, attachment.copy().id) for attachment in self.attachment_ids], # Attachments may not be bound to multiple sign requests
-					# } for srv in sign_values])
-					dummy_share_link = "%s/sign/document/mail/%s/%s" % (sr.get_base_url(), sr.id, sr.request_item_ids[0].sudo().access_token)
-					sr.write({'dummy_share_link': dummy_share_link, 'is_currently_sent': True})
-				
-				applicant.send_checklist([applicant.id])
+					applicant.send_checklist([applicant.id])
 		else:
 			raise ValidationError("please ensure to select applicants and documents")
 
