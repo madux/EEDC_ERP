@@ -76,7 +76,6 @@ class CheckListWizard(models.TransientModel):
 					sr = sign_request.create([{
 						'template_id': srv[0].id,
 						'applicant_id': applicant.id,
-						'applicant_id': applicant.id,
 						'state': 'shared',
 						'request_item_ids': [Command.create({
 							'partner_id': signer['partner_id'],
