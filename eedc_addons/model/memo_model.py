@@ -10,7 +10,26 @@ class MemoModel(models.Model):
         'memo_id', 
         string='Employee Transfer Lines'
         )
-    district_id = fields.Many2one("hr.district", string="District ID")
+    # def default_district_id(self):
+    #     self.ensure_one()
+    #     if self.employee_id:
+    #         return self.employee_id.ps_district_id.id
+    # def _default_district_id(self):
+    #     return self.employee_id.ps_district_id.id
+        # for record in self:
+        #     if record.employee_id:
+        #         return record.employee_id.ps_district_id.id
+        # return False
+
+    @api.model
+    def _default_district_id(self):
+        self.ensure_one()
+        if self.env.context.get('default_employee_id'):
+            employee = self.env['hr.employee'].browse(self.env.context['default_employee_id'])
+            return employee.ps_district_id.id if employee.ps_district_id else False
+        return False
+    
+    district_id = fields.Many2one("hr.district", string="District ID", default=lambda self: self._default_district_id())
     
     def finalize_employee_transfer(self):
         body_msg = f"""Dear {self.employee_id.name}, 
