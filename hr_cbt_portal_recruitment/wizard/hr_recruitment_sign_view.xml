@@ -34,7 +34,7 @@
         </field>
     </record>
     <record id="cbt_recruitment_wizard_action" model="ir.actions.act_window">
-        <field name="name">Send Signature Document</field>
+        <field name="name">6. Send Signature Document</field>
         <field name="res_model">cbt.recruitment.sign.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

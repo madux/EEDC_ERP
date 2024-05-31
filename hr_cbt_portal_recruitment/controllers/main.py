@@ -202,6 +202,9 @@ class WebsiteHrRecruitment(http.Controller):
 				"specifylevel_qualification": post.get("specifylevel_qualification",False),
 				"image_1920": post.get("passport_img"),# base64.b64encode(post.get("passport_img").read()),
 			}
+			online_stage = request.env.ref('hr_cbt_portal_recruitment.hr_recruitment_stage_online_application')
+			if online_stage:
+				vals.update({'stage_id': online_stage.id})
 			applicant = request.env['hr.applicant'].sudo().create(vals)
 			_logger.info('Applicant record Successfully Registered!')
 

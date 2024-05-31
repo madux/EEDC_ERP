@@ -110,6 +110,9 @@
             parent="internal_memo_menu_model_main2" sequence="4"/>
 
     <menuitem id="document_folder_dashboard" action="company_memo.document_folder_dashboard_action_main"
-        sequence="2" parent="company_memo.internal_memo_document_menu_model" name="Overview"/>
+        sequence="2" parent="company_memo.internal_memo_document_menu_model" groups="documents.group_documents_user" name="Overview"/>
+
+        <menuitem id="document_folder_dashboard_doc" action="company_memo.document_folder_dashboard_action_main"
+        sequence="1" parent="company_memo.internal_document_request_menu_model" groups="documents.group_documents_user" name="Overview"/>
     </data>
 </odoo>

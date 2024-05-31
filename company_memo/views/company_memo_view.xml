@@ -11,7 +11,7 @@
                 <form string="Memo Record">
                 <header>
                     <button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
-                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
+                    <button name="approve_memo" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['leave_request', 'cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}" string="Approve" type="object" class="oe_highlight"/>
                     <button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
                     <button name="action_post_and_vallidate_payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/>
                     <button name="send_memo_to_contacts" string="Send Memo" type="object" class="oe_highlight" confirm="Are you sure you want to make send memo?" attrs="{'invisible':['|','|', '|', ('user_is_approver','!=',True), ('state','not in',['Approve2']), ('memo_type_key','not in',['internal', 'Internal']), ('internal_memo_option','not in',['all', 'selected'])]}"/>
@@ -114,7 +114,7 @@
                                 <field widget="binary" height="64" name="file_upload" filename="file_namex" required="0" invisible="1" string="Upload File" />
                                 <field name="file_namex" invisible="1"/> 
                                 <field name="to_create_document" invisible="1"/> 
-                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
+                                <field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'readonly':[('state','not in',['submit'])]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                                 <field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
@@ -359,6 +359,19 @@
              <field name="view_mode">tree,form</field>
         </record>
 
+        <record model="ir.actions.act_window" id="internal_memo_model_document_action2">
+            <field name="name">Documents Request</field>
+            <field name="res_model">memo.model</field>
+            <field name="type">ir.actions.act_window</field>
+           <field name="domain">[('to_create_document','=',True)]</field>
+            <field name="context">{'search_default_group_to_create_document': 1, 
+                'default_to_create_document': True, 
+                'is_doc_mgt_request': True
+            }
+            </field>
+             <field name="view_mode">tree,form</field>
+        </record>
+
         <record model="ir.actions.act_window" id="internal_memo_model_action">
             <field name="name">Internal Memo Request</field>
             <field name="res_model">memo.model</field>
@@ -417,6 +430,10 @@
             <field name="target">new</field>
         </record>
 
+        <record id="documents.menu_root" model="ir.ui.menu">
+            <field name="name">Documents Mgt System</field>
+            <field name="groups_id" eval="[(6, 0, [ref('documents.group_documents_user')])]"/>
+        </record>
 
         <menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
         parent="internal_memo_menu_model_main2" sequence="3" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
@@ -442,6 +459,12 @@
             parent="internal_memo_document_menu_model" action="internal_memo_model_document_action"/>
             
         <menuitem parent="internal_memo_menu_model_main2" id="menu_memo_website_request" name="Website Request(s)" action="action_memo_open_my_request_url" sequence="5"/>
+
+        <!-- Document Mgt Requests Menu -->
+        <menuitem id="internal_document_request_menu_model" name="Document Request"
+            parent="documents.menu_root" groups="documents.group_documents_user" sequence="-1"/>
+        <menuitem id="internal_document_request" sequence= "2" name="Submission Requests"
+        parent="internal_document_request_menu_model" groups="documents.group_documents_user" action="internal_memo_model_document_action2"/>
 
     </data>
 </odoo>

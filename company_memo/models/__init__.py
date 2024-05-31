@@ -10,3 +10,4 @@ from . import purchase_order
 from . import stock_picking
 from . import hr_employee
 from . import document
+from . import doc_mgt_config

@@ -12,6 +12,7 @@
     'author': "EEDC Ltd.",
     'license': 'LGPL-3',
     'category': 'Uncategorized',
+    'sequence': 10,
     'version': '0.1',
 
     'depends': [
@@ -24,7 +25,8 @@
     ],
 
     'data': [
-        'data/data.xml',
+        # 'data/data.xml',
+        'security/ir.model.access.csv',
         'security/security_view.xml',
         'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
@@ -35,18 +37,20 @@
         'views/hr_employee.xml',
         'views/hr_recruitment_request.xml',
         'views/hr_recruitment_stage_inherit.xml',
+        'data/hr_recruitment_data.xml',
         'views/hr_documentation_view.xml',
         'views/survey_template_inherited_view.xml',
         # 'views/company_memo_inherit.xml',
-        'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
+        
         'wizard/hr_move_applicant.xml',
+        'wizard/cbt_schedule_wizard_view.xml',
+
         'wizard/applicant_checklist_wizard.xml',
         'wizard/hr_confirmation_wizard.xml',
         'wizard/import_applicant_view.xml',
         'wizard/hr_recruitment_sign_view.xml',
         'wizard/score_sheet_export.xml',
-        'security/ir.model.access.csv',
         # 'security/security_view.xml',
         'security/ir_rule.xml',
         'data/mail_template_data.xml',
