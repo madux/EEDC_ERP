@@ -2,6 +2,8 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import logging
 
+_logger = logging.getLogger(__name__)
+
 class MemoModel(models.Model):
     _inherit = 'memo.model'
 
@@ -10,26 +12,15 @@ class MemoModel(models.Model):
         'memo_id', 
         string='Employee Transfer Lines'
         )
-    # def default_district_id(self):
-    #     self.ensure_one()
-    #     if self.employee_id:
-    #         return self.employee_id.ps_district_id.id
-    # def _default_district_id(self):
-    #     return self.employee_id.ps_district_id.id
-        # for record in self:
-        #     if record.employee_id:
-        #         return record.employee_id.ps_district_id.id
-        # return False
-
-    @api.model
-    def _default_district_id(self):
-        self.ensure_one()
-        if self.env.context.get('default_employee_id'):
-            employee = self.env['hr.employee'].browse(self.env.context['default_employee_id'])
-            return employee.ps_district_id.id if employee.ps_district_id else False
-        return False
     
-    district_id = fields.Many2one("hr.district", string="District ID", default=lambda self: self._default_district_id())
+   
+    def _default_district_id(self):
+        emp = self.env.context.get('default_employee_id') or \
+            self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        return emp.ps_district_id.id
+    
+    
+    district_id = fields.Many2one("hr.district", string="District ID", default=_default_district_id)
     
     def finalize_employee_transfer(self):
         body_msg = f"""Dear {self.employee_id.name}, 

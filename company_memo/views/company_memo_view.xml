@@ -205,7 +205,7 @@
                                                 attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
                                                 <field name="qualification" string="Qualification" 
                                                 attrs="{'readonly': [('state', '!=', 'submit')], 'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
-                                                <field name="age_required" string="Required Age" attrs="{'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
+                                                <field name="age_required" string="Required Age" attrs="{'required':[('memo_type_key','in',['recruitment_request'])], 'readonly': [('state', 'not in', ['submit', None])]}"/> 
                                             </group>
                                             <group>
                                                 <field name="years_of_experience" attrs="{'readonly': [('state', '!=', 'submit')],'required':[('memo_type_key','in',['recruitment_request'])]}"/> 
