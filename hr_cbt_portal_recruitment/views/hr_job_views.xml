@@ -15,7 +15,7 @@
         <xpath expr="//field[@name='website_published']" position="after">
           <!-- <group> -->
             <field name="datetime_publish" string="Publish Date"/>
-            <field name="close_date" required="True" />
+            <field name="close_date" />
           <!-- </group> -->
         </xpath>
         <xpath expr="//notebook" position="inside">
