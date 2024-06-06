@@ -1691,24 +1691,10 @@ class Memo_Model(models.Model):
         return result
     
 
-    # def write(self, vals):
-    #     if 'users_followers' in vals:
-    #         for record in self:
-    #             current_length = len(record.users_followers)
-    #             new_length = len(vals['users_followers'])
-    #             if current_length > new_length:
-    #                 vals['users_followers'] = record.users_followers
-
-    #     res = super(Memo_Model, self).write(vals)
-    #     return res
-
     def write(self, vals):
+        old_length = len(self.users_followers)
+        res = super(Memo_Model, self).write(vals)
         if 'users_followers' in vals:
-            for record in self:
-                if vals['users_followers'][0][0] == 6 and len(vals['users_followers'][0]) > 2:
-                    current_followers = set(record.users_followers.ids)
-                    new_followers = set(vals['users_followers'][0][2])
-                    # if new_followers < current_followers:
-                        # raise UserError("You cannot remove followers. You can only add new ones.")
-                    vals['users_followers'] = [(6, 0, list(current_followers | new_followers))]
-        return super(Memo_Model, self).write(vals)
+            if len(self.users_followers) < old_length:
+                raise ValidationError("Sorry you cannot remove followers")
+        return res
