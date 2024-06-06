@@ -1690,11 +1690,10 @@ class Memo_Model(models.Model):
         result['my_to_send'] = mo.search_count([('state', '=', 'done')])
         return result
     
-
     def write(self, vals):
         old_length = len(self.users_followers)
         res = super(Memo_Model, self).write(vals)
         if 'users_followers' in vals:
             if len(self.users_followers) < old_length:
                 raise ValidationError("Sorry you cannot remove followers")
-        return res
+        return res
