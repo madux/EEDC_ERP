@@ -2,6 +2,8 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import logging
 
+_logger = logging.getLogger(__name__)
+
 class MemoModel(models.Model):
     _inherit = 'memo.model'
 
@@ -10,7 +12,15 @@ class MemoModel(models.Model):
         'memo_id', 
         string='Employee Transfer Lines'
         )
-    district_id = fields.Many2one("hr.district", string="District ID")
+    
+   
+    def _default_district_id(self):
+        emp = self.env.context.get('default_employee_id') or \
+            self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        return emp.ps_district_id.id
+    
+    
+    district_id = fields.Many2one("hr.district", string="District ID", default=_default_district_id)
     
     def finalize_employee_transfer(self):
         body_msg = f"""Dear {self.employee_id.name}, 

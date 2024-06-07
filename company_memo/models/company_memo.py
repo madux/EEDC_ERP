@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from bs4 import BeautifulSoup
 from odoo.tools import consteq, plaintext2html
 from odoo import http
@@ -94,7 +94,7 @@ class Memo_Model(models.Model):
     vendor_id = fields.Many2one('res.partner', 'Vendor')
     amountfig = fields.Float('Budget Amount', store=True, default=1.0)
     description_two = fields.Text('Reasons')
-    phone = fields.Char('Phone', store=True)
+    phone = fields.Char('Phone', store=True, default=lambda self: self.env.user.employee_id.mobile_phone if self.env.user.employee_id else "")
     email = fields.Char('Email', related='employee_id.work_email')
     reason_back = fields.Char('Return Reason')
     file_upload = fields.Binary('File Upload')
@@ -283,7 +283,7 @@ class Memo_Model(models.Model):
     recommended_by = fields.Many2one('hr.employee', string='Recommended by',
                                      states={
                                          'submit':[('readonly', False)],
-                                     })
+                                     }, default=lambda self: self.env.user.employee_id.id if self.env.user.employee_id else None)
     date_expected = fields.Date('Expected Date',
                                 states={
                                          'submit': [('required', True)],
@@ -1094,7 +1094,7 @@ class Memo_Model(models.Model):
                 'requirements': self.qualification,
                 'age_required': self.age_required,
                 'years_of_experience': self.years_of_experience,
-                'state': 'confirmed',
+                'state': 'accepted',
                 'date_expected': self.date_expected,
                 'date_accepted': fields.Date.today(),
                 'date_confirmed': fields.Date.today(),
@@ -1689,3 +1689,11 @@ class Memo_Model(models.Model):
         result['all_to_send'] = mo.search_count([('state', '=', 'draft')])
         result['my_to_send'] = mo.search_count([('state', '=', 'done')])
         return result
+    
+    def write(self, vals):
+        old_length = len(self.users_followers)
+        res = super(Memo_Model, self).write(vals)
+        if 'users_followers' in vals:
+            if len(self.users_followers) < old_length:
+                raise ValidationError("Sorry you cannot remove followers")
+        return res
