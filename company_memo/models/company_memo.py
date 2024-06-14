@@ -936,12 +936,14 @@ class Memo_Model(models.Model):
                         'attachment_id': att.id,
                         'memo_category_id': self.memo_category_id.id,
                         'memo_id': self.id,
+                        'department_id': self.dept_ids.id,
                         'owner_id': self.env.user.id,
                         'is_shared': True,
-                        'submitted_date': self.date 
+                        'submitted_date': self.date,
+                        'submitted_by': self.employee_id.id 
                     })
                     document_folder.update({'document_ids': [(4, document.id)]})
-                document_folder.update_next_occurrence_date()
+                # document_folder.update_next_occurrence_date()
             else:
                 raise ValidationError("""
                                       Ops! No documentation folder setup available for the requester department. 

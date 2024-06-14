@@ -1,13 +1,16 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 from dateutil.relativedelta import relativedelta
-
+from datetime import date
+from odoo import http
 
 class Document(models.Model):
     _inherit = 'documents.document'
 
     memo_category_id = fields.Many2one('memo.category', string="Category") 
     memo_id = fields.Many2one('memo.model', string="Memo") 
+    submitted_by = fields.Many2one('hr.employee', string="Submitted By") 
+    department_id = fields.Many2one('hr.department', string="Department") 
     submitted_date = fields.Date(
         string="submitted date")
 
@@ -24,7 +27,7 @@ class DocumentFolder(models.Model):
         string="Category")
 
     next_reoccurance_date = fields.Date(
-        string="Next reoccurance date", compute="get_reoccurance_date")
+        string="Next reoccurance date")#, compute="get_reoccurance_date")
 
     interval_period = fields.Integer(
         string="interval period", default=1)
@@ -46,13 +49,17 @@ class DocumentFolder(models.Model):
         string="Submitted documents")
 
     period_type = fields.Selection([
-        ('months', 'Months'),
-        ('days', 'Days'),
-        ('years', 'Years'),
+        ('months', 'Monthly'),
+        ('weekly', 'Weekly'),
+        ('days', 'Daily'),
+        ('years', 'Yearly'),
+        ('on_request', 'On Request'),
+        ('when_applicable', 'When Applicable')
         # ('minutes', 'Minutes'),
         # ('hours', 'Hours'),
         ],
         string="Period type", default="months")
+    applicable_date = fields.Date(string="Applicable Date")
 
     success_rate = fields.Selection([
         ('100', '100 %'),
@@ -74,6 +81,27 @@ class DocumentFolder(models.Model):
     opened_documents = fields.Integer("Opened", default=0, compute="get_unapproved_submission")
     closed_documents = fields.Integer("Completed", default=0, compute="get_completed_submission")
     active = fields.Boolean("Active",default=True)
+    users_followers = fields.Many2many(
+        'hr.employee', 
+        'document_folder_hr_employee_rel',
+        'document_folder_id',
+        'hr_employer_id',
+        string='Followers')
+    district_ids = fields.Many2many('hr.district', string='Responsible Districts')
+    users_responsible = fields.Many2many('hr.employee', string='Responsible Users')
+    submission_start_date = fields.Date(compute='compute_submission_start_expiry_date')
+    expiry_date = fields.Date(compute='compute_submission_start_expiry_date')
+    expiry_mail_sent = fields.Boolean(default=False)
+
+    @api.depends('next_reoccurance_date', 'submission_minimum_range', 'submission_maximum_range')
+    def compute_submission_start_expiry_date(self):
+        for rec in self:
+            if rec.next_reoccurance_date:
+                rec.submission_start_date = rec.next_reoccurance_date - relativedelta(days=rec.submission_minimum_range)
+                rec.expiry_date = rec.next_reoccurance_date + relativedelta(days=rec.submission_maximum_range)
+            else:
+                rec.submission_start_date = False
+                rec.expiry_date = False
 
     def get_awaiting_submission(self):
         for t in self:
@@ -108,6 +136,8 @@ class DocumentFolder(models.Model):
             recurrance_date = self.next_reoccurance_date if self.next_reoccurance_date else fields.Date.today()
             if self.period_type == 'months':
                 self.next_reoccurance_date = recurrance_date + relativedelta(months=interval)
+            elif self.period_type == 'weekly':
+                self.next_reoccurance_date = recurrance_date + relativedelta(weeks=interval)
             elif self.period_type == 'years':
                 self.next_reoccurance_date = recurrance_date + relativedelta(years=interval)
             elif self.period_type == 'days':
@@ -115,15 +145,24 @@ class DocumentFolder(models.Model):
         else:
             self.next_reoccurance_date = False
 
-    @api.onchange('interval_period', 'period_type')
+    @api.onchange('period_type')
+    def onchange_periodic_type(self):
+        self.next_reoccurance_date = False
+        self.interval_period = 0
+        self.submission_maximum_range = 0
+        self.submission_minimum_range = 0
+
+    @api.onchange('interval_period')
     def get_reoccurance_date(self):
         # TODO to be consider
         for rec in self:
             interval = rec.interval_period or 0
             if rec.period_type:
-                recurrance_date = rec.next_reoccurance_date if rec.next_reoccurance_date else fields.Date.today()
+                recurrance_date = fields.Date.today()
                 if rec.period_type == 'months':
                     rec.next_reoccurance_date = recurrance_date + relativedelta(months=interval)
+                elif rec.period_type == 'weekly':
+                    rec.next_reoccurance_date = recurrance_date + relativedelta(weeks=interval)
                 elif rec.period_type == 'years':
                     rec.next_reoccurance_date = recurrance_date + relativedelta(years=interval)
                 elif rec.period_type == 'days':
@@ -265,3 +304,93 @@ class DocumentFolder(models.Model):
                 }
         return ret
 
+    # @api.model
+    def cron_notify_document(self):
+        """
+        
+        """
+        folders = self.env['documents.folder'].search([])
+        today_date = fields.Date.today() 
+        ready_for_submission = folders.filtered(lambda rec: isinstance(rec.next_reoccurance_date, date) and ((rec.next_reoccurance_date - today_date).days in range(0, rec.submission_minimum_range + 1)))
+        # raise ValidationError(ready_for_submission)
+        for rec in ready_for_submission:
+            deps =  rec.department_ids
+            if deps:
+                for dep in deps:
+                   user_responsible = rec.users_responsible.search([('department_id', '=', dep.id)], limit=1)
+                   obj = rec
+                   template_id = self.env.ref('company_memo.mail_template_document_request_due_notification')
+                   user_email = user_responsible.mapped('work_email')
+                   email_to = dep.manager_id.work_email if dep.manager_id else user_email
+                   email_cc = ','.join(user_email) if dep.manager_id else False
+                   if email_to:
+                        self._send_mail(obj, template_id, email_to, email_cc) 
+
+    def cron_get_expiry(self):
+        self.send_mail_or_get_expire_defaulting_departments()
+
+    def send_mail_or_get_expire_defaulting_departments(self, reusable=False):
+        """
+        used to return departments that havent submitted
+        """
+        folders = self.env['documents.folder'].search([
+            ]) # get all the expired submission folders NOT SENT
+        depts = []
+        for folder in folders:
+            if folder.submission_start_date and folder.expiry_date:
+                if fields.Date.today() > folder.expiry_date:
+                    folder_documents = folder.mapped('department_ids')
+                    for dep in folder_documents:
+                        sumbitted_departments = folder.mapped('document_ids').filtered(
+                            lambda doc: doc.department_id.id == dep.id and doc.submitted_date >= folder.submission_start_date \
+                                and doc.submitted_date <= folder.expiry_date
+                                )
+                        if not sumbitted_departments:
+                            if not reusable:
+                                # send mail to the followers, informing them that the department has defaulted
+                                user_responsible = folder.users_responsible.search([('department_id', '=', dep.id)], limit=1)
+                                obj = folder
+                                template_id = self.env.ref('company_memo.mail_template_document_request_expiry_notification')
+                                user_email = user_responsible.mapped('work_email')
+                                email_to = dep.manager_id.work_email if dep.manager_id else user_email
+                                followers_email = folder.users_followers.mapped('work_email')
+                                email_cc = ','.join(followers_email)
+                                if email_to:
+                                        self._send_mail(obj, template_id, email_to, email_cc) 
+                                depts.append(dep)
+        if reusable:
+            return depts
+        else:
+            folder.update_next_occurrence_date()
+
+    
+		
+        
+    def _send_mail(self, model, template_id,email_to, email_cc):
+        if template_id and email_to:
+            ctx = dict()
+            ctx.update({
+				'default_model':  model._name,
+				'default_res_id': model.id,
+				'default_use_template': bool(template_id),
+				'default_template_id': template_id.id,
+                'default_email_to': email_to,
+                'title': 'Cool Title for Document Request'
+						})
+            # raise ValidationError('Context for email: %s' % ctx)
+            template_id.write({
+				'email_to': email_to,
+                'email_cc': email_cc
+				})
+            template_id.with_context(ctx).sudo().send_mail(model.id, force_send=False)
+
+    def get_base_url(self):
+        base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        return base_url
+
+
+    # def _is_within_submission_range(self):
+    #     for rec in self:
+    #         target_date = rec.next_reoccurance_date + relativedelta(days=rec.submission_maximum_range)
+    #         days_difference = (target_date - fields.Date.today()).days
+    #         return days_difference in range(0, rec.submission_minimum_range + rec.submission_maximum_range)
