@@ -167,13 +167,13 @@
             parent="company_memo.memo_fleet_trip_menu" sequence="10" action="company_memo.memo_fleet_action"/>
         <menuitem id="memo_fleet_trips_progress_menu" name="Trip in progress"
             parent="company_memo.memo_fleet_trip_menu" sequence="20" action="company_memo.memo_fleet_trip_progress_action"/>
-        
-        <menuitem id="memo_fleet_trips_vehicle_settings_menu" name="Vehicle Maintenance"
-            parent="company_memo.memo_fleet_trips_config_menu" sequence="1" action="company_memo.action_memo_vehicle_setting_action"/>
-    
         <menuitem id="memo_fleet_trips_config_menu" name="Configuration"
             parent="company_memo.menu_memo_vehicle_setting_menu" sequence="40"/>
 
+        <menuitem id="memo_fleet_trips_vehicle_settings_menu" name="Vehicle Maintenance"
+            parent="company_memo.memo_fleet_trips_config_menu" sequence="1" action="company_memo.action_memo_vehicle_setting_action"/>
+    
+        
         <menuitem id="memo_fleet_trips_vehicle_settings_menu" name="Vehicle settings"
             parent="company_memo.memo_fleet_trips_config_menu" sequence="1" action="company_memo.action_memo_vehicle_setting_action"/>
     

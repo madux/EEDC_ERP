@@ -15,6 +15,7 @@
         'static/templates/portal_request_inherit.xml',
         'views/menu_view.xml',
         'views/product_inherit_view.xml',
+        'views/hr_employee.xml',
         'security/ir.model.access.csv'
     ],
     # 'qweb': [
