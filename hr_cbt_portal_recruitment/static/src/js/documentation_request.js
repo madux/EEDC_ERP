@@ -38,12 +38,14 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                 formData.append('record_id', parseInt($('.record_id').attr('id')));
                 let inputIdArray = [];
                 $(`div#col-sm-docu > input.docuClass`).each(function(){
+                    var main_id = $(this).attr('main_id'); 
                     var inputId = $(this).attr('id'); 
+
                     console.log(`the game is  `, document.getElementById(inputId).files[0])
                     let inputfile = document.getElementById(inputId).files[0]
                     if (inputfile){
-                        formData.append(inputId, inputfile);
-                        inputIdArray.push(inputId)
+                        formData.append(main_id, inputfile);
+                        inputIdArray.push(main_id)
                     }
                     
                 });
@@ -214,10 +216,10 @@ odoo.define('hr_cbt_portal_recruitment.documentation_request_form', function (re
                                                 <span class="s_website_form_label_content" >${elm.document_file_name}</span>
                                             </label>
                                             <div class="col-4 col-sm-4" id="col-sm-docu">
-                                                <input type="file" class="form-control s_website_form_input docuClass" labelfor="Docu-${elm.document_file_name}" name="Docuname" id="${elm.document_file_id}" required="${elm.required}"/>
+                                                <input type="file" class="form-control s_website_form_input docuClass" labelfor="Docu-${elm.document_file_name}" name="Docuname" id="fl-${elm.document_file_id}" main_id="${elm.document_file_id}" required="${elm.required}"/>
                                             </div>
                                         </div>
-                                        <div class="${$.inArray(elm.hr_comment, ['', 'Resubmitted']) !== -1  ? 'd-none': 'alert alert-danger'}" role="alert" style="font-size: 14px;">
+                                        <div class="${$.inArray(elm.hr_comment, ['', 'Resubmitted']) !== -1  ? 'd-none': 'alert alert-danger'}" role="alert" style="font-size: 14px;">  
                                             ${elm.hr_comment}<br/>
                                         </div>
                                     </div>

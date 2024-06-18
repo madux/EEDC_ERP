@@ -38,12 +38,25 @@ class CheckListWizard(models.TransientModel):
 			sign_template_ids = self.sign_template_ids
 			sign_request = self.env['sign.request'].sudo()
 			sign_values = []
+			
 			for applicant in self.mapped('applicant_ids'): 
+				if not applicant.email_from:
+					raise ValidationError(f"{applicant.name} must have an email address setup") 
+				partner_id = applicant.partner_id
+				if not partner_id:
+					partner_id = self.env['memo.model'].create_contact(
+					name=applicant.partner_name, 
+					phone=applicant.partner_phone,
+					email=applicant.email_from)
+					applicant.partner_id = partner_id
 				'''Checks if the document type is already existing with data'''
-				applicant.applicant_documentation_checklist = False
+				# applicant.applicant_documentation_checklist = False
 				if applicant.applicant_documentation_checklist or applicant.sign_request_ids:
+					checklists_not_submitted = applicant.mapped('applicant_documentation_checklist').filtered(
+						lambda su: not su.applicant_submitted_document_file
+					)
 					applicant.write({
-						'applicant_documentation_checklist': [(3, re.id) for re in applicant.applicant_documentation_checklist],
+						'applicant_documentation_checklist': [(3, re.id) for re in checklists_not_submitted],
 						})
 					
 				if applicant.sign_request_ids:
@@ -53,14 +66,19 @@ class CheckListWizard(models.TransientModel):
 						'sign_request_ids': [(1, re.id, {'is_currently_sent': False}) for re in applicant.sign_request_ids],
 						})
 				for ch in self.documentation_type_ids:
-					applicant.write({
-						'applicant_documentation_checklist': [(0, 0, {
-							'document_type': ch.id, 
-							'document_file': ch.document_file.id,
-							'applicant_id': applicant.id,
-							'is_compulsory': ch.is_compulsory,
-							})]
-						})
+					# check applicant checklist list lines to see if the doc type exists and has data submitted
+					checklists_type_already_submitted = applicant.mapped('applicant_documentation_checklist').filtered(
+						lambda su: su.document_type.id == ch.id and su.applicant_submitted_document_file
+					)
+					if not checklists_type_already_submitted:
+						applicant.write({
+							'applicant_documentation_checklist': [(0, 0, {
+								'document_type': ch.id, 
+								'document_file': ch.document_file.id,
+								'applicant_id': applicant.id,
+								'is_compulsory': ch.is_compulsory,
+								})]
+							})
 					
 					# TODO : generate sign requests for each and every applicant and send the link to the mail template
 				for st in sign_template_ids:
@@ -74,8 +92,7 @@ class CheckListWizard(models.TransientModel):
 				for srv in sign_values:
 					sr = sign_request.create([{
 						'template_id': srv[0].id,
-						'applicant_id': applicant.id,
-						'applicant_id': applicant.id,
+						'applicant_id': applicant.id, 
 						'request_item_ids': [Command.create({
 							'partner_id': signer['partner_id'],
 							'role_id': signer['role_id'],

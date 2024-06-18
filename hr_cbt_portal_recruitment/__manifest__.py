@@ -41,9 +41,11 @@
         'views/hr_documentation_view.xml',
         'views/survey_template_inherited_view.xml',
         # 'views/company_memo_inherit.xml',
-        'wizard/cbt_schedule_wizard_view.xml',
         'wizard/survey_invite_inherit.xml',
+        
         'wizard/hr_move_applicant.xml',
+        'wizard/cbt_schedule_wizard_view.xml',
+
         'wizard/applicant_checklist_wizard.xml',
         'wizard/hr_confirmation_wizard.xml',
         'wizard/import_applicant_view.xml',

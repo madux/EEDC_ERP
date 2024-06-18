@@ -92,7 +92,7 @@
                                             Please. <br/>
                                             Kindly check the mail attachment to upload the relevant required documents <br/> <br/>
                                             
-                                            You are advised to check other mail thread for fill forms and validate e-Signatures
+                                            You are advised to check other mail thread for fill forms and validate e-Signatures.<br/>
 
                                             <t t-foreach="object.sign_request_ids" t-as="sr">
                                                 
@@ -102,9 +102,9 @@
                                                 
                                             </t>
 
-                                            Once you navigate to the link, click on start icon, and fill required / optional fields 
-                                            Ensure all the forms listed here are provided:
-                                            or use the link below to upload your data from the web portal
+                                            Once you navigate to the link, click on start icon, and fill required / optional fields <br/>
+                                            Ensure all the forms listed here are provided: <br/>
+                                            or use the link below to upload your data from the web portal <br/>
                                             <!-- <a t-att-href="'/documentation-request/%s/' %(object.id)">Click to upload</a> -->
                                             <a t-att-href="'%s/documentation-request/%s/' %(object.get_base_url(), object.id)">Click to upload</a>
 
@@ -112,7 +112,7 @@
                                             <t t-foreach="object.applicant_documentation_checklist" t-as="file">
                                                 <li>
                                                     <t t-if="file.document_file.datas != False ">
-                                                        <t t-esc="file.document_type.name"/> : See attachment to download
+                                                        <t t-esc="file.document_type.name"/> : See attachment to download <br/>
                                                     </t>
                                                     <t t-esc="file.document_type.name"/>
                                                 </li>

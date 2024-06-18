@@ -34,9 +34,9 @@
         <record id="documents_spreadsheet.documents_spreadsheet_folder" model="documents.folder">
             <field name="active">0</field>
         </record>
-        <record id="documents_hr_recruitment.documents_recruitment_folder" model="documents.folder">
+        <!-- <record id="documents_hr_recruitment.documents_recruitment_folder" model="documents.folder">
             <field name="active">0</field>
-        </record>
+        </record> -->
 
         <function name="write" model="ir.model.data">
             <function name="search" model="ir.model.data">

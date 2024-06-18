@@ -433,10 +433,11 @@ class Memo_Model(models.Model):
                 
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
-        today_date = fields.Date.today()
+        
         if self.document_folder and self.document_folder.next_reoccurance_date:
             start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
             end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
+            today_date = fields.Date.today()
             deadline_interval = (today_date >= start and today_date <= end)
             if not deadline_interval:
                 raise ValidationError(f'''The document type is meant to be submitted from the period of {start} to {end}''')
@@ -1387,7 +1388,7 @@ class Memo_Model(models.Model):
         if not existing_po:
             vals = {
                 'date_order': self.date,
-                'picking_type_id': stock_picking_type_in.id,
+                # 'picking_type_id': stock_picking_type_in.id,
                 'origin': self.code,
                 'memo_id': self.id,
                 'partner_id': self.employee_id.user_id.partner_id.id,
@@ -1857,6 +1858,20 @@ class Memo_Model(models.Model):
         invalid_record = self.mapped('invoice_ids').filtered(lambda s: not s.partner_id or not s.journal_id) # 
         if invalid_record:
             raise ValidationError("Partner, Payment journal must be selected. Also ensure the status is in draft")
+        
+    def create_contact(self, **kwargs):
+        if kwargs.get('name') and kwargs.get('email'):
+            partner = self.env['res.partner'].search([('email', '=', kwargs.get('email'))], limit=1)
+            if not partner:
+                partner = self.env['res.partner'].create({
+                    'name': kwargs.get('name'),
+                    'email': kwargs.get('email'),
+                    'phone': kwargs.get('phone'),
+                    'active': True,
+                })
+            return partner.id
+        else:
+            return None
         
     def action_post_and_vallidate_payment(self): # Register Payment
         self.validate_account_invoices()
