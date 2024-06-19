@@ -304,7 +304,6 @@ class DocumentFolder(models.Model):
                 }
         return ret
 
-    # @api.model
     def _cron_notify_document(self):
         """
         
@@ -312,7 +311,6 @@ class DocumentFolder(models.Model):
         folders = self.env['documents.folder'].search([])
         today_date = fields.Date.today() 
         ready_for_submission = folders.filtered(lambda rec: isinstance(rec.next_reoccurance_date, date) and ((rec.next_reoccurance_date - today_date).days in range(0, rec.submission_minimum_range + 1)))
-        # raise ValidationError(ready_for_submission)
         for rec in ready_for_submission:
             deps =  rec.department_ids
             if deps:
@@ -361,10 +359,7 @@ class DocumentFolder(models.Model):
         if reusable:
             return depts
         else:
-            folder.update_next_occurrence_date()
-
-    
-		
+            folder.update_next_occurrence_date()	
         
     def _send_mail(self, model, template_id,email_to, email_cc):
         if template_id and email_to:
@@ -377,7 +372,6 @@ class DocumentFolder(models.Model):
                 'default_email_to': email_to,
                 'title': 'Cool Title for Document Request'
 						})
-            # raise ValidationError('Context for email: %s' % ctx)
             template_id.write({
 				'email_to': email_to,
                 'email_cc': email_cc
@@ -387,10 +381,3 @@ class DocumentFolder(models.Model):
     def get_base_url(self):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
         return base_url
-
-
-    # def _is_within_submission_range(self):
-    #     for rec in self:
-    #         target_date = rec.next_reoccurance_date + relativedelta(days=rec.submission_maximum_range)
-    #         days_difference = (target_date - fields.Date.today()).days
-    #         return days_difference in range(0, rec.submission_minimum_range + rec.submission_maximum_range)
