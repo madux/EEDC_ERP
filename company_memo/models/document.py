@@ -305,7 +305,7 @@ class DocumentFolder(models.Model):
         return ret
 
     # @api.model
-    def cron_notify_document(self):
+    def _cron_notify_document(self):
         """
         
         """
@@ -326,7 +326,7 @@ class DocumentFolder(models.Model):
                    if email_to:
                         self._send_mail(obj, template_id, email_to, email_cc) 
 
-    def cron_get_expiry(self):
+    def _cron_get_expiry(self):
         self.send_mail_or_get_expire_defaulting_departments()
 
     def send_mail_or_get_expire_defaulting_departments(self, reusable=False):

@@ -46,7 +46,6 @@
                     <field name="district_ids" string="District" options="{'no_create_edit': True}" widget="many2many_tags"/>
                     <field name="users_responsible" string="Users Responsible" options="{'no_create_edit': True}" widget="many2many_tags"/>
                     <field name="users_followers" string="Followers" options="{'no_create_edit': True}" widget="many2many_tags"/>
-                    <button name="cron_get_expiry" string="test cron" type="object" class="oe_highlight btn-sm"/>
 
                     <!-- <field name="number_failed_submission"/>
                     <field name="number_successful_submission"/> -->
