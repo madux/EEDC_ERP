@@ -38,7 +38,8 @@
         'views/memo_fleet maintainance.xml',
         'data/memo_type.xml',
         'data/ir_cron.xml',
-        'wizard/memo_config_duplication_wizard_views.xml'
+        'wizard/memo_config_duplication_wizard_views.xml',
+        'data/mail_templates_data.xml'
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',

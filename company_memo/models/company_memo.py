@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from bs4 import BeautifulSoup
 from odoo.tools import consteq, plaintext2html
 from odoo import http
@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 class Memo_Model(models.Model):
+		
 	_name = "memo.model"
 	_description = "Internal Memo"
 	_inherit = ['mail.thread', 'mail.activity.mixin']
@@ -92,7 +93,7 @@ class Memo_Model(models.Model):
 	vendor_id = fields.Many2one('res.partner', 'Vendor')
 	amountfig = fields.Float('Budget Amount', store=True, default=1.0)
 	description_two = fields.Text('Reasons')
-	phone = fields.Char('Phone', store=True)
+	phone = fields.Char('Phone', store=True, default=lambda self: self.env.user.employee_id.mobile_phone if self.env.user.employee_id else "")
 	email = fields.Char('Email', related='employee_id.work_email')
 	reason_back = fields.Char('Return Reason')
 	file_upload = fields.Binary('File Upload')
@@ -140,6 +141,7 @@ class Memo_Model(models.Model):
 	manager_comment = fields.Html('Manager Comments', default="")
 	is_supervior = fields.Boolean(string='is supervisor', compute="compute_employee_supervisor")
 	is_manager = fields.Boolean(string="is_manager", compute="compute_employee_supervisor")
+	
 	# Fields for server request
 	applicationChange = fields.Boolean(string="Application Change")
 	datapatch = fields.Boolean(string="Data patch")
@@ -161,6 +163,7 @@ class Memo_Model(models.Model):
 		'hr_employee_id',
 		string='Approvers'
 		)
+	
 	user_is_approver = fields.Boolean(string="User is approver", compute="compute_user_is_approver")
 	is_request_completed = fields.Boolean(
 		string="is request completed", 
@@ -368,6 +371,57 @@ class Memo_Model(models.Model):
 		string="Fleets trips",
 		store=True
 		)
+	
+	job_id = fields.Many2one('hr.job', string='Requested Position',
+							 states={'submit': [('required', True)],
+									 'submit':[('readonly', False)],
+									 },
+							 help='The Job Position you expected to get more hired.',
+							 )
+	job_tmp = fields.Char(string="Job Title",
+						  size=256,
+						  readonly=True,
+						  states={'submit': [('required', True)],
+									 'submit':[('readonly', False)],
+									 },)
+	
+	established_position = fields.Selection([('yes', 'Yes'),
+								('no', 'No'),
+							  ], string='Established Position', index=True,
+							 copy=False,
+							 readonly=True,
+							 store=True,
+							 states={'submit': [('required', True)],
+									 'submit':[('readonly', False)],
+									 })
+	recruitment_mode = fields.Selection([('Internal', 'Internal'),
+								('External', 'External'),
+								('Outsourced', 'Outsourced'),
+							  ], string='Recruitment Mode', index=True,
+							 copy=False,
+							 readonly=True,
+							 store=True,
+							 states={'submit': [('required', True)],
+									 'submit':[('readonly', False)],
+									 })
+	requested_department_id = fields.Many2one('hr.department', string ='Requested Department for Recruitment') 
+	qualification = fields.Char('Qualification')
+	age_required = fields.Char('Required Age')
+	years_of_experience = fields.Char('Years of Experience')
+	expected_employees = fields.Integer('Expected Employees', default=1,
+										help='Number of extra new employees to be expected via the recruitment request.',
+										required=False,
+										index=True,
+										)
+	recommended_by = fields.Many2one('hr.employee', string='Recommended by',
+									 states={
+										 'submit':[('readonly', False)],
+									 }, default=lambda self: self.env.user.employee_id.id if self.env.user.employee_id else None)
+	date_expected = fields.Date('Expected Date',
+								states={
+										 'submit': [('required', True)],
+										 'submit':[('readonly', False)],
+									 }, index=True)
 
 	def validate_po_line(self):
 		'''if the stage requires PO confirmation'''
@@ -1206,12 +1260,14 @@ class Memo_Model(models.Model):
 						'attachment_id': att.id,
 						'memo_category_id': self.memo_category_id.id,
 						'memo_id': self.id,
+						'department_id': self.dept_ids.id,
 						'owner_id': self.env.user.id,
 						'is_shared': True,
-						'submitted_date': self.date 
+						'submitted_date': self.date,
+						'submitted_by': self.employee_id.id 
 					})
 					document_folder.update({'document_ids': [(4, document.id)]})
-				document_folder.update_next_occurrence_date()
+				# document_folder.update_next_occurrence_date()
 			else:
 				raise ValidationError("""
 									  Ops! No documentation folder setup available for the requester department. 
@@ -1395,6 +1451,30 @@ class Memo_Model(models.Model):
 			'target': 'new'
 			}
 		
+	def generate_leave_request(self, body_msg, body):
+		leave = self.env['hr.leave'].sudo()
+		vals = {
+			'employee_id': self.employee_id.id,
+			'request_date_from': self.leave_start_date,
+			'request_date_to': self.leave_end_date,
+			'date_from': self.leave_start_date,
+			'date_to': self.leave_end_date,
+			'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
+			'holiday_status_id': self.leave_type_id.id,
+			'origin': self.code,
+			'memo_id': self.id,
+		}
+		leave_id = leave.with_context(
+						tracking_disable=False,
+						mail_activity_automation_skip=False,
+						leave_fast_create=True,
+						leave_skip_state_check=True
+					).create(vals)
+		leave_id.action_approve()
+		leave_id.action_validate()
+		self.state = 'Done'
+		self.mail_sending_direct(body_msg)
+
 	def generate_recruitment_request(self, body_msg=False):
 		"""
 		Create HR job application ready for publication 
@@ -1419,7 +1499,7 @@ class Memo_Model(models.Model):
 				'requirements': self.qualification,
 				'age_required': self.age_required,
 				'years_of_experience': self.years_of_experience,
-				'state': 'confirmed',
+				'state': 'accepted',
 				'date_expected': self.date_expected,
 				'date_accepted': fields.Date.today(),
 				'date_confirmed': fields.Date.today(),
@@ -1445,31 +1525,6 @@ class Memo_Model(models.Model):
 			'target': 'current'
 			}
 		return ret
-
-	def generate_leave_request(self, body_msg, body):
-		leave = self.env['hr.leave'].sudo()
-		vals = {
-			'employee_id': self.employee_id.id,
-			'request_date_from': self.leave_start_date,
-			'request_date_to': self.leave_end_date,
-			'date_from': self.leave_start_date,
-			'date_to': self.leave_end_date,
-			'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
-			'holiday_status_id': self.leave_type_id.id,
-			'origin': self.code,
-			'memo_id': self.id,
-		}
-
-		leave_id = leave.with_context(
-						tracking_disable=False,
-						mail_activity_automation_skip=False,
-						leave_fast_create=True,
-						leave_skip_state_check=True
-					).create(vals)
-		leave_id.action_approve()
-		leave_id.action_validate()
-		self.state = 'Done'
-		self.mail_sending_direct(body_msg)
 
 	def generate_move_entries(self):
 		is_config_approver = self.determine_if_user_is_config_approver()
@@ -1956,3 +2011,11 @@ class Memo_Model(models.Model):
 		result['all_to_send'] = mo.search_count([('state', '=', 'draft')])
 		result['my_to_send'] = mo.search_count([('state', '=', 'done')])
 		return result
+	
+	def write(self, vals):
+		old_length = len(self.users_followers)
+		res = super(Memo_Model, self).write(vals)
+		if 'users_followers' in vals:
+			if len(self.users_followers) < old_length:
+				raise ValidationError("Sorry you cannot remove followers")
+		return res
