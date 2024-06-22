@@ -24,7 +24,7 @@ class Memo_Model(models.Model):
 		sequence = self.env['ir.sequence'].next_by_code('memo.model')
 		vals['code'] = str(sequence)
 		return super(Memo_Model, self).create(vals)
-
+    
 	def _compute_attachment_number(self):
 		attachment_data = self.env['ir.attachment'].sudo().read_group([
 			('res_model', '=', 'memo.model'), 
