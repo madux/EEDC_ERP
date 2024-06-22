@@ -98,7 +98,6 @@
                                 <field name="cash_advance_reference" domain="[('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/>
                                 <field name="soe_advance_reference" attrs="{'invisible':[('memo_type_key','!=', 'cash_advance')]}"/>
                                 <field name="currency_id" invisible="1"/>
-
                                 <field name="move_id" invisible="1"/>
                                 <field name = "users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                                 <field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
