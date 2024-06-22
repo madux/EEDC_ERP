@@ -18,7 +18,7 @@ class Memo_Model(models.Model):
 	_inherit = ['mail.thread', 'mail.activity.mixin']
 	_rec_name = "name"
 	_order = "id desc"
-	
+		
 	@api.model
 	def create(self, vals):
 		sequence = self.env['ir.sequence'].next_by_code('memo.model')
@@ -163,6 +163,7 @@ class Memo_Model(models.Model):
 		'hr_employee_id',
 		string='Approvers'
 		)
+	
 	
 	user_is_approver = fields.Boolean(string="User is approver", compute="compute_user_is_approver")
 	is_request_completed = fields.Boolean(
@@ -2019,3 +2020,4 @@ class Memo_Model(models.Model):
 			if len(self.users_followers) < old_length:
 				raise ValidationError("Sorry you cannot remove followers")
 		return res
+	
