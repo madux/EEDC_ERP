@@ -666,10 +666,11 @@ class Memo_Model(models.Model):
 				lambda sef: sef.source_location_id == False or sef.quantity_available < 1
 				)
 			if without_source_location_and_qty:
-				 raise ValidationError(
+				raise ValidationError(
 					 """Please ensure all request lines 
 					 has a source location and quantity greater than 0"""
-					 )
+					 ) 
+			
 	def validate_compulsory_document(self):
 		"""Check if compulsory documents have uploaded"""  
 		attachments = self.mapped('attachment_ids').filtered(
