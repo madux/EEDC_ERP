@@ -48,8 +48,8 @@ odoo.define('portal_request.portal_request', function (require) {
             }
         )
         return Items;
-
     }
+
     function formatToDatePicker(date_str) {
         //split 1988-01-23 00:00:00 and return datepicker format 01/31/2021
         if (date_str !== '') {
@@ -111,6 +111,105 @@ odoo.define('portal_request.portal_request', function (require) {
     //         })
     // }
 
+    function validateLineItems(DataItems){
+        let memo_type_with_line = ['material_request', 'soe', 'vehicle_request', 'procurement_request', 'employee_update', 'cash_advance'];
+        // if the memo type in memo_type_with_line
+        var selectRequestOption = $('#selectRequestOption'); 
+        if ($.inArray(selectRequestOption.val(), memo_type_with_line) !== -1 && DataItems.length < 1){
+            alert(`Validation: Please ensure request line items are added`)
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    function displaytableProps(memo_type){
+        // Hiding labels of the product row
+        if(memo_type == 'vehicle_request'){
+            console.log('HIDE VEHICLE PROPS')
+            $('#distance_from').removeClass('d-none');
+            $('#distance_to').removeClass('d-none');
+            $('#distance_from_th').removeClass('d-none');
+            $('#distance_to_th').removeClass('d-none');
+
+            $('#req_qty_label').addClass('d-none');
+            $('#unit_price_label').addClass('d-none');
+            $('#used_qty_for_soe').addClass('d-none');
+            $('#used_amount_for_soe').addClass('d-none');
+            $('#note_label').addClass('d-none');
+
+            $('#req_qty_label_th').addClass('d-none');
+            $('#unit_price_label_th').addClass('d-none');
+            $('#used_qty_for_soe_th').addClass('d-none');
+            $('#used_amount_for_soe_th').addClass('d-none');
+            $('#note_label_th').addClass('d-none');
+        }
+        // else if ($.inArray(memo_type, ['payment_request']) !== -1){
+        //     $('#used_qty_for_soe').addClass('d-none');
+        //     $('#used_amount_for_soe').addClass('d-none');
+        // }
+        else if ($.inArray(memo_type, ['soe']) !== -1){
+            $('#used_qty_for_soe_th').removeClass('d-none');
+            $('#used_amount_for_soe_th').removeClass('d-none');
+            $('#distance_from').addClass('d-none');
+            $('#distance_to').addClass('d-none');
+            $('#distance_from_th').addClass('d-none');
+            $('#distance_to_th').addClass('d-none');
+            $('#req_qty_label').removeClass('d-none');
+            $('#unit_price_label').removeClass('d-none');
+            $('#used_qty_for_soe').removeClass('d-none');
+            $('#used_amount_for_soe').removeClass('d-none');
+            $('#req_qty_label_th').removeClass('d-none');
+            $('#unit_price_label_th').removeClass('d-none');
+            $('#note_label_th').removeClass('d-none');
+        }
+        else if ($.inArray(memo_type, ['cash_advance']) !== -1){
+            $('#used_qty_for_soe_th').addClass('d-none');
+            $('#used_amount_for_soe_th').addClass('d-none');
+            $('#distance_from').addClass('d-none');
+            $('#distance_to').addClass('d-none');
+            $('#distance_from_th').addClass('d-none');
+            $('#distance_to_th').addClass('d-none');
+            $('#req_qty_label').removeClass('d-none');
+            $('#unit_price_label').removeClass('d-none');
+            $('#used_qty_for_soe').addClass('d-none');
+            $('#used_amount_for_soe').addClass('d-none');
+            $('#req_qty_label_th').removeClass('d-none');
+            $('#unit_price_label_th').removeClass('d-none');
+            $('#note_label_th').removeClass('d-none');
+        }
+        else if ($.inArray(memo_type, ['material_request']) !== -1){
+            $('#used_qty_for_soe_th').addClass('d-none');
+            $('#used_amount_for_soe_th').addClass('d-none');
+            $('#distance_from').addClass('d-none');
+            $('#distance_from_th').addClass('d-none');
+            $('#distance_to').addClass('d-none');
+            $('#distance_to_th').addClass('d-none');
+            $('#req_qty_label').removeClass('d-none');
+            $('#req_qty_label_th').removeClass('d-none');
+            $('#used_qty_for_soe').addClass('d-none');
+            $('#used_amount_for_soe').addClass('d-none');
+            $('#unit_price_label').addClass('d-none');
+            $('#unit_price_label_th').addClass('d-none');
+            $('#note_label_th').removeClass('d-none');
+        }else{
+            $('#distance_from').addClass('d-none');
+            $('#distance_to').addClass('d-none');
+            $('#distance_from_th').addClass('d-none');
+            $('#distance_to_th').addClass('d-none');
+            $('#req_qty_label').removeClass('d-none');
+            $('#unit_price_label').removeClass('d-none');
+            $('#used_qty_for_soe').addClass('d-none');
+            $('#used_amount_for_soe').addClass('d-none');
+            $('#used_qty_for_soe_th').addClass('d-none');
+            $('#used_amount_for_soe_th').addClass('d-none');
+            $('#note_label').removeClass('d-none');
+            $('#req_qty_label_th').removeClass('d-none');
+            $('#unit_price_label_th').removeClass('d-none');
+            $('#note_label_th').removeClass('d-none');
+        }
+    }
+
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
         console.log("Product table building loading")
         $.each(data, function (k, elm) {
@@ -149,9 +248,10 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
+                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
                         </th>
                     </tr>`
+                    
                 )
                 // ${memo_type=="cash_advance" || memo_type=="soe" ? 1: 0}
                 // TriggerProductField(lastRow_count);
@@ -161,48 +261,6 @@ odoo.define('portal_request.portal_request', function (require) {
                 console.log('No product items found')
             }
         });
-    }
-
-    function displayVehicleProps(memo_type){
-        // Hiding labels of the product row
-        if(memo_type == 'vehicle_request'){
-            console.log('HIDIE VEHICLE PROPS')
-
-            $('#distance_from').removeClass('d-none');
-            $('#distance_to').removeClass('d-none');
-            $('#distance_from_th').removeClass('d-none');
-            $('#distance_to_th').removeClass('d-none');
-
-            $('#req_qty_label').addClass('d-none');
-            $('#unit_price_label').addClass('d-none');
-            $('#used_qty_for_soe').addClass('d-none');
-            $('#used_amount_for_soe').addClass('d-none');
-            $('#note_label').addClass('d-none');
-
-            $('#req_qty_label_th').addClass('d-none');
-            $('#unit_price_label_th').addClass('d-none');
-            $('#used_qty_for_soe_th').addClass('d-none');
-            $('#used_amount_for_soe_th').addClass('d-none');
-            $('#note_label_th').addClass('d-none');
-
-        }else{
-            $('#distance_from').addClass('d-none');
-            $('#distance_to').addClass('d-none');
-            $('#distance_from_th').addClass('d-none');
-            $('#distance_to_th').addClass('d-none');
-
-            $('#req_qty_label').removeClass('d-none');
-            $('#unit_price_label').removeClass('d-none');
-            $('#used_qty_for_soe').removeClass('d-none');
-            $('#used_amount_for_soe').removeClass('d-none');
-            $('#note_label').removeClass('d-none');
-
-            $('#req_qty_label_th').removeClass('d-none');
-            $('#unit_price_label_th').removeClass('d-none');
-            $('#used_qty_for_soe_th').removeClass('d-none');
-            $('#used_amount_for_soe_th').removeClass('d-none');
-            $('#note_label_th').removeClass('d-none');
-        }
     }
 
     function buildProductRow(memo_type){ 
@@ -226,27 +284,31 @@ odoo.define('portal_request.portal_request', function (require) {
                 <th width="20%">
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
-                <th width="10%" id="req_qty_label_th">
-                    <input type="text" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity"/>
+                <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
+                    <input type="number" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity"/>
                 </th>
-                <th width="15%" id="unit_price_label_th">
+                <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
                     <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Unit Price"/> 
                 </th>
-                <th width="5%" id="used_qty_for_soe_th">
+                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
                     <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Quantity"/> 
                 </th>
-                <th width="10%" id="used_amount_for_soe_th">
+                <th width="10%" id="used_amount_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
                     <input type="number" name="UsedAmount" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Amount"/> 
                 </th>
-                <th width="20%" id="note_label_th">
+                <th width="10%" id="note_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
                     <textarea rows="2" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Note"/> 
                 </th>
                  
-                <th width="20% id="distance_from_th">
+                <th width="10% id="distance_from_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}">
                     <textarea placeholder="Start typing" name="distance_from" id="${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required': ''}" class="DistanceFrom form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}" labelfor="Distance From"/> 
                 </th>
-                <th width="20%" id="distance_to_th">
+                <th width="10%" id="distance_to_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}">
                     <textarea placeholder="Start typing" name="distance_to" id="${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required': ''}" class="Distanceto form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}" labelfor="Distance To"/> 
+                </th>
+
+                <th width="5%">
+                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
                 </th>
             </tr>`
         )
@@ -312,21 +374,53 @@ odoo.define('portal_request.portal_request', function (require) {
 
         }
     }
+
+    function getAmountQtyProcess(objVal, attrs, targetEv) {
+        let result = 0
+        console.log(`val res ${objVal}`)
+
+        if(attrs == targetEv){
+            console.log(`element attributes ${attrs}`)
+            result = Number(objVal)
+            console.log(`what is result ${result}`)
+            return result;
+        }
+        return result;
+      }
+
     var compute_total_amount = function(targetEv){
         // targetEv: amount_total or usedAmount
         var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
         var total = 0
         $(`#tbody_product > tr.prod_row`).each(function(){
-            var row_co = $(this).attr('row_count') 
+            var row_co = $(this).attr('row_count')
+            var amount = 0
+            var qty = 0
+            var amt = false
             $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
+                
                 function(){
                     if($(this).attr('name') == targetEv){
-                        total += Number($(this).val())
+                        // let compute_amount = $(this).val() * $(this).attr('productinput')
+                        // total += Number($(this).val())
+                        amount = Number($(this).val())
+                        console.log(`what is amount ${amount}`)
                     }
+                    else if($(this).attr('productinput') == 'productreqQty'){
+                        qty = Number($(this).val())
+                        console.log(`what is qty ${qty}`)
+                    }
+                    // amount = getAmountQtyProcess($(this).val(), $(this).attr('name'), targetEv)
+                    // qty = getAmountQtyProcess($(this).val(), $(this).attr('productinput'), 'productreqQty')
+                    // console.log(`what is totalxx ${amount} ane ${qty}`)
+                    amt = amount * qty
                 }
             )
+            total += amt
+            console.log(`what is total ${total}`)
         })
-        $('#all_total_amount').text(`${formatCurrency(total)}`)
+        var amount = formatCurrency(total)
+        $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
     }
 
     function getOrAssignRowNumber(memo_type=false){
@@ -593,6 +687,18 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#selectEmployeedata').attr("required", false); 
         $('#employee_item_form_div').addClass('d-none');
         }
+    
+    function makefieldsReadonly(readable=true){
+            if (readable){
+                $('#employed_id').attr("readonly", true); 
+                $('#phone_number').attr("readonly", true); 
+                $('#email_from').attr("readonly", true); 
+            }else{
+                $('#employed_id').attr("readonly", false); 
+                $('#phone_number').attr("readonly", false); 
+                $('#email_from').attr("readonly", false); 
+            }
+        }
  
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
@@ -717,7 +823,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 });
             },
-
+ 
             'change .productAmt': function(ev){
                 //computation of the total unit price
                 compute_total_amount();
@@ -769,6 +875,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             qty_elm.removeClass("is-invalid");
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
+                            compute_total_amount();
                         }
                 })
             },
@@ -894,6 +1001,9 @@ odoo.define('portal_request.portal_request', function (require) {
                         alert_modal.modal('show');
                     }
                     else{
+                         // set the value of selected option to the hidden field
+                        let sro = $('#selectRequestOption option:selected')[0].getAttribute("id");
+                        $('#selectedRequestOptionId').val(Number(sro));
                         if(selectedTarget == "leave_request"){
                             console.log('Yes leave is selected')
                             $('#leave_section').removeClass('d-none');
@@ -1067,7 +1177,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             $("#request_status").val(state)
                             $("#amount_fig").val(formatCurrency(amount))
                             $('#amount_fig').attr("readonly", false); 
-                            $("#request_date").val(request_date).trigger('change') 
+                            $("#request_date").val(request_date).trigger('change')
                             // building product items
                             if(state == "Draft"){
                                 let product_val = [];
@@ -1077,6 +1187,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 buildProductTable(product_ids, selectRequestOption.val());
                             }
                             if(selectRequestOption.val() == "soe"){
+                                makefieldsReadonly(true);
                                 buildProductTable(product_ids, "soe", "required", "", "");
                             }
                             if(selectRequestOption.val() == "cash_advance"){
@@ -1131,7 +1242,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     if (selectRequestOption.val() !== "employee_update"){
                         console.log("Building product row with form data=> ", setProductdata)
                         buildProductRow(selectRequestOption.val());
-                        displayVehicleProps(selectRequestOption.val()); // hide some artifacts before building products lines
+                        displaytableProps(selectRequestOption.val()); // hide some artifacts before building products lines
                     }
                     else{
                         console.log("Building Employee row with form data=> ", setEmployeedata)
@@ -1291,33 +1402,42 @@ odoo.define('portal_request.portal_request', function (require) {
                             DataItems.push(list_item)
                         })
                     } 
-                    formData.append('DataItems', JSON.stringify(DataItems))
-                    console.log("sssXMLREQUEST Successful====", DataItems);
+                    if (!validateLineItems(DataItems)){
+                        return false
+                    }
+                    else{
+                        formData.append('DataItems', JSON.stringify(DataItems))
+                        console.log("sssXMLREQUEST Successful====", DataItems);
 
-                    $.ajax({
-                        type: "POST",
-                        enctype: 'multipart/form-data',
-                        url: "/portal_data_process",
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        cache: false,
-                        timeout: 800000,
-                    }).then(function(data) {
-                        // // clearing form content
-                        // $("#msform")[0].reset();
-                        // $("#tbody_product").empty()
-                        // $("#tbody_employee").empty()
-                        // console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                        window.location.href = `/portal-success`;
-                        console.log("XMLREQUEST Successful====", DataItems);
-                        
-                    }).catch(function(err) {
-                        console.log(err);
-                        alert(err);
-                    }).then(function() {
-                        console.log(".")
-                    })
+                        $.ajax({
+                            type: "POST",
+                            enctype: 'multipart/form-data',
+                            url: "/portal_data_process",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            cache: false,
+                            timeout: 800000,
+                        }).then(function(data) {
+                            if (data.status == false){
+                                alert(data.message)
+                                return false;
+                            }else{
+                                // // clearing form content
+                                // $("#msform")[0].reset();
+                                // $("#tbody_product").empty()
+                                // $("#tbody_employee").empty()
+                                // console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                                window.location.href = `/portal-success`;
+                                console.log("XMLREQUEST Successful====", DataItems);
+                            }
+                        }).catch(function(err) {
+                            console.log(err);
+                            alert(err);
+                        }).then(function() {
+                            console.log(".")
+                        })
+                    }
                 }
             }
          }

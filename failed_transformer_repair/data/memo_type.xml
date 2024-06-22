@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="mtype_transformer_repair" model="memo.type">
+        <field name="name">Transformer Repair</field>
+        <field name="memo_key">transformer</field>
+        <field name="active">1</field>
+    </record>
+    <record id="mtype_transformer_repair" model="memo.type">
+        <field name="name">Transformer Replacement</field>
+        <field name="memo_key">transformer</field>
+        <field name="active">1</field>
+    </record>
+</odoo>
