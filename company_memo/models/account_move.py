@@ -61,6 +61,7 @@ class AccountMoveMemo(models.Model):
                 '''This is added to help send the soe reference to the related cash advance'''
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
             self.memo_id.is_request_completed = True
+            self.sudo().memo_id.update_final_state_and_approver()
             # self.memo_id.state = "Done"
         return super(AccountMoveMemo, self).action_post()
     

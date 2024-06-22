@@ -32,7 +32,7 @@
             <field name="active">1</field>
         </record>
         <record id="mtype_leave_request" model="memo.type">
-            <field name="name">leave_request</field>
+            <field name="name">Leave Request</field>
             <field name="memo_key">leave_request</field>
             <field name="active">1</field>
         </record>

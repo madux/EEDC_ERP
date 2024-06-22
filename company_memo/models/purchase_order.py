@@ -51,7 +51,11 @@ class PurchaseOrder(models.Model):
     def button_confirm(self):
         # is request completed is used to determine if the entire process is done
         if self.memo_id:
-            if self.env.user.id not in [r.user_id.id for r in self.memo_id.stage_id.approver_ids]:
+            # memo_setting_stages = self.memo_id.memo_setting_id.stage_ids.ids[-1]
+            # if self.memo_id.stage_id.id != memo_setting_stages:
+            users_to_approve = [r.user_id.id for r in self.memo_id.stage_id.approver_ids] + [r.user_id.id for r in self.memo_id.memo_setting_id.approver_ids]
+            # raise ValidationError(users_to_approve)
+            if self.env.user.id not in users_to_approve:
                 raise ValidationError("You are not allowed to confirm this Purchase Order")
             self.memo_id.is_request_completed = True
             self.sudo().memo_id.update_final_state_and_approver()

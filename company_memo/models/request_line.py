@@ -47,6 +47,7 @@ class RequestLine(models.Model):
     quantity_available = fields.Float(string="Qty Requested", default=1)
     used_qty = fields.Float(string="Qty Used")
     amount_total = fields.Float(string="Unit Price")
+    sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     used_amount = fields.Float(string="Amount Used")
     note = fields.Char(string="Note")
     code = fields.Char(string="code")
@@ -55,6 +56,14 @@ class RequestLine(models.Model):
     state = fields.Char(string="State")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
+
+    @api.depends("quantity_available", "amount_total")
+    def compute_sub_total(self):
+        for x in self:
+            if (x.amount_total and x.quantity_available):
+                x.sub_total_amount =  x.quantity_available * x.amount_total
+            else:
+                x.sub_total_amount = 0.00
 
     distance_from = fields.Text(
         string="From",

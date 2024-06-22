@@ -5,7 +5,8 @@ from odoo.exceptions import ValidationError
 class MemoConfigDuplicationWizard(models.TransientModel):
     _name = 'memo.config.duplication.wizard'
 
-    dept_ids = fields.Many2many('hr.department', string="Departments", required='1')
+    name = fields.Char(string="Memo Type")
+    dept_ids = fields.Many2many('hr.department', string="Departments")
     dummy_memo_stage_ids = fields.Many2many('dummy.memo.stage', 'duplication_wizard_id')
     employees_follow_up_ids = fields.Many2many('hr.employee',
                                                'hr_employee_wizard_rel',
@@ -32,6 +33,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                     'active': stage.active,
                     'approver_ids': stage.approver_ids,
                     'is_approved_stage': stage.is_approved_stage,
+                    'main_stage_id': stage.id
                 })
                 dummy_memo_stage_ids.append(dummy_memo_stage.id)
             res.update({'dummy_memo_stage_ids': [(6, 0, dummy_memo_stage_ids)]})
@@ -79,7 +81,6 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                             'memo_has_condition': stage.main_stage_id.memo_has_condition,
                             'no_condition': stage.main_stage_id.no_condition,
                             'yes_condition': stage.main_stage_id.yes_condition,
-
                         })
                         stage_ids.append(new_stage.id)
                     new_config.update({'stage_ids': stage_ids})
@@ -123,11 +124,6 @@ class MemoConfigDuplicationWizard(models.TransientModel):
             #     'target': 'current',
             # }
 
-
-
-
-
-
 class DummyMemoStage(models.TransientModel):
     _name = 'dummy.memo.stage'
 
@@ -137,6 +133,6 @@ class DummyMemoStage(models.TransientModel):
     active = fields.Boolean(string="Active")
     approver_ids = fields.Many2many('hr.employee', 'employee_wizard_rel', 'employee_id', 'employee_wizard_id', string="Approvers")
     is_approved_stage = fields.Boolean(string="Is Approved Stage")
-
+    main_stage_id = fields.Many2one('memo.stage', string="Main Stage")
 
 

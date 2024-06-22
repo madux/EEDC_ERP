@@ -66,7 +66,7 @@ class Forward_Wizard(models.TransientModel):
     #         raise ValidationError('Please select an Employee to Direct To')
     #     next_stage_id = self.get_next_stage_artifact()
     #     return self.memo_record.confirm_memo(self.direct_employee_id.name, msg)#, next_stage_id[1])
- 
+    
     def forward_memo(self): # Always available, 
         if self.memo_record.memo_type.memo_key == "Payment":
             if self.memo_record.amountfig < 0:

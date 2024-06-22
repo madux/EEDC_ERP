@@ -183,8 +183,8 @@ class MemoStage(models.Model):
     _description = "Memo Stage"
     _order = 'sequence'
 
-    name = fields.Char("Name", required=True)
-    sequence = fields.Integer("Sequence", required=True)
+    name = fields.Char("Name", required=False)
+    sequence = fields.Integer("Sequence", required=False)
     description = fields.Text("description")
     active = fields.Boolean("Active", default=True)
     is_approved_stage = fields.Boolean("Is approved stage", help="if set true, it is used to determine if this stage is the final approved stage")

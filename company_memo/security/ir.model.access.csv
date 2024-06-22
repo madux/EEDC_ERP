@@ -29,3 +29,8 @@ access_user_memo_stage_document_line,user_memo_stage_document_line_name,company_
 access_admin_memo_stage_invoice_line,admin_memo_stage_invoice_line_name,company_memo.model_memo_stage_invoice_line,base.group_system,1,1,1,1
 access_user_memo_stage_invoice_line,user_memo_stage_invoice_line_name,company_memo.model_memo_stage_invoice_line,,1,1,0,0
 
+mail.access_mail_activity_type_user,mail.activity.type.user,mail.model_mail_activity_type,base.group_user,1,1,0,0
+mail.access_mail_activity_type_all,mail.activity.type.all,mail.model_mail_activity_type,,1,1,0,0
+calendar.access_calendar_event_all_user,calendar.event_all_user,calendar.model_calendar_event,base.group_portal,1,1,1,0
+calendar.access_calendar_attendee_portal,calendar.attendee_portal,calendar.model_calendar_attendee,base.group_portal,1,1,1,0
+mail.access_mail_activity_all,mail.activity.all,mail.model_mail_activity,,1,1,1,0
