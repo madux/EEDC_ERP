@@ -20,7 +20,7 @@ class Send_PMS_back(models.TransientModel):
             msg_body = "Dear Sir/Madam, </br> We wish to notify you that {} appraisal with reference <br/>{} has been returned with reason(s) below; \
              <br/>{} <br/><br/>HR Administrator<br/>\
              Should you require any additional information, please contact ICT support for help.<br/>\
-             <a href='https://ictsupport.eedc.online'>Click ICT Support link</a>".format(self.direct_employee_id.name, self.record_id.name, self.reason)
+             <a href='https://easypaybillsng.com/#Contact'>Click ICT Support link</a>".format(self.direct_employee_id.name, self.record_id.name, self.reason)
             record_id.sudo().write({'reason_back': "By {}: {}".format(self.env.user.name, self.reason)})
             self.mail_sending_reject(msg_body)
         else:
