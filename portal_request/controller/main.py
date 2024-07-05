@@ -21,8 +21,8 @@ from odoo.tools.translate import _
 _logger = logging.getLogger(__name__)
 # Shared parameters for all login/signup flows
 SIGN_UP_REQUEST_PARAMS = {'db', 'login', 'debug', 'token', 'message', 'error', 'scope', 'mode',
-                          'redirect', 'redirect_hostname', 'email', 'name', 'partner_id',
-                          'password', 'confirm_password', 'city', 'country_id', 'lang', 'signup_email'}
+						  'redirect', 'redirect_hostname', 'email', 'name', 'partner_id',
+						  'password', 'confirm_password', 'city', 'country_id', 'lang', 'signup_email'}
 LOGIN_SUCCESSFUL_PARAMS = set()
 
 def get_url(id):
@@ -853,11 +853,13 @@ class PortalRequest(http.Controller):
 			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
 		if employee_id.parent_id:
 			follower_ids.append((4, employee_id.parent_id.id))
+		selected_approver = random.choice(approver_ids)
 		memo_id.sudo().update({
 			'stage_id': next_stage_id, 
-			'approver_id': random.choice(approver_ids),
+			'approver_id': selected_approver,
+			'set_staff': selected_approver,
 			'approver_ids': [(4, r) for r in approver_ids],
-			"direct_employee_id": random.choice(approver_ids),
+			"direct_employee_id": selected_approver,
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
