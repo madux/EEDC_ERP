@@ -21,8 +21,8 @@ from odoo.tools.translate import _
 _logger = logging.getLogger(__name__)
 # Shared parameters for all login/signup flows
 SIGN_UP_REQUEST_PARAMS = {'db', 'login', 'debug', 'token', 'message', 'error', 'scope', 'mode',
-                          'redirect', 'redirect_hostname', 'email', 'name', 'partner_id',
-                          'password', 'confirm_password', 'city', 'country_id', 'lang', 'signup_email'}
+						  'redirect', 'redirect_hostname', 'email', 'name', 'partner_id',
+						  'password', 'confirm_password', 'city', 'country_id', 'lang', 'signup_email'}
 LOGIN_SUCCESSFUL_PARAMS = set()
 
 def get_url(id):
@@ -352,7 +352,6 @@ class PortalRequest(http.Controller):
 	@http.route(['/check-cash-retirement'], type='json', website=True, auth="user", csrf=False)
 	def check_cash_retirement(self, **post):
 		user = request.env.user 
-		request_type = post.get('request_type')
 		staff_num = post.get('staff_num')
 		memo_obj = request.env['memo.model'].sudo()
 		if staff_num:
@@ -360,7 +359,6 @@ class PortalRequest(http.Controller):
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('memo_type.memo_key', '=', 'cash_advance'),
 				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
 				('state', '=', 'Done') 
@@ -752,7 +750,7 @@ class PortalRequest(http.Controller):
 			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
 		if post.get("selectRequestOption") == "soe":
 			cash_advance_id = request.env['memo.model'].sudo().search([
-			('code', '=', existing_order)], limit=1)
+			('code', '=ilike', existing_order)], limit=1)
 		else:
 			cash_advance_id = False
 		systemRequirementOptions = [
@@ -773,7 +771,8 @@ class PortalRequest(http.Controller):
 		<b>Description: </b> {post.get("description", "")}<br/>
 		<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
 		"""
-		memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
+		# memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
+		memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
 		vals = {
 			"employee_id": employee_id.id,
 			"memo_type": memo_type.id,
@@ -787,8 +786,6 @@ class PortalRequest(http.Controller):
 			"leave_type_id": post.get("leave_type_id", ""),
 			"leave_start_date": leave_start_date,
 			"leave_end_date": leave_end_date,
-			# "district_id": district_id,
-			# "district_id": district_id,
 			"applicationChange": True if post.get("applicationChange") == "on" else False,
 			"enhancement": True if post.get("enhancement") == "on" else False,
 			"datapatch": True if post.get("datapatch") == "on" else False,
@@ -822,7 +819,6 @@ class PortalRequest(http.Controller):
 			_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
 			if post.get("selectRequestOption") != "employee_update":
 				self.generate_request_line(DataItems, memo_id)
-		
 			else:
 				# post.get("selectRequestOption") == "employee_update":
 				self.generate_employee_transfer_line(DataItems, memo_id)
@@ -839,11 +835,16 @@ class PortalRequest(http.Controller):
 		####
 		# memo_id.action_submit_button()
 		stage_id = memo_id.get_initial_stage(
-			memo_id.memo_type.memo_key, 
+			memo_id.memo_type.id,
 			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 			)
-		_logger.info(f'''initial stage come be {stage_id} ''')
+		_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type} and department {memo_id.employee_id.department_id.name}''')
 		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+		if not approver_ids and not next_stage_id:
+			_logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
+			return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
+			# return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
+
 		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
 		approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
 		follower_ids = [(4, r) for r in approver_ids]
@@ -852,11 +853,13 @@ class PortalRequest(http.Controller):
 			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
 		if employee_id.parent_id:
 			follower_ids.append((4, employee_id.parent_id.id))
+		selected_approver = random.choice(approver_ids)
 		memo_id.sudo().update({
 			'stage_id': next_stage_id, 
-			'approver_id': random.choice(approver_ids),
+			'approver_id': selected_approver,
+			'set_staff': selected_approver,
 			'approver_ids': [(4, r) for r in approver_ids],
-			"direct_employee_id": random.choice(approver_ids),
+			"direct_employee_id": selected_approver,
 			'users_followers': follower_ids,
 			'res_users': user_ids,
 			'memo_setting_id': stage_obj.memo_config_id.id,
@@ -881,14 +884,12 @@ class PortalRequest(http.Controller):
 		for rec in DataItems:
 			desc = rec.get('description', '')
 			_logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
-			product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
-			if product_id:
-				request.env['request.line'].sudo().create({
+			
+			request_vals = {
 					'memo_id': memo_id.id,
 					'memo_type': memo_id.memo_type.id,
 					'memo_type_key': memo_id.memo_type.memo_key,
-					'product_id': product_id.id, 
-					#int(rec.get('product_id')) if rec.get('product_id') else False,
+					# 'product_id': product_id.id, 
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
 					'description': BeautifulSoup(desc, features="lxml").get_text(),
 					'used_qty': rec.get('used_qty'),
@@ -899,7 +900,14 @@ class PortalRequest(http.Controller):
 					'to_retire': rec.get('line_checked'),
 					'distance_from': rec.get('distance_from'),
 					'distance_to': rec.get('distance_to'),
+				}
+			productid = rec.get('product_id') or 0
+			product_id = request.env['product.product'].sudo().browse([int(productid)])
+			if product_id:
+				request_vals.update({
+					'product_id': product_id.id, 
 				})
+			request.env['request.line'].sudo().create(request_vals)
 			counter += 1
 
 	def generate_employee_transfer_line(self, DataItems, memo_id):

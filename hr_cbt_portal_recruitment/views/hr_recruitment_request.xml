@@ -22,10 +22,10 @@
 						<button name="action_done" states="recruiting"
 							string="Set to Done" type="object"
 							/> -->
-						<button name="action_start_recruit" states="confirmed"
+						<button name="action_start_recruit" states="accepted"
 							string="Start Recruitment" type="object" class="oe_highlight"
 							/>
-						<button name="action_open_and_publish" states="recruiting"
+						<button name="action_open_and_publish" states="recruiting,confirmed"
 							string="Publish &amp; Advertise Recruitment" type="object" class="oe_highlight"
 							/>
 						<field name="state" widget="statusbar"

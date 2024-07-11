@@ -26,8 +26,8 @@
 
     'data': [
         # 'data/data.xml',
-        'security/ir.model.access.csv',
         'security/security_view.xml',
+        'security/ir.model.access.csv',
         'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',

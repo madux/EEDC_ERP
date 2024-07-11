@@ -104,11 +104,12 @@ class OfficeDashboard(http.Controller):
 			start = doc.submission_minimum_range
 			end = doc.submission_maximum_range
 			today =  fields.Date.today()
-			min_date = doc.next_reoccurance_date + relativedelta(days=-start)
-			maximum_date = doc.next_reoccurance_date + relativedelta(days=end)
-			if today >= min_date and today <= maximum_date:
-				total_expectation += 1
-				departments += [dep.name for dep in doc.department_ids]
+			if doc.next_reoccurance_date:
+				min_date = doc.next_reoccurance_date + relativedelta(days=-start)
+				maximum_date = doc.next_reoccurance_date + relativedelta(days=end)
+				if today >= min_date and today <= maximum_date:
+					total_expectation += 1
+					departments += [dep.name for dep in doc.department_ids]
 		return total_expectation, list(set(departments))
 	
 	def get_xy_data(self, memo_type_param="document_request"):

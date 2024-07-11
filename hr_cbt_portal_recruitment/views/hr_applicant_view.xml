@@ -99,7 +99,7 @@
                     </page>
                     <page string='Checklist'>
                         <field name="applicant_documentation_checklist">
-                            <tree editable="bottom">
+                            <tree editable="bottom" create="0">
                                 <field name="select" invisible="0"/>
                                 <field name="document_type"/>
                                 <!-- <field name="filename" invisible="1"/> -->
