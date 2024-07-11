@@ -7,12 +7,13 @@
             <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='description']" position="after">
-                    <page name='transformer' string='Transformer' attrs="{'invisible': [('memo_type_key', '!=', 'transformer')]}">
+                    <page name='transformer' string='Transformer' attrs="{'invisible': ['|', ('has_transformer', '=', False),('memo_type_key', '!=', 'transformer')]}">
                         
                         <form string=""> 
                             <sheet>
                                 <group>
                                     <group>
+                                        <field name="has_transformer" string="is transformer" invisible="1"/>
                                         <field name="transformer_id" />
                                         <field name="repair_replacement" /> 
                                     </group>

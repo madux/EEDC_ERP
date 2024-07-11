@@ -25,6 +25,7 @@
                             </group>
                             <notebook>
                                 <page string="Stages">
+                                    <button name="update_parent_setting" type="object" class="oe_highlight" string="Update Stages Parent" confirm="This is used to update missing parent configuration id on stages" help="This is used to update missing parent configuration id on stages"/>
                                     <field name="stage_ids" domain="[('id', '=', None)]" required="1" context="{'default_memo_config_id': active_id}">
                                         <tree string="stages">
                                             <field name="sequence" widget="handle" string="Drag"/>

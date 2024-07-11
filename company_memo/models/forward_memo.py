@@ -81,6 +81,8 @@ class Forward_Wizard(models.TransientModel):
             comment_msg = " "
             if memo.comments:
                 comment_msg = memo.comments if memo.comments else "-"
+            if not self.direct_employee_id.work_email:
+                raise ValidationError('Employee to direct to must have an email')
             memo.write({
                     'res_users': [(4, self.env.uid)],
                     'set_staff': self.direct_employee_id.id, 'direct_employee_id': self.direct_employee_id.id, 'state': 'Sent',
@@ -101,5 +103,5 @@ class Forward_Wizard(models.TransientModel):
                 self.memo_record.stage_to_skip = second_option_stage_id.id
         # the above is very important: if set to true, the 2nd optional stage will
         # not be applicable when it gets to that point
-        return self.memo_record.confirm_memo(self.direct_employee_id.name, msg, False, conditional_stage_id)#, next_stage_id[1])
+        return self.memo_record.confirm_memo(self.direct_employee_id, msg, False, conditional_stage_id)#, next_stage_id[1])
     

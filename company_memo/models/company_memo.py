@@ -552,6 +552,37 @@ class Memo_Model(models.Model):
                     'to_retire': rec.to_retire,
                 }) for rec in self.cash_advance_reference.product_ids]
             
+    has_invoice = fields.Boolean(
+        string='Has invoice line', 
+        help="used to show invoice when there is an invoice setup in the memo_config_setting stages"
+        )
+    has_po = fields.Boolean(
+        string='Has PO line', 
+        help="used to show invoice when there is an PO setup in the memo_config_setting stages"
+        )
+    has_so = fields.Boolean(
+        string='Has PO line', 
+        help="used to show invoice when there is an PO setup in the memo_config_setting stages"
+        )
+    has_transformer = fields.Boolean(
+        string='Has transformer line', 
+        help="used to show invoice when there is an PO setup in the memo_config_setting stages"
+        )
+    
+    def check_po_config(self, memo_setting):
+        stages = memo_setting.mapped('stage_ids')
+        has_invoice, has_po, has_so, has_transformer = False, False, False, False
+        if memo_setting.has_transformer:
+            has_transformer = True
+        for st in stages:
+            if st.required_invoice_line:
+                has_invoice = True
+            if st.require_po_confirmation:
+                has_po = True 
+            if st.require_po_confirmation:
+                has_so = True 
+        return has_invoice, has_po, has_so, has_transformer
+            
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
@@ -565,7 +596,12 @@ class Memo_Model(models.Model):
                     ('department_id', '=', department_id.id)
                     ], limit=1)
                 if ms:
+                    has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
                     memo_setting_stage = ms.stage_ids[0]
+                    self.has_invoice = has_invoice
+                    self.has_po = has_po
+                    self.has_so = has_so
+                    self.has_transformer = has_transformer
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
                     self.memo_type_key = self.memo_type.memo_key  
@@ -1064,7 +1100,7 @@ class Memo_Model(models.Model):
                     documents.append(docid.id)
         return invoices, documents, 
 
-    def update_final_state_and_approver(self, from_website=False, default_stage=False):
+    def update_final_state_and_approver(self, from_website=False, default_stage=False, assigned_to=False):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
             pass
@@ -1080,18 +1116,18 @@ class Memo_Model(models.Model):
                 })
             self.generate_sub_stage_artifacts(self.stage_id)
             # determining the stage to update the already existing state used to hide or display some components
-            # if self.stage_id:
-            #     if self.stage_id.is_approved_stage:
-            #         if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
-            #             self.state = "Approve"
-            #         else:
-            #             self.state = "Approve2"
-            #     # important: users_followers must be required in for them to see the records.
-            #     if self.sudo().stage_id.approver_ids:
-            #         self.sudo().update({
-            #             'users_followers': [(4, appr.id) for appr in self.sudo().stage_id.approver_ids],
-            #             'set_staff': self.sudo().stage_id.approver_ids[0].id # FIXME To be reviewed
-            #             })
+            if self.stage_id:
+                if self.stage_id.is_approved_stage:
+                    if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
+                        self.state = "Approve"
+                    else:
+                        self.state = "Approve2"
+                # important: users_followers must be required in for them to see the records.
+                if self.sudo().stage_id.approver_ids:
+                    self.sudo().update({
+                        'users_followers': [(4, appr.id) for appr in self.sudo().stage_id.approver_ids],
+                        'set_staff': assigned_to if assigned_to else self.sudo().stage_id.approver_ids[0].id # FIXME To be reviewed
+                        })
             if self.memo_setting_id and self.memo_setting_id.stage_ids:
                 ms = self.memo_setting_id.stage_ids
                 last_stage = ms[-1]
@@ -1132,7 +1168,7 @@ class Memo_Model(models.Model):
                 
     def confirm_memo(self, employee, comments, from_website=False, default_stage_id=False): 
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
-        Beneficiary = self.employee_id.name or self.user_ids.name
+        Beneficiary = self.employee_id.name # or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
         from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
@@ -1144,8 +1180,8 @@ class Memo_Model(models.Model):
             # first set the stage id and then update
             self.update_final_state_and_approver(from_website, default_stage_id)
         else:
-            self.update_final_state_and_approver(from_website)
-        self.mail_sending_direct(body_msg)
+            self.update_final_state_and_approver(from_website, False, employee.id)
+        self.mail_sending_direct(body_msg, employee)
         body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(
             type,
             self.name,
@@ -1156,7 +1192,7 @@ class Memo_Model(models.Model):
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
 
-    def mail_sending_direct(self, body_msg): 
+    def mail_sending_direct(self, body_msg, email_to=False): 
         subject = "Memo Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
@@ -1165,6 +1201,8 @@ class Memo_Model(models.Model):
             ] if self.stage_id.memo_config_id.approver_ids else []
         email_list = follower_list + stage_followers_list
         approver_emails = [eml.work_email for eml in self.stage_id.approver_ids if eml.work_email]
+        if email_to:
+            approver_emails = approver_emails + [email_to.work_email]
         mail_to = (','.join(approver_emails))
         emails = (','.join(elist for elist in email_list))
         mail_data = {

@@ -871,7 +871,7 @@ class PortalRequest(http.Controller):
 					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
 		 
 		memo_id.confirm_memo(
-				memo_id.direct_employee_id or employee_id.parent_id.id, 
+				memo_id.direct_employee_id or employee_id.parent_id, 
 				post.get("description", ""),
 				from_website=True
 				)
