@@ -370,6 +370,8 @@ class MemoConfig(models.Model):
         copy=True,
         help="Serves as the suffix code for the department in question"
         )
+    
+    has_transformer = fields.Boolean(string="For transformer", default=False)
     active = fields.Boolean(string="Active", default=True)
     allowed_for_company_ids = fields.Many2many(
         'res.partner', 
@@ -383,6 +385,11 @@ class MemoConfig(models.Model):
         the list from the portal
         """
         )
+    
+    def update_parent_setting(self):
+        if self.stage_ids:
+            for rec in self.stage_ids:
+                rec.memo_config_id = self.id
 
     @api.constrains('memo_type')
     def _check_duplicate_memo_type(self):

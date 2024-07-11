@@ -79,7 +79,7 @@
                                 attrs="{'readonly':[('state','not in',['submit'])], 'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', '=', 'selected'), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
                     <!-- MEMO THINGS -->
-                                <field name="client_id" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
+                                <field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
                                 <field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
                                 <!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
                                 <field name="phone" readonly="1"/>
@@ -134,9 +134,7 @@
                             </group> 
                         </group>
                         <notebook>
-                            <page name='description' string='Memo Body'>
-                                <field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-                            </page> 
+                            
                             <page name='Products' string='Request item' attrs="{'invisible':[('memo_type_key','not in',['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])]}">
                                 <field name="product_ids" string = "Items" 
                                 attrs="{'readonly':[('state','in',['Done'])]}"
@@ -172,8 +170,8 @@
                                 </field>
                             </page>
                             <!--ADDD-->
-                            <page name='Invoices' string='Invoices'>
-                             <!-- attrs="{'invisible':[('memo_type_key','!=','Payment')]}"> -->
+                            
+                            <page name='Invoices' string='Invoices' attrs="{'invisible':['|', ('has_invoice','=','False'), ('memo_type_key','!=','Payment')]}">
                                 <field name="invoice_ids" context="{'default_move_type': 'in_invoice', 'default_memo_id': active_id}" domain="[('state', '=', 'draft')]" attrs="{'readonly':[('state','in',['Sent', 'Done', 'Approve2'])]}">
                                     <tree string="Invoices">
                                         <field name="memo_id" string="Memo" invisible="1"/>  
@@ -253,6 +251,7 @@
                                     </sheet>
                                 </form>
                             </page>
+                            
                             <page name='vehicle_trips' string='Vehicle trip' attrs="{'invisible':[('memo_type_key','not in',['vehicle_request'])]}">
                                 <field name="vehicle_trip_ids" string = "Vehicle trip" readonly="1" force_save="1"
                                 context="{'default_memo_id': active_id, 'default_code': code}">
@@ -300,7 +299,8 @@
                                     </form>
                                 </field>
                             </page> 
-                            <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">
+                            <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}">
+                            <!-- attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}" -->
                                 <field name="po_ids" force_save="1"
                                 context="{'default_memo_id': active_id, 'default_memo_state': state, 'default_partner_id': client_id, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
                                     <tree string="PO">
@@ -319,6 +319,12 @@
                                      
                                 </field>
                             </page>
+                            <page name='description' string='Memo Body'>
+                                <field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+                                <field name="has_po" invisible="0"/>
+                                <field name="has_so" invisible="0"/>
+                                <field name="has_invoice" invisible="0"/>
+                            </page> 
                             <page name="sub_stages" string="Sub Tasks" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">
                                 <!-- invisible="not has_sub_stage"> -->
                                 <field name="memo_sub_stage_ids">
