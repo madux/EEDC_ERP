@@ -875,6 +875,55 @@ class Memo_Model(models.Model):
             else:
                 return False, False
     
+    def build_po_line(self, order_id):
+        '''args: order_id: the po_id already created'''
+        po_ids = self.mapped('po_ids')
+        request_lines = self.mapped('product_ids')
+        po_products = []
+        for po in po_ids:
+            '''Filtered the products already added to po lines'''
+            po_products.append(po.order_line.mapped('product_id'))
+        exists = False
+        for rq in request_lines:
+            if not rq.product_id in po_products:
+                orderlineval = {
+                    'order_id': order_id.id,
+                    'product_id': rq.product_id.id,
+                    'product_uom_qty': rq.quantity_available,
+                    'product_qty': rq.quantity_available,
+                    'price_unit': rq.amount_total,
+                }
+                self.env['purchase.order.line'].create(orderlineval)
+                exists = True
+        if exists:
+            self.update({'po_ids': [(4, order_id.id)]})
+        else:
+            order_id.button_cancel()
+            order_id.unlink()
+
+    def generate_po_from_request(self):
+        vals = {
+                'date_order': fields.Date.today(),
+                'origin': self.code,
+                'memo_id': self.id,
+                'memo_type_key': self.memo_type_key,
+                'memo_type': self.memo_type.id,
+            }
+        po_id = self.env['purchase.order'].sudo().create(vals)
+        self.build_po_line(po_id)
+        view_id = self.env.ref('purchase.purchase_order_form').id
+        ret = {
+            'name': "Purchase Order",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'purchase.order',
+            'res_id': po_id.id,
+            'type': 'ir.actions.act_window', 
+            'target': 'new',
+            }
+        return ret
+    
     def generate_sub_stage_artifacts(self, stage_id):
         sub_stage_ids = stage_id.sub_stage_ids
         self.has_sub_stage = True if stage_id.sub_stage_ids else False
