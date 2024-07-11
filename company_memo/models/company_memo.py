@@ -1132,7 +1132,7 @@ class Memo_Model(models.Model):
                 
     def confirm_memo(self, employee, comments, from_website=False, default_stage_id=False): 
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
-        Beneficiary = self.employee_id.name or self.user_ids.name
+        Beneficiary = self.employee_id.name # or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
         from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
@@ -1145,7 +1145,7 @@ class Memo_Model(models.Model):
             self.update_final_state_and_approver(from_website, default_stage_id)
         else:
             self.update_final_state_and_approver(from_website)
-        self.mail_sending_direct(body_msg)
+        self.mail_sending_direct(body_msg, employee)
         body = "%s for %s initiated by %s, moved by- ; %s and sent to %s" %(
             type,
             self.name,
@@ -1156,7 +1156,7 @@ class Memo_Model(models.Model):
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
 
-    def mail_sending_direct(self, body_msg): 
+    def mail_sending_direct(self, body_msg, email_to=False): 
         subject = "Memo Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
@@ -1165,6 +1165,8 @@ class Memo_Model(models.Model):
             ] if self.stage_id.memo_config_id.approver_ids else []
         email_list = follower_list + stage_followers_list
         approver_emails = [eml.work_email for eml in self.stage_id.approver_ids if eml.work_email]
+        if email_to:
+            approver_emails = approver_emails + [email_to.work_email]
         mail_to = (','.join(approver_emails))
         emails = (','.join(elist for elist in email_list))
         mail_data = {
