@@ -20,6 +20,7 @@
                     <button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('memo_type_key','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
                     <button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve','Done']), ('memo_type_key','not in',['soe']),('user_is_approver','=', False)]}"/>
                     <button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
+                    <button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
                     <button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object" class="btn-primary"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2'])]}" type="object"/>
                     <button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
@@ -125,7 +126,11 @@
                                 widget="many2many_tags" attrs="{'invisible': [('internal_memo_all_employee_option', '!=', 'employees')], 'required': [('internal_memo_all_employee_option', '=', 'employee')]}" 
                                 invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />  -->
                                 <field name="status_progress" widget="progressbar" string="Progress(%)"/>
-                                <field name="code"/>  
+                                <field name="code"/> 
+                                <field name="source_location_id" string="Source Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['submit'])], 'required':[('memo_type_key','in', ['material_request'])]}"/> 
+                                <field name="dest_location_id" string="Destination Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['submit'])], 'required':[('memo_type_key','in', ['material_request'])]}"/> 
+                                <field name="picking_type_id" string="Operation Type" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['submit'])], 'required':[('memo_type_key','in', ['material_request'])]}"/> 
+                                   
                                 <field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
                                 <field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
                                 <field name="user_is_approver" invisible="1" readonly="0"/>
@@ -137,33 +142,34 @@
                             
                             <page name='Products' string='Request item' attrs="{'invisible':[('memo_type_key','not in',['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])]}">
                                 <field name="product_ids" string = "Items" 
-                                attrs="{'readonly':[('state','in',['Done'])]}"
+                                attrs="{'readonly':[('state','in',['Sent', 'Done'])]}"
                                 context="{'default_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
                                     <tree string="Items" editable="bottom">
                                         <field name="state" string="State" invisible="1"/> 
                                         <field name="memo_type_key" string="memo key" invisible="1" force_save="1"/> 
-                                        <field name="to_retire" string="To Retire" attrs="{'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="to_retire" string="To Retire" attrs="{'column_invisible': [('memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
                                         <!-- <field name="district_id" string="District" invisible="1"/>  -->
-                                        <field name="memo_id" string="Memo" invisible="1" force_save="1"/> 
-                                        <field name="memo_type" string="Memo type" invisible="1" force_save="1"/> 
+                                        <field name="memo_id" string="Memo" invisible="1" force_save="1" column_invisible="1"/> 
+                                        <field name="memo_type" string="Memo type" invisible="1" force_save="1" column_invisible="1"/> 
                                         <field name="product_id" string="Product" force_save="1"
-                                         attrs="{'readonly':[('state','not in',['draft'])],'required':[('memo_type_key','in',['material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])], 
-                                         'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
-                                        <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['draft'])],'required': [('product_id', '=', False)]}"/> 
-                                        <field name="code" string="Code" readonly="1" force_save="1" attrs="{'readonly':[('state','not in',['draft'])], 'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
-                                        <field name="quantity_available" string="Request Qty" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['draft'])], 'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
-                                        <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['draft'])], 'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance'])]}"/>
+                                         attrs="{'readonly':[('state','not in',['submit'])],'required':[('memo_type_key','in',['material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])], 
+                                        }"/> 
+                                         <!-- 'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>  -->
+                                        <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['submit'])],'required': [('product_id', '=', False)]}"/> 
+                                        <field name="code" string="Code" readonly="1" column_invisible="1" force_save="1"/>
+                                        <field name="quantity_available" string="Request Qty" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit'])], 'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])],'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/> 
+                                        <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit'])], 'invisible': [('memo_type_key', 'in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance'])], 'column_invisible': [('memo_type_key', 'not in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>
                                         <field name="sub_total_amount"  readonly="1" force_save="1" string="Subtotal" sum="Total" attrs="{'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance'])]}"/>
-                                        <field name="used_qty" string="Used Qty" force_save="1" attrs="{'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['draft'])], 'invisible': [('memo_type_key', 'not in', ['soe'])], 'column_invisible': [('memo_type_key', 'in', ['soe'])]}"/> 
-                                        <field name="used_amount" string="Used Amount" force_save="1" attrs="{'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['draft'])], 'invisible': [('memo_type_key', 'not in', ['soe'])], 'column_invisible': [('memo_type_key', 'in', ['soe'])]}"/> 
-                                        <field name="note" string="Note" invisible="0" force_save="1"/> 
+                                        <field name="used_qty" string="Used Qty" force_save="1" attrs="{'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit'])], 'invisible': [('memo_type_key', 'not in', ['soe'])], 'column_invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="used_amount" string="Used Amount" force_save="1" attrs="{'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit'])], 'invisible': [('memo_type_key', 'not in', ['soe'])], 'column_invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="note" string="Note" invisible="1" force_save="1"/> 
                                         <field name="driver_assigned" string="Driver" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
-                                        <field name="source_location_id" string="Source Location" force_save="1" attrs="{'readonly':[('state','not in',['draft'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/> 
-                                        <field name="dest_location_id" string="Destination Location" force_save="1" attrs="{'readonly':[('state','not in',['draft'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/>
-                                        <field name="distance_from" string="From" force_save="1" attrs="{'readonly':[('state','not in',['draft'])], 
+                                        <field name="source_location_id" string="Source Location" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/> 
+                                        <field name="dest_location_id" string="Destination Location" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/>
+                                        <field name="distance_from" string="From" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 
                                         'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
-                                        <field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['draft'])], 
+                                        <field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 
                                         'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
                                         <field name="retired" string="Retired" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['soe'])]}"/>
                                     </tree>
@@ -172,7 +178,7 @@
                             <!--ADDD-->
                             
                             <page name='Invoices' string='Invoices' attrs="{'invisible':['|', ('has_invoice','=','False'), ('memo_type_key','!=','Payment')]}">
-                                <field name="invoice_ids" context="{'default_move_type': 'in_invoice', 'default_memo_id': active_id}" domain="[('state', '=', 'draft')]" attrs="{'readonly':[('state','in',['Sent', 'Done', 'Approve2'])]}">
+                                <field name="invoice_ids" context="{'default_move_type': 'in_invoice', 'default_memo_id': active_id}" domain="[('state', '=', 'submit')]" attrs="{'readonly':[('state','in',['Sent', 'Done', 'Approve2'])]}">
                                     <tree string="Invoices">
                                         <field name="memo_id" string="Memo" invisible="1"/>  
                                         <field name="memo_state" string="Memo state" invisible="1"/>  
@@ -301,7 +307,8 @@
                             </page> 
                             <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}">
                             <!-- attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}" -->
-                                <field name="po_ids" force_save="1"
+                                <button name="generate_po_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate Purchase Order"/>
+                                <field name="po_ids" force_save="1" readonly="1"
                                 context="{'default_memo_id': active_id, 'default_memo_state': state, 'default_partner_id': client_id, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
                                     <tree string="PO">
                                         <field name="memo_state" string="Memo State" column_invisible="1"/> 
