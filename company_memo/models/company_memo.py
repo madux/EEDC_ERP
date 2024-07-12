@@ -427,6 +427,16 @@ class Memo_Model(models.Model):
     def validate_po_line(self):
         '''if the stage requires PO confirmation'''
         self.procurement_confirmation()
+    
+    def validate_necessary_components(self):
+        '''check relevant fields necessary for different memo type'''
+        request_list = ['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']
+        if self.memo_type_key in request_list and not self.product_ids:
+            raise ValidationError("Please enter request lines")
+        
+        invoice_list = ['Payment']
+        if self.memo_type_key in invoice_list and not self.product_ids:
+            raise ValidationError("Please enter invoice lines")
 
     def procurement_confirmation(self):
         if self.stage_id.require_po_confirmation:
@@ -605,6 +615,8 @@ class Memo_Model(models.Model):
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
                     self.memo_type_key = self.memo_type.memo_key  
+                    picking_id = self.env.ref('stock.picking_type_internal').id
+                    self.picking_type_id = picking_id
                     self.requested_department_id = self.employee_id.department_id.id
                     self.users_followers = [
                         (4, self.employee_id.administrative_supervisor_id.id),
@@ -824,7 +836,69 @@ class Memo_Model(models.Model):
                     'Each Request line item must have used qty and used amount greater than 0'
                 )
             
+    def build_po_line(self, order_id):
+        '''args: order_id: the po_id already created'''
+        po_ids = self.mapped('po_ids')
+        request_lines = self.mapped('product_ids')
+        po_products = []
+        for po in po_ids:
+            '''Filtered the products already added to po lines'''
+            po_products.append(po.order_line.mapped('product_id'))
+        exists = False
+        for rq in request_lines:
+            if not rq.product_id in po_products:
+                orderlineval = {
+                    'order_id': order_id.id,
+                    'product_id': rq.product_id.id,
+                    'product_uom_qty': rq.quantity_available,
+                    'product_qty': rq.quantity_available,
+                    'price_unit': rq.amount_total,
+                }
+                self.env['purchase.order.line'].create(orderlineval)
+                exists = True
+        if exists:
+            self.update({'po_ids': [(4, order_id.id)]})
+        else:
+            order_id.button_cancel()
+            order_id.unlink()
+    
+    def generate_po_from_request(self):
+        if not self.user_in_stage_exists():
+            raise ValidationError("You are not allowed to generate a PO lines")
+        
+        vals = {
+                'date_order': fields.Date.today(),
+                'origin': self.code,
+                'memo_id': self.id,
+                'memo_type_key': self.memo_type_key,
+                'memo_type': self.memo_type.id,
+            }
+        po_id = self.env['purchase.order'].sudo().create(vals)
+        self.build_po_line(po_id)
+        view_id = self.env.ref('purchase.purchase_order_form').id
+        ret = {
+            'name': "Purchase Order",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'purchase.order',
+            'res_id': po_id.id,
+            'type': 'ir.actions.act_window', 
+            'target': 'new',
+            }
+        return ret
+
+    def user_in_stage_exists(self):
+        user_in_stage_approvers = self.env.uid in [rec.user_id.id for rec in self.stage_id.approver_ids]
+        if user_in_stage_approvers:
+            return True
+        else:
+            return False
+        
+        
     def forward_memo(self): 
+        self.validate_necessary_components()
+        self.validate_po_line()
         self.validate_compulsory_document()
         self.validate_sub_stage()
         self.validate_invoice_line()
@@ -937,29 +1011,6 @@ class Memo_Model(models.Model):
             order_id.button_cancel()
             order_id.unlink()
 
-    def generate_po_from_request(self):
-        vals = {
-                'date_order': fields.Date.today(),
-                'origin': self.code,
-                'memo_id': self.id,
-                'memo_type_key': self.memo_type_key,
-                'memo_type': self.memo_type.id,
-            }
-        po_id = self.env['purchase.order'].sudo().create(vals)
-        self.build_po_line(po_id)
-        view_id = self.env.ref('purchase.purchase_order_form').id
-        ret = {
-            'name': "Purchase Order",
-            'view_mode': 'form',
-            'view_id': view_id,
-            'view_type': 'form',
-            'res_model': 'purchase.order',
-            'res_id': po_id.id,
-            'type': 'ir.actions.act_window', 
-            'target': 'new',
-            }
-        return ret
-    
     def generate_sub_stage_artifacts(self, stage_id):
         sub_stage_ids = stage_id.sub_stage_ids
         self.has_sub_stage = True if stage_id.sub_stage_ids else False
@@ -1071,7 +1122,7 @@ class Memo_Model(models.Model):
         invoices, documents= [], []
         if stage_invoice_line:
             if not self.client_id:
-                raise ValidationError("Client / Partner must be selected before invoice validation")
+                raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
             for stage_inv in stage_invoice_line:
                 already_existing_stage_invoice_line = obj.mapped('invoice_ids').filtered(
                     lambda exist: exist.stage_invoice_name == stage_inv.name and exist.state not in ['posted'])
@@ -1492,6 +1543,17 @@ class Memo_Model(models.Model):
                 "All vehicle request line must be assigned to a driver"
                 )
             
+    stock_picking_id = fields.Many2one(
+        "stock.picking",
+        string="Stock picking"
+        )
+    picking_type_id = fields.Many2one(
+        "stock.picking.type",
+        string="Operation type", 
+        )
+    source_location_id = fields.Many2one("stock.location", string="Source Location")
+    dest_location_id = fields.Many2one("stock.location", string="Destination Location")
+            
     def generate_vehicle_request(self, body_msg):
         # generate fleet asset
         Fleet = self.env['memo.fleet'].sudo()
@@ -1813,8 +1875,22 @@ class Memo_Model(models.Model):
             return self.record_to_open('stock.picking', view_id)
              
         elif self.memo_type.memo_key == "procurement_request":
-            view_id = self.env.ref('purchase.purchase_order_form').id
-            return self.record_to_open('purchase.order', view_id)
+            tree_view = self.env.ref('purchase.purchase_order_tree').id
+            form_view = self.env.ref('purchase.purchase_order_form').id
+            ret = {
+                    'name': 'Procurement',
+                    'view_mode': 'tree,form',
+                    # 'view_id': view_id,
+                    'view_type': 'tree',
+                    'res_model': 'purchase.order',
+                    'views': [(tree_view, 'tree'), (form_view, 'form')],
+                    # 'res_id': res_id,
+                    'type': 'ir.actions.act_window',
+                    'domain': [('id', 'in', [rec.id for rec in self.po_ids])],
+                    'target': 'current'
+                    }
+            return ret
+            # return self.record_to_open('purchase.order', view_id)
         elif self.memo_type.memo_key == "vehicle_request":
             pass 
         elif self.memo_type.memo_key == "leave_request":
