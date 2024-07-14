@@ -141,7 +141,10 @@ class Memo_Model(models.Model):
     manager_comment = fields.Html('Manager Comments', default="")
     is_supervior = fields.Boolean(string='is supervisor', compute="compute_employee_supervisor")
     is_manager = fields.Boolean(string="is_manager", compute="compute_employee_supervisor")
-    
+    is_cash_advance_retired = fields.Boolean(
+        string="Is cash Advanced Retired", 
+        help="Used to determine if user has fully retired his cash advance"
+        )
     # Fields for server request
     applicationChange = fields.Boolean(string="Application Change")
     datapatch = fields.Boolean(string="Data patch")
@@ -545,7 +548,7 @@ class Memo_Model(models.Model):
 
     @api.onchange('cash_advance_reference')
     def onchange_cash_advance_reference(self):
-        if self.cash_advance_reference.product_ids:
+        if self.cash_advance_reference.product_ids and self.state in ['submit']: # NEWC checked the state to ensure no retired product is changed
             self.product_ids = False
             self.product_ids = [(0, 0, {
                     'memo_id': self.id,
@@ -559,7 +562,7 @@ class Memo_Model(models.Model):
                     'used_amount': rec.used_amount,
                     'note': rec.note,
                     'code': rec.code,
-                    'to_retire': rec.to_retire,
+                    'to_retire': True if not rec.retired else False,
                 }) for rec in self.cash_advance_reference.product_ids]
             
     has_invoice = fields.Boolean(
@@ -829,12 +832,13 @@ class Memo_Model(models.Model):
     def validate_soe_line(self):
         if self.memo_type.memo_key == "soe":
             soe_line_not_cleared = self.mapped('product_ids').filtered(
-                lambda s: s.used_qty < 1 or s.used_amount < 1
-            )
-            if soe_line_not_cleared:
-                raise ValidationError(
-                    'Each Request line item must have used qty and used amount greater than 0'
-                )
+                lambda s: s.to_retire == True)
+            for r in soe_line_not_cleared: 
+                if r.used_qty < 0 or r.used_amount < 1:
+                    # if soe_line_not_cleared:
+                    raise ValidationError(
+                        'Each Request line item must have used qty and used amount greater than 0'
+                    )
             
     def build_po_line(self, order_id):
         '''args: order_id: the po_id already created'''
@@ -902,7 +906,7 @@ class Memo_Model(models.Model):
         self.validate_compulsory_document()
         self.validate_sub_stage()
         self.validate_invoice_line()
-        self.validate_soe_line()
+        # self.validate_soe_line()
         if self.to_create_document:
             attach_document_ids = self.env['ir.attachment'].sudo().search([
                     ('res_id', '=', self.id), 
@@ -1729,7 +1733,24 @@ class Memo_Model(models.Model):
             )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
-        
+    
+    def update_cash_advance_lines_as_retired(self, linecode):
+        '''this is done so as not to populate it when next user wants to retire other items'''
+        request_line = self.env['request.line'].search([
+            ('memo_id', '=', self.cash_advance_reference.id),
+            ('code', '=', linecode)
+            ], limit=1)
+        if request_line:
+            request_line.retired= True
+            
+    def set_cash_advance_as_retired(self):
+        if self.cash_advance_reference:
+            if self.cash_advance_reference.mapped('product_ids').filtered(
+                lambda pr: pr.retired == False):
+                self.cash_advance_reference.is_cash_advance_retired = False 
+            else:
+                self.cash_advance_reference.is_cash_advance_retired = True 
+           
     def generate_soe_entries(self):
         # self.follower_messages(body)
         is_config_approver = self.determine_if_user_is_config_approver()
@@ -1763,18 +1784,11 @@ class Memo_Model(models.Model):
                     'move_type': 'out_receipt',
                     'invoice_date': fields.Date.today(),
                     'date': fields.Date.today(),
-                    'journal_id': journal_id.id,
-                    'invoice_line_ids': [(0, 0, {
-                            'name': pr.product_id.name if pr.product_id else pr.description,
-                            'ref': f'{self.code}: {pr.product_id.name}',
-                            'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            'price_unit': pr.used_amount,
-                            'quantity': pr.used_qty,
-                            'discount': 0.0,
-                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                            'product_id': pr.product_id.id if pr.product_id else None,
-                    }) for pr in self.product_ids],
+                    'journal_id': journal_id.id, 
                 })
+                if self.product_ids_with_qty_to_return():
+                    self.to_update_inventory_product = True
+
                 for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
                     cash_advance_amount = self.env['account.move.line'].search([
                         ('code', '=', pr.code)
@@ -1783,24 +1797,28 @@ class Memo_Model(models.Model):
                         approved_cash_advance_amount = cash_advance_amount.price_unit
                         balance_remaining = approved_cash_advance_amount - pr.used_amount # e.g 5000 - 3000 = 2000
                         inv.invoice_line_ids = [(0, 0, {
-                                'name': pr.product_id.name if pr.product_id else pr.description,
-                                'ref': f'{self.code}: {pr.product_id.name}',
-                                'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                                'price_unit': balance_remaining, # pr.used_total,
-                                'quantity': pr.used_qty,
-                                'discount': 0.0,
-                                'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                                'product_id': pr.product_id.id if pr.product_id else None,
+                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'ref': f'{self.code}: {pr.product_id.name}',
+                            'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                            'price_unit': balance_remaining if balance_remaining > 0 else 0, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
+                            'quantity': pr.used_qty,
+                            'discount': 0.0,
+                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                            'product_id': pr.product_id.id if pr.product_id else None,
                         })]
-                        pr.update({'retired': True}) # updating the Line as retired
-            return self.record_to_open(
-            "account.move", 
-            view_id,
-            inv.id,
-            f"Journal Entry SOE - {inv.name}"
-            ) 
-        else:
-            raise ValidationError("Sorry! You are not allowed to validate cash advance payments")
+                        pr.update({'retired': True, 'to_retire': False}) # updating the Line as retired
+                        self.update_cash_advance_lines_as_retired(pr.code)
+                        self.set_cash_advance_as_retired()
+            
+            if inv.amount_total > 0:
+                return self.record_to_open(
+                    "account.move", 
+                    view_id,
+                    inv.id,
+                    f"Journal Entry SOE - {inv.name}"
+                    ) 
+            else:
+                raise ValidationError("Sorry! You are not allowed to retire cash advance payments with amount less than 0")
          
     def record_to_open(self, model, view_id, res_id=False, name=False):
         obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
@@ -1814,6 +1832,19 @@ class Memo_Model(models.Model):
         else:
             raise ValidationError("No related record found for the memo")
 
+    to_update_inventory_product = fields.Boolean('Update Inventory product')
+    def compute_used_quantity(self, req_qty, usedqty):
+        amount_to_return = 0
+        if usedqty < req_qty:
+            amount_to_return = req_qty - usedqty
+        return amount_to_return 
+    
+    def product_ids_with_qty_to_return(self): 
+        product_ids_with_qty_to_return = self.mapped('product_ids').filtered(
+                    lambda pr: pr.product_id and pr.product_id.detailed_type == "product" \
+                        and pr.retired == True and self.compute_used_quantity(pr.quantity_available, pr.used_qty) > 0)
+        return product_ids_with_qty_to_return
+             
     def update_inventory_product_quantity(self):
         '''this will be used to raise a stock tranfer record. Once someone claimed he returned a 
          positive product (storable product) , 
@@ -1826,24 +1857,35 @@ class Memo_Model(models.Model):
             ('company_id', '=', user.company_id.id) 
         ], limit=1)
         partner_location_id = self.env.ref('stock.stock_location_customers')
-        vals = {
-            'scheduled_date': fields.Date.today(),
-            'picking_type_id': stock_picking_type_out.id,
-            'origin': self.code,
-            'partner_id': self.employee_id.user_id.partner_id.id,
-            'move_ids_without_package': [(0, 0, {
-                            'name': self.code, 
-                            'picking_type_id': stock_picking_type_out.id,
-                            'location_id': partner_location_id.id,
-                            'location_dest_id': mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
-                            'product_id': mm.product_id.id,
-                            'product_uom_qty': mm.quantity_available,
-                            'date_deadline': self.date_deadline,
-            }) for mm in self.mapped('product_ids').filtered(
-                lambda pr: pr.product_id and pr.product_id.detailed_type == "product" and pr.to_retire == True)]
-        }
-        stock_picking.sudo().create(vals)
-
+        stock = self.env['stock.picking'].search(['|',('memo_id', '=', self.id), ('origin', '=', self.code)], limit=1)
+        view_id = self.env.ref('stock.view_picking_form').id
+        if not stock:
+            
+            '''Ensure request line items has positive products to return before generate stock move to inventory moves'''
+            if self.product_ids_with_qty_to_return():
+                vals = {
+                    'scheduled_date': fields.Date.today(),
+                    'picking_type_id': stock_picking_type_out.id,
+                    'origin': self.code,
+                    'partner_id': self.employee_id.user_id.partner_id.id,
+                    'move_ids_without_package': [(0, 0, {
+                                    'name': self.code, 
+                                    'picking_type_id': stock_picking_type_out.id,
+                                    'location_id': partner_location_id.id,
+                                    'location_dest_id': mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                                    'product_id': mm.product_id.id,
+                                    'product_uom_qty': self.compute_used_quantity(mm.quantity_available, mm.used_qty),
+                                    'date_deadline': self.date_deadline,
+                    }) for mm in self.product_ids_with_qty_to_return()]
+                }
+                stock_picking.sudo().create(vals)
+        return self.record_to_open(
+                "stock.picking", 
+                view_id,
+                stock.id,
+                f"Stock move for SOE {self.code} - {stock.name}"
+                )
+        
     def open_related_record_view(self, model, res_id, view_id, name="Record To approved"):
         ret = {
                 'name': name,

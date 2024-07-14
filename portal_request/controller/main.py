@@ -361,7 +361,7 @@ class PortalRequest(http.Controller):
 				('employee_id.user_id', '=', user.id),
 				('memo_type.memo_key', '=', 'cash_advance'),
 				('soe_advance_reference', '=', False),
-				('state', '=', 'Done') 
+				('is_cash_advance_retired', '=', False) 
 			]
 			cash_advance_not_retired = memo_obj.search(domain, limit=1)
 			_logger.info(f"This is cash advance check staff_num: {staff_num}")
@@ -415,7 +415,25 @@ class PortalRequest(http.Controller):
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
+			
 			if memo_request: 
+				if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
+					return {
+					"status": False,
+					"data": {
+						'name': "",
+						'phone': "",
+						'work_email': "",
+						'subject': "",
+						'description': "",
+						# 'district_id': "",
+						# 'district_id': "",
+						'request_date': "",
+						'product_ids': "",
+					},
+					"message": 'You cannot process with retirement as All cash advance lines has been retired' 
+					}
+					
 				return {
 					"status": True,
 					"data": {
@@ -897,7 +915,7 @@ class PortalRequest(http.Controller):
 					'used_amount': rec.get('used_amount'),
 					'note': rec.get('note'),
 					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
-					'to_retire': rec.get('line_checked'),
+					'to_retire': True if rec.get('line_checked') == 'on' else False,
 					'distance_from': rec.get('distance_from'),
 					'distance_to': rec.get('distance_to'),
 				}
