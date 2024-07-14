@@ -1252,8 +1252,9 @@ class Memo_Model(models.Model):
             ] if self.stage_id.memo_config_id.approver_ids else []
         email_list = follower_list + stage_followers_list
         approver_emails = [eml.work_email for eml in self.stage_id.approver_ids if eml.work_email]
-        if email_to:
-            approver_emails = approver_emails + [email_to.work_email]
+        if email_to and email_to.work_email:
+            approver_emails.append(email_to.work_email)
+            # approver_emails = approver_emails + [email_to.work_email]
         mail_to = (','.join(approver_emails))
         emails = (','.join(elist for elist in email_list))
         mail_data = {
