@@ -386,10 +386,18 @@ class MemoConfig(models.Model):
         """
         )
     
+    def write(self, vals):
+        res = super(MemoConfig, self).write(vals)
+        self.update_parent_setting()
+        return res
+    
     def update_parent_setting(self):
         if self.stage_ids:
             for rec in self.stage_ids:
+                rec.is_approved_stage = False
                 rec.memo_config_id = self.id
+            if len(self.stage_ids) > 2:
+                self.stage_ids[-2].is_approved_stage = True
 
     @api.constrains('memo_type')
     def _check_duplicate_memo_type(self):

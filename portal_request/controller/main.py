@@ -137,21 +137,22 @@ class PortalRequest(http.Controller):
 		}
 		return request.render("portal_request.portal_request_template", vals)
 	 
-	@http.route(['/check_staffid/<staff_num>'], type='json', website=True, auth="user", csrf=False)
-	def check_staff_num(self, staff_num):
+	@http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
+	def check_staff_num(self, **post):
 		"""Check staff Identification No.
 		Args:
 			staff_num (str): The Id No to be validated
 		Returns:
 			dict: Response
 		"""
-		_logger.info('Checking Staff ID No ...')
+		staff_num = post.get('staff_num')
+		_logger.info(f'Checking Staff ID No ...{staff_num}')
 		user = request.env.user
 		# ('user_id', '=', user.id)
 		if staff_num:
 			employee = request.env['hr.employee'].sudo().search(
 			[
-				('employee_number', '=', staff_num),
+				('employee_number', '=ilike', staff_num),
 				('active', '=', True),
 				('user_id', '=', user.id)], limit=1)
 			if employee:
@@ -360,8 +361,9 @@ class PortalRequest(http.Controller):
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
 				('memo_type.memo_key', '=', 'cash_advance'),
-				('soe_advance_reference', '=', False),
-				('is_cash_advance_retired', '=', False) 
+				# ('soe_advance_reference', '=', False),
+				('is_cash_advance_retired', '=', False),
+				('state', 'in', ['Done']) # PLEASE DONT REMOVE
 			]
 			cash_advance_not_retired = memo_obj.search(domain, limit=1)
 			_logger.info(f"This is cash advance check staff_num: {staff_num}")
@@ -369,7 +371,7 @@ class PortalRequest(http.Controller):
 				_logger.info(f"Cash advance not retired: {cash_advance_not_retired}")
 				return {
 					"status": False,
-					"message": f"You cannot request for another cash advance without retiring an existing one" 
+					"message": f"You cannot request for another cash advance without retiring an existing one See: {cash_advance_not_retired.id}"
 				}
 			else:
 				_logger.info(f"Cash advance is retired")
@@ -441,7 +443,7 @@ class PortalRequest(http.Controller):
 						'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
 						'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
 						'work_email': memo_request.employee_id.work_email,
-						'subject': memo_request.name,
+						'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
 						'description': memo_request.description or "",
 						'amount': sum([
 							rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
@@ -454,11 +456,11 @@ class PortalRequest(http.Controller):
 							'name': q.product_id.name if q.product_id else q.description, 
 							'qty': q.quantity_available,
 							# building lines for cash advance and soe
-							'used_qty': q.used_qty,
+							'used_qty': q.quantity_available, # q.used_qty,
 							'amount_total': q.amount_total,
-							'used_amount': q.used_amount,
+							'used_amount': q.amount_total, # q.used_amount,
 							'description': q.description or "",
-							'code': q.code,
+							'request_line_id': q.id,
 							} 
 							for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
 						]
@@ -914,7 +916,8 @@ class PortalRequest(http.Controller):
 					'amount_total': rec.get('amount_total'),
 					'used_amount': rec.get('used_amount'),
 					'note': rec.get('note'),
-					'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
+					'request_line_id': int(rec.get('request_line_id')),
+					# 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
 					'to_retire': True if rec.get('line_checked') == 'on' else False,
 					'distance_from': rec.get('distance_from'),
 					'distance_to': rec.get('distance_to'),
