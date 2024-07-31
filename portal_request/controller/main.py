@@ -456,7 +456,7 @@ class PortalRequest(http.Controller):
 							# building lines for cash advance and soe
 							'used_qty': q.quantity_available, # q.used_qty,
 							'amount_total': q.amount_total,
-							'used_amount': q.amount_total, # q.used_amount,
+							'used_amount': q.sub_total_amount, # q.used_amount,
 							'description': q.description or "",
 							'request_line_id': q.id,
 							} 
@@ -628,7 +628,7 @@ class PortalRequest(http.Controller):
 	# 		})	
 
 	@http.route(['/my/request-state'], type='json', website=True, auth="user", csrf=False)
-	def check_qty(self,  *args, **kwargs):
+	def check_request_state(self,  *args, **kwargs):
 		type = kwargs.get('type') 
 		id = kwargs.get('id') 
 		"""Check quantity.
@@ -687,7 +687,7 @@ class PortalRequest(http.Controller):
 				('id', '=', int(product_id))
 			], 
 			limit=1) 
-			if product:
+			if product_id and type(product_id) in [int]:
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
 				] 
@@ -745,157 +745,160 @@ class PortalRequest(http.Controller):
 		Returns:
 			json: JSON reponse
 		"""
-		_logger.info(f'Creating Portal Request data ...{post}')
-		employee_id = request.env['hr.employee'].sudo().search([
-			('user_id', '=', request.env.uid), 
-			('employee_number', '=', post.get('staff_id'))], limit=1)
-		if not employee_id:
-			return json.dumps({'status': False, 'message': "No employee record found for staff id provided"})
-		existing_request  = post.get("selectTypeRequest")
-		existing_order = post.get("existing_order")
-		memo_id = False
-		if existing_request == "existing":
-			_logger.info(f'existing found')
-			memo_id = request.env['memo.model'].sudo().search([
-			('employee_id', '=', employee_id.id), 
-			('code', '=', existing_order)], limit=1)
-			if not memo_id:
-				_logger.info(f'memo not found')
-				return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-		
-		leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
-		leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
-			if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
-		if post.get("selectRequestOption") == "soe":
-			cash_advance_id = request.env['memo.model'].sudo().search([
-			('code', '=ilike', existing_order)], limit=1)
-		else:
-			cash_advance_id = False
-		systemRequirementOptions = [
-			'Application change : True' if post.get("applicationChange") == "on" else '',
-			'Enhancement : True' if post.get("enhancement") == "on" else '',
-			'Datapatch : True' if post.get("datapatch") == "on" else '',
-			'Database Change : True' if post.get("databaseChange") == "on" else '',
-			'OS Change : True' if post.get("osChange") == "on" else '',
-			'Ids on OS and DB : True' if post.get("ids_on_os_and_db") == "on" else '',
-			'Version Upgrade : True' if post.get("versionUpgrade") == "on" else '',
-			'Hardware Option : True' if post.get("hardwareOption") == "on" else '',
-			'Other Changes : ' + post.get("other_system_details", "") if post.get("other_system_details") else '', 
-			'Justification reason : ' + post.get("justification_reason", "") if post.get("justification_reason") else '', 
-			'Start date : ' + post.get("request_date",'') if post.get("request_date") else '', 
-			'End date : ' + post.get("request_end_date",'') if post.get("request_end_date") else '', 
-			]
-		description_body = f"""
-		<b>Description: </b> {post.get("description", "")}<br/>
-		<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
-		"""
-		# memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
-		memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
-		vals = {
-			"employee_id": employee_id.id,
-			"memo_type": memo_type.id,
-			"memo_type_key": memo_type.memo_key,
-			# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
-			"email": post.get("email_from"),
-			"phone": post.get("phone_number"),
-			"name": post.get("subject", ''),
-			"amountfig": post.get("amount_fig", 0),
-			"date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
-			"leave_type_id": post.get("leave_type_id", ""),
-			"leave_start_date": leave_start_date,
-			"leave_end_date": leave_end_date,
-			"applicationChange": True if post.get("applicationChange") == "on" else False,
-			"enhancement": True if post.get("enhancement") == "on" else False,
-			"datapatch": True if post.get("datapatch") == "on" else False,
-			"databaseChange": True if post.get("databaseChange") == "on" else False,
-			"osChange": True if post.get("osChange") == "on" else False,
-			"ids_on_os_and_db": True if post.get("ids_on_os_and_db") == "on" else False,
-			"versionUpgrade": True if post.get("versionUpgrade") == "on" else False,
-			"hardwareOption": True if post.get("hardwareOption") == "on" else False,
-			"otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
-			"other_system_details": post.get("other_system_details"),
-			"justification_reason": post.get("justification_reason"),
-			"state": "Sent",
-			"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
-			"description": description_body, 
-			"request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
-			"request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
-
-		}
-		_logger.info(f"POST DATA {vals}")
-		_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
-		DataItems = []
-		DataItems = json.loads(post.get('DataItems'))
-		memo_obj = request.env['memo.model']
-		if not memo_id:
-			_logger.info("Memo id creating")
-			memo_id = memo_obj.sudo().create(vals)
-		else:
-			_logger.info("Memo id updating")
-			memo_id.sudo().write(vals)
-		if DataItems:
-			_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
-			if post.get("selectRequestOption") != "employee_update":
-				self.generate_request_line(DataItems, memo_id)
+  		try:
+			_logger.info(f'Creating Portal Request data ...{post}')
+			employee_id = request.env['hr.employee'].sudo().search([
+				('user_id', '=', request.env.uid), 
+				('employee_number', '=', post.get('staff_id'))], limit=1)
+			if not employee_id:
+				return json.dumps({'status': False, 'message': "No employee record found for staff id provided"})
+			existing_request  = post.get("selectTypeRequest")
+			existing_order = post.get("existing_order")
+			memo_id = False
+			if existing_request == "existing":
+				_logger.info(f'existing found')
+				memo_id = request.env['memo.model'].sudo().search([
+				('employee_id', '=', employee_id.id), 
+				('code', '=', existing_order)], limit=1)
+				if not memo_id:
+					_logger.info(f'memo not found')
+					return json.dumps({'status': False, 'message': "No existing request found for the employee"})
+			
+			leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
+			leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
+				if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
+			if post.get("selectRequestOption") == "soe":
+				cash_advance_id = request.env['memo.model'].sudo().search([
+				('code', '=ilike', existing_order)], limit=1)
 			else:
-				# post.get("selectRequestOption") == "employee_update":
-				self.generate_employee_transfer_line(DataItems, memo_id)
-		# else:
-		# 	raise ValidationError("Haaaaaahaaaaaa no dsta item")
-		
-		## generating attachment
-		if 'other_docs' in request.params:
-			attached_files = request.httprequest.files.getlist('other_docs')
-			for attachment in attached_files:
-				file_name = attachment.filename
-				datas = base64.b64encode(attachment.read())
-				other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
-		####
-		# memo_id.action_submit_button()
-		stage_id = memo_id.get_initial_stage(
-			memo_id.memo_type.id,
-			memo_id.employee_id.department_id.id or memo_id.dept_ids.id
-			)
-		_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type} and department {memo_id.employee_id.department_id.name}''')
-		approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
-		if not approver_ids and not next_stage_id:
-			_logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
-			return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
-			# return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
+				cash_advance_id = False
+			systemRequirementOptions = [
+				'Application change : True' if post.get("applicationChange") == "on" else '',
+				'Enhancement : True' if post.get("enhancement") == "on" else '',
+				'Datapatch : True' if post.get("datapatch") == "on" else '',
+				'Database Change : True' if post.get("databaseChange") == "on" else '',
+				'OS Change : True' if post.get("osChange") == "on" else '',
+				'Ids on OS and DB : True' if post.get("ids_on_os_and_db") == "on" else '',
+				'Version Upgrade : True' if post.get("versionUpgrade") == "on" else '',
+				'Hardware Option : True' if post.get("hardwareOption") == "on" else '',
+				'Other Changes : ' + post.get("other_system_details", "") if post.get("other_system_details") else '', 
+				'Justification reason : ' + post.get("justification_reason", "") if post.get("justification_reason") else '', 
+				'Start date : ' + post.get("request_date",'') if post.get("request_date") else '', 
+				'End date : ' + post.get("request_end_date",'') if post.get("request_end_date") else '', 
+				]
+			description_body = f"""
+			<b>Description: </b> {post.get("description", "")}<br/>
+			<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
+			"""
+			# memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
+			memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
+			vals = {
+				"employee_id": employee_id.id,
+				"memo_type": memo_type.id,
+				"memo_type_key": memo_type.memo_key,
+				# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
+				"email": post.get("email_from"),
+				"phone": post.get("phone_number"),
+				"name": post.get("subject", ''),
+				"amountfig": post.get("amount_fig", 0),
+				"date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
+				"leave_type_id": post.get("leave_type_id", ""),
+				"leave_start_date": leave_start_date,
+				"leave_end_date": leave_end_date,
+				"applicationChange": True if post.get("applicationChange") == "on" else False,
+				"enhancement": True if post.get("enhancement") == "on" else False,
+				"datapatch": True if post.get("datapatch") == "on" else False,
+				"databaseChange": True if post.get("databaseChange") == "on" else False,
+				"osChange": True if post.get("osChange") == "on" else False,
+				"ids_on_os_and_db": True if post.get("ids_on_os_and_db") == "on" else False,
+				"versionUpgrade": True if post.get("versionUpgrade") == "on" else False,
+				"hardwareOption": True if post.get("hardwareOption") == "on" else False,
+				"otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
+				"other_system_details": post.get("other_system_details"),
+				"justification_reason": post.get("justification_reason"),
+				"state": "Sent",
+				"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
+				"description": description_body, 
+				"request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
+				"request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
 
-		stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
-		approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
-		follower_ids = [(4, r) for r in approver_ids]
-		user_ids = [(4, request.env.user.id)]
-		if employee_id.administrative_supervisor_id:
-			follower_ids.append((4, employee_id.administrative_supervisor_id.id))
-		if employee_id.parent_id:
-			follower_ids.append((4, employee_id.parent_id.id))
-		selected_approver = random.choice(approver_ids)
-		memo_id.sudo().update({
-			'stage_id': next_stage_id, 
-			'approver_id': selected_approver,
-			'set_staff': selected_approver,
-			'approver_ids': [(4, r) for r in approver_ids],
-			"direct_employee_id": selected_approver,
-			'users_followers': follower_ids,
-			'res_users': user_ids,
-			'memo_setting_id': stage_obj.memo_config_id.id,
-			'memo_type_key': memo_id.memo_type.memo_key,
-		})
-		_logger.info(f'''
-			   Successfully Registered! with memo id Approver = {approver_ids} \
-				stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
-					or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
-		 
-		memo_id.confirm_memo(
-				memo_id.direct_employee_id or employee_id.parent_id, 
-				post.get("description", ""),
-				from_website=True
+			}
+			_logger.info(f"POST DATA {vals}")
+			_logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
+			DataItems = []
+			DataItems = json.loads(post.get('DataItems'))
+			memo_obj = request.env['memo.model']
+			if not memo_id:
+				_logger.info("Memo id creating")
+				memo_id = memo_obj.sudo().create(vals)
+			else:
+				_logger.info("Memo id updating")
+				memo_id.sudo().write(vals)
+			if DataItems:
+				_logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
+				if post.get("selectRequestOption") != "employee_update":
+					self.generate_request_line(DataItems, memo_id)
+				else:
+					# post.get("selectRequestOption") == "employee_update":
+					self.generate_employee_transfer_line(DataItems, memo_id)
+			# else:
+			# 	raise ValidationError("Haaaaaahaaaaaa no dsta item")
+			
+			## generating attachment
+			if 'other_docs' in request.params:
+				attached_files = request.httprequest.files.getlist('other_docs')
+				for attachment in attached_files:
+					file_name = attachment.filename
+					datas = base64.b64encode(attachment.read())
+					other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
+			####
+			# memo_id.action_submit_button()
+			stage_id = memo_id.get_initial_stage(
+				memo_id.memo_type.id,
+				memo_id.employee_id.department_id.id or memo_id.dept_ids.id
 				)
-		request.session['memo_ref'] = memo_id.code
-		return json.dumps({'status': True, 'message': "Form Submitted!"})
-	
+			_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type} and department {memo_id.employee_id.department_id.name}''')
+			approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+			if not approver_ids and not next_stage_id:
+				_logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
+				return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
+				# return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
+
+			stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
+			approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
+			follower_ids = [(4, r) for r in approver_ids]
+			user_ids = [(4, request.env.user.id)]
+			if employee_id.administrative_supervisor_id:
+				follower_ids.append((4, employee_id.administrative_supervisor_id.id))
+			if employee_id.parent_id:
+				follower_ids.append((4, employee_id.parent_id.id))
+			selected_approver = random.choice(approver_ids)
+			memo_id.sudo().update({
+				'stage_id': next_stage_id, 
+				'approver_id': selected_approver,
+				'set_staff': selected_approver,
+				'approver_ids': [(4, r) for r in approver_ids],
+				"direct_employee_id": selected_approver,
+				'users_followers': follower_ids,
+				'res_users': user_ids,
+				'memo_setting_id': stage_obj.memo_config_id.id,
+				'memo_type_key': memo_id.memo_type.memo_key,
+			})
+			_logger.info(f'''
+				Successfully Registered! with memo id Approver = {approver_ids} \
+					stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+						or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
+			
+			memo_id.confirm_memo(
+					memo_id.direct_employee_id or employee_id.parent_id, 
+					post.get("description", ""),
+					from_website=True
+					)
+			request.session['memo_ref'] = memo_id.code
+			return json.dumps({'status': True, 'message': "Form Submitted!"})
+		except Exception as ex:
+			_logger.exception("Unexpected Error while sending office memo data: %s" % ex)
+   
 	def generate_request_line(self, DataItems, memo_id):
 		memo_id.sudo().write({'product_ids': False})
 		counter = 1
@@ -916,10 +919,11 @@ class PortalRequest(http.Controller):
 					'note': rec.get('note'),
 					'request_line_id': int(rec.get('request_line_id')),
 					# 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
-					'to_retire': True if rec.get('line_checked') == 'on' else False,
+					'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
 					'distance_from': rec.get('distance_from'),
 					'distance_to': rec.get('distance_to'),
 				}
+			_logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
 			productid = rec.get('product_id') or 0
 			product_id = request.env['product.product'].sudo().browse([int(productid)])
 			if product_id:

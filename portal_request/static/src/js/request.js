@@ -1361,7 +1361,8 @@ odoo.define('portal_request.portal_request', function (require) {
                                     }
                                     if($(this).attr('class') == "productchecked"){
                                         console.log($(this).val())
-                                        list_item['line_checked'] = $(this).val()
+                                        // list_item['line_checked'] = $(this).val()
+                                        list_item['line_checked'] = $(this).is(':checked') ? 'on' : 'off' 
                                         list_item['request_line_id'] = $(this).attr('code')
                                         list_item['code'] = $(this).attr('code')
                                     }

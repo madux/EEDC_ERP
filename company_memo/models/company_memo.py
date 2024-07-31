@@ -583,6 +583,11 @@ class Memo_Model(models.Model):
             if st.require_po_confirmation:
                 has_so = True 
         return has_invoice, has_po, has_so, has_transformer
+    
+    def portal_check_po_config(self, memo_setting):
+        has_invoice, has_po, has_so, has_transformer = self.check_po_config(memo_setting)
+        if has_po:
+            self.has_po = has_po
             
     @api.onchange('memo_type')
     def get_default_stage_id(self):
@@ -1255,6 +1260,7 @@ class Memo_Model(models.Model):
             )
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
+        self.portal_check_po_config(self.memo_setting_id)
 
     def mail_sending_direct(self, body_msg, email_to=False): 
         subject = "Memo Notification"
