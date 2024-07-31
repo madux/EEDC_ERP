@@ -738,15 +738,11 @@ class PortalRequest(http.Controller):
 		})
 		return attachment_id
 	
-	# portal_request data_process form post
+ 	# portal_request data_process form post
 	@http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
 	def portal_data_process(self, **post):
-		"""
-		Returns:
-			json: JSON reponse
-		"""
-  		try:
-			_logger.info(f'Creating Portal Request data ...{post}')
+		'''used to process portal data'''
+		try:
 			employee_id = request.env['hr.employee'].sudo().search([
 				('user_id', '=', request.env.uid), 
 				('employee_number', '=', post.get('staff_id'))], limit=1)
