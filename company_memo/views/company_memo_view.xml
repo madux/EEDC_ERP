@@ -18,7 +18,7 @@
 					<button name="complete_memo_transactions" string="Generate &amp; Confirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type_key','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
 					<button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('memo_type_key','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
 					<button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve2', 'Approve','Done']), ('memo_type_key','not in',['soe']),('user_is_approver','=', False)]}"/>
-					<button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('state','not in',['Done']), ('memo_type_key','not in',['soe'])]}"/>
+                    <button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('to_update_inventory_product','!=', True), ('memo_type_key','not in',['soe'])]}"/>
 					<button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
 					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
 					<button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object"/>
@@ -160,6 +160,7 @@
 								context="{'default_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}"
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
 									<tree string="Items" editable="bottom">
+										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="state" string="State" invisible="1"/> 
 										<field name="memo_type_key" string="memo key" invisible="1" force_save="1"/> 
 										<!-- <field name="district_id" string="District" invisible="1"/>  -->

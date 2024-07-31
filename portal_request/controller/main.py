@@ -428,8 +428,6 @@ class PortalRequest(http.Controller):
 						'work_email': "",
 						'subject': "",
 						'description': "",
-						# 'district_id': "",
-						# 'district_id': "",
 						'request_date': "",
 						'product_ids': "",
 					},

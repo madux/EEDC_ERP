@@ -79,11 +79,11 @@ class AccountMoveReversal(models.TransientModel):
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
 
-    def reverse_moves(self):
-        res = super(AccountMoveReversal, self).post()
-        for rec in self.move_ids:
-            if rec.memo_id:
-                rec.memo_id.state = "Approve" # waiting for payment and confirmation
-        return res
+    # def reverse_moves(self):
+    #     res = super(AccountMoveReversal, self).post()
+    #     for rec in self.move_ids:
+    #         if rec.memo_id:
+    #             rec.memo_id.state = "Approve" # waiting for payment and confirmation
+    #     return res
 
      

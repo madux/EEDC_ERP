@@ -78,7 +78,8 @@
             ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
             ('users_followers.user_id.id','=', user.id), 
             ('approver_id.user_id.id','=', user.id),
-            ('approver_ids.user_id','=', user.id)]</field>
+            ('approver_ids.user_id','=', user.id),
+            ('create_uid','=', user.id)]</field>
         </record>
         <record id="memo_root_see_all_record" model="ir.rule">
             <field name="name">Admin Users See All Memo Records</field>
