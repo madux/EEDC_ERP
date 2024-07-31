@@ -65,7 +65,7 @@
 						<div class="oe_title">
 						<label for="name"/>
 							<h1 style="color:Tomato;">
-								<field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/><field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit'])]}"/>
+								<field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
 							</h1>
 						</div>
 						<group>
