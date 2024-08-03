@@ -10,6 +10,14 @@ from odoo import http
 class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
 
+    invoice_date = fields.Date(
+        string='Invoice/Bill Date',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+        index=True,
+        copy=False,
+        default=fields.Date.today(),
+    )
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
     origin = fields.Char(string="Source")
