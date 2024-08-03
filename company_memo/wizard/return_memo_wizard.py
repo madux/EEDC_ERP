@@ -32,19 +32,19 @@ class Send_Memo_back(models.Model):
         current_stage_index = stages.index(current_stage.id)
         new_previous_stage = stages[current_stage_index -1] if current_stage_index != 0 else stages[0]
         if new_previous_stage:
-            return new_previous_stage
+            return new_previous_stage, current_stage_index
         else:
-            return False
+            return False, False
         
     def post_refuse(self):
         get_record = self.env['memo.model'].search([('id','=', self.memo_record.id)])
-        get_previous_stage = self.get_previous_stage(get_record)
+        get_previous_stage, first_stage = self.get_previous_stage(get_record)
         reasons = "<b><h4>Refusal Message From: %s </b></br> Please refer to the reasons below:</h4></br>* %s." %(self.env.user.name,self.reason)
         if self.reason:
             msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
              <br/>Kindly {} to Review<br/> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id))
             get_record.write({
-                'state':'Refuse',
+                'state':'submit' if first_stage == 0 else 'Refuse',
                 'reason_back': reasons,
                 'stage_id': get_previous_stage or self.env.ref("company_memo.memo_refuse_stage").id,
                 'users_followers': [(4, self.direct_employee_id.id)],
