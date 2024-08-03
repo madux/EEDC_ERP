@@ -27,6 +27,11 @@ class RequestLine(models.Model):
         "memo.model", 
         string="Memo ID"
         )
+    request_line_id = fields.Integer(
+        string="Request line ID",
+        help="Will be used to get the actual cash advance line to retire",
+        store=True,
+        )
     fleet_id = fields.Many2one(
         "memo.fleet", 
         string="Fleet ID"

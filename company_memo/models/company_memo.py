@@ -64,6 +64,13 @@ class Memo_Model(models.Model):
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
     #     ], string="Memo Type", required=True)
+    memo_material_request_status = fields.Boolean('')
+    memo_procurement_request_status = fields.Boolean('')
+    memo_awaiting_procurement_request_status = fields.Boolean('')
+    memo_soe_status = fields.Boolean('')
+    memo_bagde_status = fields.Boolean('')
+    memo_bagde_undone = fields.Boolean('', default=True)
+    
     def get_publish_memo_types(self):
         memo_configs = self.env['memo.config'].search([('active', '=', True)])
         memo_type_ids = [r.memo_type.id for r in memo_configs]
@@ -545,25 +552,6 @@ class Memo_Model(models.Model):
     def get_amount(self):
         if self.invoice_ids:
             self.amountfig = sum([rec.amount_total for rec in self.invoice_ids])
-
-    @api.onchange('cash_advance_reference')
-    def onchange_cash_advance_reference(self):
-        if self.cash_advance_reference.product_ids and self.state in ['submit']: # NEWC checked the state to ensure no retired product is changed
-            self.product_ids = False
-            self.product_ids = [(0, 0, {
-                    'memo_id': self.id,
-                    'memo_type': self.memo_type.id,
-                    'memo_type_key': self.memo_type.memo_key,
-                    'product_id': rec.product_id and rec.product_id.id, 
-                    'quantity_available': rec.quantity_available,
-                    'description': rec.description,
-                    'used_qty': rec.used_qty,
-                    'amount_total': rec.amount_total,
-                    'used_amount': rec.used_amount,
-                    'note': rec.note,
-                    'code': rec.code,
-                    'to_retire': True if not rec.retired else False,
-                }) for rec in self.cash_advance_reference.product_ids]
             
     has_invoice = fields.Boolean(
         string='Has invoice line', 
@@ -595,6 +583,11 @@ class Memo_Model(models.Model):
             if st.require_po_confirmation:
                 has_so = True 
         return has_invoice, has_po, has_so, has_transformer
+    
+    def portal_check_po_config(self, memo_setting):
+        has_invoice, has_po, has_so, has_transformer = self.check_po_config(memo_setting)
+        if has_po:
+            self.has_po = has_po
             
     @api.onchange('memo_type')
     def get_default_stage_id(self):
@@ -742,12 +735,13 @@ class Memo_Model(models.Model):
                 'You cannot cancel a memo that is currently undergoing management approval'
                 )
         for rec in self:
-            rec.write({
+            rec.sudo.write({
                 'state': "submit", 
                 'direct_employee_id': False, 
                 'partner_id':False, 
-                'users_followers': False,
                 'set_staff': False,
+                'users_followers': False, 
+                'stage_id': self.memo_setting_id.stage_ids[0].id,
                 }) 
             
     def get_url(self, id):
@@ -1153,7 +1147,27 @@ class Memo_Model(models.Model):
                         code=code
                         )
                     documents.append(docid.id)
-        return invoices, documents, 
+        return invoices, documents
+    
+    def update_status_badge(self):
+        self.memo_bagde_undone = False #'Retired'
+        if self.memo_type_key in ['material_request']:
+            self.memo_material_request_status = True #'Issued'
+        elif self.memo_type_key in ['procurement_request']:
+            pending_receipts = self.mapped('po_ids').filtered(lambda x: x.receipt_status == 'pending')
+            if pending_receipts:
+                self.memo_awaiting_procurement_request_status = True 
+                self.memo_procurement_request_status = False 
+
+            else:
+                self.memo_awaiting_procurement_request_status = False 
+                # raise ValidationError('B')
+                self.memo_procurement_request_status = True 
+
+        elif self.memo_type_key in ['soe']:
+            self.memo_soe_status = True #'Retired'
+        else:
+            self.memo_bagde_status = True #'Completed'
 
     def update_final_state_and_approver(self, from_website=False, default_stage=False, assigned_to=False):
         if from_website:
@@ -1246,6 +1260,7 @@ class Memo_Model(models.Model):
             )
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
+        self.portal_check_po_config(self.memo_setting_id)
 
     def mail_sending_direct(self, body_msg, email_to=False): 
         subject = "Memo Notification"
@@ -1289,11 +1304,18 @@ class Memo_Model(models.Model):
         """
         memo_settings = self.env['memo.config'].sudo().search([
             ('id', '=', self.memo_setting_id.id)
-            ])
+            ], limit=1)
         memo_approver_ids = memo_settings.approver_ids
         user = self.env.user
         emloyee = self.env['hr.employee'].search([('user_id', '=', user.id)], limit=1)
-        if emloyee and emloyee.id in [emp.id for emp in memo_approver_ids] or self.env.uid in [r.user_id.id for r in self.stage_id.approver_ids]:
+        is_approver_stage = memo_settings.mapped('stage_ids').filtered(lambda aps: aps.is_approved_stage)
+        approver_stage_ids = is_approver_stage[0]
+        approvers= []
+        if approver_stage_ids:
+            approvers = approver_stage_ids.approver_ids.ids
+        if emloyee and emloyee.id in [emp.id for emp in memo_approver_ids] \
+            or self.env.uid in [r.user_id.id for r in self.stage_id.approver_ids] or \
+                emloyee.id in approvers:
             return True
         else:
             return False
@@ -1437,6 +1459,8 @@ class Memo_Model(models.Model):
         }
 
     def generate_stock_material_request(self, body_msg, body):
+        if not self.dest_location_id or not self.source_location_id or not self.picking_type_id:
+            raise ValidationError('Please enter the source or destination location and or operation type')
         stock_picking_type_out = self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking']
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
@@ -1489,46 +1513,54 @@ class Memo_Model(models.Model):
         Check po record if already create, popup the wizard, 
         else create pO and pop up the wizard
         """
-        stock_picking_type_in = self.env.ref('stock.picking_type_in')
-        purchase_obj = self.env['purchase.order']
-        existing_po = purchase_obj.search([('memo_id', '=', self.id)], limit=1)
-        if not existing_po:
-            vals = {
-                'date_order': self.date,
-                # 'picking_type_id': stock_picking_type_in.id,
-                'origin': self.code,
-                'memo_id': self.id,
-                'partner_id': self.employee_id.user_id.partner_id.id,
-                'order_line': [(0, 0, {
-                                'product_id': mm.product_id.id,
-                                'name': mm.description or f'{mm.product_id.name} Requistion',
-                                'product_qty': mm.quantity_available,
-                                'price_unit': mm.amount_total,
-                                'date_planned': self.date,
-                }) for mm in self.product_ids]
-            }
-            po = purchase_obj.create(vals)
-        else:
-            po = existing_po
+        # stock_picking_type_in = self.env.ref('stock.picking_type_in')
+        # purchase_obj = self.env['purchase.order']
+        if not self.po_ids:
+            raise ValidationError(
+                '''
+                Please kindly click generate Purchase Order button from the purchase order tab
+                '''
+                )
+        # existing_po = purchase_obj.search([('memo_id', '=', self.id)])
+        # if not existing_po:
+
+        #     vals = {
+        #         'date_order': self.date,
+        #         # 'picking_type_id': stock_picking_type_in.id,
+        #         'origin': self.code,
+        #         'memo_id': self.id,
+        #         'partner_id': self.employee_id.user_id.partner_id.id,
+        #         'order_line': [(0, 0, {
+        #                         'product_id': mm.product_id.id,
+        #                         'name': mm.description or f'{mm.product_id.name} Requistion',
+        #                         'product_qty': mm.quantity_available,
+        #                         'price_unit': mm.amount_total,
+        #                         'date_planned': self.date,
+        #         }) for mm in self.product_ids]
+        #     }
+        #     po = purchase_obj.create(vals)
+        # else:
+        #     po = existing_po
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
         is_config_approver = self.determine_if_user_is_config_approver()
-        if is_config_approver:
-            """Check if the user is enlisted as the approver for memo type"""
-            self.follower_messages(body)
-            view_id = self.env.ref('purchase.purchase_order_form').id
-            ret = {
-                'name': "Purchase Order",
-                'view_mode': 'form',
-                'view_id': view_id,
-                'view_type': 'form',
-                'res_model': 'purchase.order',
-                'res_id': po.id,
-                'type': 'ir.actions.act_window',
-                'domain': [],
-                'target': 'new'
-                }
-            return ret
+        self.update_status_badge()
+        # if is_config_approver:
+        #     """Check if the user is enlisted as the approver for memo type"""
+        #     self.follower_messages(body)
+        #     view_id = self.env.ref('purchase.purchase_order_form').id
+        #     ret = {
+        #         'name': "Purchase Order",
+        #         'view_mode': 'form',
+        #         'view_id': view_id,
+        #         'view_type': 'form',
+        #         'res_model': 'purchase.order',
+        #         'res_id': po.id,
+        #         'type': 'ir.actions.act_window',
+        #         'domain': [],
+        #         'target': 'new'
+        #         }
+        #     return ret
         
     def check_available_fleet_before_assignment(self, productid):
         available_fleet = self.env['product.product'].sudo().search([
@@ -1734,14 +1766,48 @@ class Memo_Model(models.Model):
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
     
-    def update_cash_advance_lines_as_retired(self, linecode):
+    ## SOE FEATURES
+    @api.onchange('cash_advance_reference')
+    def onchange_cash_advance_reference(self):
+        car = self.cash_advance_reference
+        if self.cash_advance_reference:
+            if car.product_ids and car.mapped('product_ids').filtered(lambda x: not x.retired) and self.state in ['submit']: 
+                # NEWC checked the state to ensure no retired product is changed
+                self.product_ids = False
+                self.product_ids = [(0, 0, {
+                        'memo_id': self.id,
+                        'memo_type': self.memo_type.id,
+                        'memo_type_key': self.memo_type.memo_key,
+                        'product_id': rec.product_id and rec.product_id.id, 
+                        'quantity_available': rec.quantity_available,
+                        'description': rec.description,
+                        'request_line_id': rec.id,
+                        'used_qty': rec.used_qty,
+                        'amount_total': rec.amount_total,
+                        'used_amount': rec.sub_total_amount,
+                        'note': rec.note,
+                        'code': rec.code,
+                        'to_retire': True if not rec.retired else False,
+                    }) for rec in car.mapped('product_ids').filtered(lambda s: not s.retired)]
+            else:
+                raise ValidationError('you have already retired all the items in the selected cash advance reference')
+    
+    def update_cash_advance_lines_as_retired(self, request_lineid):
         '''this is done so as not to populate it when next user wants to retire other items'''
         request_line = self.env['request.line'].search([
             ('memo_id', '=', self.cash_advance_reference.id),
-            ('code', '=', linecode)
+            ('id', '=', request_lineid)
             ], limit=1)
         if request_line:
-            request_line.retired= True
+             request_line.sudo().update({'retired': True})
+        else:
+            raise ValidationError(f"Request line with id {request_lineid} cannot be found to retire")
+
+    def soe_invoice_to_generate(self):
+        items = self.mapped('product_ids').filtered(
+            lambda lm: (lm.sub_total_amount - lm.used_amount) 
+        )
+        return items 
             
     def set_cash_advance_as_retired(self):
         if self.cash_advance_reference:
@@ -1749,7 +1815,7 @@ class Memo_Model(models.Model):
                 lambda pr: pr.retired == False):
                 self.cash_advance_reference.is_cash_advance_retired = False 
             else:
-                self.cash_advance_reference.is_cash_advance_retired = True 
+                self.cash_advance_reference.is_cash_advance_retired = True
            
     def generate_soe_entries(self):
         # self.follower_messages(body)
@@ -1790,26 +1856,27 @@ class Memo_Model(models.Model):
                     self.to_update_inventory_product = True
 
                 for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-                    cash_advance_amount = self.env['account.move.line'].search([
-                        ('code', '=', pr.code)
-                        ], limit=1) # locating the existing cash_advance_line to get the initial request amount
-                    if cash_advance_amount:
-                        approved_cash_advance_amount = cash_advance_amount.price_unit
-                        balance_remaining = approved_cash_advance_amount - pr.used_amount # e.g 5000 - 3000 = 2000
+                    # cash_advance_amount = self.env['account.move.line'].search([
+                    #     ('code', '=', pr.code)
+                    #     ], limit=1) # locating the existing cash_advance_line to get the initial request amount
+                    # if cash_advance_amount:
+                    # approved_cash_advance_amount = cash_advance_amount.price_unit
+                    balance_remaining = pr.sub_total_amount - pr.used_amount # e.g 5000 - 3000 = 2000
+                    if balance_remaining > 0:
                         inv.invoice_line_ids = [(0, 0, {
-                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'name': f"{pr.product_id.name or ''}: {self.code}" or f"{pr.description}",
                             'ref': f'{self.code}: {pr.product_id.name}',
                             'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            'price_unit': balance_remaining if balance_remaining > 0 else 0, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
-                            'quantity': pr.used_qty,
+                            'price_unit': pr.sub_total_amount - pr.used_amount, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
+                            'quantity': 1, # pr.used_qty,
                             'discount': 0.0,
                             'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
                             'product_id': pr.product_id.id if pr.product_id else None,
-                        })]
+                        })]# if pr.sub_total_amount - pr.used_amount > 0 else False]
                         pr.update({'retired': True, 'to_retire': False}) # updating the Line as retired
-                        self.update_cash_advance_lines_as_retired(pr.code)
-                        self.set_cash_advance_as_retired()
-            
+                        _logger.info(f'req line id {pr.request_line_id}')
+                        self.update_cash_advance_lines_as_retired(pr.request_line_id) # no longer pr.code
+
             if inv.amount_total > 0:
                 return self.record_to_open(
                     "account.move", 
@@ -1818,7 +1885,16 @@ class Memo_Model(models.Model):
                     f"Journal Entry SOE - {inv.name}"
                     ) 
             else:
-                raise ValidationError("Sorry! You are not allowed to retire cash advance payments with amount less than 0")
+                '''Set the retired to true if there is not amount difference to retire'''
+                for rec in self.mapped('product_ids').filtered(lambda x: x.to_retire):
+                    rec.update({'retired': True, 'to_retire': False}) # updating the Line as retired
+                    _logger.info(f'req line id 2 {rec.request_line_id}')
+                    self.update_cash_advance_lines_as_retired(rec.request_line_id)
+                self.sudo().cash_advance_reference.soe_advance_reference = self.id
+                self.is_request_completed = True
+                self.sudo().update_final_state_and_approver()
+                self.update_status_badge()
+            self.set_cash_advance_as_retired()
          
     def record_to_open(self, model, view_id, res_id=False, name=False):
         obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
@@ -1939,7 +2015,7 @@ class Memo_Model(models.Model):
         elif self.memo_type.memo_key == "leave_request":
             view_id = self.env.ref('hr_holidays.hr_leave_view_form').id
             return self.record_to_open('purchase.order', view_id)
-        elif self.memo_type.memo_key == "cash_advance":
+        elif self.memo_type.memo_key in ["cash_advance", "soe"]:
             view_id = self.env.ref('account.view_move_form').id
             return self.record_to_open('account.move', view_id)
         else:
@@ -2225,7 +2301,7 @@ class Memo_Model(models.Model):
     def write(self, vals):
         old_length = len(self.users_followers)
         res = super(Memo_Model, self).write(vals)
-        if 'users_followers' in vals:
+        if 'users_followers' in vals and self.create_uid.id != self.env.uid:
             if len(self.users_followers) < old_length:
                 raise ValidationError("Sorry you cannot remove followers")
         return res

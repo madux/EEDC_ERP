@@ -13,6 +13,7 @@ class StockPicking(models.Model):
         if self.memo_id:
             self.memo_id.is_request_completed = True
             self.sudo().memo_id.update_final_state_and_approver()
+            self.sudo().memo_id.update_status_badge()
         return res
 
     def button_validate(self):
@@ -21,6 +22,7 @@ class StockPicking(models.Model):
         if self.memo_id:
             self.memo_id.is_request_completed = True
             self.sudo().memo_id.update_final_state_and_approver()
+            self.sudo().memo_id.update_status_badge()
         return res
     
 
@@ -43,5 +45,6 @@ class StockImmediateTransfer(models.TransientModel):
         res = super(StockImmediateTransfer, self).process()
         for transfer in self.immediate_transfer_line_ids:
             transfer.picking_id.memo_id.is_request_completed = True
+            transfer.sudo().picking_id.memo_id.update_status_badge()
         return res
 
