@@ -68,9 +68,11 @@ class AccountMoveMemo(models.Model):
             if self.memo_id.memo_type.memo_key == "soe":
                 '''This is added to help send the soe reference to the related cash advance'''
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
+                self.sudo().memo_id.set_cash_advance_as_retired()
             self.memo_id.is_request_completed = True
             self.sudo().memo_id.update_final_state_and_approver()
             # self.memo_id.state = "Done"
+            self.sudo().memo_id.update_status_badge()
         return super(AccountMoveMemo, self).action_post()
     
 class AccountMove(models.Model):
@@ -85,11 +87,11 @@ class AccountMoveReversal(models.TransientModel):
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
 
-    def reverse_moves(self):
-        res = super(AccountMoveReversal, self).post()
-        for rec in self.move_ids:
-            if rec.memo_id:
-                rec.memo_id.state = "Approve" # waiting for payment and confirmation
-        return res
+    # def reverse_moves(self):
+    #     res = super(AccountMoveReversal, self).post()
+    #     for rec in self.move_ids:
+    #         if rec.memo_id:
+    #             rec.memo_id.state = "Approve" # waiting for payment and confirmation
+    #     return res
 
      

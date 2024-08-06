@@ -220,7 +220,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     `<tr class="heading prod_row" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
                         <th width="5%">
                             <span>
-                                <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.code}"/>
+                                <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.request_line_id}"/>
                             </span>
                         </th>
                         <th width="20%">
@@ -885,9 +885,10 @@ odoo.define('portal_request.portal_request', function (require) {
                 if(staff_num !== ''){  
                     var self = this;
                     this._rpc({
-                        route: `/check_staffid/${staff_num}`,
+                        route: `/check_staffid`, ///${staff_num}`,
                         params: {
                             //'type': type
+                            'staff_num': staff_num
                         },
                     }).then(function (data) {
                         console.log('retrieved staff data => '+ JSON.stringify(data))
@@ -1315,6 +1316,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                     'note': '',
                                     'line_checked': false,
                                     'code': 'mef00981',
+                                    'request_line_id': '',
                                     'distance_from': '',
                                     'distance_to': '',
                             }
@@ -1359,7 +1361,9 @@ odoo.define('portal_request.portal_request', function (require) {
                                     }
                                     if($(this).attr('class') == "productchecked"){
                                         console.log($(this).val())
-                                        list_item['line_checked'] = $(this).val()
+                                        // list_item['line_checked'] = $(this).val()
+                                        list_item['line_checked'] = $(this).is(':checked') ? 'on' : 'off' 
+                                        list_item['request_line_id'] = $(this).attr('code')
                                         list_item['code'] = $(this).attr('code')
                                     }
                                 }
