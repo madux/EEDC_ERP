@@ -31,12 +31,12 @@
                                     <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
                                         
                                         <div class="d-grid flex-sm-nowrap">
-                                            <a class="btn btn-secondary pt-1" href="/portal-request">
+                                            <a class="portal_button pt-1" href="/portal-request">
                                                 Create Request
                                             </a>
                                         </div>
                                         <div class="d-grid pt-2 flex-sm-nowrap">
-                                            <button class="btn btn-secondary cancel_btn" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                            <button class="portal_button cancel_btn" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                                 Cancel Request
                                             </button>
                                         </div> 
@@ -109,7 +109,7 @@
 
                                     <li t-if="req.approver_ids" class="list-group-item flex-grow-1">
                                         <div class="col-12 col-md-12 pb-2">
-                                            <strong>To be Approved by</strong>
+                                            <strong>To be Approved by:</strong>
                                             <t t-foreach="req.approver_ids" t-as="appr">
                                                 <t t-if="appr.user_id">
                                                     <div class="d-flex ps-3 flex-nowrap">
@@ -143,39 +143,37 @@
                                     <div class="row gs-0">
                                         <div class="col-md">
                                             <h5 class="row mx-1 mb-1 mb-md-0">
-                                            <div class="col-6 text-truncate">
-                                                <span t-field="req.name"/>
-                                                <a t-att-id="req.id" class="record_id"/>
-                                                <small class="text-muted "> (#<span t-field="req.code"/>) </small>
-                                            </div>
-                                            <div class="col-3 text-truncate">
-                                                <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
-                                                    <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
-                                                        <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
-                                                        Approve
-                                                    </a>
-                                                    <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
-                                                        Refuse
-                                                    </a>
-                                                </t>
-                                                    <t t-else="">
-                                                    -
-                                                </t>
-                                                <t t-if="req.state == 'Refuse'">
-                                                    <!-- <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Refuse')"> -->
-                                                    <a id="req.id" class="resend_request btn btn-secondary btn-sm">
-                                                        Resend
-                                                    </a>
-                                                </t>
-                                                <t t-else="">
-                                                    -
-                                                </t>
-                                            </div>
-                                            <div class="col-3 p-3 text-end">
-                                                <small class="text-end">Status:</small>
-                                                <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
-                                            </div>
+                                                <div class="col-8">
+                                                    <span t-field="req.name"/>
+                                                    <a t-att-id="req.id" class="record_id"/>
+                                                    <small class="text-muted "> (#<span t-field="req.code"/>) </small>
+                                                </div>
                                             </h5>
+                                        </div>
+                                        <!-- <div class="col-md"> -->
+                                            <!-- <div class="col-3 text-truncate"> -->
+                                        <div class="btn-group">
+                                            <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
+                                                <a id="approve_request" class="approve_request portal_button">
+                                                    <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
+                                                    Approve
+                                                </a>
+                                                <a id="refuse_request_btn" class="refuse_request_btn portal_button" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                                    Refuse
+                                                </a>
+                                            </t>
+                                            <t t-else="">
+                                            </t>
+                                            <t t-if="req.state == 'Refuse'">
+                                                <a id="req.id" class="resend_request btn btn-secondary btn-sm">
+                                                    Resend
+                                                </a>
+                                            </t>
+                                            <t t-else="">
+                                            </t> 
+                                        </div>
+                                        <div class="btn-group">
+                                            <span class="col-6 offset-3 text-end"><span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/></span>
                                         </div>
                                     </div>
                                 </div>
@@ -355,16 +353,16 @@
                             </t>
                             <t t-else="">
                             </t>
-                            <t t-if="req.employee_id.user_id.id == current_user">
+                            <!-- <t t-if="req.employee_id.user_id.id == current_user"> -->
                                 <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
                                     <h4><strong>Message(s) and communication history</strong></h4>
                                     <t t-call="portal.message_thread">
                                         <t t-set="object" t-value="req"/>
                                     </t>
                                 </div>
-                            </t>
+                            <!-- </t>
                             <t t-else="">
-                            </t>
+                            </t> -->
                             <!-- <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
                                 <h4><strong>Message(s) and communication history</strong></h4>
                                 <t t-call="portal.message_thread">
