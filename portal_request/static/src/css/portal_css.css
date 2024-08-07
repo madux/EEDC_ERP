@@ -1,3 +1,29 @@
+.portal_button {
+  background-color: #624c50; /* Green */
+  border: none;
+  color: white;
+  border-radius: 8px;
+  /* padding: 15px 32px; */
+  padding: 10px 24px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  border: 2px solid #d8f3e9;
+  transition-duration: 0.4s;
+  
+}
+
+.portal_button:hover {
+  color: var(--bs-btn-hover-color);
+}
+
+
+.portal_element_right {
+  float: right;
+  padding-right: 50px;
+}
+
 .alert>.start-icon {
     margin-right: 0;
     min-width: 20px;
