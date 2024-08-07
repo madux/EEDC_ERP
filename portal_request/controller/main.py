@@ -913,7 +913,7 @@ class PortalRequest(http.Controller):
 					'amount_total': rec.get('amount_total'),
 					'used_amount': rec.get('used_amount'),
 					'note': rec.get('note'),
-					'request_line_id': int(rec.get('request_line_id')),
+					'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
 					# 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
 					'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
 					'distance_from': rec.get('distance_from'),

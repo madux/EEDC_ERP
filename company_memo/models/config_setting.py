@@ -370,6 +370,9 @@ class MemoConfig(models.Model):
         copy=True,
         help="Serves as the suffix code for the department in question"
         )
+    send_to_initiator_on_refusal = fields.Boolean(string="Send to initiator",
+                                      default=False, 
+                                      help="Check if you want system to send straight to initiator upon refusal")
     
     has_transformer = fields.Boolean(string="For transformer", default=False)
     active = fields.Boolean(string="Active", default=True)
