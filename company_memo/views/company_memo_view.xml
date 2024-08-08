@@ -143,7 +143,7 @@
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
                                 <field name="source_location_id" string="Source Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
                                 <field name="dest_location_id" string="Destination Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
-                                <field name="picking_type_id" string="Operation Type" force_save="1" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
+                                <field name="picking_type_id" string="Operation Type" force_save="1" domain="[('code', '=', 'internal')]" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
 								   
 								<field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>

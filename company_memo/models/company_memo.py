@@ -792,9 +792,10 @@ class Memo_Model(models.Model):
                         )
                 
     def validate_sub_stage(self):
-        for count, rec in enumerate(self.memo_sub_stage_ids, 1):
-            if not rec.sub_stage_done:
-                raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
+        if self.memo_sub_stage_ids:
+            for count, rec in enumerate(self.memo_sub_stage_ids, 1):
+                if not rec.sub_stage_done:
+                    raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
     
     def validate_invoice_line(self):
         '''Check all invoice in draft and check if 
@@ -1348,7 +1349,10 @@ class Memo_Model(models.Model):
     def approve_memo(self): # Always available to Some specific groups
         ''' check if supervisor has commented on the memo if it is server access'''
         self.check_supervisor_comment()
-        
+        self.validate_necessary_components()
+        self.validate_po_line()
+        self.validate_compulsory_document()
+        self.validate_sub_stage()
         '''Determine if current user has access to approve'''
         is_config_approver = self.determine_if_user_is_config_approver()
         if self.env.uid == self.employee_id.user_id.id and not is_config_approver:
@@ -1516,9 +1520,7 @@ class Memo_Model(models.Model):
         # stock_picking_type_in = self.env.ref('stock.picking_type_in')
         # purchase_obj = self.env['purchase.order']
         if not self.po_ids:
-            raise ValidationError(
-                '''
-                Please kindly click generate Purchase Order button from the purchase order tab
+            raise ValidationError('''Please kindly click generate Purchase Order button from the purchase order tab
                 '''
                 )
         # existing_po = purchase_obj.search([('memo_id', '=', self.id)])

@@ -233,7 +233,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <input type="text" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
+                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
                         </th>
                         <th width="10%">
                             <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Price"/> 
@@ -248,7 +248,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
+                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-secondary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
                         </th>
                     </tr>`
                     
@@ -285,12 +285,12 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
                 <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity"/>
+                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1"/>
                 </th>
                 <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
                     <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Unit Price"/> 
                 </th>
-                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
+                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">about:blank#blocked
                     <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Quantity"/> 
                 </th>
                 <th width="10%" id="used_amount_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
@@ -308,7 +308,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 </th>
 
                 <th width="5%">
-                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
+                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-secondary btn-sm"> Remove </a>
                 </th>
             </tr>`
         )
@@ -351,7 +351,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     </span>
                 </th>  
                 <th width="5%">
-                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-primary btn-sm"> Remove </a>
+                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-secondary btn-sm"> Remove </a>
                 </th>
             </tr>`
         )
