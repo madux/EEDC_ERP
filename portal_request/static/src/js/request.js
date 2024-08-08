@@ -248,7 +248,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-primary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
+                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-secondary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
                         </th>
                     </tr>`
                     
@@ -308,7 +308,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 </th>
 
                 <th width="5%">
-                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a>
+                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-secondary btn-sm"> Remove </a>
                 </th>
             </tr>`
         )
@@ -351,7 +351,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     </span>
                 </th>  
                 <th width="5%">
-                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-primary btn-sm"> Remove </a>
+                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-secondary btn-sm"> Remove </a>
                 </th>
             </tr>`
         )

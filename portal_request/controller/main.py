@@ -631,7 +631,7 @@ class PortalRequest(http.Controller):
 	def check_request_state(self,  *args, **kwargs):
 		type = kwargs.get('type') 
 		id = kwargs.get('id') 
-		"""Check quantity.
+		""" 
 		Args:
 			type (type): either set to draft or set to Sent
 			id: id of the record
@@ -678,16 +678,16 @@ class PortalRequest(http.Controller):
 		Returns:
 			dict: Response
 		"""
-		_logger.info(f'Checking product for {product_id} District {district} check_ qty No ...{qty}')
-		if product_id:
+		_logger.info(f'Checking product for Request type {request_type} {product_id} District {district} check_ qty No ...{qty}')
+		numeric_data = [int, float]
+		if product_id and type(product_id) not in numeric_data and type(qty) not in numeric_data and qty > 0:
 			product = request.env['product.product'].sudo().search(
 			[
 				('active', '=', True),
-				# ('detailed_type', '=', 'product'),
 				('id', '=', int(product_id))
 			], 
 			limit=1) 
-			if product_id and type(product_id) in [int]:
+			if product:
 				domain = [
 					('company_id', '=', request.env.user.company_id.id) 
 				] 
@@ -697,30 +697,34 @@ class PortalRequest(http.Controller):
 				if request_type in ['material_request'] and product.detailed_type in ['product']:
 					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
 					product_qty = float(qty) if qty else 0
+					_logger.info(f'total_availability: {product_qty} and {total_availability}')
 					if product_qty > total_availability:
+						_logger.info(f'BLLLLLLLLLLLLLLLLLLLLLA: {product_qty} and {total_availability}')
 						return {
 							"status": False,
 							"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
 							}
 					else:
+						_logger.info(f'FFFFFFFFFFFFFFFFFFFFKKKKKKKKKKKK:')
 						return {
 							"status": True,
 							"message": "", 
 							}
 				else:
+					_logger.info(f'XXXXXXXXXXXXXXXXXXXXXXXXX')
 					return {
 						"status": True,
 						"message": "", 
 						}
 			else:
 				return {
-					"status": True,
+					"status": False,
 					"message": "The product does not exist on the inventory", 
 					}
 		else:
 			return {
-				"status": True,
-				"message": "Please ensure you select a product line", 
+				"status": False,
+				"message": "Please ensure you add a product, Ensure quantity is numeric and is above 0", 
 				}
 
 	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
@@ -1235,24 +1239,24 @@ class PortalRequest(http.Controller):
 						"status": True,
 						"message": "Comment successfully Updated",
 						}
-			# elif post.get('manager_comment'):
-			# 	body = plaintext2html(post.get('manager_comment'))
-			# 	message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
-			# 	request_record.write({
-			# 		'manager_comment': message,
-			# 		'state': 'Refuse' if status == 'Refuse' else request_record.state,
-			# 		'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
-			# 		})
-			# 	body_msg = f"""
-			# 		Dear Sir / Madam, <br/>
-			# 		I wish to notify you that a memo with description \n <br/>\
-			# 		has been commented by the Manager. <br/>\
-			# 		Kindly {get_url(request_record.id)}"""
-			# 	request_record.message_post(body=body)
-			# 	return {
-			# 			"status": True,
-			# 			"message": "Comment successfully Updated",
-			# 			}
+			elif post.get('manager_comment'):
+				body = plaintext2html(post.get('manager_comment'))
+				message = manager_message +"\n"+ "By: " + request.env.user.name +':'+ body
+				request_record.write({
+					'manager_comment': message,
+					'state': 'Refuse' if status == 'Refuse' else request_record.state,
+					'stage_id': request.env.ref("company_memo.memo_refuse_stage").id if status == 'Refuse' else request_record.stage_id.id,
+					})
+				body_msg = f"""
+					Dear Sir / Madam, <br/>
+					I wish to notify you that a memo with description \n <br/>\
+					has been commented by the Manager. <br/>\
+					Kindly {get_url(request_record.id)}"""
+				request_record.message_post(body=body)
+				return {
+						"status": True,
+						"message": "Comment successfully Updated",
+						}
 			else:
 				_logger.info(f"xxxxxx not updated")
 				return {

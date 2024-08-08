@@ -165,7 +165,7 @@
                                             <t t-else="">
                                             </t>
                                             <t t-if="req.state == 'Refuse'">
-                                                <a id="req.id" class="resend_request btn btn-secondary btn-sm">
+                                                <a id="req.id" class="resend_request portal_button">
                                                     Resend
                                                 </a>
                                             </t>

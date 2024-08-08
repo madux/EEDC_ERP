@@ -488,7 +488,7 @@
                                     </div> 
                                     <div class="mb-0 py-2 col-12 add_item justify-content-center">
                                         <div style="width: 200px;" class="s_website_form_label"/>
-                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-secondary btn-sm"> Add item </a>
                                         <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
                                         <span id="s_website_form_result_addxx"/>
                                     </div>
@@ -559,7 +559,7 @@
                                             </div> 
                                             <div class="mb-0 py-2 col-12 add_item justify-content-center">
                                                 <div style="width: 200px;" class="s_website_form_label"/>
-                                                <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                                <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn portal_button btn-sm"> Add item </a>
                                                 <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
                                                 <span id="s_website_form_result_addxx"/>
                                             </div>
@@ -630,7 +630,7 @@
                                         </div>
                                         <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">
                                             <div style="width: 200px;" class="s_website_form_label"/>
-                                            <a href="#" role="button" class="btn btn-primary btn-lg o_default_snippet_text button_req_submit">Submit</a>
+                                            <a href="#" role="button" class="btn btn-secondary btn-lg o_default_snippet_text button_req_submit">Submit</a>
                                             <span id="s_website_form_result"/>
                                         </div>
                                     </div>
