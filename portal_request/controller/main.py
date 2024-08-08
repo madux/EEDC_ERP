@@ -680,7 +680,18 @@ class PortalRequest(http.Controller):
 		"""
 		_logger.info(f'Checking product for Request type {request_type} {product_id} District {district} check_ qty No ...{qty}')
 		numeric_data = [int, float]
-		if product_id and type(product_id) not in numeric_data and type(qty) not in numeric_data and qty > 0:
+		# _logger.info(f'BLLLLLLLLLLLLLLLLLLLLLA: {type(qty)}')
+		# if qty.isalpha():
+		# 	return {
+		# 			"status": False,
+		# 			"message": "Quantity must be numeric", 
+		# 			} 
+		# if int(qty) < 1:
+		# 	return {
+		# 			"status": False,
+		# 			"message": "Quantity must be above 1", 
+		# 			}  
+		if product_id:# and type(product_id) in numeric_data:
 			product = request.env['product.product'].sudo().search(
 			[
 				('active', '=', True),
@@ -724,7 +735,7 @@ class PortalRequest(http.Controller):
 		else:
 			return {
 				"status": False,
-				"message": "Please ensure you add a product, Ensure quantity is numeric and is above 0", 
+				"message": "Please ensure you add a valid product", 
 				}
 
 	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
