@@ -792,9 +792,10 @@ class Memo_Model(models.Model):
                         )
                 
     def validate_sub_stage(self):
-        for count, rec in enumerate(self.memo_sub_stage_ids, 1):
-            if not rec.sub_stage_done:
-                raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
+        if self.memo_sub_stage_ids:
+            for count, rec in enumerate(self.memo_sub_stage_ids, 1):
+                if not rec.sub_stage_done:
+                    raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
     
     def validate_invoice_line(self):
         '''Check all invoice in draft and check if 
@@ -1348,7 +1349,10 @@ class Memo_Model(models.Model):
     def approve_memo(self): # Always available to Some specific groups
         ''' check if supervisor has commented on the memo if it is server access'''
         self.check_supervisor_comment()
-        
+        self.validate_necessary_components()
+        self.validate_po_line()
+        self.validate_compulsory_document()
+        self.validate_sub_stage()
         '''Determine if current user has access to approve'''
         is_config_approver = self.determine_if_user_is_config_approver()
         if self.env.uid == self.employee_id.user_id.id and not is_config_approver:
@@ -1516,9 +1520,7 @@ class Memo_Model(models.Model):
         # stock_picking_type_in = self.env.ref('stock.picking_type_in')
         # purchase_obj = self.env['purchase.order']
         if not self.po_ids:
-            raise ValidationError(
-                '''
-                Please kindly click generate Purchase Order button from the purchase order tab
+            raise ValidationError('''Please kindly click generate Purchase Order button from the purchase order tab
                 '''
                 )
         # existing_po = purchase_obj.search([('memo_id', '=', self.id)])
@@ -1771,6 +1773,8 @@ class Memo_Model(models.Model):
     def onchange_cash_advance_reference(self):
         car = self.cash_advance_reference
         if self.cash_advance_reference:
+            if self.env.user.id != self.cash_advance_reference.employee_id.user_id.id:
+                raise ValidationError("""You cannot retire cash advance not initiated by you.""")
             if car.product_ids and car.mapped('product_ids').filtered(lambda x: not x.retired) and self.state in ['submit']: 
                 # NEWC checked the state to ensure no retired product is changed
                 self.product_ids = False
@@ -2201,12 +2205,13 @@ class Memo_Model(models.Model):
 
     """line 4 - 7 checks if the current user is the initiator of the memo, 
     if true, raises warning error else: it opens the wizard"""
-
+        
     def return_validator(self):
-        user_exist = self.mapped('res_users').filtered(
-            lambda user: user.id == self.env.uid
-            )
-        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        # user_exist = self.mapped('res_users').filtered(
+        #     lambda user: user.id == self.env.uid
+        #     )
+        # if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        if self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """Sorry you are not allowed to reject /  return you own initiated memo"""
                 )
