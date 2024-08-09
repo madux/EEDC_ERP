@@ -1119,8 +1119,8 @@ class Memo_Model(models.Model):
         stage_document_line = stage_id.mapped('required_document_line')
         invoices, documents= [], []
         if stage_invoice_line:
-            if not self.client_id:
-                raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
+            # if not self.client_id:
+            #     raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
             for stage_inv in stage_invoice_line:
                 already_existing_stage_invoice_line = obj.mapped('invoice_ids').filtered(
                     lambda exist: exist.stage_invoice_name == stage_inv.name and exist.state not in ['posted'])
