@@ -9,6 +9,8 @@ from dateutil.relativedelta import relativedelta as rd
 import xlrd
 from xlrd import open_workbook
 import base64
+import io
+import xlsxwriter
 
 _logger = logging.getLogger(__name__)
 
@@ -19,6 +21,42 @@ class ImportApplicants(models.TransientModel):
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
+    action_type = fields.Selection(
+        [('upload', 'Applicant Upload'), ('download', 'Template Download')],
+        string='Action Type',
+        default='upload'
+    )
+    
+    def download_template_action(self):
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet()
+
+
+        headers = [
+            'Email', 'Full Name', 'Phone', 'Gender',
+            'NYSC Completed (Yes/No)', 'NYSC Certificate Link',
+            'Professional Certification (Yes/No)', 'Certification Link',
+            'Job Position'
+        ]
+        
+        for col_num, header in enumerate(headers):
+            worksheet.write(0, col_num, header)
+
+        workbook.close()
+        
+        output.seek(0)
+        self.data_file = base64.b64encode(output.read())
+        self.filename = 'Applicant_Template.xlsx'
+        output.close()
+        
+        return {
+        'type': 'ir.actions.act_url',
+        'url': 'web/content/?model=hr.import_applicant.wizard&id=%s&field=data_file&filename_field=filename&filename=Applicant_Template.xlsx&download=true' % self.id,
+        'target': 'self',
+        'data_file': self.data_file,
+        'filename': 'Applicant_Template.xlsx',
+    }
 
     def create_job_position(self, name):
         job_position_obj = self.env['hr.job']
@@ -61,6 +99,7 @@ class ImportApplicants(models.TransientModel):
         unimport_count, count = 0, 0
         success_records = []
         unsuccess_records = []
+        
         def find_existing_applicant(email,job):
             applicant_id = False 
             if email: 
@@ -125,6 +164,41 @@ class ImportApplicants(models.TransientModel):
                 'target':'new',
                 'context':context,
                 }
+    
+    # def download_template_action(self):
+    # # Create a simple Excel template
+    #     import io
+    #     import xlsxwriter
+
+    #     output = io.BytesIO()
+    #     workbook = xlsxwriter.Workbook(output)
+    #     worksheet = workbook.add_worksheet()
+
+    #     # Add headers for the template
+    #     headers = [
+    #         'Email', 'Full Name', 'Phone', 'Gender',
+    #         'NYSC Completed (Yes/No)', 'NYSC Certificate Link',
+    #         'Professional Certification (Yes/No)', 'Certification Link',
+    #         'Job Position'
+    #     ]
+    #     for col_num, header in enumerate(headers):
+    #         worksheet.write(0, col_num, header)
+
+    #     workbook.close()
+
+    #     # Encode the output to Base64 and return as an attachment
+    #     output.seek(0)
+    #     template_data = base64.b64encode(output.read())
+    #     output.close()
+
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': 'web/content/?model=hr.import_applicant.wizard&id=%s&field=data_file&filename_field=filename&filename=Applicant_Template.xlsx&download=true' % self.id,
+    #         'target': 'self',
+    #         'data_file': template_data,
+    #         'filename': 'Applicant_Template.xlsx',
+    #     }
+
 
 
 class MigrationDialogModel(models.TransientModel):
