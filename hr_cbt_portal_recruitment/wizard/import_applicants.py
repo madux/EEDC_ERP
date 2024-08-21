@@ -61,9 +61,9 @@ class ImportApplicants(models.TransientModel):
     def create_job_position(self, name):
         job_position_obj = self.env['hr.job']
         if name:
-            position_rec = job_position_obj.search([('name', '=', name.strip().title())], limit = 1)
+            position_rec = job_position_obj.search([('name', '=', name.strip())], limit = 1)
             job_position = job_position_obj.create({
-                        "name": name.strip().title()
+                        "name": name.strip()
                     }) if not position_rec else position_rec
             return job_position
         else:
@@ -100,15 +100,25 @@ class ImportApplicants(models.TransientModel):
         success_records = []
         unsuccess_records = []
         
-        def find_existing_applicant(email,job):
+        def find_existing_applicant(email, applicant_code, job):
             applicant_id = False 
-            if email: 
-                applicant = self.env['hr.applicant'].search([
-                    ('email_from', '=', email),
-                    ('job_id', '=', job.id),
-                    ('create_date', '>=', job.datetime_publish),
-                    ('create_date', '<=', job.close_date),
-                    ('active', '=', True)])
+            if email:
+                if applicant_code:
+                    applicant = self.env['hr.applicant'].search([('applicant_code', '=', applicant_code)])
+                    if not applicant:
+                        applicant = self.env['hr.applicant'].search([
+                        ('email_from', '=', email),
+                        ('job_id', '=', job.id),
+                        ('create_date', '>=', job.datetime_publish),
+                        ('create_date', '<=', job.close_date),
+                        ('active', '=', True)])
+                else:
+                    applicant = self.env['hr.applicant'].search([
+                        ('email_from', '=', email),
+                        ('job_id', '=', job.id),
+                        ('create_date', '>=', job.datetime_publish),
+                        ('create_date', '<=', job.close_date),
+                        ('active', '=', True)])
                 if applicant:
                     applicant_id = applicant.id
                 else:
@@ -117,32 +127,49 @@ class ImportApplicants(models.TransientModel):
             else:
                 return False
         for row in file_data:
-            posittion = self.create_job_position(row[8])
-            if find_existing_applicant(row[1].strip(), posittion):
-                unsuccess_records.append(f'Applicant with {str(row[1])} Already exists')
+            posittion = self.create_job_position(row[12])
+            email = row[2] or row[4]
+            applicant_code = row[1].strip()
+            if find_existing_applicant(email.strip(),applicant_code, posittion):
+                unsuccess_records.append(f'Applicant with {str(email)} Already exists')
             else:
-                full_name = row[1].split()
-                _logger.info(f'Full name = {full_name}')
-                applicant_data = {
-                    'name': row[1],
-                    'first_name': full_name[1] if len(full_name) > 1 else None,
-                    'middle_name': full_name[2] if len(full_name) == 3 else None,
-                    'last_name': full_name[0],
-                    'email_from': row[0],
-                    'partner_phone': row[2],
-                    'gender': row[3].lower(),
-                    'has_completed_nysc': 'Yes' if row[4].lower() == 'yes' else 'No',
-                    'nysc_certificate_link': row[5],
-                    'has_professional_certification': 'Yes' if row[6].lower() == 'yes' else 'No',
-                    'professional_certificate_link': row[7],
-                    'job_id': posittion.id,
-                    'stage_id': self.env.ref('hr_recruitment.stage_job1').id
-                    # 'partner_id': self.create_contact(row[0].strip(), row[1], row[2])
-                }
-                applicant = self.env['hr.applicant'].sudo().create(applicant_data)
-                _logger.info(f'Applicant data: {applicant}')
-                count += 1
-                success_records.append(applicant_data.get('name'))
+                # raise ValidationError(row[13])
+                
+                full_name = row[3].split() if row[3] else False
+                if full_name:
+                    _logger.info(f'Full name = {full_name}')
+                    partner_name = f"{full_name[1]} {full_name[2]} {full_name[0]}",
+                    applicant_data = {
+                        'applicant_code': applicant_code,
+                        'email_from': email,
+                        'name': f"Applciation for {row[3]}",
+                        'first_name': full_name[2] if len(full_name) > 2 else full_name[1] if len(full_name) > 1 else full_name[0] or None,
+                        # maduka chris sopulu, maduka sopulu, maduka, none
+                        'middle_name': full_name[1] if len(full_name) == 3 else "",
+                        'last_name': full_name[0] if len(full_name) > 0 else "",
+                        'gender': row[5].lower(),
+                        'partner_phone': row[6],
+                        'partner_name': partner_name,
+                        'highest_level_of_qualification': row[7],
+                        'course_of_study': row[8],
+                        'is_graduate': row[9],
+                        'nysc_certificate_number': row[10],
+                        'age': row[11],
+                        'job_id': posittion.id,
+                        'worked_at_eedc': row[13].lower(),
+                        'describe_work_at_eedc': row[14],
+                        'why_do_you_leave': row[15],
+                        
+                        'presentlocation': row[16],
+                        'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
+                        'partner_id': self.create_contact(email.strip(), partner_name, row[6]),
+                    }
+                    applicant = self.env['hr.applicant'].sudo().create(applicant_data)
+                    _logger.info(f'Applicant data: {applicant}')
+                    count += 1
+                    success_records.append(applicant_data.get('name'))
+                else:
+                    unsuccess_records.append(f'Applicant with {str(row[0])} Does not have a name')
         errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
         errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
         if len(errors) > 1:
