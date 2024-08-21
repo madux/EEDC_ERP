@@ -130,18 +130,17 @@ class ImportApplicants(models.TransientModel):
             else:
                 return False
         for row in file_data:
-            posittion = self.create_job_position(row[12])
+            posittion = self.create_job_position(row[11])
             email = row[2] or row[4]
             applicant_code = row[1].strip()
             if find_existing_applicant(email.strip(),applicant_code, posittion):
                 unsuccess_records.append(f'Applicant with {str(email)} Already exists')
             else:
-                # raise ValidationError(row[13])
                 
                 full_name = row[3].split() if row[3] else False
                 if full_name:
                     _logger.info(f'Full name = {full_name}')
-                    partner_name = f"{full_name[1]} {full_name[2]} {full_name[0]}",
+                    partner_name = row[3].strip(),
                     applicant_data = {
                         'applicant_code': applicant_code,
                         'email_from': email,
@@ -150,28 +149,28 @@ class ImportApplicants(models.TransientModel):
                         # maduka chris sopulu, maduka sopulu, maduka, none
                         'middle_name': full_name[1] if len(full_name) == 3 else "",
                         'last_name': full_name[0] if len(full_name) > 0 else "",
-                        'gender': row[5].lower(),
-                        'partner_phone': row[6],
+                        'partner_phone': row[5],
                         'partner_name': partner_name,
-                        'highest_level_of_qualification': row[7],
-                        'course_of_study': row[8],
-                        'is_graduate': row[9],
-                        'nysc_certificate_number': row[10],
-                        'age': row[11],
+                        'highest_level_of_qualification': row[6],
+                        'course_of_study': row[7],
+                        'is_graduate': row[8],
+                        'nysc_certificate_number': row[9],
+                        'age': row[10],
                         'job_id': posittion.id,
-                        'worked_at_eedc': row[13].lower(),
-                        'describe_work_at_eedc': row[14],
-                        'why_do_you_leave': row[15],
+                        'worked_at_eedc': row[12].lower() if row[12] in ['yes', 'no'] else False,
+                        'describe_work_at_eedc': row[13],
+                        'why_do_you_leave': row[14],
                         
-                        'presentlocation': row[16],
-                        'prefered_district': row[17].strip(),
+                        'presentlocation': row[15],
+                        'prefered_district': row[16].strip(),
+                        'gender': row[17].lower(),
                         'is_aptis': row[18].strip(),
-                        'skills': row[19].strip(),
+                        # 'skills': row[19].strip(),
                         'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
-                        'partner_id': self.create_contact(email.strip(), partner_name, row[6]),
+                        'partner_id': self.create_contact(email.strip(), partner_name, row[5]),
                     }
                     applicant = self.env['hr.applicant'].sudo().create(applicant_data)
-                    _logger.info(f'Applicant data: {applicant}')
+                    _logger.info(f'Applicant data: {applicant} at {row[0]}')
                     count += 1
                     success_records.append(applicant_data.get('name'))
                 else:
