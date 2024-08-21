@@ -34,11 +34,11 @@ class ImportApplicants(models.TransientModel):
 
 
         headers = [
-            'SN','Applicant\'s code','Email Address', 'Name', 'Active Email(s)', 'Gender', 'Active Phone', 'Highest Educational Qualification',
+            'SN','Applicant\'s code','Email Address', 'Name', 'Active Email(s)', 'Active Phone', 'Highest Educational Qualification',
             'What is Your Course of Study?', 'Are You a graduate?','NYSC Certificate Number', 'Age','Position Applying for',
-            'Have you worked with EEDC?', 'If you worked, how did you leave?', 'What is your currrent state of residence?'
+            'Have you worked with EEDC?', 'If you worked, how did you leave?', 'Why did you leave?', 'What is your currrent state of residence?'
             'If you are selected, which District (s) would you prefer based on proximity? (Select nearest districts to your residence)',
-            'Are you APTIS?','What are your Relevant Skills/Competencies?'
+            'Gender','Are you APTIS?','What are your Relevant Skills/Competencies?'
         ]
         
         bold_format = workbook.add_format({'bold': True})
