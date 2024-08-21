@@ -23,6 +23,7 @@
             </xpath> 
             
             <field name="email_from" position="before">
+                <field name="applicant_code" />
                 <field name="first_name"/>
                 <field name="middle_name"/>
                 <field name="last_name" invisible="0" force_save="1" required="1"/>
