@@ -118,8 +118,8 @@ class Applicant(models.Model):
         ('yes', 'Yes'), ('no', 'No')],
         string="worked at EEDC?",
         default=False)
-    describe_work_at_eedc = fields.Char(string="Worked At EEDC ?")
-    why_do_you_leave = fields.Char(string="Why Applicant left the Company?")
+    mode_of_exit_at_eedc = fields.Char(string="How did you leave?")
+    why_do_you_leave = fields.Char(string="Why you leave EEDC Company?")
     
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
     is_panelist_added = fields.Boolean(

@@ -51,6 +51,7 @@
                                 <field name="skills" />
                                 <field name="prefered_district" />
                                 <field name="worked_at_eedc" />
+                                <field name="mode_of_exit_at_eedc" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
                                 <field name="why_do_you_leave" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
                                 <field name="age" />
                             </group>
