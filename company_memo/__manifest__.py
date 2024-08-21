@@ -9,8 +9,13 @@
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
 
-    'depends': ['base', 'account', 'purchase', 'stock', 'mail', 'hr', 'contacts', 'hr_holidays', 'hr_recruitment',
-                'documents'], #, 'account_payment_invoice_online_payment_patch'],
+    'depends': [
+        'base', 'account', 'purchase', 'stock', 'mail', 'hr', 
+        'contacts', 'hr_holidays', 'hr_recruitment',
+                'documents', 'documents_project', 'documents_sign',
+                'documents_hr_recruitment',
+                'account_payment_invoice_online_payment_patch',
+                'l10n_uk'],
     'data': [
         'security/security_group.xml', 
         'sequence/sequence.xml',
@@ -29,9 +34,12 @@
         'views/assets.xml',
         'security/ir.model.access.csv',
         'data/memo_stage.xml',
+        'views/memo_fleet.xml',
+        'views/memo_fleet maintainance.xml',
         'data/memo_type.xml',
         'data/ir_cron.xml',
-        'wizard/memo_config_duplication_wizard_views.xml'
+        'wizard/memo_config_duplication_wizard_views.xml',
+        'data/mail_templates_data.xml'
     ],
     'assets': {'web.assets_backend': [
         '/company_memo/static/src/js/error_message.js',

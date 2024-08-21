@@ -10,4 +10,24 @@
         <field name="numbercall">-1</field>
         <field name="doall" eval="False"/>
     </record>
+
+    <record id="ir_cron_notify_document" model="ir.cron">
+        <field name="name">Document: Upcoming document submission notification</field>
+        <field name="model_id" ref="model_documents_folder"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_notify_document()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+    </record>
+
+    <record id="ir_cron_get_expiry" model="ir.cron">
+        <field name="name">Document: Submission Expiration Notification</field>
+        <field name="model_id" ref="model_documents_folder"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_get_expiry()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+    </record>
 </odoo>

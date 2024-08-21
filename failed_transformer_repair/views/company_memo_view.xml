@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="memo_model_form_view_transformer">
+            <field name="name">memo view inherited for transformer app</field>
+            <field name="model">memo.model</field>
+            <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='description']" position="after">
+                    <page name='transformer' string='Transformer' attrs="{'invisible': ['|', ('has_transformer', '=', False),('memo_type_key', '!=', 'transformer')]}">
+                        
+                        <form string=""> 
+                            <sheet>
+                                <group>
+                                    <group>
+                                        <field name="has_transformer" string="is transformer" invisible="1"/>
+                                        <field name="transformer_id" />
+                                        <field name="repair_replacement" /> 
+                                    </group>
+                                    <group>
+                                        <field name="repair_type" attrs="{'invisible': [('repair_replacement', '!=', 'repair')]}"/>
+                                    </group>
+                                </group>
+                            
+                                <field name ="transformer_issue_ids" context="{'default_transformer_id': transformer_id}">
+                                    <form string=""> 
+                                        <sheet>
+                                            <group>
+                                                <group>
+                                                    <field name="transformer_id" />
+                                                    <field name="transformer_name" />
+                                                    <field name="transformer_serialno" />
+                                                    <field name="transformer_rating" />
+                                                    <field name="substation" />
+                                                    <field name="oil_weight" />
+                                                    <field name="transformer_impedance" />
+                                                    <field name="transformer_date_of_manufacture" />
+                                                </group>
+                                                <group>
+                                                    <field name="state" />
+                                                    <field name="movement_direction" />
+                                                    <field name="present_location" />
+
+                                                    <field name="issue_description" />
+                                                    <field name="repair_type" />
+                                                </group>
+                                            </group>
+                                            
+                                        </sheet>
+                                    </form>
+                                    <tree string="">
+                                        <field name="date_registered" />
+                                        <field name="transformer_name" />
+                                        <field name="transformer_rating" />
+                                        <field name="state" />
+                                        <field name="movement_direction" />
+                                        <field name="repair_type" />
+                                    </tree>
+                                </field>
+
+                                <field name ="transformer_movement_ids" context="{'default_transformer_id': transformer_id}">
+                                    <form string=""> 
+                                        <sheet>
+                                            <group>
+                                                <group>
+                                                    <field name="transformer_id" />
+                                                    <field name="issue_id" /> 
+                                                    <field name="memo_id" invisible="1"/> 
+                                                </group>
+                                                <group>
+                                                    <field name="location" string="Source location"/>
+                                                    <field name="destination_location" string="Destination location"/>
+                                                    <field name="create_date" />
+                                                </group>
+                                            </group>
+                                        </sheet>
+                                    </form>
+                                    <tree string="">
+                                        <field name="transformer_id" required="1"/>
+                                        <field name="issue_id" required="1"/> 
+                                        <field name="memo_id" invisible="1"/>
+                                        <field name="location" string="Source location" required="1"/>
+                                        <field name="destination_location" string="Destination location" required="1"/>
+                                        <field name="create_date" required="1"/>
+                                    </tree>
+                                </field>
+                            </sheet>
+                        </form>
+                    </page>
+                </xpath>  
+            </field>
+        </record>
+ 
+        
+    </data>
+</odoo>

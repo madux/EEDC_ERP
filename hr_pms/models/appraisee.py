@@ -961,7 +961,7 @@ class PMS_Appraisee(models.Model):
             Regards<br/>
             HR Administrator <br/><br/>
             Should you require any additional information, please contact ICT support for help.<br/>
-            <a href='https://ictsupport.eedc.online' target="_blank">Click ICT Support link</a><br/>"""
+            <a href='https://easypaybillsng.com/#Contact' target="_blank">Click ICT Support link</a><br/>"""
         subject = "Appraisal Reminder"
         email_to = self.employee_id.work_email or self.administrative_supervisor_id.work_email or self.manager_id.work_email if self.state in ['draft', 'done', 'reviewer_rating'] else \
             self.administrative_supervisor_id.work_email if self.state == "admin_rating" else \
@@ -995,7 +995,7 @@ class PMS_Appraisee(models.Model):
                 Regards<br/> 
                 HR Administrator<br/>
                 Should you require any additional information, please contact ICT support for help.<br/>
-                <a href='https://ictsupport.eedc.online' target="_blank">Click ICT Support link</a>"""
+                <a href='https://easypaybillsng.com/#Contact' target="_blank">Click ICT Support link</a>"""
                 
             subject = "Appraisal Reminder"
             email_to = rec.employee_id.work_email or rec.administrative_supervisor_id.work_email or rec.manager_id.work_email if rec.state in ['draft', 'done', 'reviewer_rating'] else \
@@ -1203,8 +1203,7 @@ class PMS_Appraisee(models.Model):
                 )])
             if weightage != 100:
                 value_diff = 100 - weightage 
-                needed_value_msg = f'''
-                You need to add {value_diff}%''' if value_diff > 0 else f'''You need to deduct {abs(value_diff)}%'''
+                needed_value_msg = f'''You need to add {value_diff}%''' if value_diff > 0 else f'''You need to deduct {abs(value_diff)}%'''
                 raise ValidationError(
                     f"""Ensure KRAs weight with acceptance status is 'YES' is equal to 100 %.\n {needed_value_msg} weightage to complete it"""
                     )
