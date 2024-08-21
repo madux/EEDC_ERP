@@ -63,6 +63,7 @@ class Applicant(models.Model):
     first_name = fields.Char("First Name")
     middle_name = fields.Char("Middle Name")
     last_name = fields.Char("Last Name")
+    applicant_code = fields.Char("Applicant's Code")
     has_completed_nysc = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string="Completed NYSC",default="No")
     know_anyone_at_eedc = fields.Selection([
         ('Yes', 'Yes'), ('No', 'No')],
@@ -105,6 +106,18 @@ class Applicant(models.Model):
         default="No")
     professional_certificate_link = fields.Char()
     gender = fields.Char()
+    highest_level_of_qualification = fields.Char(string="highest level of qualification")
+    course_of_study = fields.Char(string="Course of study")
+    is_graduate = fields.Boolean(string="Are you a graduate?") #  Do not choose "yes" if you do not have your NYSC certificate available
+    nysc_certificate_number = fields.Char(string="NYSC Certificate Number")
+    age = fields.Char(string="Age")
+    worked_at_eedc = fields.Selection([
+        ('yes', 'Yes'), ('no', 'No')],
+        string="worked at EEDC?",
+        default=False)
+    describe_work_at_eedc = fields.Char(string="Worked At EEDC ?")
+    why_do_you_leave = fields.Char(string="Why Applicant left the Company?")
+    
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
     is_panelist_added = fields.Boolean(
         "Panelist added?", 

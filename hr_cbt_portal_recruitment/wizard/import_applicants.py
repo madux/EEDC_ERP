@@ -9,6 +9,8 @@ from dateutil.relativedelta import relativedelta as rd
 import xlrd
 from xlrd import open_workbook
 import base64
+import io
+import xlsxwriter
 
 _logger = logging.getLogger(__name__)
 
@@ -19,13 +21,52 @@ class ImportApplicants(models.TransientModel):
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
+    action_type = fields.Selection(
+        [('upload', 'Applicant Upload'), ('download', 'Template Download')],
+        string='Action Type',
+        default='upload'
+    )
+    
+    def download_template_action(self):
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet()
+
+
+        headers = [
+            'SN','Applicant\'s code','Email Address', 'Name', 'Active Email(s)', 'Gender', 'Active Phone', 'Highest Educational Qualification',
+            'What is Your Course of Study?', 'Are You a graduate?','NYSC Certificate Number', 'Age','Position Applying for',
+            'Have you worked with EEDC?', 'If you worked, how did you leave?', 'What is your currrent state of residence?'
+            'If you are selected, which District (s) would you prefer based on proximity? (Select nearest districts to your residence)',
+            'What are your Relevant Skills/Competencies?'
+        ]
+        
+        bold_format = workbook.add_format({'bold': True})
+        
+        for col_num, header in enumerate(headers):
+            worksheet.write(0, col_num, header, bold_format)
+
+        workbook.close()
+        
+        output.seek(0)
+        self.data_file = base64.b64encode(output.read())
+        self.filename = 'Applicant_Template.xlsx'
+        output.close()
+        
+        return {
+        'type': 'ir.actions.act_url',
+        'url': 'web/content/?model=hr.import_applicant.wizard&id=%s&field=data_file&filename_field=filename&filename=Applicant_Template.xlsx&download=true' % self.id,
+        'target': 'self',
+        'data_file': self.data_file,
+        'filename': 'Applicant_Template.xlsx',
+    }
 
     def create_job_position(self, name):
         job_position_obj = self.env['hr.job']
         if name:
-            position_rec = job_position_obj.search([('name', '=', name.strip().title())], limit = 1)
+            position_rec = job_position_obj.search([('name', '=', name.strip())], limit = 1)
             job_position = job_position_obj.create({
-                        "name": name.strip().title()
+                        "name": name.strip()
                     }) if not position_rec else position_rec
             return job_position
         else:
@@ -61,15 +102,26 @@ class ImportApplicants(models.TransientModel):
         unimport_count, count = 0, 0
         success_records = []
         unsuccess_records = []
-        def find_existing_applicant(email,job):
+        
+        def find_existing_applicant(email, applicant_code, job):
             applicant_id = False 
-            if email: 
-                applicant = self.env['hr.applicant'].search([
-                    ('email_from', '=', email),
-                    ('job_id', '=', job.id),
-                    ('create_date', '>=', job.datetime_publish),
-                    ('create_date', '<=', job.close_date),
-                    ('active', '=', True)])
+            if email:
+                if applicant_code:
+                    applicant = self.env['hr.applicant'].search([('applicant_code', '=', applicant_code)])
+                    if not applicant:
+                        applicant = self.env['hr.applicant'].search([
+                        ('email_from', '=', email),
+                        ('job_id', '=', job.id),
+                        ('create_date', '>=', job.datetime_publish),
+                        ('create_date', '<=', job.close_date),
+                        ('active', '=', True)])
+                else:
+                    applicant = self.env['hr.applicant'].search([
+                        ('email_from', '=', email),
+                        ('job_id', '=', job.id),
+                        ('create_date', '>=', job.datetime_publish),
+                        ('create_date', '<=', job.close_date),
+                        ('active', '=', True)])
                 if applicant:
                     applicant_id = applicant.id
                 else:
@@ -78,32 +130,49 @@ class ImportApplicants(models.TransientModel):
             else:
                 return False
         for row in file_data:
-            posittion = self.create_job_position(row[8])
-            if find_existing_applicant(row[1].strip(), posittion):
-                unsuccess_records.append(f'Applicant with {str(row[1])} Already exists')
+            posittion = self.create_job_position(row[12])
+            email = row[2] or row[4]
+            applicant_code = row[1].strip()
+            if find_existing_applicant(email.strip(),applicant_code, posittion):
+                unsuccess_records.append(f'Applicant with {str(email)} Already exists')
             else:
-                full_name = row[1].split()
-                _logger.info(f'Full name = {full_name}')
-                applicant_data = {
-                    'name': row[1],
-                    'first_name': full_name[1] if len(full_name) > 1 else None,
-                    'middle_name': full_name[2] if len(full_name) == 3 else None,
-                    'last_name': full_name[0],
-                    'email_from': row[0],
-                    'partner_phone': row[2],
-                    'gender': row[3].lower(),
-                    'has_completed_nysc': 'Yes' if row[4].lower() == 'yes' else 'No',
-                    'nysc_certificate_link': row[5],
-                    'has_professional_certification': 'Yes' if row[6].lower() == 'yes' else 'No',
-                    'professional_certificate_link': row[7],
-                    'job_id': posittion.id,
-                    'stage_id': self.env.ref('hr_recruitment.stage_job1').id
-                    # 'partner_id': self.create_contact(row[0].strip(), row[1], row[2])
-                }
-                applicant = self.env['hr.applicant'].sudo().create(applicant_data)
-                _logger.info(f'Applicant data: {applicant}')
-                count += 1
-                success_records.append(applicant_data.get('name'))
+                # raise ValidationError(row[13])
+                
+                full_name = row[3].split() if row[3] else False
+                if full_name:
+                    _logger.info(f'Full name = {full_name}')
+                    partner_name = f"{full_name[1]} {full_name[2]} {full_name[0]}",
+                    applicant_data = {
+                        'applicant_code': applicant_code,
+                        'email_from': email,
+                        'name': f"Applciation for {row[3]}",
+                        'first_name': full_name[2] if len(full_name) > 2 else full_name[1] if len(full_name) > 1 else full_name[0] or None,
+                        # maduka chris sopulu, maduka sopulu, maduka, none
+                        'middle_name': full_name[1] if len(full_name) == 3 else "",
+                        'last_name': full_name[0] if len(full_name) > 0 else "",
+                        'gender': row[5].lower(),
+                        'partner_phone': row[6],
+                        'partner_name': partner_name,
+                        'highest_level_of_qualification': row[7],
+                        'course_of_study': row[8],
+                        'is_graduate': row[9],
+                        'nysc_certificate_number': row[10],
+                        'age': row[11],
+                        'job_id': posittion.id,
+                        'worked_at_eedc': row[13].lower(),
+                        'describe_work_at_eedc': row[14],
+                        'why_do_you_leave': row[15],
+                        
+                        'presentlocation': row[16],
+                        'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
+                        'partner_id': self.create_contact(email.strip(), partner_name, row[6]),
+                    }
+                    applicant = self.env['hr.applicant'].sudo().create(applicant_data)
+                    _logger.info(f'Applicant data: {applicant}')
+                    count += 1
+                    success_records.append(applicant_data.get('name'))
+                else:
+                    unsuccess_records.append(f'Applicant with {str(row[0])} Does not have a name')
         errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
         errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
         if len(errors) > 1:
@@ -125,6 +194,41 @@ class ImportApplicants(models.TransientModel):
                 'target':'new',
                 'context':context,
                 }
+    
+    # def download_template_action(self):
+    # # Create a simple Excel template
+    #     import io
+    #     import xlsxwriter
+
+    #     output = io.BytesIO()
+    #     workbook = xlsxwriter.Workbook(output)
+    #     worksheet = workbook.add_worksheet()
+
+    #     # Add headers for the template
+    #     headers = [
+    #         'Email', 'Full Name', 'Phone', 'Gender',
+    #         'NYSC Completed (Yes/No)', 'NYSC Certificate Link',
+    #         'Professional Certification (Yes/No)', 'Certification Link',
+    #         'Job Position'
+    #     ]
+    #     for col_num, header in enumerate(headers):
+    #         worksheet.write(0, col_num, header)
+
+    #     workbook.close()
+
+    #     # Encode the output to Base64 and return as an attachment
+    #     output.seek(0)
+    #     template_data = base64.b64encode(output.read())
+    #     output.close()
+
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': 'web/content/?model=hr.import_applicant.wizard&id=%s&field=data_file&filename_field=filename&filename=Applicant_Template.xlsx&download=true' % self.id,
+    #         'target': 'self',
+    #         'data_file': template_data,
+    #         'filename': 'Applicant_Template.xlsx',
+    #     }
+
 
 
 class MigrationDialogModel(models.TransientModel):
