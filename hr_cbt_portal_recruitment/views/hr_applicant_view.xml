@@ -38,6 +38,7 @@
                     <page name="Other informations" string="Other informations">
                         <group>
                             <group>
+                                <field name="is_graduate" />
                                 <field name="has_completed_nysc"/>
                                 <field name="know_anyone_at_eedc"/>
                                 <field name="linkedin_account"/>
@@ -45,6 +46,13 @@
                                 <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
+                                <field name="nysc_certificate_number" attrs="{'invisible':[('is_graduate', '!=', True)]}"/>
+                                <field name="is_aptis" />
+                                <field name="skills" />
+                                <field name="prefered_district" />
+                                <field name="worked_at_eedc" />
+                                <field name="why_do_you_leave" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
+                                <field name="age" />
                             </group>
                             <group>
                                 <field name="reside_job_location"/>

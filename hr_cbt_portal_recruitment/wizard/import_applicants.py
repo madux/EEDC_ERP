@@ -38,7 +38,7 @@ class ImportApplicants(models.TransientModel):
             'What is Your Course of Study?', 'Are You a graduate?','NYSC Certificate Number', 'Age','Position Applying for',
             'Have you worked with EEDC?', 'If you worked, how did you leave?', 'What is your currrent state of residence?'
             'If you are selected, which District (s) would you prefer based on proximity? (Select nearest districts to your residence)',
-            'What are your Relevant Skills/Competencies?'
+            'Are you APTIS?','What are your Relevant Skills/Competencies?'
         ]
         
         bold_format = workbook.add_format({'bold': True})
@@ -164,6 +164,9 @@ class ImportApplicants(models.TransientModel):
                         'why_do_you_leave': row[15],
                         
                         'presentlocation': row[16],
+                        'prefered_district': row[17].strip(),
+                        'is_aptis': row[18].strip(),
+                        'skills': row[19].strip(),
                         'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
                         'partner_id': self.create_contact(email.strip(), partner_name, row[6]),
                     }

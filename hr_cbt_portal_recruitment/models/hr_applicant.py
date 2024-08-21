@@ -109,6 +109,9 @@ class Applicant(models.Model):
     highest_level_of_qualification = fields.Char(string="highest level of qualification")
     course_of_study = fields.Char(string="Course of study")
     is_graduate = fields.Boolean(string="Are you a graduate?") #  Do not choose "yes" if you do not have your NYSC certificate available
+    is_aptis = fields.Boolean(string="Are you APTIS?")
+    skills = fields.Char(string="Relevant Skills")
+    prefered_district = fields.Boolean("Which district do you prefer>")
     nysc_certificate_number = fields.Char(string="NYSC Certificate Number")
     age = fields.Char(string="Age")
     worked_at_eedc = fields.Selection([
