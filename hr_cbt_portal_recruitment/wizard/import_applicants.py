@@ -34,14 +34,17 @@ class ImportApplicants(models.TransientModel):
 
 
         headers = [
-            'Email', 'Full Name', 'Phone', 'Gender',
-            'NYSC Completed (Yes/No)', 'NYSC Certificate Link',
-            'Professional Certification (Yes/No)', 'Certification Link',
-            'Job Position'
+            'SN','Applicant\'s code','Email Address', 'Name', 'Active Email(s)', 'Gender', 'Active Phone', 'Highest Educational Qualification',
+            'What is Your Course of Study?', 'Are You a graduate?','NYSC Certificate Number', 'Age','Position Applying for',
+            'Have you worked with EEDC?', 'If you worked, how did you leave?', 'What is your currrent state of residence?'
+            'If you are selected, which District (s) would you prefer based on proximity? (Select nearest districts to your residence)',
+            'What are your Relevant Skills/Competencies?'
         ]
         
+        bold_format = workbook.add_format({'bold': True})
+        
         for col_num, header in enumerate(headers):
-            worksheet.write(0, col_num, header)
+            worksheet.write(0, col_num, header, bold_format)
 
         workbook.close()
         
