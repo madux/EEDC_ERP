@@ -1,0 +1,13 @@
+{
+    'name': 'Payroll Contract Addons',
+    'version': '16.0.1',
+    'author': "Maduka Sopulu",
+    'category': 'ERP',
+    'summary': 'ODOO Base Extension to customize base modules',
+    'depends': ['hr_contract_salary'],
+    'description': "ODOO Base Extension to customize base modules ",
+    "data": [
+        # 'security/ir.model.access.csv',
+        'views/hr_payroll.xml'
+    ],
+}

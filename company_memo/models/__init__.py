@@ -1,4 +1,5 @@
 from . import res_users
+from . import memo_fleet
 from . import company_memo
 from . import forward_memo
 from . import account_payment
@@ -10,4 +11,7 @@ from . import purchase_order
 from . import stock_picking
 from . import hr_employee
 from . import document
+from . import product_template
 from . import doc_mgt_config
+from . import ir_attachment
+from . import hr_holidays

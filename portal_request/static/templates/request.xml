@@ -150,12 +150,14 @@
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
                                                     <span class="s_website_form_label_content">Request Option </span>
                                                     <span class="s_website_form_mark"> *</span>
+                                                    <input type="number" class="d-none form-control s_website_form_input" name="selectedRequestOptionId" id="selectedRequestOptionId"/>
                                                 </label>
                                                 <div class="col-sm">
                                                     <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="memo_key_ids" t-as="key">
-                                                            <option t-att-value="key.memo_key">
+                                                            <!-- <option t-att-value="key.memo_key"> -->
+                                                            <option t-att-value="key.memo_key" t-att-id="key.id">
                                                                 <span t-esc="key.name"/>
                                                             </option>
                                                         </t>
@@ -503,36 +505,47 @@
                                                 style="height: 250px !important; width: 1400px !important; overflow: scroll !important;display: block;">
                                                     <thead>
                                                         <tr class="heading">
+                                                            <!-- 1 -->
                                                             <th width="5%">
                                                                 <label></label>
                                                             </th>
-                                                            <th width="25%">
+                                                            <!-- 2 -->
+                                                            <th width="20%">
                                                                 Product Name
                                                             </th>
+                                                            <!-- 3 -->
                                                             <th id="description_line" width="10%">
                                                                 Description
                                                             </th>
+                                                            <!-- 4 -->
                                                             <th id="req_qty_label" width="5%">
                                                                 <label>Request Qty</label>
                                                             </th>
+                                                            <!-- 5 -->
                                                             <th id="unit_price_label" width="10%">
                                                                 <label>Unit Price</label>
                                                             </th>
+                                                            <!-- 6 -->
                                                             <th id="used_qty_for_soe" width="5%">
                                                                 <label>Used Qty</label>
                                                             </th>
+                                                            <!-- 7 -->
                                                             <th id="used_amount_for_soe" width="10%">
                                                                 <label>Used Amount</label>
                                                             </th>
+                                                            <!-- 8 -->
                                                             <th id="note_label" width="10%">
                                                                 <label>Note</label>
                                                             </th>
+                                                            <!-- 9 -->
                                                             <th class="d-none" id="distance_from" width="20%">
                                                                 <label>Distance From</label>
                                                             </th>
+                                                            <!-- 10 -->
                                                             <th class="d-none" id="distance_to" width="20%">
                                                                 <label>Distance to</label>
                                                             </th>
+                                                            <!-- 11 -->
                                                             <th id="delete_label" width="5%">
                                                                 <label>X</label>
                                                             </th>
@@ -541,17 +554,6 @@
                                                     </thead>
                                                     <!-- <tbody id="attachment2_table_body" name="attachment2_table_body"> -->
                                                     <tbody id="tbody_product" name="tbody_product">
-                                                        <!-- <tr>
-                                                            <td width="30%">
-                                                                <span id="product_name_text"></span>
-                                                            </td>
-                                                            <td width="30%">
-                                                                <input type="text" name="custom_product_qty" id="custom_product_qty" class="form-control"/>
-                                                            </td>
-                                                            <td width="30%">
-                                                                <span id="delete_product">X</span>
-                                                            </td>
-                                                        </tr> -->
                                                     </tbody>
                                                 </table>
                                             </div> 
@@ -574,11 +576,19 @@
                                                             </th>
                                                             <th width="5%">
                                                             </th>
-                                                            <th width="10%">
+                                                            <th width="5%">
                                                             </th>
                                                             <th width="5%">
                                                             </th>
+                                                            <th width="10%">
+                                                            </th>
+                                                            
                                                             <th width="20%">
+                                                            </th>
+                                                            
+                                                            <th width="5%">
+                                                            </th>
+                                                            <th width="5%">
                                                             </th>
                                                             <th width="5%">
                                                             </th>
@@ -596,6 +606,9 @@
                                                             </td>
                                                             <td width="10%">
                                                             </td>
+                                                            
+                                                            <td width="10%">
+                                                            </td>
                                                             <td width="10%">
                                                                 Total - 
                                                             </td>
@@ -604,7 +617,11 @@
                                                             </td>
                                                             <td width="5%">
                                                             </td>
-                                                            <td width="10%">
+                                                            <td width="5%">
+                                                            </td>
+                                                            <td width="5%">
+                                                            </td>
+                                                            <td width="5%">
                                                             </td>
                                                         </tr>
                                                     </tbody>

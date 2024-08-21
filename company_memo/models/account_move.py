@@ -10,9 +10,25 @@ from odoo import http
 class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
 
+    invoice_date = fields.Date(
+        string='Invoice/Bill Date',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+        index=True,
+        copy=False,
+        default=fields.Date.today(),
+    )
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
     origin = fields.Char(string="Source")
+    stage_invoice_name = fields.Char(
+        string="Stage invoice name", 
+        store=True,
+        help="Used to track if invoice is from the stage configuration",
+        )
+    stage_invoice_required = fields.Boolean(string="Stage invoice required?", store=True,
+        help="Used to track if invoice is required based on the stage configuration")
+    is_locked = fields.Boolean(string="Is locked", default=False)
     memo_state = fields.Char(string="Memo state", compute="compute_memo_state")
     payment_journal_id = fields.Many2one(
         'account.journal', 
@@ -52,8 +68,11 @@ class AccountMoveMemo(models.Model):
             if self.memo_id.memo_type.memo_key == "soe":
                 '''This is added to help send the soe reference to the related cash advance'''
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
+                self.sudo().memo_id.set_cash_advance_as_retired()
             self.memo_id.is_request_completed = True
+            self.sudo().memo_id.update_final_state_and_approver()
             # self.memo_id.state = "Done"
+            self.sudo().memo_id.update_status_badge()
         return super(AccountMoveMemo, self).action_post()
     
 class AccountMove(models.Model):
@@ -68,11 +87,11 @@ class AccountMoveReversal(models.TransientModel):
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
     # district_id = fields.Many2one('hr.district', string="District")
 
-    def reverse_moves(self):
-        res = super(AccountMoveReversal, self).post()
-        for rec in self.move_ids:
-            if rec.memo_id:
-                rec.memo_id.state = "Approve" # waiting for payment and confirmation
-        return res
+    # def reverse_moves(self):
+    #     res = super(AccountMoveReversal, self).post()
+    #     for rec in self.move_ids:
+    #         if rec.memo_id:
+    #             rec.memo_id.state = "Approve" # waiting for payment and confirmation
+    #     return res
 
      
