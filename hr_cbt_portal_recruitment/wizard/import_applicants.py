@@ -197,41 +197,6 @@ class ImportApplicants(models.TransientModel):
                 'target':'new',
                 'context':context,
                 }
-    
-    # def download_template_action(self):
-    # # Create a simple Excel template
-    #     import io
-    #     import xlsxwriter
-
-    #     output = io.BytesIO()
-    #     workbook = xlsxwriter.Workbook(output)
-    #     worksheet = workbook.add_worksheet()
-
-    #     # Add headers for the template
-    #     headers = [
-    #         'Email', 'Full Name', 'Phone', 'Gender',
-    #         'NYSC Completed (Yes/No)', 'NYSC Certificate Link',
-    #         'Professional Certification (Yes/No)', 'Certification Link',
-    #         'Job Position'
-    #     ]
-    #     for col_num, header in enumerate(headers):
-    #         worksheet.write(0, col_num, header)
-
-    #     workbook.close()
-
-    #     # Encode the output to Base64 and return as an attachment
-    #     output.seek(0)
-    #     template_data = base64.b64encode(output.read())
-    #     output.close()
-
-    #     return {
-    #         'type': 'ir.actions.act_url',
-    #         'url': 'web/content/?model=hr.import_applicant.wizard&id=%s&field=data_file&filename_field=filename&filename=Applicant_Template.xlsx&download=true' % self.id,
-    #         'target': 'self',
-    #         'data_file': template_data,
-    #         'filename': 'Applicant_Template.xlsx',
-    #     }
-
 
 
 class MigrationDialogModel(models.TransientModel):
