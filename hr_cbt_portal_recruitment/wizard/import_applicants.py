@@ -133,7 +133,10 @@ class ImportApplicants(models.TransientModel):
             posittion = self.create_job_position(row[11])
             email = row[2] or row[4]
             applicant_code = row[1].strip()
-            if find_existing_applicant(email.strip(),applicant_code, posittion):
+            
+            if not posittion:
+                unsuccess_records.append(f'Applicant with {str(email)} has no Job position specified')
+            elif posittion and find_existing_applicant(email.strip(),applicant_code, posittion):
                 unsuccess_records.append(f'Applicant with {str(email)} Already exists')
             else:
                 
@@ -155,16 +158,16 @@ class ImportApplicants(models.TransientModel):
                         'course_of_study': row[7],
                         'is_graduate': row[8],
                         'nysc_certificate_number': row[9],
-                        'age': row[10],
+                        'age': row[10] if row[10] else False,
                         'job_id': posittion.id,
-                        'worked_at_eedc': row[12].lower() if row[12] in ['yes', 'no'] else False,
-                        'mode_of_exit_at_eedc': row[13],
-                        'why_do_you_leave': row[14],
+                        'worked_at_eedc': row[12].lower() if row[12] and row[12] in ['yes', 'no'] else False,
+                        'mode_of_exit_at_eedc': row[13] if len(row) > 13 and row[13] else False,
+                        'why_do_you_leave': row[14] if len(row) > 14 and row[14] else False,
                         
-                        'presentlocation': row[15],
-                        'prefered_district': row[16].strip(),
-                        'gender': row[17].lower(),
-                        'is_aptis': row[18].strip(),
+                        'presentlocation': row[15] if len(row) > 15 and row[15] else False,
+                        'prefered_district': row[16].strip() if len(row) > 16 and row[16] else False,
+                        'gender': row[17].lower() if len(row) > 17 and row[17] else False,
+                        'is_aptis': row[18].strip() if len(row) > 18 and row[18] else False,
                         # 'skills': row[19].strip(),
                         'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
                         'partner_id': self.create_contact(email.strip(), partner_name, row[5]),

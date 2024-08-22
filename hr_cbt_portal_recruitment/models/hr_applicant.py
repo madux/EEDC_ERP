@@ -111,7 +111,7 @@ class Applicant(models.Model):
     is_graduate = fields.Boolean(string="Are you a graduate?") #  Do not choose "yes" if you do not have your NYSC certificate available
     is_aptis = fields.Boolean(string="Are you APTIS?")
     skills = fields.Char(string="Relevant Skills")
-    prefered_district = fields.Boolean("Which district do you prefer>")
+    prefered_district = fields.Char("Which district do you prefer")
     nysc_certificate_number = fields.Char(string="NYSC Certificate Number")
     age = fields.Char(string="Age")
     worked_at_eedc = fields.Selection([
@@ -152,6 +152,13 @@ class Applicant(models.Model):
     
     audited = fields.Boolean(default=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
     stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
+    
+    @api.onchange('nysc_certificate_number')
+    def _onchange_nysc_certificate_number(self):
+        if self.nysc_certificate_number and self.nysc_certificate_number != '':
+            self.has_completed_nysc = 'Yes'
+        else:
+            self.has_completed_nysc = 'No'
 
     def create_employee_from_applicant(self):
         res = super().create_employee_from_applicant()
