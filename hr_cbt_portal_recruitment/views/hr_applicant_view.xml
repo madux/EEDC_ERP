@@ -23,6 +23,7 @@
             </xpath> 
             
             <field name="email_from" position="before">
+                <field name="applicant_code" />
                 <field name="first_name"/>
                 <field name="middle_name"/>
                 <field name="last_name" invisible="0" force_save="1" required="1"/>
@@ -37,6 +38,7 @@
                     <page name="Other informations" string="Other informations">
                         <group>
                             <group>
+                                <field name="is_graduate" />
                                 <field name="has_completed_nysc"/>
                                 <field name="know_anyone_at_eedc"/>
                                 <field name="linkedin_account"/>
@@ -44,6 +46,14 @@
                                 <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
+                                <field name="nysc_certificate_number" attrs="{'invisible':[('is_graduate', '!=', True)]}"/>
+                                <field name="is_aptis" />
+                                <field name="skills" />
+                                <field name="prefered_district" />
+                                <field name="worked_at_eedc" />
+                                <field name="mode_of_exit_at_eedc" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
+                                <field name="why_do_you_leave" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
+                                <field name="age" />
                             </group>
                             <group>
                                 <field name="reside_job_location"/>
