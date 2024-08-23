@@ -2203,10 +2203,11 @@ class Memo_Model(models.Model):
     if true, raises warning error else: it opens the wizard"""
 
     def return_validator(self):
+        stage_approvers = [r.user_id.id for r in self.stage_id.approver_ids]
         user_exist = self.mapped('res_users').filtered(
             lambda user: user.id == self.env.uid
             )
-        if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        if user_exist and self.env.user.id not in stage_approvers:
             raise ValidationError(
                 """Sorry you are not allowed to reject /  return you own initiated memo"""
                 )
