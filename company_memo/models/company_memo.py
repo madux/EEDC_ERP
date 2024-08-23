@@ -914,7 +914,7 @@ class Memo_Model(models.Model):
             raise ValidationError("All invoice line must have a price amount greater than 0") 
         if self.stage_id.approver_ids and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
-                """You cannot forward this memo again unless returned / cancelled!!!"""
+                """You are not allowed to Forward / Approve this record !!!"""
                 )
         if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
