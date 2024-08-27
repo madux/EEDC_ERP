@@ -140,14 +140,15 @@ class ImportApplicants(models.TransientModel):
                 unsuccess_records.append(f'Applicant with {str(email)} Already exists')
             else:
                 
+                fullName = row[3]
                 full_name = row[3].split() if row[3] else False
                 if full_name:
                     _logger.info(f'Full name = {full_name}')
-                    partner_name = row[3].strip(),
+                    partner_name = fullName.strip(),
                     applicant_data = {
                         'applicant_code': applicant_code,
                         'email_from': email,
-                        'name': f"Applciation for {row[3]}",
+                        'name': f"Application for {row[3]}",
                         'first_name': full_name[2] if len(full_name) > 2 else full_name[1] if len(full_name) > 1 else full_name[0] or None,
                         # maduka chris sopulu, maduka sopulu, maduka, none
                         'middle_name': full_name[1] if len(full_name) == 3 else "",
