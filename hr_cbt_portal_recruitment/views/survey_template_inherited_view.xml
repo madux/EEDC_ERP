@@ -41,9 +41,9 @@
                 <div t-field="survey.description_done" class="oe_no_empty" />
                 <div class="row">
                     <div class="col">
-                        <t t-if="survey.scoring_type == 'scoring_with_answers' and survey.scoring_success_min">
+                        <t t-if="survey.scoring_type != 'no_scoring'">
                             <div>You scored <t t-esc="answer.scoring_percentage" />%</div>
-                            <t t-if="answer.scoring_success">
+                            <t t-if="answer.scoring_success and survey.scoring_success_min">
                                 <div>Congratulations, you have passed the test!</div>
 
                                 <div t-if="survey.certification" class="mt16 mb16">
@@ -55,9 +55,9 @@
                                     </a>
                                 </div>
                             </t>
-                            <t t-else="">
+                            <!-- <t t-else="">
                                 <div>Unfortunately, you have failed the test.</div>
-                            </t>
+                            </t> -->
                         </t>
                         <!-- <t t-call="survey.survey_button_retake"/> -->
                         <div t-if="survey.scoring_type != 'scoring_without_answers'" class="o_survey_review">
