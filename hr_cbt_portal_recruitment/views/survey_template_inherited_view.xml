@@ -41,7 +41,7 @@
                 <div t-field="survey.description_done" class="oe_no_empty" />
                 <div class="row">
                     <div class="col">
-                        <t t-if="survey.scoring_type != 'no_scoring' and survey.scoring_success_min">
+                        <t t-if="survey.scoring_type == 'scoring_with_answers' and survey.scoring_success_min">
                             <div>You scored <t t-esc="answer.scoring_percentage" />%</div>
                             <t t-if="answer.scoring_success">
                                 <div>Congratulations, you have passed the test!</div>
@@ -70,7 +70,7 @@
                     </div>
                 </div>
             </div>
-            <div class="o_survey_result p-4 col-12 row" t-if="graph_data">
+            <!-- <div class="o_survey_result p-4 col-12 row" t-if="graph_data">
                 <div t-if="survey.page_ids" class="survey_graph col-lg-6 d-none d-md-block"
                         data-graph-type="by_section"
                         t-att-data-graph-data="graph_data">
@@ -81,7 +81,7 @@
                         t-att-data-graph-data="graph_data">
                     <canvas id="doughnut_chart"></canvas>
                 </div>
-            </div>
+            </div> -->
         </div>
     </template>
 
