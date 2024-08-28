@@ -28,6 +28,116 @@
             <field name="lang">{{ object.partner_id.lang }}</field>
             <field name="auto_delete" eval="True"/>
         </record>
+
+        <record id="mail_template_user_input_invite2" model="mail.template">
+            <field name="name">Job Application Test (Graduate Operation Tech): Invite</field>
+            <field name="model_id" ref="model_survey_user_input" />
+            <field name="subject">Invitation to {{ object.survey_id.display_name }}</field>
+            <field name="email_to">{{ (object.partner_id.email_formatted or object.email) }}</field>
+            <field name="description">Sent to job applicant when you share an assessment cbt</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        You have been invited to participate in a Computer Based Test (CBT) as part of your job 
+                        application prerequisite for the role of Graduate Operations Technician in EEDC through 
+                        APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 2024 by 1:00pm prompt. 
+                        To participate in this exercise, endeavour to have a stable/working internet as well as an internet 
+                        enabled gadget.
+
+                        Note that you will not be able to move to the next phase of this recruitment if you do not participate in this CBT and if you do not meet the required cut-off mark. 
+                        Please be guided accordingly.
+                        
+                        We wish you good luck!
+
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="'%s%s' % (object.get_base_url(),object.get_start_url())"
+                                style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                Start Test
+                            </a>
+                        </div>
+                        
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <record id="mail_template_user_input_invite3" model="mail.template">
+            <field name="name">Job Application Test (Non-Graduate Operation Tech): Invite</field>
+            <field name="model_id" ref="model_survey_user_input" />
+            <field name="subject">Invitation to {{ object.survey_id.display_name }}</field>
+            <field name="email_to">{{ (object.partner_id.email_formatted or object.email) }}</field>
+            <field name="description">Sent to job applicant when you share an assessment cbt</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        You have been invited to participate in a Computer Based Test (CBT) as part of your 
+                        job application prerequisite for the role of Non-Graduate Operations Technician in EEDC 
+                        through APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 
+                        2024 by 3:00pm prompt. To participate in this exercise, endeavour to have a stable/working 
+                        internet as well as an internet enabled gadget.
+
+                        Note that you will not be able to move to the next phase of this recruitment if you do not 
+                        participate in this CBT and if you do not meet the required cut-off mark.
+
+                        Please be guided accordingly.
+                        
+                        We wish you good luck!
+
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="'%s%s' % (object.get_base_url(),object.get_start_url())"
+                                style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                Start Test
+                            </a>
+                        </div>
+                        
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <record id="mail_template_user_input_invite4" model="mail.template">
+            <field name="name">Job Application Test (Graduate Marketer): Invite</field>
+            <field name="model_id" ref="model_survey_user_input" />
+            <field name="subject">Invitation to {{ object.survey_id.display_name }}</field>
+            <field name="email_to">{{ (object.partner_id.email_formatted or object.email) }}</field>
+            <field name="description">Sent to job applicant when you share an assessment cbt</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        You have been invited to participate in a Computer Based Test (CBT) as part of 
+                        your job application prerequisite for the role of Graduate Marketer in EEDC through 
+                        APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 2024 by 11:00am prompt. 
+                        To participate in this exercise, endeavour to have a stable/working internet as well as an internet 
+                        enabled gadget.
+                        
+                        Note that you will not be able to move to the next phase of this recruitment if you do not 
+                        participate in this CBT and if you do not meet the required cut-off mark.
+                        
+                        Please be guided accordingly.
+                        
+                        We wish you good luck!
+
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="'%s%s' % (object.get_base_url(),object.get_start_url())"
+                                style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                Start Test
+                            </a>
+                        </div>
+                        
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
         <record id="mail_template_move_applicants" model="mail.template">
             <field name="name">Job Application Stage Update</field>
             <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_move_wizard"/>
