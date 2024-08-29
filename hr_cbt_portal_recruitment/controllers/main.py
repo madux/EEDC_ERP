@@ -28,16 +28,14 @@ class SurveyInherit(Survey):
             survey_sudo, answer_sudo = self._fetch_from_access_token(survey_token, answer_token)
             
             now = datetime.now()
-            _logger.info(f'Current time: {now}')
-            _logger.info(f'Survey start time: {survey_sudo.start_time}')
-            _logger.info(f'Survey deadline: {survey_sudo.deadline}')
+            # _logger.info(f'Current time: {now}')
+            # _logger.info(f'Survey start time: {survey_sudo.start_time}')
+            # _logger.info(f'Survey deadline: {survey_sudo.deadline}')
 
             if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
-                _logger.info(f'Survey testing date')
                 return 'survey_closed'
             
             if survey_sudo.deadline < datetime.now():
-                _logger.info(f'Survey testing deadline')
                 return 'survey_closed'
 
         return result
