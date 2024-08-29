@@ -33,10 +33,12 @@ class SurveyInherit(Survey):
             _logger.info(f'Survey deadline: {survey_sudo.deadline}')
 
             if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
+                _logger.info(f'Survey testing date')
                 return 'survey_closed'
             
-            if answer_sudo and answer_sudo.deadline and answer_sudo.deadline < datetime.now():
-                return 'answer_deadline'
+            if survey_sudo.deadline < datetime.now():
+                _logger.info(f'Survey testing deadline')
+                return 'survey_closed'
 
         return result
 
