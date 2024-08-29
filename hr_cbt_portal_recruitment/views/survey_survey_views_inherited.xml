@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="view_survey_survey_form_inherit" model="ir.ui.view">
+        <field name="name">survey.survey.form.inherit</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='scoring']" position="after">
+                <group string="Scheduling" name="scheduling">
+                    <field name="start_time" widget="datetime" string="Start Time"/>
+                    <field name="deadline" widget="datetime" string="Deadline"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>

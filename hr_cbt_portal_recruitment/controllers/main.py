@@ -7,8 +7,38 @@ import base64
 import json
 from datetime import date, datetime
 # from odoo.addons.website_sale.controllers.main import WebsiteSale
+from odoo.addons.survey.controllers.main import Survey
 
 _logger = logging.getLogger(__name__)
+
+class SurveyInherit(Survey):
+    def _check_validity(self, survey_token, answer_token, ensure_token=True, check_partner=True):
+        """ Custom check validity method with additional start time and deadline logic """
+        
+        _logger.info('Entering _check_validity in SurveyInherit')
+        
+        result = super(SurveyInherit, self)._check_validity(
+            survey_token,
+            answer_token,
+            ensure_token=ensure_token,
+            check_partner=check_partner
+        )
+
+        if result is True:
+            survey_sudo, answer_sudo = self._fetch_from_access_token(survey_token, answer_token)
+            
+            now = datetime.now()
+            _logger.info(f'Current time: {now}')
+            _logger.info(f'Survey start time: {survey_sudo.start_time}')
+            _logger.info(f'Survey deadline: {survey_sudo.deadline}')
+
+            if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
+                return 'survey_closed'
+            
+            if answer_sudo and answer_sudo.deadline and answer_sudo.deadline < datetime.now():
+                return 'answer_deadline'
+
+        return result
 
 class WebsiteHrRecruitment(http.Controller):
 	

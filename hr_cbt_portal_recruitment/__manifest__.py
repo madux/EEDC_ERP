@@ -41,6 +41,7 @@
         'views/hr_documentation_view.xml',
         'views/survey_template_inherited_view.xml',
         # 'views/company_memo_inherit.xml',
+        'views/survey_survey_views_inherited.xml',
         'wizard/survey_invite_inherit.xml',
         
         'wizard/hr_move_applicant.xml',
