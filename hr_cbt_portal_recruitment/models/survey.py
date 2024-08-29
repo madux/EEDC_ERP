@@ -7,6 +7,9 @@ from odoo.osv import expression
 
 class SurveySurvey(models.Model):
     _inherit = "survey.survey"
+    
+    start_time = fields.Datetime('Start Time')
+    deadline = fields.Datetime('Deadline')
  
     def action_send_survey(self, email_invite_template=False, panelist_ids=False):
         """ Open a window to compose an email, pre-filled with the survey message """

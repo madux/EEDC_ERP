@@ -68,6 +68,7 @@ class SurveyInvite(models.TransientModel):
             ('partner_id', 'in', partners.ids),
             ('email', 'in', emails)
         ])
+        survey = self.survey_id
         partners_done = self.env['res.partner']
         emails_done = []
         if existing_answers:
@@ -94,6 +95,8 @@ class SurveyInvite(models.TransientModel):
                     if applicant.email_from not in emails_done:
                         applicant_email = applicant.email_from
                         survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+                        # survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, deadline=survey.deadline, **self._get_answers_values())
+
                         answers |= survey_input
                         applicant.survey_user_input_id = survey_input.id
                 # for applicant_email in [email.email_from for email in self.applicant_ids if email not in emails_done]:
