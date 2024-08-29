@@ -32,7 +32,7 @@ class SurveyInherit(Survey):
             if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
                 return 'survey_closed'
             
-            if survey_sudo.deadline < datetime.now():
+            if survey_sudo.deadline and survey_sudo.deadline < datetime.now():
                 return 'survey_closed'
 
         return result
