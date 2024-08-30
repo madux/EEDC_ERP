@@ -28,14 +28,27 @@ class SurveyInherit(Survey):
             survey_sudo, answer_sudo = self._fetch_from_access_token(survey_token, answer_token)
             
             now = datetime.now()
+            
+            # Check if the survey has already been completed
+            if answer_sudo and answer_sudo.state == 'done':
+                return True
 
             if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
-                return 'survey_closed'
+                return 'survey_not_opened'
             
             if survey_sudo.deadline and survey_sudo.deadline < datetime.now():
                 return 'survey_closed'
 
         return result
+    
+    def _redirect_with_error(self, access_data, error_key):
+        survey_sudo = access_data['survey_sudo']
+        answer_sudo = access_data['answer_sudo']
+        
+        if error_key == 'survey_not_opened' and access_data['can_answer']:
+            return request.render("hr_cbt_portal_recruitment.survey_not_opened", {'survey': survey_sudo})
+        
+        return super(SurveyInherit, self)._redirect_with_error(access_data, error_key)
 
 class WebsiteHrRecruitment(http.Controller):
 	
