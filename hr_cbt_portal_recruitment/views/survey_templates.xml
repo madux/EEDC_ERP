@@ -17,7 +17,7 @@
                                         <t t-esc="(survey.start_time + relativedelta(hours=1)).strftime('%Y-%m-%d %I:%M %p')"/>
                                     </span>.
                                 </p>
-                                <p>Please check back at the start time dot.</p>
+                                <p>Please check back or refresh at the exact time.</p>
                                 <br/>
                                 <p style="color: red; font-weight: bold; font-size: 18px;">Note that you must start immediately at the dot before it expires.</p>
                             </div>
