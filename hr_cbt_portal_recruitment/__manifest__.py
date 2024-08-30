@@ -46,6 +46,7 @@
         
         'wizard/hr_move_applicant.xml',
         'wizard/cbt_schedule_wizard_view.xml',
+        'views/survey_templates.xml',
 
         'wizard/applicant_checklist_wizard.xml',
         'wizard/hr_confirmation_wizard.xml',
