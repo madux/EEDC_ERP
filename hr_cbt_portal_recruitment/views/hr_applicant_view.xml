@@ -165,9 +165,11 @@
             <xpath expr="//filter[@name='my_applications']" position="after">
                 <filter string="Test Sent" name="cbt_completed" domain="[('survey_user_input_id', '!=', False)]"/>
                 <filter string="Test not Sent" name="cbt_not_completed" domain="[('survey_user_input_id', '=', False)]"/>
-                <filter string="Test Done" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'done')]"/>
+                <filter string="Test Completed" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'done')]"/>
+                <filter string="Test In Progress" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'in_progress')]"/>
                 <filter string="Test not started" name="cbt_not_completed" domain="[('survey_user_input_id.state', '=', 'new')]"/>
                 <filter name="passed" string="Passed Applicants" domain="[('test_passed', '=', True)]"/>
+                <filter string="Score: 0" name="score_0" domain="[('scoring_percentage','=', 0)]"/>
                 <filter string="Score: 0 - 19" name="score_0_19" domain="[('scoring_percentage','&lt;', 20)]"/>
                 <filter string="Score: 20 - 29" name="score_0_20" domain="[('scoring_percentage','&gt;', 19),('scoring_percentage','&lt;', 30)]"/>
                 <filter string="Score: 30 - 39" name="score_0_30" domain="[('scoring_percentage','&gt;', 29),('scoring_percentage','&lt;', 40)]"/>
