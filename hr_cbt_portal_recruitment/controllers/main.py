@@ -5,7 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 import logging
 import base64
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 # from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.addons.survey.controllers.main import Survey
 
@@ -33,7 +33,7 @@ class SurveyInherit(Survey):
             if answer_sudo and answer_sudo.state == 'done':
                 return True
 
-            if survey_sudo.start_time and datetime.now() < survey_sudo.start_time:
+            if survey_sudo.start_time and datetime.now() < (survey_sudo.start_time - timedelta(minutes=1)):
                 return 'survey_not_opened'
             
             if survey_sudo.deadline and survey_sudo.deadline < datetime.now():
