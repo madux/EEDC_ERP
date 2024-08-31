@@ -180,6 +180,9 @@
                 <filter string="Score: 80 - 89" name="score_0_80" domain="[('scoring_percentage','&gt;', 79),('scoring_percentage','&lt;', 90)]"/>
                 <filter string="Score: 90 - 99" name="score_0_90" domain="[('scoring_percentage','&gt;', 89),('scoring_percentage','&lt;', 100)]"/>
                 <filter string="Score: 100" name="score_0_100" domain="[('scoring_percentage','=', 100)]"/>
+
+                <filter string="Test Created Today" name="test_created_today" domain="[('survey_user_input_id.create_date', '>=', context_today())]"/>
+                <filter string="Test Not Created Today" name="test_not_created_today" domain="[('survey_user_input_id.create_date', '&lt;', context_today())]"/>
             </xpath>
         </field>
     </record>
