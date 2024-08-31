@@ -32,12 +32,15 @@ class SurveyInherit(Survey):
             # Check if the survey has already been completed
             if answer_sudo and answer_sudo.state == 'done':
                 return True
+            
+            now = datetime.now()
 
-            if survey_sudo.start_time and datetime.now() < (survey_sudo.start_time - timedelta(minutes=1)):
+            if survey_sudo.start_time and now < (survey_sudo.start_time - timedelta(minutes=1)):
                 return 'survey_not_opened'
             
-            if survey_sudo.deadline and survey_sudo.deadline < datetime.now():
-                return 'survey_closed'
+            if survey_sudo.deadline and now > survey_sudo.deadline:
+                if answer_sudo and answer_sudo.state != 'in_progress':
+                    return 'survey_closed'
 
         return result
     
