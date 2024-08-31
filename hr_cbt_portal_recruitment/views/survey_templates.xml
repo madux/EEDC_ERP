@@ -17,6 +17,11 @@
                                         <t t-esc="(survey.start_time + relativedelta(hours=1)).strftime('%Y-%m-%d %I:%M %p')"/>
                                     </span>.
                                 </p>
+                                <p>The current time is 
+                                    <span style="color: #e74c3c; font-weight: bold; font-size: 22px;">
+                                        <t t-esc="current_time"/>
+                                    </span>.
+                                </p>
                                 <p>Please check back or refresh at the exact time.</p>
                                 <br/>
                                 <p style="color: red; font-weight: bold; font-size: 18px;">Note that you must start immediately at the dot before it expires.</p>
@@ -25,7 +30,7 @@
                     </div>
                 </div>
             </t>
-        </template>                                          
+        </template>                                                       
         
 
 </odoo>
