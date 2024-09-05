@@ -113,6 +113,7 @@ class Applicant(models.Model):
     skills = fields.Char(string="Relevant Skills")
     prefered_district = fields.Char("Which district do you prefer")
     nysc_certificate_number = fields.Char(string="NYSC Certificate Number")
+    date_of_birth = fields.Date("Date of Birth")
     age = fields.Char(string="Age")
     worked_at_eedc = fields.Selection([
         ('yes', 'Yes'), ('no', 'No')],
