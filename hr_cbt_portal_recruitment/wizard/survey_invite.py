@@ -26,6 +26,7 @@ class SurveyInvite(models.TransientModel):
                                      string='Panelists')
     
     
+    
     def action_invite(self):
         """ Process the wizard content and proceed with sending the related
             email(s), rendering any template patterns on the fly if needed """
@@ -94,7 +95,7 @@ class SurveyInvite(models.TransientModel):
                 for applicant in applicant_ids:
                     if applicant.email_from not in emails_done:
                         applicant_email = applicant.email_from
-                        survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+                        survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values(), hr_applicant_id=applicant.id)
                         # survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, deadline=survey.deadline, **self._get_answers_values())
 
                         answers |= survey_input
