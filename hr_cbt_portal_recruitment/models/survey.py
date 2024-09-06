@@ -17,7 +17,7 @@ class SurveySurvey(models.Model):
             if record.deadline and record.start_time and record.deadline < record.start_time:
                 raise ValidationError("The deadline must be after the start time. Please correct the dates.")
  
-    def action_send_survey(self, email_invite_template=False, panelist_ids=False, applicant_ids=False):
+    def action_send_survey(self, email_invite_template=False, panelist_ids=False):
         """ Open a window to compose an email, pre-filled with the survey message """
         # Ensure that this survey has at least one question.
         if not self.question_ids:
@@ -46,7 +46,6 @@ class SurveySurvey(models.Model):
             default_template_id=template and template.id or False,
             default_email_layout_xmlid='mail.mail_notification_light',
             default_panelist_ids= [(6, 0, [emp.id for emp in panelist_ids])] if panelist_ids else False,
-            default_applicant_ids= [(6, 0, [applicant.id for applicant in applicant_ids])] if applicant_ids else False,
             # default_emails= email_list
         )
         return {
