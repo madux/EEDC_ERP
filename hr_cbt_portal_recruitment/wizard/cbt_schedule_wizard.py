@@ -47,9 +47,9 @@ class CBTscheduleWizard(models.TransientModel):
 
     def schedule_action(self):
         """takes all the applicants emails and shares test links to them"""
-        no_applicant_with_email = self.mapped('panelist_ids').filtered(lambda s: not s.work_email)
+        no_panelist_with_email = self.mapped('panelist_ids').filtered(lambda s: not s.work_email)
         if self.is_score_sheet:
-            if no_applicant_with_email:
+            if no_panelist_with_email:
                 raise ValidationError(
                     """Please check!  Ensure all the panelist email is added !!!
                     """)
@@ -57,9 +57,24 @@ class CBTscheduleWizard(models.TransientModel):
                 raise ValidationError(
                     """Please ensure panelist is selected on the tab"""
                     )
-        return self.survey_id.action_send_survey(
-            self.email_invite_template, self.panelist_ids
+                
+            return self.survey_id.action_send_survey(
+                self.email_invite_template, panelist_ids=self.panelist_ids
             )
+        else:
+            no_applicant_with_email = self.mapped('applicant_ids').filtered(lambda s: not s.email_from)
+            if no_applicant_with_email:
+                raise ValidationError(
+                    """Please check!  Ensure all the applicants email is added !!!
+                    """)
+            
+            if not self.applicant_ids:
+                raise ValidationError(
+                    """Please ensure applicants are selected on the tab"""
+                    )
+            return self.survey_id.action_send_survey(
+                    self.email_invite_template, applicant_ids=self.applicant_ids
+                )
     
     def get_base_url(self):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')

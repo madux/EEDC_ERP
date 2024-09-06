@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
         <record id="mail_template_user_input_invite" model="mail.template">
             <field name="name">Job Application Assessment: Invite</field>
             <field name="model_id" ref="model_survey_user_input" />
@@ -10,7 +10,7 @@
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-size: 13px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                        Dear <t t-out="object.partner_id.name or 'Applicant'">Applicant</t><br/><br/>
+                        Dear <t t-out="object.hr_applicant_id.partner_name or 'Applicant'"/><br/><br/>
                         You have been invited to take an assessment/test as part of your job application.
                         <div style="margin: 16px 0px 16px 0px;">
                             <a t-att-href="'%s%s' % (object.get_base_url(),object.get_start_url())"
@@ -38,7 +38,7 @@
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-size: 13px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        Dear <t t-out="object.hr_applicant_id.partner_name or 'Applicant'"/><br/><br/>
                         You have been invited to participate in a Computer Based Test (CBT) as part of your job 
                         application prerequisite for the role of Graduate Operations Technician in EEDC through 
                         APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 2024 by 1:00pm prompt. 
@@ -73,7 +73,7 @@
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-size: 13px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        Dear <t t-out="object.hr_applicant_id.partner_name or 'Applicant'"/><br/><br/>
                         You have been invited to participate in a Computer Based Test (CBT) as part of your 
                         job application prerequisite for the role of Non-Graduate Operations Technician in EEDC 
                         through APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 
@@ -110,7 +110,7 @@
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-size: 13px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                        Dear <t t-out="object.partner_id.name or 'Applicant,'">Applicant,</t><br/><br/>
+                        Dear <t t-out="object.hr_applicant_id.partner_name or 'Applicant'"/><br/><br/>
                         You have been invited to participate in a Computer Based Test (CBT) as part of 
                         your job application prerequisite for the role of Graduate Marketer in EEDC through 
                         APTIS Management Partners Ltd. This CBT will be held on Friday, 30th August, 2024 by 11:00am prompt. 
