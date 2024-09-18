@@ -13,5 +13,17 @@
             </xpath>
         </field>
     </record>
+
+    <record id="view_survey_user_input_search_inherit" model="ir.ui.view">
+        <field name="name">survey.survey_user_input_view_search.inherit</field>
+        <field name="model">survey.user_input</field>
+        <field name="inherit_id" ref="survey.survey_user_input_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='not_test']" position="after">
+                <filter string="Archived" name="archived" domain="[('active','=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
     
 </odoo>
