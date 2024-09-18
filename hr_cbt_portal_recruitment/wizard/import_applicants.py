@@ -144,7 +144,7 @@ class ImportApplicants(models.TransientModel):
                 full_name = row[3].split() if row[3] else False
                 if full_name:
                     _logger.info(f'Full name = {full_name}')
-                    partner_name = fullName.strip(),
+                    partner_name = fullName.strip()
                     applicant_data = {
                         'applicant_code': applicant_code,
                         'email_from': email,
@@ -170,7 +170,7 @@ class ImportApplicants(models.TransientModel):
                         'gender': row[17].lower() if len(row) > 17 and row[17] else False,
                         'is_aptis': row[18].strip() if len(row) > 18 and row[18] else False,
                         # 'skills': row[19].strip(),
-                        'stage_id': self.env.ref('hr_recruitment.stage_job1').id,
+                        'stage_id': self.env.ref('hr_recruitment_stage_request_initiation').id,
                         'partner_id': self.create_contact(email.strip(), partner_name, row[5]),
                     }
                     applicant = self.env['hr.applicant'].sudo().create(applicant_data)
