@@ -65,4 +65,6 @@ class SurveyUserInput(models.Model):
         string="HR applicant",
         required=False,
     )
+    
+    active = fields.Boolean(default=True)
   
