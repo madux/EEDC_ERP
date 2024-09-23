@@ -22,10 +22,27 @@ class ImportApplicants(models.TransientModel):
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
     action_type = fields.Selection(
-        [('upload', 'Applicant Upload'), ('download', 'Template Download')],
+        [('upload', 'Applicant Upload'), ('update', 'Update Applicants'), ('download', 'Template Download')],
         string='Action Type',
         default='upload'
     )
+    
+    update_field_selection = fields.Many2many('ir.model.fields', string="Fields to Update",
+                                              domain="[('model', '=', 'hr.applicant')]")
+    column_mappings = fields.Char(string="Column Mappings (Comma Separated)", help="Specify the column numbers in the Excel file that correspond to the selected fields.")
+    stage_id = fields.Many2one('hr.recruitment.stage', string="Select Stage", help="Select the stage to set for the applicants during update.")
+    search_key = fields.Selection(
+        [('email_from', 'Email'), ('applicant_code', 'Applicant Code')],
+        string="Search Key",
+        required=True,
+        default="applicant_code",
+        help="Select whether to search applicants by email or applicant code."
+    )
+    search_key_column = fields.Integer(
+        string="Search Key Excel Column",
+        help="Specify the column number in the Excel file that contains the search key (either email or applicant code)."
+    )
+
     
     def download_template_action(self):
         output = io.BytesIO()
@@ -129,61 +146,142 @@ class ImportApplicants(models.TransientModel):
                 return applicant_id
             else:
                 return False
-        for row in file_data:
-            posittion = self.create_job_position(row[11])
-            email = row[2] or row[4]
-            applicant_code = row[1].strip()
-            
-            if not posittion:
-                unsuccess_records.append(f'Applicant with {str(email)} has no Job position specified')
-            elif posittion and find_existing_applicant(email.strip(),applicant_code, posittion):
-                unsuccess_records.append(f'Applicant with {str(email)} Already exists')
-            else:
+        
+        if self.action_type == 'upload':
+            for row in file_data:
+                posittion = self.create_job_position(row[11])
+                email = row[2] or row[4]
+                applicant_code = row[1].strip()
                 
-                fullName = row[3]
-                full_name = row[3].split() if row[3] else False
-                if full_name:
-                    _logger.info(f'Full name = {full_name}')
-                    partner_name = fullName.strip()
-                    applicant_data = {
-                        'applicant_code': applicant_code,
-                        'email_from': email,
-                        'name': f"Application for {row[3]}",
-                        'first_name': full_name[2] if len(full_name) > 2 else full_name[1] if len(full_name) > 1 else full_name[0] or None,
-                        # maduka chris sopulu, maduka sopulu, maduka, none
-                        'middle_name': full_name[1] if len(full_name) == 3 else "",
-                        'last_name': full_name[0] if len(full_name) > 0 else "",
-                        'partner_phone': row[5],
-                        'partner_name': partner_name,
-                        'highest_level_of_qualification': row[6],
-                        'course_of_study': row[7],
-                        'is_graduate': row[8],
-                        'nysc_certificate_number': row[9],
-                        'age': row[10] if row[10] else False,
-                        'job_id': posittion.id,
-                        'worked_at_eedc': row[12].lower() if row[12] and row[12] in ['yes', 'no'] else False,
-                        'mode_of_exit_at_eedc': row[13] if len(row) > 13 and row[13] else False,
-                        'why_do_you_leave': row[14] if len(row) > 14 and row[14] else False,
-                        
-                        'presentlocation': row[15] if len(row) > 15 and row[15] else False,
-                        'prefered_district': row[16].strip() if len(row) > 16 and row[16] else False,
-                        'gender': row[17].lower() if len(row) > 17 and row[17] else False,
-                        'is_aptis': row[18].strip() if len(row) > 18 and row[18] else False,
-                        # 'skills': row[19].strip(),
-                        'stage_id': self.env.ref('hr_cbt_portal_recruitment.hr_recruitment_stage_request_initiation').id,
-                        'partner_id': self.create_contact(email.strip(), partner_name, row[5]),
-                    }
-                    applicant = self.env['hr.applicant'].sudo().create(applicant_data)
-                    _logger.info(f'Applicant data: {applicant} at {row[0]}')
-                    count += 1
-                    success_records.append(applicant_data.get('name'))
+                if not posittion:
+                    unsuccess_records.append(f'Applicant with {str(email)} has no Job position specified')
+                elif posittion and find_existing_applicant(email.strip(),applicant_code, posittion):
+                    unsuccess_records.append(f'Applicant with {str(email)} Already exists')
                 else:
-                    unsuccess_records.append(f'Applicant with {str(row[0])} Does not have a name')
-        errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
-        errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
-        if len(errors) > 1:
-            message = '\n'.join(errors)
-            return self.confirm_notification(message)
+                    
+                    fullName = row[3]
+                    full_name = row[3].split() if row[3] else False
+                    if full_name:
+                        _logger.info(f'Full name = {full_name}')
+                        partner_name = fullName.strip()
+                        applicant_data = {
+                            'applicant_code': applicant_code,
+                            'email_from': email,
+                            'name': f"Application for {row[3]}",
+                            'first_name': full_name[2] if len(full_name) > 2 else full_name[1] if len(full_name) > 1 else full_name[0] or None,
+                            # maduka chris sopulu, maduka sopulu, maduka, none
+                            'middle_name': full_name[1] if len(full_name) == 3 else "",
+                            'last_name': full_name[0] if len(full_name) > 0 else "",
+                            'partner_phone': row[5],
+                            'partner_name': partner_name,
+                            'highest_level_of_qualification': row[6],
+                            'course_of_study': row[7],
+                            'is_graduate': row[8],
+                            'nysc_certificate_number': row[9],
+                            'age': row[10] if row[10] else False,
+                            'job_id': posittion.id,
+                            'worked_at_eedc': row[12].lower() if row[12] and row[12] in ['yes', 'no'] else False,
+                            'mode_of_exit_at_eedc': row[13] if len(row) > 13 and row[13] else False,
+                            'why_do_you_leave': row[14] if len(row) > 14 and row[14] else False,
+                            
+                            'presentlocation': row[15] if len(row) > 15 and row[15] else False,
+                            'prefered_district': row[16].strip() if len(row) > 16 and row[16] else False,
+                            'gender': row[17].lower() if len(row) > 17 and row[17] else False,
+                            'is_aptis': row[18].strip() if len(row) > 18 and row[18] else False,
+                            # 'skills': row[19].strip(),
+                            'stage_id': self.env.ref('hr_cbt_portal_recruitment.hr_recruitment_stage_request_initiation').id,
+                            'partner_id': self.create_contact(email.strip(), partner_name, row[5]),
+                        }
+                        applicant = self.env['hr.applicant'].sudo().create(applicant_data)
+                        _logger.info(f'Applicant data: {applicant} at {row[0]}')
+                        count += 1
+                        success_records.append(applicant_data.get('name'))
+                    else:
+                        unsuccess_records.append(f'Applicant with {str(row[0])} Does not have a name')
+            errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
+            errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
+            if len(errors) > 1:
+                message = '\n'.join(errors)
+                return self.confirm_notification(message)
+            
+        elif self.action_type == 'update':
+            
+            if not self.update_field_selection and not self.stage_id:
+                raise ValidationError('Please select fields to update or specify a stage to set.')
+
+            if not self.search_key_column:
+                raise ValidationError('Please specify the search key column.')
+            
+            column_mappings = [int(c) - 1 for c in self.column_mappings.split(",")] if self.column_mappings else []
+            
+            count_updated = 0
+            unsuccess_updated = 0
+            success_updates = []
+            unsuccess_updates = []
+            error_job_position = []
+            
+            for row in file_data:
+                search_value = row[self.search_key_column - 1]
+                
+                applicant = self.env['hr.applicant'].search([(self.search_key, '=', search_value)], limit=1)
+                
+                if applicant:
+                    update_data = {}
+                    partner_update_data = {}
+                    
+                    if self.stage_id:
+                        update_data['stage_id'] = self.stage_id.id
+
+                    if self.update_field_selection and column_mappings:
+                        for index, field in enumerate(self.update_field_selection):
+                            if index < len(column_mappings) and column_mappings[index] < len(row):
+                                
+                                field_value = row[column_mappings[index]]
+                                
+                                if field.name == 'job_id':
+                                    # job_position = self.create_job_position(field_value)
+                                    job_position_obj = self.env['hr.job']
+                                    job_position = job_position_obj.search([('name', '=', field_value.strip())], limit=1)
+                                    if job_position:
+                                        update_data['job_id'] = job_position.id
+                                    else:
+                                        error_job_position.append(f"{search_value} - {applicant.partner_name}")
+                                                                            
+                                elif field.name == 'partner_name':
+                                    partner_update_data['name'] = field_value
+                                    
+                                elif field.name == 'email_from':
+                                    partner_update_data['email'] = field_value
+                                    
+                                elif field.name == 'partner_phone':
+                                    partner_update_data['phone'] = field_value
+                                
+                                else:
+                                    update_data[field.name] = field_value
+
+                    try:
+                        applicant.write(update_data)
+                        if partner_update_data:
+                            applicant.partner_id.write(partner_update_data)
+                            
+                        count_updated += 1
+                        success_updates.append(f"{search_value} - {applicant.partner_name}")
+                    except Exception as e:
+                        unsuccess_updated += 1
+                        unsuccess_updates.append(f"{search_value} - Error: {str(e)}")
+                else:
+                    unsuccess_updated += 1
+                    unsuccess_updates.append(f"{search_value} - Applicant not found")
+                    
+            report = []
+            if error_job_position:
+                report.append(f'Job positions not found for these Applicants below\n{", ".join(error_job_position)}\n\n')
+            report.append(f'Successful Update(s): {count_updated} Record(s): See Records Below\n{", ".join(success_updates)}\n\n')
+            report.append(f'Unsuccessful Update(s): {unsuccess_updated} Record(s): See Records Below\n{", ".join(unsuccess_updates)}')
+
+            if len(report) > 1:
+                message = '\n'.join(report)
+                return self.confirm_notification(message)
 
     def confirm_notification(self,popup_message):
         view = self.env.ref('hr_cbt_portal_recruitment.hr_import_applicants_confirm_dialog_view')

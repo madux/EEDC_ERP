@@ -5,20 +5,34 @@
         <field name="name">hr.import_applicant.wizard</field>
         <field name="model">hr.import_applicant.wizard</field>
         <field name="arch" type="xml">
-            <form string="Import ">
+            <form string="Import Applicants">
                 <header>
-                    Import 
+                    Import Applicants
                 </header>
                 <group>
                     <field name="action_type"/>
     
-                    <group attrs="{'invisible': [('action_type', '=', 'download')]}">
+                    <!-- Upload Fields -->
+                    <group attrs="{'invisible': [('action_type', 'in', ['download'])]}">
                         <field name="filename" invisible="1"/> 
                         <field name="index"/> 
                         <field name="data_file" filename="filename" widget="binary"/>
                     </group>
+
+                    <!-- Update Fields -->
+                    <group attrs="{'invisible': [('action_type', '!=', 'update')]}">
+                        <!-- New Fields for Search Key -->
+                        <field name="search_key" required="1"/>
+                        <field name="search_key_column" required="1"/>
+                        
+                        <field name="update_field_selection" widget="many2many_tags" placeholder="Select Fields to Update"/>
+                        <field name="column_mappings" placeholder="Enter comma-separated column numbers"/>
+                        <!-- Stage Field for Applicant Update -->
+                        <field name="stage_id" placeholder="Select Stage (Optional)"/>
+                    </group>
     
-                    <group attrs="{'invisible': [('action_type', '=', 'upload')]}">
+                    <!-- Download Template -->
+                    <group attrs="{'invisible': [('action_type', '!=', 'download')]}">
                         <button name="download_template_action" string="Download Template" type="object" class="btn-primary oe_highlight" icon="fa-download"/>
                     </group>
                 </group>
@@ -29,7 +43,9 @@
                 </footer>
             </form>
         </field>
-    </record> 
+    </record>   
+    
+     
 
     <record id="action_wizard_hr_import_applicants" model="ir.actions.act_window">
         <field name="name">Import</field>

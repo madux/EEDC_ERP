@@ -164,6 +164,7 @@
         <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_search_bis"/>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_applications']" position="after">
+                <field name="applicant_code" string="Application Code" />
                 <filter string="Test Sent" name="cbt_completed" domain="[('survey_user_input_id', '!=', False)]"/>
                 <filter string="Test not Sent" name="cbt_not_completed" domain="[('survey_user_input_id', '=', False)]"/>
                 <filter string="Test Completed" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'done')]"/>
