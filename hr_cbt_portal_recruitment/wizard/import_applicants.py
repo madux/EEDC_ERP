@@ -249,17 +249,17 @@ class ImportApplicants(models.TransientModel):
                                     else:
                                         error_job_position.append(f"{search_value} - {applicant.partner_name}")
                                                                             
-                                elif field == 'partner_name':
+                                elif field.name == 'partner_name':
                                     partner_update_data['name'] = field_value
                                     
-                                elif field == 'email_from':
+                                elif field.name == 'email_from':
                                     partner_update_data['email'] = field_value
                                     
-                                elif field == 'partner_phone':
+                                elif field.name == 'partner_phone':
                                     partner_update_data['phone'] = field_value
                                 
                                 else:
-                                    update_data[field] = field_value
+                                    update_data[field.name] = field_value
 
                     try:
                         applicant.write(update_data)
@@ -306,20 +306,19 @@ class UpdateFieldMapping(models.TransientModel):
     _name = 'update.field.mapping'
     _description = 'Update Field Mapping Wizard'
 
-    # wizard_id = fields.Many2one('hr.import.applicant.wizard', string='Wizard Reference', required=True)
     wizard_id = fields.Many2one('hr.import_applicant.wizard', string='Wizard Reference', ondelete='cascade')
-    field_name = fields.Selection([
-        ('partner_name', 'Partner Name'),
-        ('job_id', 'Job Position'),
-        ('email_from', 'Phone')
-        ('partner_phone', 'Phone')
-        ('partner_phone', 'Phone')
-    ], string='Field to Update', required=True)
+    # field_name = fields.Selection([
+    #     ('partner_name', 'Partner Name'),
+    #     ('job_id', 'Job Position'),
+    #     ('email_from', 'Phone')
+    #     ('partner_phone', 'Phone')
+    #     ('partner_phone', 'Phone')
+    # ], string='Field to Update', required=True)
     
-    # field_name = fields.Many2one('ir.model.fields', 
-    #                              string="Fields to Update",
-    #                              domain="[('model', '=', 'hr.applicant'), ('store', '=', True)]",
-    #                              required=True)
+    field_name = fields.Many2one('ir.model.fields', 
+                                 string="Fields to Update",
+                                 domain="[('model', '=', 'hr.applicant'), ('store', '=', True)]",
+                                 required=True)
 
     column_number = fields.Integer(string='Column Mapping', required=True)
     
