@@ -9,33 +9,43 @@
                 <header>
                     Import Applicants
                 </header>
-                <group>
-                    <field name="action_type"/>
-    
-                    <!-- Upload Fields -->
-                    <group attrs="{'invisible': [('action_type', 'in', ['download'])]}">
-                        <field name="filename" invisible="1"/> 
-                        <field name="index"/> 
-                        <field name="data_file" filename="filename" widget="binary"/>
+                <sheet>
+                    <group>
+                        <field name="action_type"/>
+        
+                        <!-- Upload Fields -->
+                        <group attrs="{'invisible': [('action_type', 'in', ['download'])]}">
+                            <field name="filename" invisible="1"/> 
+                            <field name="index"/> 
+                            <field name="data_file" filename="filename" widget="binary"/>
+                        </group>
+        
+                        <!-- Download Template -->
+                        <group attrs="{'invisible': [('action_type', '!=', 'download')]}">
+                            <button name="download_template_action" string="Download Template" type="object" class="btn-primary oe_highlight" icon="fa-download"/>
+                        </group>
                     </group>
+                    <notebook>
+                        <page string="Updatelines">
 
-                    <!-- Update Fields -->
-                    <group attrs="{'invisible': [('action_type', '!=', 'update')]}">
-                        <!-- New Fields for Search Key -->
-                        <field name="search_key" required="1"/>
-                        <field name="search_key_column" required="1"/>
-                        
-                        <field name="update_field_selection" widget="many2many_tags" placeholder="Select Fields to Update"/>
-                        <field name="column_mappings" placeholder="Enter comma-separated column numbers"/>
-                        <!-- Stage Field for Applicant Update -->
-                        <field name="stage_id" placeholder="Select Stage (Optional)"/>
-                    </group>
-    
-                    <!-- Download Template -->
-                    <group attrs="{'invisible': [('action_type', '!=', 'download')]}">
-                        <button name="download_template_action" string="Download Template" type="object" class="btn-primary oe_highlight" icon="fa-download"/>
-                    </group>
-                </group>
+                            <!-- Update Fields -->
+                            <group attrs="{'invisible': [('action_type', '!=', 'update')]}">
+                                <!-- New Fields for Search Key -->
+                                <field name="search_key" required="1"/>
+                                <field name="search_key_column" required="1"/>
+                                
+                                <field name="update_field_mappings" widget="one2many_list">
+                                    <tree editable="bottom">
+                                        <field name="field_name"/>
+                                        <field name="column_number"/>
+                                    </tree>
+                                </field>
+                                <field name="stage_id" placeholder="Select Stage (Optional)"/>
+                            </group>
+                            
+                        </page>
+                    </notebook>
+                </sheet>
                 <footer>
                     <button name="import_records_action" string="Import Applicants Record" type="object" class="oe_highlight" attrs="{'invisible': [('action_type', '=', 'download')]}"/>
                     or

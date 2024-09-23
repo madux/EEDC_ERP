@@ -27,9 +27,6 @@ class ImportApplicants(models.TransientModel):
         default='upload'
     )
     
-    update_field_selection = fields.Many2many('ir.model.fields', string="Fields to Update",
-                                              domain="[('model', '=', 'hr.applicant')]")
-    column_mappings = fields.Char(string="Column Mappings (Comma Separated)", help="Specify the column numbers in the Excel file that correspond to the selected fields.")
     stage_id = fields.Many2one('hr.recruitment.stage', string="Select Stage", help="Select the stage to set for the applicants during update.")
     search_key = fields.Selection(
         [('email_from', 'Email'), ('applicant_code', 'Applicant Code')],
@@ -42,6 +39,10 @@ class ImportApplicants(models.TransientModel):
         string="Search Key Excel Column",
         help="Specify the column number in the Excel file that contains the search key (either email or applicant code)."
     )
+    
+    update_field_mappings = fields.One2many('update.field.mapping', 'wizard_id', string='Field Mappings')
+    # update_field_mappings = fields.Many2many('update.field.mapping', string='Field Mappings')
+
 
     
     def download_template_action(self):
@@ -206,14 +207,12 @@ class ImportApplicants(models.TransientModel):
             
         elif self.action_type == 'update':
             
-            if not self.update_field_selection and not self.stage_id:
+            if not self.update_field_mappings and not self.stage_id:
                 raise ValidationError('Please select fields to update or specify a stage to set.')
 
             if not self.search_key_column:
                 raise ValidationError('Please specify the search key column.')
-            
-            column_mappings = [int(c) - 1 for c in self.column_mappings.split(",")] if self.column_mappings else []
-            
+                        
             count_updated = 0
             unsuccess_updated = 0
             success_updates = []
@@ -232,12 +231,15 @@ class ImportApplicants(models.TransientModel):
                     if self.stage_id:
                         update_data['stage_id'] = self.stage_id.id
 
-                    if self.update_field_selection and column_mappings:
-                        for index, field in enumerate(self.update_field_selection):
-                            if index < len(column_mappings) and column_mappings[index] < len(row):
+                    if self.update_field_mappings:
+                        for mapping in self.update_field_mappings:
                                 
-                                field_value = row[column_mappings[index]]
-                                
+                            field = mapping.field_name  # Field to update
+                            column_number = mapping.column_number - 1 
+                            
+                            if column_number < len(row):
+                                field_value = row[column_number]
+                            
                                 if field.name == 'job_id':
                                     # job_position = self.create_job_position(field_value)
                                     job_position_obj = self.env['hr.job']
@@ -247,17 +249,17 @@ class ImportApplicants(models.TransientModel):
                                     else:
                                         error_job_position.append(f"{search_value} - {applicant.partner_name}")
                                                                             
-                                elif field.name == 'partner_name':
+                                elif field == 'partner_name':
                                     partner_update_data['name'] = field_value
                                     
-                                elif field.name == 'email_from':
+                                elif field == 'email_from':
                                     partner_update_data['email'] = field_value
                                     
-                                elif field.name == 'partner_phone':
+                                elif field == 'partner_phone':
                                     partner_update_data['phone'] = field_value
                                 
                                 else:
-                                    update_data[field.name] = field_value
+                                    update_data[field] = field_value
 
                     try:
                         applicant.write(update_data)
@@ -299,6 +301,28 @@ class ImportApplicants(models.TransientModel):
                 'context':context,
                 }
 
+
+class UpdateFieldMapping(models.TransientModel):
+    _name = 'update.field.mapping'
+    _description = 'Update Field Mapping Wizard'
+
+    # wizard_id = fields.Many2one('hr.import.applicant.wizard', string='Wizard Reference', required=True)
+    wizard_id = fields.Many2one('hr.import_applicant.wizard', string='Wizard Reference', ondelete='cascade')
+    field_name = fields.Selection([
+        ('partner_name', 'Partner Name'),
+        ('job_id', 'Job Position'),
+        ('email_from', 'Phone')
+        ('partner_phone', 'Phone')
+        ('partner_phone', 'Phone')
+    ], string='Field to Update', required=True)
+    
+    # field_name = fields.Many2one('ir.model.fields', 
+    #                              string="Fields to Update",
+    #                              domain="[('model', '=', 'hr.applicant'), ('store', '=', True)]",
+    #                              required=True)
+
+    column_number = fields.Integer(string='Column Mapping', required=True)
+    
 
 class MigrationDialogModel(models.TransientModel):
     _name="hr.import_applicant.confirm.dialog"
