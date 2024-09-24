@@ -46,6 +46,7 @@
                                 <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
+                                <field name="course_of_study" />
                                 <field name="nysc_certificate_number" attrs="{'invisible':[('is_graduate', '!=', True)]}"/>
                                 <field name="is_aptis" />
                                 <field name="skills" />
@@ -164,6 +165,7 @@
         <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_search_bis"/>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_applications']" position="after">
+                <field name="applicant_code" string="Application Code" />
                 <filter string="Test Sent" name="cbt_completed" domain="[('survey_user_input_id', '!=', False)]"/>
                 <filter string="Test not Sent" name="cbt_not_completed" domain="[('survey_user_input_id', '=', False)]"/>
                 <filter string="Test Completed" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'done')]"/>
