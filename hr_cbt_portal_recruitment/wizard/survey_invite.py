@@ -67,7 +67,8 @@ class SurveyInvite(models.TransientModel):
             '&', ('survey_id', '=', self.survey_id.id),
             '|',
             ('partner_id', 'in', partners.ids),
-            ('email', 'in', emails)
+            ('email', 'in', emails),
+            ('active', '=', True)
         ])
         survey = self.survey_id
         partners_done = self.env['res.partner']
