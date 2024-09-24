@@ -37,7 +37,7 @@ class ImportApplicants(models.TransientModel):
     )
     search_key_column = fields.Integer(
         string="Search Key Excel Column",
-        help="Specify the column number in the Excel file that contains the search key (either email or applicant code)."
+        help="Enter Excel Column for Search key"
     )
     
     update_field_mappings = fields.One2many('update.field.mapping', 'wizard_id', string='Field Mappings')
@@ -240,7 +240,7 @@ class ImportApplicants(models.TransientModel):
                             if column_number < len(row):
                                 field_value = row[column_number]
                             
-                                if field.name == 'job_id':
+                                if field == 'job_id':
                                     # job_position = self.create_job_position(field_value)
                                     job_position_obj = self.env['hr.job']
                                     job_position = job_position_obj.search([('name', '=', field_value.strip())], limit=1)
@@ -249,17 +249,17 @@ class ImportApplicants(models.TransientModel):
                                     else:
                                         error_job_position.append(f"{search_value} - {applicant.partner_name}")
                                                                             
-                                elif field.name == 'partner_name':
+                                elif field == 'partner_name':
                                     partner_update_data['name'] = field_value
                                     
-                                elif field.name == 'email_from':
+                                elif field == 'email_from':
                                     partner_update_data['email'] = field_value
                                     
-                                elif field.name == 'partner_phone':
+                                elif field == 'partner_phone':
                                     partner_update_data['phone'] = field_value
                                 
                                 else:
-                                    update_data[field.name] = field_value
+                                    update_data[field] = field_value
 
                     try:
                         applicant.write(update_data)
@@ -307,18 +307,31 @@ class UpdateFieldMapping(models.TransientModel):
     _description = 'Update Field Mapping Wizard'
 
     wizard_id = fields.Many2one('hr.import_applicant.wizard', string='Wizard Reference', ondelete='cascade')
-    # field_name = fields.Selection([
-    #     ('partner_name', 'Partner Name'),
-    #     ('job_id', 'Job Position'),
-    #     ('email_from', 'Phone')
-    #     ('partner_phone', 'Phone')
-    #     ('partner_phone', 'Phone')
-    # ], string='Field to Update', required=True)
+    field_name = fields.Selection([
+        ('partner_name', 'Full Name'),
+        ('job_id', 'Job Position'),
+        ('email_from', 'Email'),
+        ('partner_phone', 'Phone'),
+        ('middle_name', 'Middle Name'),
+        ('last_name', 'Last Name'),
+        ('is_graduate', 'Are you Graduate?'),
+        ('course_of_study', 'Course of Study'),
+        ('highest_level_of_qualification', 'Highest Level of Qualification'),
+        ('gender', 'Gender'),
+        ('age', 'Age'),
+        ('date_of_birth', 'Date of Birth'),
+        ('is_aptis', 'Are you Aptis?'),
+        ('prefered_district', 'Preffered District'),
+        ('presentlocation', 'Present Location'),
+        ('worked_at_eedc', 'Did you work at EEDC before?'),
+        ('mode_of_exit_at_eedc', 'How did you leave EEDC?'),
+        ('why_do_you_leave', 'Why did you leave')
+    ], string='Field to Update', required=True)
     
-    field_name = fields.Many2one('ir.model.fields', 
-                                 string="Fields to Update",
-                                 domain="[('model', '=', 'hr.applicant'), ('store', '=', True)]",
-                                 required=True)
+    # field_name = fields.Many2one('ir.model.fields', 
+    #                              string="Fields to Update",
+    #                              domain="[('model', '=', 'hr.applicant'), ('store', '=', True)]",
+    #                              required=True)
 
     column_number = fields.Integer(string='Column Mapping', required=True)
     

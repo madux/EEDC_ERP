@@ -46,6 +46,7 @@
                                 <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
+                                <field name="course_of_study" />
                                 <field name="nysc_certificate_number" attrs="{'invisible':[('is_graduate', '!=', True)]}"/>
                                 <field name="is_aptis" />
                                 <field name="skills" />
