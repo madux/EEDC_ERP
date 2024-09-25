@@ -64,7 +64,8 @@ class SurveyInvite(models.TransientModel):
     def _prepare_answers(self, partners, emails, applicant_ids=False):
         answers = self.env['survey.user_input']
         existing_answers = self.env['survey.user_input'].search([
-            '&', ('survey_id', '=', self.survey_id.id),
+            '&', '&', ('survey_id', '=', self.survey_id.id),
+            ('active', '=', True),
             '|',
             ('partner_id', 'in', partners.ids),
             ('email', 'in', emails)
