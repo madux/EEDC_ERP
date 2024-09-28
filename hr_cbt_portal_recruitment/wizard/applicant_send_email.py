@@ -38,7 +38,7 @@ class ApplicantSendMailInherit(models.TransientModel):
                 'res_id': applicant.id,
                 'subject': self.subject,
                 'body_html': self.body,
-                'auto_delete': True,
+                'auto_delete': False,
                 'email_to': applicant.partner_id.email or applicant.email_from,
             }
             
