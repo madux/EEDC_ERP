@@ -67,6 +67,10 @@
 							<h1 style="color:Tomato;">
 								<field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
 							</h1>
+							<label for="code" string="Request Number"/>
+							<h1>
+								<field name="code" placeholder="Request Number"/>
+							</h1>
 						</div>
 						<group>
 							<group> 
@@ -139,7 +143,7 @@
 								widget="many2many_tags" attrs="{'invisible': [('internal_memo_all_employee_option', '!=', 'employees')], 'required': [('internal_memo_all_employee_option', '=', 'employee')]}" 
 								invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />  -->
 								<field name="status_progress" widget="progressbar" string="Progress(%)"/>
-								<field name="code"/> 
+								<!-- <field name="code"/>  -->
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
                                 <field name="source_location_id" string="Source Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
                                 <field name="dest_location_id" string="Destination Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
@@ -162,6 +166,7 @@
 									<tree string="Items" editable="bottom">
 										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="state" string="State" invisible="1"/> 
+										<field name="request_line_id" string="Request Line ID" invisible="0"/> 
 										<field name="memo_type_key" string="memo key" invisible="1" force_save="1"/> 
 										<!-- <field name="district_id" string="District" invisible="1"/>  -->
 										<field name="memo_id" string="Memo" invisible="1" force_save="1" column_invisible="1"/> 
