@@ -505,6 +505,7 @@
 			<field name="arch" type="xml">
 				<search string="Internal Memo Filter"> 
 					<field name="name"/>
+					<field name="code"/>
 					<field name="dept_ids"/>
 					<field name="vendor_id" string="Vendor"/>
 					<field name="employee_id"/>

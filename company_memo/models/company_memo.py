@@ -485,6 +485,12 @@ class Memo_Model(models.Model):
                 raise ValidationError("Please kindly create and pay the bills for each PO lines")
 
     @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        args = args or []
+        domain = ['|', ('name', operator, name), ('code', operator, name)]
+        return self.search(domain + args, limit=limit).name_get()
+    
+    @api.model
     def default_get(self, fields_list):
         defaults = super(Memo_Model, self).default_get(fields_list)
         if 'is_doc_mgt_request' in self._context:
