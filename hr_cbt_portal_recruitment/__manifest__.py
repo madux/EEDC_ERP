@@ -53,6 +53,7 @@
         'wizard/import_applicant_view.xml',
         'wizard/hr_recruitment_sign_view.xml',
         'wizard/score_sheet_export.xml',
+        'wizard/applicant_send_mail_views_inherit.xml',
         # 'security/security_view.xml',
         'security/ir_rule.xml',
         'data/mail_template_data.xml',
