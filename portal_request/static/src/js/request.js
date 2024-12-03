@@ -678,6 +678,7 @@ odoo.define('portal_request.portal_request', function (require) {
     function displayNonLeaveElement() {
         console.log("Leave set to false")
         $('#leave_section').addClass('d-none');
+        $('#leave_section2').addClass('d-none');
         $('#leave_start_date').attr("required", false);
         $('#leave_end_datex').attr("required", false);
         $('#product_form_div').addClass('d-none');
@@ -946,6 +947,14 @@ odoo.define('portal_request.portal_request', function (require) {
             }, 
 
             'blur input[name=leave_start_datex]': function(ev){
+                if ($('#leave_type_id').val() == ""){
+                    let message = `Validation Error! Please ensure to select Leave type`
+                    $('#leave_start_datex').val('');
+                    $('#leave_end_datex').val('');
+                    modal_message.text(message)
+                    alert_modal.modal('show');
+
+                }
                 let leave_remaining = $('#leave_remaining').val(); 
                 let start_date = $(ev.target);
                 let remain_days = leave_remaining !== undefined ? parseInt($('#leave_remaining').val()) : 1
@@ -1008,7 +1017,9 @@ odoo.define('portal_request.portal_request', function (require) {
                         if(selectedTarget == "leave_request"){
                             console.log('Yes leave is selected')
                             $('#leave_section').removeClass('d-none');
+                            $('#leave_section2').removeClass('d-none');
                             $('#leave_start_date').attr('required', true);
+                            $('#leave_type_id').attr('required', true);
                             $('#leave_end_datex').attr('required', true);
                             $('#product_form_div').addClass('d-none');
                             $('#amount_section').addClass('d-none');

@@ -97,7 +97,10 @@
 								<field name="memo_soe_status" invisible="1"/>
 								<field name="memo_bagde_status" invisible="1"/>
 								<field name="memo_bagde_undone" invisible="1"/>
-								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'), ('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/>
+								<field name="user_owned_cash_advance_ids" invisible="1" widget="many2many_tags"/>
+								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" attrs="{'readonly':[('state','=', 'Done')], 'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"
+                                options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+								<!-- <field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'), ('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/> -->
 								<field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
@@ -129,6 +132,7 @@
 								<field name="leave_type_id"  options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
 								<field name="leave_start_date" widget="daterange" options='{"related_end_date": "leave_end_date", "datepicker": {"daysOfWeekDisabled": [5, 6]}}' attrs="{'required':[('memo_type_key','in',['leave_request'])],'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
 								<field name="leave_end_date" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])],'readonly':[('state','not in',['submit'])]}"/>
+								<field name="leave_duration" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])],'readonly':[('state','not in',['submit'])]}"/>
 								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
 								<field name="amountfig" string="Amount" readonly="1" attrs="{'invisible':[('memo_type_key','not in',['Payment'])]}"/>
 								<field name="project_id" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
@@ -163,7 +167,7 @@
 								attrs="{'readonly':[('state','in',['Sent', 'Approve', 'Done'])]}"
 								context="{'default_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}"
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
-									<tree string="Items" editable="bottom">
+									<tree string="Items" editable="bottom" no_open="1">
 										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="state" string="State" invisible="1"/> 
 										<field name="request_line_id" string="Request Line ID" invisible="0"/> 
@@ -309,7 +313,6 @@
 													
 												</group>
 												<group> 
-													
 													<field name="number_of_days_covered" readonly="1"/>
 													<field name="volume_of_current_fuel" readonly="1"/>
 													<field name="volume_of_extra_fuel_used" readonly="0"/>
@@ -326,8 +329,10 @@
 									</form>
 								</field>
 							</page> 
-							<page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}">
+							<!-- <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}"> -->
 							<!-- attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}" -->
+							<page name="PurchaseOrder" string="Purchase Order" 
+                            attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment'])]}">
 								<button name="generate_po_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate Purchase Order"/>
 								<field name="po_ids" force_save="1" readonly="0" domain="[('id', '=', 0)]"
 								context="{'default_memo_id': active_id, 'default_memo_state': state, 'default_partner_id': client_id, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
@@ -339,7 +344,7 @@
 										<field name="name" string="PO Number"/>
 										<field name="state" string="PO Status"/>
 										<field name="receipt_status" string="Receipt Status"/>
-										<field name="amount_total" string="Total"/>
+										<field name="amount_total" string="Total" sum="Total"/>
 										<!-- <field name="is_shipped" column_invisible="1"/> -->
 										<!-- <field name="incoming_picking_count" widget="statinfo" column_invisible="1" string="Receipt" help="Incoming Shipments"/> -->
 										<button name="button_confirm" type="object" attrs="{'invisible': [('state', 'not in', ['draft', 'sent'])]}" string="Confirm Order" context="{'validate_analytic': True}" class="oe_highlight" id="bid_confirm" data-hotkey="q"/>

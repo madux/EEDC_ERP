@@ -51,7 +51,7 @@ class Send_Memo_back(models.Model):
             msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
              <br/>Kindly {} to Review<br/> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id))
             get_record.write({
-                'state':'submit' if first_stage == 0 else 'Refuse',
+                'state':'submit' if first_stage == 0 else 'Sent',
                 'reason_back': reasons,
                 'stage_id': get_previous_stage or self.env.ref("company_memo.memo_refuse_stage").id,
                 'users_followers': [(4, self.direct_employee_id.id)],

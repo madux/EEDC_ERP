@@ -179,25 +179,43 @@
                                 </div>
                                 <div id="card_body" class="card-body">
                                     <div class="row mb-4">
-                                        <strong class="col-lg-2">Request date</strong>
-                                        <span class="col-lg-10" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
-                                    </div>
+                                        <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                    </div><br/>
+                                    <t t-if="req.memo_type.memo_key in ['leave_request']">
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave Start date</strong>: <span class="col-md-6" t-field="req.leave_start_date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        </div>
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave End date</strong>:<span class="col-md-6" t-field="req.leave_end_date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        </div>
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave Days Taken</strong>:<span class="col-md-6"><t t-esc="leave_taken"/> Day(s)</span>
+                                        </div>
+                                    </t>
                                     <div class="row mb-4" t-if="req.employee_id.parent_id">
-                                        <strong class="col-lg-2">Manager</strong>
-                                        <span class="col-lg-10">
+                                        <strong class="col-md-4">Manager</strong>:
+                                        <span class="col-md-6">
                                             <a t-attf-href="#">
                                                 <span t-field="req.employee_id.parent_id.name"/>
                                             </a>
                                         </span>
                                     </div>
+                                    <div class="row mb-4">
+                                        <strong class="col-md-4">Request type</strong>:
+                                        <span class="col-md-6">
+                                            <a t-attf-href="#">
+                                                <span t-field="req.memo_type"/>
+                                            </a>
+                                        </span>
+                                    </div>
                                     <div class="row mb-4" t-if="req.employee_id.administrative_supervisor_id">
-                                        <strong class="col-lg-2">Supervisor</strong>
-                                        <span class="col-lg-10">
+                                        <strong class="col-md-4">Supervisor</strong>
+                                        <span class="col-md-6">
                                             <a t-attf-href="#">
                                                 <span t-field="req.employee_id.administrative_supervisor_id.name"/>
                                             </a>
                                         </span>
-                                    </div>
+                                    </div><br/>
                                     <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="description">
                                         <div class="col-lg-12" t-raw="req.description"/>
                                     </div>
@@ -227,18 +245,28 @@
                                                     <th width="5%">
                                                         <label></label>
                                                     </th>
-                                                    <th width="45%">
+                                                    <th width="30%">
                                                         Product Name
                                                     </th>
-                                                    <th width="30%">
+                                                    <th width="35%">
+                                                        Description
+                                                    </th>
+                                                    <th width="10%">
                                                         <label>Request Qty</label>
                                                     </th>
-                                                    <th width="30%">
+                                                    <th width="15%">
                                                         <label>Amount</label>
                                                     </th>
-                                                    <th width="20%">
-                                                        <label>X</label>
-                                                    </th>
+                                                    <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                        <th width="10%">
+                                                            <label>Retired</label>
+                                                        </th>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <th width="5%">
+                                                            <label>X</label>
+                                                        </th>
+                                                    </t>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbody_product" name="tbody_product">
@@ -249,21 +277,40 @@
                                                                 <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
                                                             </span>
                                                         </th>
-                                                        <th width="50%">
+                                                        <th width="30%">
                                                             <span t-att-id="prod.id">
                                                                 <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="35%">
+                                                            <span t-att-id="prod.id">
+                                                                <input t-att-id="prod.id" t-att-special_id="prod.description" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
                                                             </span>
                                                         </th>
                                                         <th width="10%">
                                                             <input type="text" t-att-name="prod.quantity_available" t-att-id="prod.id" t-att-value="prod.quantity_available" class="productinput form-control" readonly="readonly"/> 
                                                         </th>
-                                                        <th width="30%">
+                                                        <th width="15%">
                                                             <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/> 
                                                         </th>
+                                                        <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                            <th width="10%">
+                                                                <t t-if="prod.retired">
+                                                                    <span>Retired</span>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span>Retired</span>
+                                                                </t>
+                                                            </th>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <th width="5%">
+                                                                <label>X</label>
+                                                            </th>
+                                                        </t>
                                                         
                                                         <th width="5%">
                                                             #
-                                                            <!-- <a t-att-id="prod.id" t-att-remove_id="prod.id" t-att-name="prod.product_id.name" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a> -->
                                                         </th>
                                                     </tr>
                                                 </t>

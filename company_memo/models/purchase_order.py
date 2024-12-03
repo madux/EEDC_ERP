@@ -61,7 +61,7 @@ class PurchaseOrder(models.Model):
             raise ValidationError("Please enter a partner")
         if self.memo_id:
             if not self.memo_id.stage_id.require_po_confirmation:
-                raise ValidationError('You are not required to confirm this PO at this stage')
+                raise ValidationError('You are not required to confirm this PO at this stage. Set require confirmation on the current stage')
             else:
                 if self.memo_id.stage_id.approver_ids and \
                     self.env.user.id not in [r.user_id.id for r in self.memo_id.stage_id.approver_ids]:

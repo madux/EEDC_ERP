@@ -1057,6 +1057,13 @@ class PortalRequest(http.Controller):
 		values = {'requests': requests}
 		return request.render("portal_request.my_portal_request", values)
 	
+	def get_leave_days_taken(self, record):
+		if record and record.leave_end_date and record.leave_start_date:
+			duration = record.leave_end_date - record.leave_start_date
+			return duration.days if duration else 0
+		else:
+			return 0
+
 	@http.route('/my/request/view/<string:id>', type='http', auth="user", website=True)
 	def my_single_request(self, id):
 		id = int(id) if id else 0
@@ -1081,7 +1088,7 @@ class PortalRequest(http.Controller):
 			])
 		values = {
 			'req': requests,
-			# 'req': requests,
+   			'leave_taken': self.get_leave_days_taken(requests),
 			'current_user': user.id,
 			'record_attachment_ids': memo_attachment_ids,
 			}

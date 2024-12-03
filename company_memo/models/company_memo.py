@@ -139,6 +139,13 @@ class Memo_Model(models.Model):
     cash_advance_reference = fields.Many2one(
         'memo.model', 
         'Cash Advance ref.')
+    user_owned_cash_advance_ids = fields.Many2many(
+        'memo.model', 
+        'user_owned_cash_advance_rel',
+        'user_owned_cash_advance_id',
+        'memo_id',
+        compute='_compute_user_cash_advance', string="User owned cash advances", store=True)
+    
     date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
@@ -251,6 +258,19 @@ class Memo_Model(models.Model):
         'memo.config', 
         string="Memo config id",  
         )
+    leave_duration = fields.Char(
+        string="Duration",
+        store=True,
+        compute="get_leave_days_taken")
+
+    @api.depends('leave_end_date')
+    def get_leave_days_taken(self):
+        for rec in self:
+            if rec.leave_start_date and rec.leave_end_date:
+                duration = rec.leave_end_date - rec.leave_start_date
+                rec.leave_duration = duration.days
+            else:
+                rec.leave_duration = 0
     
     ###############3 RECRUITMENT ##### 
     job_id = fields.Many2one('hr.job', string='Requested Position',
@@ -511,6 +531,15 @@ class Memo_Model(models.Model):
                 )
             else:
                 record.computed_stage_ids = False
+    
+    @api.depends('memo_type')
+    def _compute_user_cash_advance(self):
+        cash_advance_ids = self.env['memo.model'].search([('create_uid', '=', self.env.uid)])
+        for record in self:
+            if cash_advance_ids:
+                record.user_owned_cash_advance_ids = cash_advance_ids.ids
+            else:
+                record.user_owned_cash_advance_ids = False
                 
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
