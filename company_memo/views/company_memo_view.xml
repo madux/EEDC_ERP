@@ -171,7 +171,7 @@
 										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="state" string="State" invisible="1"/> 
 										<field name="request_line_id" string="Request Line ID" invisible="0"/> 
-										<field name="memo_type_key" string="memo key" invisible="1" force_save="1"/> 
+										<field name="memo_type_key" string="memo key" invisible="0" force_save="1"/> 
 										<!-- <field name="district_id" string="District" invisible="1"/>  -->
 										<field name="memo_id" string="Memo" invisible="1" force_save="1" column_invisible="1"/> 
 										<field name="memo_type" string="Memo type" invisible="1" force_save="1" column_invisible="1"/> 
@@ -180,9 +180,9 @@
 										}"/> 
 										 <!-- 'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>  --> 
 										<!-- <field name="code" string="Code" readonly="1" column_invisible="0" force_save="1"/> -->
-										<field name="quantity_available" string="Quantity" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
 										<!-- <field name="quantity_available" string="Quantity" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])],'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>  -->
                                         <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])],'required': [('product_id', '=', False)]}"/> 
+										<field name="quantity_available" string="Unit" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
                                         <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['recruitment_request','employee_update', 'material_request'])]}"/>
 										<!-- <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['Payment','recruitment_request','employee_update', 'material_request'])]}"/> -->
 										<field name="sub_total_amount"  readonly="1" force_save="1" string="Subtotal" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request','material_request'])], 'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'procurement_request'])]}"/>
@@ -294,6 +294,7 @@
 										<field name="source_destination_id"/> 
 										<field name="start_time" readonly="1"/>
 										<field name="end_time" readonly="1"/>
+										<field name="distance_covered"/> 
 										<field name="trip_started" readonly="1" string="Trip Started?"/>
 										<button name="action_start_fleet" confirm="Are you sure you want to complete this trip" string="Start trip" type="object" class="btn-sm oe_highlight" attrs="{'invisible': [('trip_started', '=', True)]}"/>
 										<button name="action_end_fleet" string="End trip" confirm="Are you sure you want to end this trip" type="object" class="btn-sm oe_highlight" attrs="{'invisible': ['|',('end_time', '!=', False),('trip_started', '=', False)]}"/>

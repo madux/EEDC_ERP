@@ -1276,8 +1276,8 @@ class Memo_Model(models.Model):
         Beneficiary = self.employee_id.name # or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
-        from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
-        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)} \
+        from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"})<br/> 
+        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)}
         <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.direct_employee_id = False 
         self.lock_artifacts_from_modification() # first locks already generated artifacts to avoid further modification
