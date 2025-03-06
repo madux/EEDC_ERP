@@ -40,7 +40,9 @@ class AccountMoveMemo(models.Model):
     example_date = fields.Date(store=False, compute='_compute_payment_term_example')
     example_invalid = fields.Boolean(compute='_compute_payment_term_example')
     example_preview = fields.Html(compute='_compute_payment_term_example')
-
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
+    
     @api.depends('memo_id')
     def _compute_payment_term_example(self):
         for rec in self:

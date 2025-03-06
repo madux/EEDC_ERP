@@ -5,6 +5,8 @@ from odoo.exceptions import ValidationError
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
     partner_id = fields.Many2one(
         'res.partner', string='Vendor', 
         required=False, change_default=True, 

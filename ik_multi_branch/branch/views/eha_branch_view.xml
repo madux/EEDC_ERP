@@ -2,8 +2,8 @@
   <data>
     
         <record id="view_multi_branch_form" model="ir.ui.view">
-                <field name="name">multi.branch.form</field>
-                <field name="model">multi.branch</field>
+                <field name="name">hr.district.form</field>
+                <field name="model">hr.district</field>
                 <field name="arch" type="xml">
                     <form string="Branch Information" >
                         <sheet>
@@ -38,8 +38,8 @@
         </record>
 
         <record id="view_multi_branch_tree" model="ir.ui.view">
-            <field name="name">multi.branch.tree</field>
-            <field name="model">multi.branch</field>
+            <field name="name">hr.district.tree</field>
+            <field name="model">hr.district</field>
             <field name="arch" type="xml">
                 <tree string="Branch Information">
                     <field name="name"/>
@@ -52,9 +52,9 @@
         </record>
 
         <record id="action_res_multi_branch_form" model="ir.actions.act_window">
-            <field name="name">Branches</field>
+            <field name="name">Districts</field>
             <field name="type">ir.actions.act_window</field>
-            <field name="res_model">multi.branch</field>
+            <field name="res_model">hr.district</field>
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">

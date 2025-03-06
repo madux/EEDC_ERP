@@ -43,7 +43,7 @@ class HomeExtension(Home):
                                                    request.params['password'])
                 request.params['login_success'] = True
                 request.env['ir.rule'].clear_caches()
-                branch = request.env['multi.branch'].search([('name', '=', selected_branch)])
+                branch = request.env['hr.district'].search([('name', '=', selected_branch)])
                 user = request.env['res.users'].browse([uid])
                 user.sudo().write({'branch_id': branch.id})  # branch_id = branch.id
                 return http.redirect_with_hash(self._login_redirect(uid, redirect=redirect))

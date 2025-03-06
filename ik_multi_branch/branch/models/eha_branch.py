@@ -5,11 +5,12 @@ _logger = logging.getLogger(__name__)
 _BRANCH_KAFKA_KEY = "branch"
 
 class EhaBranch(models.Model):
-    _name = 'multi.branch'
+    _name = 'hr.district'
     _description = 'Branch'
 
     name = fields.Char('Name', required=False)
     code = fields.Char('Code', readonly=False, default= lambda self :'XXXXXXXX')
+    lga_id = fields.Many2one('res.lga', 'LGA')
      
     telephone_no = fields.Char("Telephone No")
     company_id = fields.Many2one('res.company', string='Company', required=False, readonly=True, default=lambda self: self.env['res.company']._company_default_get())
@@ -24,7 +25,7 @@ class EhaBranch(models.Model):
     alias_display = fields.Char(string="Alias", 
     help="This will be the name to display on the dropdown for shop")
     pricelist_id = fields.Many2one('product.pricelist', string='Pricelist')
-    parent_id = fields.Many2one('multi.branch', 'Parent Branch')
+    parent_id = fields.Many2one('hr.district', 'Parent Branch')
     simplybook_location_id = fields.Char(string="Simplybook ID")
     active = fields.Boolean(default=True)
 
@@ -50,7 +51,7 @@ class EhaBranch(models.Model):
         # _logger.info('*** Starting Branch Migration **** ')
         # company = self.env.company #self.env['res.users']._get_company()
         # _logger.info('*** Company **** %s ', company)
-        # branch = self.env['multi.branch'].create({
+        # branch = self.env['hr.district'].create({
         #     'name':company.name,
         #     'company_id':company.id,
         #     'telephone_no': company.phone,

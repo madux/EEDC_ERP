@@ -8,17 +8,17 @@ from odoo.exceptions import UserError, ValidationError
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
-    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+    branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
 
 
 class StockQuant(models.Model):
     _inherit = "stock.quant"
-    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+    branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
 
 
 # class InventoryLine(models.Model):
 #     _inherit = "stock.inventory.line"
-#     branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+#     branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
 
 #     def _get_move_values(self, qty, location_id, location_dest_id, out):
 #         res = super(InventoryLine, self)._get_move_values(qty, location_id, location_dest_id, out)
@@ -28,7 +28,7 @@ class StockQuant(models.Model):
 
 class StockWarehouse(models.Model):
     _inherit = 'stock.warehouse'
-    branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id, required=False)
+    branch_id = fields.Many2one('hr.district', string='Branch', default=lambda self: self.env.user.branch_id.id, required=False)
     state_ids = fields.Many2many('res.country.state', string='States')
     city = fields.Char(string="City", required=False, help="Warehouse location city")
 
@@ -191,7 +191,7 @@ class StockWarehouse(models.Model):
 # class Orderpoint(models.Model):
 #     """ Defines Minimum stock rules. """
 #     _inherit = "stock.warehouse.orderpoint"
-#     branch_id = fields.Many2one('multi.branch', 'Branch', readonly=True, store=True, default=lambda self: self.env['res.partner']._branch_default_get())
+#     branch_id = fields.Many2one('hr.district', 'Branch', readonly=True, store=True, default=lambda self: self.env['res.partner']._branch_default_get())
 
 #     def _prepare_procurement_values(self, product_qty, date=False, group=False):
 #         rec = super(Orderpoint, self)._prepare_procurement_values(product_qty, date, group)
@@ -201,7 +201,7 @@ class StockWarehouse(models.Model):
 
 class StockLocation(models.Model):
     _inherit = 'stock.location'
-    branch_id = fields.Many2one('multi.branch', 'Branch',)
+    branch_id = fields.Many2one('hr.district', 'Branch',)
 
     
     @api.constrains('branch_id')
@@ -219,12 +219,12 @@ class StockLocation(models.Model):
 
 class StockRoute(models.Model):
     _inherit = 'stock.route'
-    branch_id = fields.Many2one('multi.branch', string='Branch',)
+    branch_id = fields.Many2one('hr.district', string='Branch',)
 
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
-    branch_id = fields.Many2one('multi.branch', string='Branch',)
+    branch_id = fields.Many2one('hr.district', string='Branch',)
 
     def assign_picking(self):
         """ Try to assign the moves to an existing picking that has not been
@@ -336,7 +336,7 @@ class StockMove(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
     
-    branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id, required=False)
+    branch_id = fields.Many2one('hr.district', string='Branch', default=lambda self: self.env.user.branch_id.id, required=False)
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', compute='_compute_warehouse')
     sign_signature = fields.Binary(string="Digital Signature", compute='_compute_warehouse', groups="base.group_system")
 
@@ -359,7 +359,7 @@ class StockPicking(models.Model):
 
 class StockRule(models.Model):
     _inherit = 'stock.rule'
-    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+    branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
 
     def _push_prepare_move_copy_values(self, move_to_copy, new_date):
         rec = super(StockRule, self)._push_prepare_move_copy_values(move_to_copy, new_date)

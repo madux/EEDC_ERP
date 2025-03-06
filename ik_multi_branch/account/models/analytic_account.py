@@ -7,12 +7,12 @@ from odoo.exceptions import ValidationError
 
 class AccountAnalyticAccount(models.Model):
     _inherit = 'account.analytic.account'
-    branch_id = fields.Many2one('multi.branch', string='Branch', required=False, default=lambda self: self.env.user.partner_id.branch_id)
+    branch_id = fields.Many2one('hr.district', string='Branch', required=False, default=lambda self: self.env.user.partner_id.branch_id)
 
 
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
-    branch_id = fields.Many2one('multi.branch', string='Branch',required=False, readonly=True, default=lambda self: self.env.user.partner_id.branch_id)
+    branch_id = fields.Many2one('hr.district', string='Branch',required=False, readonly=True, default=lambda self: self.env.user.partner_id.branch_id)
 
     
     @api.constrains('branch_id', 'account_id')

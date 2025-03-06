@@ -14,17 +14,17 @@ _logger = logging.getLogger(__name__)
 class AccountReconcileModel(models.Model):
     _inherit = 'account.reconcile.model'
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', default=lambda self: self.env.user.branch_id.id)
+        'hr.district', 'Branch', default=lambda self: self.env.user.branch_id.id)
 
 
 class AccountAccount(models.Model):
     _inherit = "account.account"
-    branch_id = fields.Many2one('multi.branch', string='Branch',
+    branch_id = fields.Many2one('hr.district', string='Branch',
                                 default=lambda self: self.env.user.branch_id.id, required=False)
 
 class AccountPartialReconcile(models.Model):
     _inherit = "account.partial.reconcile"
-    branch_id = fields.Many2one('multi.branch', related='debit_move_id.branch_id', string='Branch',
+    branch_id = fields.Many2one('hr.district', related='debit_move_id.branch_id', string='Branch',
                                 store=True, default=lambda self: self.env.user.partner_id.branch_id.id)
 
 
@@ -32,10 +32,10 @@ class AccountJournal(models.Model):
     _inherit = "account.journal"
 
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
+        'hr.district', 'Branch', default=lambda self: self.env['hr.district']._branch_default_get(), required=False)
 
     allowed_branch_ids = fields.Many2many(
-        'multi.branch', string='Branchs', required=False) 
+        'hr.district', string='Branchs', required=False) 
     for_public_use = fields.Boolean(string="For Public user")
 
 
@@ -44,18 +44,18 @@ class AccountBatchPayment(models.Model):
     _inherit = "account.batch.payment"
 
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
+        'hr.district', 'Branch', default=lambda self: self.env['hr.district']._branch_default_get(), required=False)
 
 
 class AccountAnalyticLine(models.Model):
     _inherit = "account.analytic.line"
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', default=lambda self: self.env.user.partner_id.branch_id.id, required=False)
+        'hr.district', 'Branch', default=lambda self: self.env.user.partner_id.branch_id.id, required=False)
 
 
 class AccountInvoice(models.Model):
     _inherit = 'account.move'
-    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env.user.branch_id.id, states={
+    branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self.env.user.branch_id.id, states={
                                 'draft': [('readonly', False)]})
     
     @api.depends('company_id', 'invoice_filter_type_domain')
@@ -201,7 +201,7 @@ class AccountInvoice(models.Model):
 
 # class AccountInvoiceLine(models.Model):
 #     _inherit = 'account.move.line'
-#     branch_id = fields.Many2one('multi.branch', string='Branch',
+#     branch_id = fields.Many2one('hr.district', string='Branch',
 #                                 default=lambda self: self.invoice_id.branch_id.id)
 
 #     def _prepare_invoice_line(self):
@@ -212,14 +212,14 @@ class AccountInvoice(models.Model):
 
 # class AccountInvoiceTax(models.Model):
 #     _inherit = "account.move.tax"
-#     branch_id = fields.Many2one('multi.branch', string='Branch',
+#     branch_id = fields.Many2one('hr.district', string='Branch',
 #                                 default=lambda self: self.env.user.branch_id.id, required=False)
 
 
  
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
-    branch_id = fields.Many2one('multi.branch', string='Branch',
+    branch_id = fields.Many2one('hr.district', string='Branch',
                                 default=lambda self: self._get_move_branch(), required=False,)
      
     def _prepare_invoice_line(self):
@@ -368,7 +368,7 @@ class AccountMoveLine(models.Model):
 # class AccountAnalyticDefault(models.Model):
 #     _inherit = "account.analytic.default"
 #     branch_id = fields.Many2one(
-#         'multi.branch', 'Branch', default=lambda self: self.env.user.partner_id.branch_id.id)
+#         'hr.district', 'Branch', default=lambda self: self.env.user.partner_id.branch_id.id)
 
     # @api.model
     # def account_get(self, product_id=None, partner_id=None, user_id=None, date=None, company_id=None, branch_id=None):
@@ -409,18 +409,18 @@ class AccountMoveLine(models.Model):
 
 # class AccountAssetAsset(models.Model):
 #     _inherit = "account.asset.asset"
-#     branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.partner_id.branch_id.id)
+#     branch_id = fields.Many2one('hr.district', string='Branch', default=lambda self: self.env.user.partner_id.branch_id.id)
 
 
 # class AccountVoucher(models.Model):
 #     _inherit = "account.voucher"
-#     branch_id = fields.Many2one('multi.branch', string='Branch',
+#     branch_id = fields.Many2one('hr.district', string='Branch',
 #                                 default=lambda self: self.env.user.partner_id.branch_id.id)
 
 class AccountPaymentRegister(models.TransientModel):
     _inherit = 'account.payment.register'
 
-    branch_id = fields.Many2one('multi.branch', string='Branch',
+    branch_id = fields.Many2one('hr.district', string='Branch',
                                 required=False)    
     
     @api.depends('payment_type', 'company_id', 'can_edit_wizard')
@@ -495,7 +495,7 @@ class AccountPaymentRegister(models.TransientModel):
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
-    branch_id = fields.Many2one('multi.branch', string='Branch',
+    branch_id = fields.Many2one('hr.district', string='Branch',
                                 required=False, default=lambda self: self.env.user.branch_id.id)
     
 
@@ -555,19 +555,19 @@ class AccountPayment(models.Model):
 #             return branch_id
 #
 #     branch_id = fields.Many2one(
-#         'multi.branch', 'Branch', default=_get_invoice_refund_default_branch, required=False)
+#         'hr.district', 'Branch', default=_get_invoice_refund_default_branch, required=False)
 #
 
 class AccountBankStatement(models.Model):
     _inherit = 'account.bank.statement'
-    branch_id = fields.Many2one('multi.branch', 'Branch',
+    branch_id = fields.Many2one('hr.district', 'Branch',
                                 default=lambda self: self.env['res.partner']._branch_default_get())
 
 
 class AccountBankStatementLine(models.Model):
     _inherit = 'account.bank.statement.line'
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', related='statement_id.branch_id')
+        'hr.district', 'Branch', related='statement_id.branch_id')
 
     # def process_reconciliation(self, counterpart_aml_dicts=None, payment_aml_rec=None, new_aml_dicts=None):
     #     """ Match statement lines with existing payments (eg. checks) and/or payables/receivables (eg. invoices and credit notes) and/or new move lines (eg. write-offs).

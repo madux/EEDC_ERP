@@ -6,6 +6,8 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
 
     def _action_done(self):
         res = super(StockPicking, self)._action_done()

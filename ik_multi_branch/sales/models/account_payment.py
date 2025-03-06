@@ -7,7 +7,7 @@ class AccountPayment(models.Model):
 
     sale_order_id = fields.Many2one(comodel_name='sale.order', string='Sale Order', copy=False)
     branch_id = fields.Many2one(
-        'multi.branch', 'Branch', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
+        'hr.district', 'Branch', default=lambda self: self.env['hr.district']._branch_default_get(), required=False)
 
     @api.onchange('sale_order_id')
     def _onchange_sale_order_id(self):

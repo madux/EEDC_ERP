@@ -11,7 +11,7 @@
             <field name="inherit_id" ref="account.view_account_invoice_filter"/>
             <field name="arch" type="xml">
                 <filter name="salesperson" position="before">
-                    <filter name="branch_id" string="Branch" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -67,7 +67,7 @@
             <field name="inherit_id" ref="account_voucher.view_voucher_filter"/>
             <field name="arch" type="xml">
                 <filter name="partner" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record> -->
@@ -80,7 +80,7 @@
             <field name="inherit_id" ref="account_voucher.view_voucher_filter_vendor"/>
             <field name="arch" type="xml">
                 <filter name="vendor" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record> -->
@@ -93,7 +93,7 @@
             <field name="inherit_id" ref="account_voucher.view_voucher_filter_sale"/>
             <field name="arch" type="xml">
                 <filter name="customer" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record> -->
@@ -106,7 +106,7 @@
             <field name="inherit_id" ref="account.view_account_payment_search"/>
             <field name="arch" type="xml">
                 <filter name="inbound_filter" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -250,7 +250,7 @@
             <field name="inherit_id" ref="account_reports.customer_statements_search_view"/>
             <field name="arch" type="xml">
                 <filter name="supplier" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
 
@@ -292,7 +292,7 @@
                     <field name="branch_id" />
                 </field>
                 <filter name="partner" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -319,7 +319,7 @@
                     <field name="branch_id" />
                 </field>
                 <filter name="group_by_partner" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -358,7 +358,7 @@
                     <field name="branch_id" />
                 </field>
                 <!-- <filter name="account_id" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter> -->
             </field>
         </record>
@@ -395,7 +395,7 @@
                     <field name="branch_id" />
                 </field>
                 <filter name="month" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record> -->
@@ -515,7 +515,7 @@
                     <field name="branch_id" />
                 </field>
                 <filter name="partner" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
 

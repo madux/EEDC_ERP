@@ -110,7 +110,7 @@
                 </field>
 
                 <filter name="salesperson" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -144,11 +144,11 @@
             <field name="inherit_id" ref="sale.view_sales_order_line_filter" />
             <field name="arch" type="xml">
                 <filter name="to_invoice" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
 
                 <filter name="product" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>
@@ -181,10 +181,10 @@
             <field name="inherit_id" ref="sales_team.crm_team_view_search"/>
             <field name="arch" type="xml">
                 <field name="name" position="before">
-                    <field name="branch_id" string="Branch"/>
+                    <field name="branch_id" string="District"/>
                 </field>
                 <filter name="team_leader" position="before">
-                    <filter name="branch_id" string="Branch" domain="[]" context="{'group_by':'branch_id'}"/>
+                    <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>
                 </filter>
             </field>
         </record>

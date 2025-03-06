@@ -2,7 +2,7 @@
     <template id="web_login_extension" inherit_id="web.login">
         <xpath expr="//p[@t-if='error']" position="replace">
             <t t-set="default_value" t-value="default_value or ''"/>
-            <t t-set="branches" t-value="request.env['multi.branch'].sudo().search([])"/>
+            <t t-set="branches" t-value="request.env['hr.district'].sudo().search([])"/>
             <t t-if="len(branches)">
                 <div class="form-group field-branch-id">
                     <label for="branch_id">Branch</label>

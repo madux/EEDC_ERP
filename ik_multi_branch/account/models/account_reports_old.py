@@ -11,7 +11,7 @@ class AccountReportExtension(models.AbstractModel):
 
         options['branches'] = []
         previous_company = False
-        branches_read = self.env['multi.branch'].search([('company_id', 'in', self.env.user.company_ids.ids or [self.env.user.company_id.id])], order="company_id, name")
+        branches_read = self.env['hr.district'].search([('company_id', 'in', self.env.user.company_ids.ids or [self.env.user.company_id.id])], order="company_id, name")
         for b in branches_read:
             if b.company_id != previous_company:
                 options['branches'].append({'id': 'divider', 'name': b.company_id.name})
@@ -45,7 +45,7 @@ class AccountReportExtension(models.AbstractModel):
 
 
     def _get_branches(self):
-        branches_read = self.env['multi.branch'].search([], order="id, name")
+        branches_read = self.env['hr.district'].search([], order="id, name")
         branches = []
         previous_company = False
         for b in branches_read:

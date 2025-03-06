@@ -6,8 +6,8 @@
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
             <xpath expr="//page[@name='access_rights']" position="inside" >
-	        	<group string="Multi Branches" >
-                    <field string="Allowed Branches" name="branch_ids" widget="many2many_tags" />
+	        	<group string="Multi Districts" >
+                    <field string="Allowed Districts" name="branch_ids" widget="many2many_tags" />
                     <field string="Current Branch" name="branch_id" />
                 </group>
             </xpath>
@@ -31,7 +31,7 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
             <field name="lang" position="after" >
-	        	<field string="Branch" name="branch_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+	        	<field string="District" name="branch_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
             </field>
         </field>
     </record>

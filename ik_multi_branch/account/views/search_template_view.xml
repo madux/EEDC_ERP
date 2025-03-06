@@ -4,12 +4,12 @@
 
 		<!-- <template id="search_template_branch">
 		    <a type="button" class="dropdown-toggle account_branch_filter" data-toggle="dropdown">
-		        <span class="fa fa-home"/> Branches
+		        <span class="fa fa-home"/> Districts
 		        <span class="caret"/>
 		    </a>
 		    <ul class="dropdown-menu o_filters_menu" role="menu">
 		        <li style='margin-left: 10px; margin-right: 10px;'>
-		            <b>Branches</b><br />
+		            <b>Districts</b><br />
 		            <select class="js_branch_auto_complete" data-filter="branch" multiple="multiple" style="min-width: 100px;">
 		                <t t-foreach="branch" t-as="a">
 		                    <option t-att-value="a[0]"><t t-esc="a[1]" /></option>

@@ -22,7 +22,7 @@
                 <field name="branch_id" />
             </field>
             <filter name="vendor"  position="after">
-                <filter string="Branch" name="branch_id" domain="[]" context="{'group_by':'branch_id'}"/>
+                <filter string="District" name="branch_id" domain="[]" context="{'group_by':'branch_id'}"/>
             </filter>
         </field>
     </record>
