@@ -6,6 +6,8 @@ class HRLeave(models.Model):
 
     origin = fields.Char(string='Source')
     memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
 
     def action_approve(self):
         res = super(HRLeave, self).action_approve()

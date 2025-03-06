@@ -402,7 +402,7 @@
                                                     <!-- <span class="s_website_form_mark"> *</span> -->
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="1"/>
+                                                    <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="1" placeholder="Hold shift / Ctrl to select multiple files"/>
                                                 </div>
                                             </div>
                                         </div> 
@@ -437,6 +437,24 @@
                                                 <div class="col-sm">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" name="leave_end_datex" required="false" labelfor="Leave End date"/>
                                                 </div>
+                                            </div>
+                                            <div class="row s_col_no_resize s_col_no_bgcolor" id="leave_section2">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_taken">
+                                                    <span class="s_website_form_label_content">Taken Leave</span>
+                                                    <span class="s_website_form_mark"> </span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <span id="leave_taken" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
+                                                </div> 
+                                            </div>
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_remain">
+                                                    <span class="s_website_form_label_content">Remaining Leave</span>
+                                                    <span class="s_website_form_mark"> </span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
+                                                </div> 
                                             </div>
                                         </div> 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required product_section d-none" id="product_section" data-type="text" data-name="Field">
@@ -488,7 +506,7 @@
                                     </div> 
                                     <div class="mb-0 py-2 col-12 add_item justify-content-center">
                                         <div style="width: 200px;" class="s_website_form_label"/>
-                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                        <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-secondary btn-sm"> Add item </a>
                                         <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
                                         <span id="s_website_form_result_addxx"/>
                                     </div>
@@ -559,7 +577,7 @@
                                             </div> 
                                             <div class="mb-0 py-2 col-12 add_item justify-content-center">
                                                 <div style="width: 200px;" class="s_website_form_label"/>
-                                                <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn btn btn-primary btn-sm"> Add item </a>
+                                                <a id="add_item_btn" name="add_item_btn" href="#" class="add_item_btn portal_button btn-sm"> Add item </a>
                                                 <!-- <a href="#" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">Submit</a> -->
                                                 <span id="s_website_form_result_addxx"/>
                                             </div>
@@ -630,7 +648,7 @@
                                         </div>
                                         <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">
                                             <div style="width: 200px;" class="s_website_form_label"/>
-                                            <a href="#" role="button" class="btn btn-primary btn-lg o_default_snippet_text button_req_submit">Submit</a>
+                                            <a href="#" role="button" class="btn btn-secondary btn-lg o_default_snippet_text button_req_submit">Submit</a>
                                             <span id="s_website_form_result"/>
                                         </div>
                                     </div>

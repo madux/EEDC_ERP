@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_hr_contract_wizard_form" model="ir.ui.view">
+            <field name="name">hr.contract.wizard.form</field>
+            <field name="model">hr.contract.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <group>
+                            <field name="contract_start_date"/>
+                            <field name="contract_end_date"/>
+                        </group>
+                        <group>
+                            <field name="structure_type_id"/>
+                            <field name="monthly_wage"/>
+                            <field name="update_existing_contract"/>
+                        </group>
+                    </group> 
+                    <notebook>
+                        <page string="Employee Details" name="employee_details_page">
+                            <field name="employee_ids" widget="one2many_list">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                    <field name="employee_number"/> 
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                    <footer>
+                        <button string="Create Employee Contract" type="object" class="oe_highlight" name="auto_create_employee_contract"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

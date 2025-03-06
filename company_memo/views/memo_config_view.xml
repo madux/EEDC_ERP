@@ -22,6 +22,8 @@
                                 <field name="department_code" string="Department suffix" placeholder="K, Y, A"/>
                                 <field name="approver_ids" string="Employees for Follow up" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                                 <field name="allowed_for_company_ids" string="Allow companies" domain="[('is_company','=', True)]" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                                <field name="send_to_initiator_on_refusal"/>
+
                             </group>
                             <notebook>
                                 <page string="Stages">

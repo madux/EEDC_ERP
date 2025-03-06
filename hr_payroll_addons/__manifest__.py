@@ -7,7 +7,10 @@
     'depends': ['hr_contract_salary'],
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
-        # 'security/ir.model.access.csv',
-        'views/hr_payroll.xml'
+        'security/ir.model.access.csv',
+        'views/hr_payroll.xml',
+        'views/hr_employee.xml',
+        'views/hr_contract_wizard.xml',
+        
     ],
 }

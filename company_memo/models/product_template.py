@@ -6,6 +6,8 @@ from odoo.exceptions import ValidationError
 class productTemplate(models.Model):
     _inherit = "product.template"
 
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
     is_vehicle_product = fields.Boolean("Is vehicle", default=False)
     vehicle_plate_number = fields.Char("Vehicle Plate Number")
     vehicle_reg_number = fields.Char("Vehicle Reg Number")

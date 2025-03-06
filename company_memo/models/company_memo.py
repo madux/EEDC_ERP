@@ -139,6 +139,13 @@ class Memo_Model(models.Model):
     cash_advance_reference = fields.Many2one(
         'memo.model', 
         'Cash Advance ref.')
+    user_owned_cash_advance_ids = fields.Many2many(
+        'memo.model', 
+        'user_owned_cash_advance_rel',
+        'user_owned_cash_advance_id',
+        'memo_id',
+        compute='_compute_user_cash_advance', string="User owned cash advances", store=True)
+    
     date_deadline = fields.Date('Deadline date')
     status_progress = fields.Float(string="Progress(%)", compute='_progress_state')
     users_followers = fields.Many2many('hr.employee', string='Add followers') #, default=_default_employee)
@@ -251,6 +258,19 @@ class Memo_Model(models.Model):
         'memo.config', 
         string="Memo config id",  
         )
+    leave_duration = fields.Char(
+        string="Duration",
+        store=True,
+        compute="get_leave_days_taken")
+
+    @api.depends('leave_end_date')
+    def get_leave_days_taken(self):
+        for rec in self:
+            if rec.leave_start_date and rec.leave_end_date:
+                duration = rec.leave_end_date - rec.leave_start_date
+                rec.leave_duration = duration.days
+            else:
+                rec.leave_duration = 0
     
     ###############3 RECRUITMENT ##### 
     job_id = fields.Many2one('hr.job', string='Requested Position',
@@ -485,6 +505,12 @@ class Memo_Model(models.Model):
                 raise ValidationError("Please kindly create and pay the bills for each PO lines")
 
     @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        args = args or []
+        domain = ['|', ('name', operator, name), ('code', operator, name)]
+        return self.search(domain + args, limit=limit).name_get()
+    
+    @api.model
     def default_get(self, fields_list):
         defaults = super(Memo_Model, self).default_get(fields_list)
         if 'is_doc_mgt_request' in self._context:
@@ -505,6 +531,15 @@ class Memo_Model(models.Model):
                 )
             else:
                 record.computed_stage_ids = False
+    
+    @api.depends('memo_type')
+    def _compute_user_cash_advance(self):
+        cash_advance_ids = self.env['memo.model'].search([('create_uid', '=', self.env.uid)])
+        for record in self:
+            if cash_advance_ids:
+                record.user_owned_cash_advance_ids = cash_advance_ids.ids
+            else:
+                record.user_owned_cash_advance_ids = False
                 
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
@@ -792,9 +827,10 @@ class Memo_Model(models.Model):
                         )
                 
     def validate_sub_stage(self):
-        for count, rec in enumerate(self.memo_sub_stage_ids, 1):
-            if not rec.sub_stage_done:
-                raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
+        if self.memo_sub_stage_ids:
+            for count, rec in enumerate(self.memo_sub_stage_ids, 1):
+                if not rec.sub_stage_done:
+                    raise ValidationError(f"""There are unfinished sub task at line {count} that requires completion before moving to the next stage""")
     
     def validate_invoice_line(self):
         '''Check all invoice in draft and check if 
@@ -1119,8 +1155,8 @@ class Memo_Model(models.Model):
         stage_document_line = stage_id.mapped('required_document_line')
         invoices, documents= [], []
         if stage_invoice_line:
-            if not self.client_id:
-                raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
+            # if not self.client_id:
+            #     raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
             for stage_inv in stage_invoice_line:
                 already_existing_stage_invoice_line = obj.mapped('invoice_ids').filtered(
                     lambda exist: exist.stage_invoice_name == stage_inv.name and exist.state not in ['posted'])
@@ -1240,8 +1276,8 @@ class Memo_Model(models.Model):
         Beneficiary = self.employee_id.name # or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
-        from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"}) \
-        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)} \
+        from {Beneficiary} (Department: {self.employee_id.department_id.name or "-"})<br/> 
+        was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)}
         <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.direct_employee_id = False 
         self.lock_artifacts_from_modification() # first locks already generated artifacts to avoid further modification
@@ -1348,7 +1384,10 @@ class Memo_Model(models.Model):
     def approve_memo(self): # Always available to Some specific groups
         ''' check if supervisor has commented on the memo if it is server access'''
         self.check_supervisor_comment()
-        
+        self.validate_necessary_components()
+        self.validate_po_line()
+        self.validate_compulsory_document()
+        self.validate_sub_stage()
         '''Determine if current user has access to approve'''
         is_config_approver = self.determine_if_user_is_config_approver()
         if self.env.uid == self.employee_id.user_id.id and not is_config_approver:
@@ -1516,9 +1555,7 @@ class Memo_Model(models.Model):
         # stock_picking_type_in = self.env.ref('stock.picking_type_in')
         # purchase_obj = self.env['purchase.order']
         if not self.po_ids:
-            raise ValidationError(
-                '''
-                Please kindly click generate Purchase Order button from the purchase order tab
+            raise ValidationError('''Please kindly click generate Purchase Order button from the purchase order tab
                 '''
                 )
         # existing_po = purchase_obj.search([('memo_id', '=', self.id)])
@@ -1771,6 +1808,8 @@ class Memo_Model(models.Model):
     def onchange_cash_advance_reference(self):
         car = self.cash_advance_reference
         if self.cash_advance_reference:
+            if self.env.user.id != self.cash_advance_reference.employee_id.user_id.id:
+                raise ValidationError("""You cannot retire cash advance not initiated by you.""")
             if car.product_ids and car.mapped('product_ids').filtered(lambda x: not x.retired) and self.state in ['submit']: 
                 # NEWC checked the state to ensure no retired product is changed
                 self.product_ids = False
@@ -2201,13 +2240,13 @@ class Memo_Model(models.Model):
 
     """line 4 - 7 checks if the current user is the initiator of the memo, 
     if true, raises warning error else: it opens the wizard"""
-
+        
     def return_validator(self):
-        stage_approvers = [r.user_id.id for r in self.stage_id.approver_ids]
-        user_exist = self.mapped('res_users').filtered(
-            lambda user: user.id == self.env.uid
-            )
-        if user_exist and self.env.user.id not in stage_approvers:
+        # user_exist = self.mapped('res_users').filtered(
+        #     lambda user: user.id == self.env.uid
+        #     )
+        # if user_exist and self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
+        if self.env.user.id not in [r.user_id.id for r in self.stage_id.approver_ids]:
             raise ValidationError(
                 """Sorry you are not allowed to reject /  return you own initiated memo"""
                 )

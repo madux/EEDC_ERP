@@ -11,6 +11,8 @@ class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
     memo_reference = fields.Many2one('memo.model', string="Memo Reference")
+    legacy_id = fields.Integer(string="legacy_id")
+    external_id = fields.Char(string="External ID")
     
     # def post(self):
     #     res = super(AccountPayment, self).post()

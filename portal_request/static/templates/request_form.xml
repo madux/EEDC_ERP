@@ -31,12 +31,12 @@
                                     <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
                                         
                                         <div class="d-grid flex-sm-nowrap">
-                                            <a class="btn btn-secondary pt-1" href="/portal-request">
+                                            <a class="portal_button pt-1" href="/portal-request">
                                                 Create Request
                                             </a>
                                         </div>
                                         <div class="d-grid pt-2 flex-sm-nowrap">
-                                            <button class="btn btn-secondary cancel_btn" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                            <button class="portal_button cancel_btn" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                                 Cancel Request
                                             </button>
                                         </div> 
@@ -109,7 +109,7 @@
 
                                     <li t-if="req.approver_ids" class="list-group-item flex-grow-1">
                                         <div class="col-12 col-md-12 pb-2">
-                                            <strong>To be Approved by</strong>
+                                            <strong>To be Approved by:</strong>
                                             <t t-foreach="req.approver_ids" t-as="appr">
                                                 <t t-if="appr.user_id">
                                                     <div class="d-flex ps-3 flex-nowrap">
@@ -143,63 +143,81 @@
                                     <div class="row gs-0">
                                         <div class="col-md">
                                             <h5 class="row mx-1 mb-1 mb-md-0">
-                                            <div class="col-6 text-truncate">
-                                                <span t-field="req.name"/>
-                                                <a t-att-id="req.id" class="record_id"/>
-                                                <small class="text-muted "> (#<span t-field="req.code"/>) </small>
-                                            </div>
-                                            <div class="col-3 text-truncate">
-                                                <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
-                                                    <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
-                                                        <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
-                                                        Approve
-                                                    </a>
-                                                    <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
-                                                        Refuse
-                                                    </a>
-                                                </t>
-                                                    <t t-else="">
-                                                    -
-                                                </t>
-                                                <t t-if="req.state == 'Refuse'">
-                                                    <!-- <a id="req.id" class="resend_request btn btn-secondary btn-sm" t-att-href="'/my/request/update/%s/%s' % (req.id, 'Refuse')"> -->
-                                                    <a id="req.id" class="resend_request btn btn-secondary btn-sm">
-                                                        Resend
-                                                    </a>
-                                                </t>
-                                                <t t-else="">
-                                                    -
-                                                </t>
-                                            </div>
-                                            <div class="col-3 p-3 text-end">
-                                                <small class="text-end">Status</small>
-                                                <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
-                                            </div>
+
+                                                <div class="col-8">
+                                                    <span t-field="req.name"/>
+                                                    <a t-att-id="req.id" class="record_id"/>
+                                                    <small class="text-muted "> (#<span t-field="req.code"/>) </small>
+                                                </div>
+
                                             </h5>
+                                        </div>
+                                        <!-- <div class="col-md"> -->
+                                            <!-- <div class="col-3 text-truncate"> -->
+                                        <div class="btn-group">
+                                            <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
+                                                <a id="approve_request" class="approve_request portal_button">
+                                                    <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
+                                                    Approve
+                                                </a>
+                                                <a id="refuse_request_btn" class="refuse_request_btn portal_button" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                                    Refuse
+                                                </a>
+                                            </t>
+                                            <t t-else="">
+                                            </t>
+                                            <t t-if="req.state == 'Refuse'">
+                                                <a id="req.id" class="resend_request portal_button">
+                                                    Resend
+                                                </a>
+                                            </t>
+                                            <t t-else="">
+                                            </t> 
+                                        </div>
+                                        <div class="btn-group">
+                                            <span class="col-6 offset-3 text-end"><span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/></span>
                                         </div>
                                     </div>
                                 </div>
                                 <div id="card_body" class="card-body">
                                     <div class="row mb-4">
-                                        <strong class="col-lg-2">Request date</strong>
-                                        <span class="col-lg-10" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
-                                    </div>
+                                        <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                    </div><br/>
+                                    <t t-if="req.memo_type.memo_key in ['leave_request']">
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave Start date</strong>: <span class="col-md-6" t-field="req.leave_start_date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        </div>
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave End date</strong>:<span class="col-md-6" t-field="req.leave_end_date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        </div>
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Leave Days Taken</strong>:<span class="col-md-6"><t t-esc="leave_taken"/> Day(s)</span>
+                                        </div>
+                                    </t>
                                     <div class="row mb-4" t-if="req.employee_id.parent_id">
-                                        <strong class="col-lg-2">Manager</strong>
-                                        <span class="col-lg-10">
+                                        <strong class="col-md-4">Manager</strong>:
+                                        <span class="col-md-6">
                                             <a t-attf-href="#">
                                                 <span t-field="req.employee_id.parent_id.name"/>
                                             </a>
                                         </span>
                                     </div>
+                                    <div class="row mb-4">
+                                        <strong class="col-md-4">Request type</strong>:
+                                        <span class="col-md-6">
+                                            <a t-attf-href="#">
+                                                <span t-field="req.memo_type"/>
+                                            </a>
+                                        </span>
+                                    </div>
                                     <div class="row mb-4" t-if="req.employee_id.administrative_supervisor_id">
-                                        <strong class="col-lg-2">Supervisor</strong>
-                                        <span class="col-lg-10">
+                                        <strong class="col-md-4">Supervisor</strong>
+                                        <span class="col-md-6">
                                             <a t-attf-href="#">
                                                 <span t-field="req.employee_id.administrative_supervisor_id.name"/>
                                             </a>
                                         </span>
-                                    </div>
+                                    </div><br/>
                                     <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="description">
                                         <div class="col-lg-12" t-raw="req.description"/>
                                     </div>
@@ -229,18 +247,28 @@
                                                     <th width="5%">
                                                         <label></label>
                                                     </th>
-                                                    <th width="45%">
+                                                    <th width="30%">
                                                         Product Name
                                                     </th>
-                                                    <th width="30%">
+                                                    <th width="35%">
+                                                        Description
+                                                    </th>
+                                                    <th width="10%">
                                                         <label>Request Qty</label>
                                                     </th>
-                                                    <th width="30%">
+                                                    <th width="15%">
                                                         <label>Amount</label>
                                                     </th>
-                                                    <th width="20%">
-                                                        <label>X</label>
-                                                    </th>
+                                                    <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                        <th width="10%">
+                                                            <label>Retired</label>
+                                                        </th>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <th width="5%">
+                                                            <label>X</label>
+                                                        </th>
+                                                    </t>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbody_product" name="tbody_product">
@@ -251,21 +279,40 @@
                                                                 <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
                                                             </span>
                                                         </th>
-                                                        <th width="50%">
+                                                        <th width="30%">
                                                             <span t-att-id="prod.id">
                                                                 <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                            </span>
+                                                        </th>
+                                                        <th width="35%">
+                                                            <span t-att-id="prod.id">
+                                                                <input t-att-id="prod.id" t-att-special_id="prod.description" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
                                                             </span>
                                                         </th>
                                                         <th width="10%">
                                                             <input type="text" t-att-name="prod.quantity_available" t-att-id="prod.id" t-att-value="prod.quantity_available" class="productinput form-control" readonly="readonly"/> 
                                                         </th>
-                                                        <th width="30%">
+                                                        <th width="15%">
                                                             <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/> 
                                                         </th>
+                                                        <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                            <th width="10%">
+                                                                <t t-if="prod.retired">
+                                                                    <span>Retired</span>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span>Retired</span>
+                                                                </t>
+                                                            </th>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <th width="5%">
+                                                                <label>X</label>
+                                                            </th>
+                                                        </t>
                                                         
                                                         <th width="5%">
                                                             #
-                                                            <!-- <a t-att-id="prod.id" t-att-remove_id="prod.id" t-att-name="prod.product_id.name" href="#" class="remove_field btn btn-primary btn-sm"> Remove </a> -->
                                                         </th>
                                                     </tr>
                                                 </t>

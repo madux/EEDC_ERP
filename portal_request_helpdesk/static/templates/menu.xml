@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="menu_all_portal_request_helpdesk" model="website.menu">
+        <field name="name">Helpdesk</field>
+        <field name="url">/portal-helpdesk</field>
+        <field name="parent_id" ref="portal_request.menu_portal_request_applications" />
+        <field name="website_id" ref="website.default_website" />
+        <field name="sequence" type="int">4</field>
+    </record>
+ 
+</odoo>
