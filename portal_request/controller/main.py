@@ -935,7 +935,7 @@ class PortalRequest(http.Controller):
 					'distance_to': rec.get('distance_to'),
 				}
 			_logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
-			productid = rec.get('product_id') or 0
+			productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
 			product_id = request.env['product.product'].sudo().browse([int(productid)])
 			if product_id:
 				request_vals.update({

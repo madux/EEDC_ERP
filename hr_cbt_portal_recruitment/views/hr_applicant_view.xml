@@ -23,6 +23,7 @@
             </xpath> 
             
             <field name="email_from" position="before">
+                <field name="applicant_code" />
                 <field name="first_name"/>
                 <field name="middle_name"/>
                 <field name="last_name" invisible="0" force_save="1" required="1"/>
@@ -37,6 +38,7 @@
                     <page name="Other informations" string="Other informations">
                         <group>
                             <group>
+                                <field name="is_graduate" />
                                 <field name="has_completed_nysc"/>
                                 <field name="know_anyone_at_eedc"/>
                                 <field name="linkedin_account"/>
@@ -44,6 +46,16 @@
                                 <field name="relationship_type"/>
                                 <field name="degree_in_relevant_field"/>
                                 <field name="specifylevel_qualification" attrs="{'invisible':[('degree_in_relevant_field', '!=', 'Yes')]}"/>
+                                <field name="course_of_study" />
+                                <field name="nysc_certificate_number" attrs="{'invisible':[('is_graduate', '!=', True)]}"/>
+                                <field name="is_aptis" />
+                                <field name="skills" />
+                                <field name="prefered_district" />
+                                <field name="worked_at_eedc" />
+                                <field name="mode_of_exit_at_eedc" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
+                                <field name="why_do_you_leave" attrs="{'invisible':[('worked_at_eedc', '!=', 'yes')]}" />
+                                <field name="date_of_birth" />
+                                <field name="age" />
                             </group>
                             <group>
                                 <field name="reside_job_location"/>
@@ -153,8 +165,15 @@
         <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_search_bis"/>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_applications']" position="after">
-                 <filter name="passed" string="Passed Applicants" domain="[('test_passed', '=', True)]"/>
-                 <filter string="Score: 0 - 19" name="score_0_19" domain="[('scoring_percentage','&lt;', 20)]"/>
+                <field name="applicant_code" string="Application Code" />
+                <filter string="Test Sent" name="cbt_completed" domain="[('survey_user_input_id', '!=', False)]"/>
+                <filter string="Test not Sent" name="cbt_not_completed" domain="[('survey_user_input_id', '=', False)]"/>
+                <filter string="Test Completed" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'done')]"/>
+                <filter string="Test In Progress" name="cbt_completed" domain="[('survey_user_input_id.state', '=', 'in_progress')]"/>
+                <filter string="Test not started" name="cbt_not_completed" domain="[('survey_user_input_id.state', '=', 'new')]"/>
+                <filter name="passed" string="Passed Applicants" domain="[('test_passed', '=', True)]"/>
+                <filter string="Score: 0" name="score_0" domain="[('scoring_percentage','=', 0)]"/>
+                <filter string="Score: 0 - 19" name="score_0_19" domain="[('scoring_percentage','&lt;', 20)]"/>
                 <filter string="Score: 20 - 29" name="score_0_20" domain="[('scoring_percentage','&gt;', 19),('scoring_percentage','&lt;', 30)]"/>
                 <filter string="Score: 30 - 39" name="score_0_30" domain="[('scoring_percentage','&gt;', 29),('scoring_percentage','&lt;', 40)]"/>
                 <filter string="Score: 40 - 49" name="score_0_40" domain="[('scoring_percentage','&gt;', 39),('scoring_percentage','&lt;', 50)]"/>
@@ -164,6 +183,9 @@
                 <filter string="Score: 80 - 89" name="score_0_80" domain="[('scoring_percentage','&gt;', 79),('scoring_percentage','&lt;', 90)]"/>
                 <filter string="Score: 90 - 99" name="score_0_90" domain="[('scoring_percentage','&gt;', 89),('scoring_percentage','&lt;', 100)]"/>
                 <filter string="Score: 100" name="score_0_100" domain="[('scoring_percentage','=', 100)]"/>
+
+                <filter string="Test Created Today" name="test_created_today" domain="[('survey_user_input_id.create_date', '>=', context_today())]"/>
+                <filter string="Test Not Created Today" name="test_not_created_today" domain="[('survey_user_input_id.create_date', '&lt;', context_today())]"/>
             </xpath>
         </field>
     </record>

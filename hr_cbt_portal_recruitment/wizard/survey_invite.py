@@ -26,6 +26,7 @@ class SurveyInvite(models.TransientModel):
                                      string='Panelists')
     
     
+    
     def action_invite(self):
         """ Process the wizard content and proceed with sending the related
             email(s), rendering any template patterns on the fly if needed """
@@ -63,11 +64,13 @@ class SurveyInvite(models.TransientModel):
     def _prepare_answers(self, partners, emails, applicant_ids=False):
         answers = self.env['survey.user_input']
         existing_answers = self.env['survey.user_input'].search([
-            '&', ('survey_id', '=', self.survey_id.id),
+            '&', '&', ('survey_id', '=', self.survey_id.id),
+            ('active', '=', True),
             '|',
             ('partner_id', 'in', partners.ids),
             ('email', 'in', emails)
         ])
+        survey = self.survey_id
         partners_done = self.env['res.partner']
         emails_done = []
         if existing_answers:
@@ -93,7 +96,9 @@ class SurveyInvite(models.TransientModel):
                 for applicant in applicant_ids:
                     if applicant.email_from not in emails_done:
                         applicant_email = applicant.email_from
-                        survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values())
+                        survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, **self._get_answers_values(), hr_applicant_id=applicant.id)
+                        # survey_input = self.survey_id._create_answer(email=applicant_email, check_attempts=False, deadline=survey.deadline, **self._get_answers_values())
+
                         answers |= survey_input
                         applicant.survey_user_input_id = survey_input.id
                 # for applicant_email in [email.email_from for email in self.applicant_ids if email not in emails_done]:

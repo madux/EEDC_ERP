@@ -5,10 +5,54 @@ from odoo.exceptions import UserError, ValidationError
 import logging
 import base64
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 # from odoo.addons.website_sale.controllers.main import WebsiteSale
+from odoo.addons.survey.controllers.main import Survey
 
 _logger = logging.getLogger(__name__)
+
+class SurveyInherit(Survey):
+    def _check_validity(self, survey_token, answer_token, ensure_token=True, check_partner=True):
+        """ Custom check validity method with additional start time and deadline logic """
+        
+        _logger.info('Entering _check_validity in SurveyInherit')
+        
+        result = super(SurveyInherit, self)._check_validity(
+            survey_token,
+            answer_token,
+            ensure_token=ensure_token,
+            check_partner=check_partner
+        )
+
+        if result is True:
+            survey_sudo, answer_sudo = self._fetch_from_access_token(survey_token, answer_token)
+            
+            now = datetime.now()
+            
+            # Check if the survey has already been completed
+            if answer_sudo and answer_sudo.state == 'done':
+                return True
+            
+            now = datetime.now()
+
+            if survey_sudo.start_time and now < (survey_sudo.start_time - timedelta(minutes=1)):
+                return 'survey_not_opened'
+            
+            if survey_sudo.deadline and now > survey_sudo.deadline:
+                if answer_sudo and answer_sudo.state != 'in_progress':
+                    return 'survey_closed'
+
+        return result
+    
+    def _redirect_with_error(self, access_data, error_key):
+        survey_sudo = access_data['survey_sudo']
+        answer_sudo = access_data['answer_sudo']
+        
+        if error_key == 'survey_not_opened' and access_data['can_answer']:
+            current_time = datetime.now().strftime('%Y-%m-%d %I:%M %p')
+            return request.render("hr_cbt_portal_recruitment.survey_not_opened", {'survey': survey_sudo, 'current_time': current_time})
+        
+        return super(SurveyInherit, self)._redirect_with_error(access_data, error_key)
 
 class WebsiteHrRecruitment(http.Controller):
 	

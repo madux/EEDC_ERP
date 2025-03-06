@@ -143,11 +143,13 @@
                                     <div class="row gs-0">
                                         <div class="col-md">
                                             <h5 class="row mx-1 mb-1 mb-md-0">
+
                                                 <div class="col-8">
                                                     <span t-field="req.name"/>
                                                     <a t-att-id="req.id" class="record_id"/>
                                                     <small class="text-muted "> (#<span t-field="req.code"/>) </small>
                                                 </div>
+
                                             </h5>
                                         </div>
                                         <!-- <div class="col-md"> -->

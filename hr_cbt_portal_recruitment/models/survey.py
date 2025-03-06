@@ -2,11 +2,20 @@
 
 
 from odoo import api, exceptions, fields, models, _
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.osv import expression
 
 class SurveySurvey(models.Model):
     _inherit = "survey.survey"
+    
+    start_time = fields.Datetime('Start Time')
+    deadline = fields.Datetime('Deadline')
+    
+    @api.constrains('start_time', 'deadline')
+    def _check_deadline_after_start_time(self):
+        for record in self:
+            if record.deadline and record.start_time and record.deadline < record.start_time:
+                raise ValidationError("The deadline must be after the start time. Please correct the dates.")
  
     def action_send_survey(self, email_invite_template=False, panelist_ids=False):
         """ Open a window to compose an email, pre-filled with the survey message """
@@ -56,4 +65,6 @@ class SurveyUserInput(models.Model):
         string="HR applicant",
         required=False,
     )
+    
+    active = fields.Boolean(default=True)
   

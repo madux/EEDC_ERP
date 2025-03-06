@@ -63,6 +63,7 @@ class Applicant(models.Model):
     first_name = fields.Char("First Name")
     middle_name = fields.Char("Middle Name")
     last_name = fields.Char("Last Name")
+    applicant_code = fields.Char("Applicant's Code")
     has_completed_nysc = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string="Completed NYSC",default="No")
     know_anyone_at_eedc = fields.Selection([
         ('Yes', 'Yes'), ('No', 'No')],
@@ -105,6 +106,22 @@ class Applicant(models.Model):
         default="No")
     professional_certificate_link = fields.Char()
     gender = fields.Char()
+    highest_level_of_qualification = fields.Char(string="highest level of qualification")
+    course_of_study = fields.Char(string="Course of study")
+    is_graduate = fields.Boolean(string="Are you a graduate?") #  Do not choose "yes" if you do not have your NYSC certificate available
+    is_aptis = fields.Boolean(string="Are you APTIS?")
+    skills = fields.Char(string="Relevant Skills")
+    prefered_district = fields.Char("Which district do you prefer")
+    nysc_certificate_number = fields.Char(string="NYSC Certificate Number")
+    date_of_birth = fields.Date("Date of Birth")
+    age = fields.Char(string="Age")
+    worked_at_eedc = fields.Selection([
+        ('yes', 'Yes'), ('no', 'No')],
+        string="worked at EEDC?",
+        default=False)
+    mode_of_exit_at_eedc = fields.Char(string="How did you leave?")
+    why_do_you_leave = fields.Char(string="Why you leave EEDC Company?")
+    
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
     is_panelist_added = fields.Boolean(
         "Panelist added?", 
@@ -136,6 +153,13 @@ class Applicant(models.Model):
     
     audited = fields.Boolean(default=False, string='Audited', readonly=True) # Boolean field to check whether someone has been auduted
     stage_type = fields.Selection(related='stage_id.stage_type') # Used in the attribute domain for hiding button
+    
+    @api.onchange('nysc_certificate_number')
+    def _onchange_nysc_certificate_number(self):
+        if self.nysc_certificate_number and self.nysc_certificate_number != '':
+            self.has_completed_nysc = 'Yes'
+        else:
+            self.has_completed_nysc = 'No'
 
     def create_employee_from_applicant(self):
         res = super().create_employee_from_applicant()

@@ -47,9 +47,9 @@ class CBTscheduleWizard(models.TransientModel):
 
     def schedule_action(self):
         """takes all the applicants emails and shares test links to them"""
-        no_applicant_with_email = self.mapped('panelist_ids').filtered(lambda s: not s.work_email)
+        no_panelist_with_email = self.mapped('panelist_ids').filtered(lambda s: not s.work_email)
         if self.is_score_sheet:
-            if no_applicant_with_email:
+            if no_panelist_with_email:
                 raise ValidationError(
                     """Please check!  Ensure all the panelist email is added !!!
                     """)
