@@ -249,6 +249,11 @@ class Memo_Model(models.Model):
         'memo_id', 
         string ='Request Line',
     )
+    document_request_ids = fields.One2many(
+        'document.request.line', 
+        'memo_document_request_id', 
+        string ='Document request Line',
+    )
     leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
     request_date = fields.Datetime('Request Start Date')

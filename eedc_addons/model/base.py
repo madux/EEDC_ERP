@@ -7,6 +7,27 @@ class District(models.Model):
     code = fields.Char('Code')
     lga_id = fields.Many2one('res.lga', 'LGA')
     state_id = fields.Many2one('res.country.state', 'State')
+    company_id = fields.Many2one('res.company', string='Company')
+
+    ###### 
+    telephone_no = fields.Char("Telephone No")
+    company_id = fields.Many2one('res.company', string='Company', required=False, readonly=True, default=lambda self: self.env['res.company']._company_default_get())
+    street = fields.Char()
+    street2 = fields.Char()
+    zip = fields.Char(change_default=True)
+    city = fields.Char(required=False)
+    country_id = fields.Many2one('res.country', string='Country')
+    state_id = fields.Many2one("res.country.state", string='State', domain="[('country_id', '=?', country_id)]")
+    is_testcenter = fields.Boolean('Is Test Center?')
+    is_online_store = fields.Boolean('Is Online store?')
+    alias_display = fields.Char(string="Alias", 
+    help="This will be the name to display on the dropdown for shop")
+    pricelist_id = fields.Many2one('product.pricelist', string='Pricelist')
+    branch_id = fields.Many2one('multi.branch', string='Branch')
+    parent_id = fields.Integer('Branch ID')
+    district_id = fields.Many2one('hr.district', string='Related District')
+    simplybook_location_id = fields.Char(string="Simplybook ID")
+    active = fields.Boolean(default=True)
 
 
 class ResCountryState(models.Model):

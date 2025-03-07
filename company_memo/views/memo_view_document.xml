@@ -2,10 +2,9 @@
 <odoo>
 	<data>
 		
-		<record id ="memo_model_form_view_3" model ="ir.ui.view">
+		<record id ="memo_model_document_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record</field>
 			<field name="model">memo.model</field>
-			<!-- <field name="context">{'form_no_edit':[('user_ids','in', ['res_users'])]}</field>  -->
 			<field eval="1" name="priority"/>
 			<field name ="arch" type="xml">
 				<form string="Memo Record">
@@ -13,14 +12,6 @@
 					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
 					<button name="approve_memo" string="Approve" type="object" class="oe_highlight" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['soe', 'leave_request', 'cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
 					<button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
-					<button name="action_post_and_vallidate_payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/>
-					<button name="send_memo_to_contacts" string="Send Memo" type="object" class="oe_highlight" confirm="Are you sure you want to make send memo?" attrs="{'invisible':['|','|', '|', ('user_is_approver','!=',True), ('state','not in',['Approve2']), ('memo_type_key','not in',['internal', 'Internal']), ('internal_memo_option','not in',['all', 'selected'])]}"/>
-					<button name="complete_memo_transactions" string="Generate &amp; Confirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type_key','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
-					<button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('memo_type_key','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
-					<button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve2', 'Approve','Done']), ('memo_type_key','not in',['soe']),('user_is_approver','=', False)]}"/>
-                    <button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('to_update_inventory_product','!=', True), ('memo_type_key','not in',['soe'])]}"/>
-					<button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
-					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
 					<button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
 					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
@@ -29,18 +20,6 @@
 					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
 				</header>
 					<sheet>
-									<!-- icon="fa-redo" -->
-						<div class="row">
-							<div class="col-xs-4 pull-left mt8">
-								<button name="return_memo"
-									class="btn-danger oe_stat_button sm"
-									attrs="{'invisible': ['|', '|',('memo_type_key','not in',['Internal','server_access','employee_update', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']),('state','!=','Sent'),('user_is_approver','!=', True)]}"
-									type="object" string="Refuse"
-									confirm="Are you sure you want to refuse with comments?">
-								</button>
-							</div> 
-						</div>
-						<br/>
 						<div class="oe_button_box oe_right">
 							<button name="action_get_attachment_view"
 								class="oe_highlight"
@@ -56,12 +35,8 @@
 								 
 						</div>
 						<widget name="web_ribbon" title="Issued" bg_color="bg-danger" attrs="{'invisible': [('memo_material_request_status', '=', False)]}"/>
-                        <widget name="web_ribbon" title="Procured" bg_color="bg-danger" attrs="{'invisible': [('memo_procurement_request_status', '=', False)]}"/>
-                        <widget name="web_ribbon" title="Awaiting Receipt" bg_color="bg-danger" attrs="{'invisible': [('memo_awaiting_procurement_request_status', '=', False)]}"/>
-                        <widget name="web_ribbon" title="Retired" bg_color="bg-danger" attrs="{'invisible': [('memo_soe_status', '=', False)]}"/>
-                        <widget name="web_ribbon" title="Completed" bg_color="bg-danger" attrs="{'invisible': [('memo_bagde_status', '=', False)]}"/>
                         <widget name="web_ribbon" title="In progress" bg_color="bg-danger" attrs="{'invisible': [('memo_bagde_undone', '=', False)]}"/>
-
+                        <widget name="web_ribbon" title="Completed" bg_color="bg-danger" attrs="{'invisible': [('memo_bagde_status', '=', False)]}"/>
 						<div class="oe_title">
 						<label for="name"/>
 							<h1 style="color:Tomato;">

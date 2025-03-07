@@ -125,8 +125,8 @@ class PortalRequest(http.Controller):
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
-			# "district_ids": request.env["hr.district"].sudo().search([]),
-			# "district_ids": request.env["hr.district"].sudo().search([]),
+			# "district_ids": request.env["multi.branch"].sudo().search([]),
+			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
 			"memo_key_ids": request.env["memo.type"].sudo().search([
 				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
@@ -548,7 +548,7 @@ class PortalRequest(http.Controller):
 				})
 			elif request_type_option == "district":
 				domain = []
-				departments = request.env["hr.district"].sudo().search(domain)
+				departments = request.env["multi.branch"].sudo().search(domain)
 				return json.dumps({
 					"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
 					"pagination": {
@@ -605,7 +605,7 @@ class PortalRequest(http.Controller):
 	# 			})
 	# 		elif request_type_option == "district":
 	# 			domain = []
-	# 			departments = request.env["hr.district"].sudo().search(domain)
+	# 			departments = request.env["multi.branch"].sudo().search(domain)
 	# 			return json.dumps({
 	# 				"results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
 	# 				"pagination": {
@@ -952,7 +952,7 @@ class PortalRequest(http.Controller):
 			employee = request.env['hr.employee'].sudo()
 			department = request.env['hr.department'].sudo()
 			role = request.env['hr.job'].sudo()
-			district = request.env['hr.district'].sudo()
+			district = request.env['multi.branch'].sudo()
 			employee_id = employee.browse([int(rec.get('employee_id'))]) if rec.get('employee_id') else False
 			transfer_dept_id = department.browse([int(rec.get('transfer_dept'))]) if rec.get('transfer_dept') else False
 			role_id = role.browse([int(rec.get('new_role'))]) if rec.get('new_role') else False
