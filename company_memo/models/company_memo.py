@@ -581,7 +581,7 @@ class Memo_Model(models.Model):
         res = super(Memo_Model, self).default_get(fields)
         to_create_document = self.env.context.get('to_create_document')
         memo_document_key = self.env.ref('company_memo.mtype_doc_management_request')
-        memo_document_key = memo_document_key if to_create_document else False
+        memo_document_key = memo_document_key.id if to_create_document else False
         res.update({
             'memo_type': memo_document_key,
         })
