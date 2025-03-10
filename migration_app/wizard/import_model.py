@@ -62,8 +62,8 @@ class ImportRecords(models.TransientModel):
     def get_district_id(self, name):
         if not name:
             return False
-        rec = self.env['hr.district'].search([('name', '=', name)], limit=1)
-        return rec.id if rec else self.env['hr.district'].create({'name': name}).id
+        rec = self.env['multi.branch'].search([('name', '=', name)], limit=1)
+        return rec.id if rec else self.env['multi.branch'].create({'name': name}).id
     
     def get_region_id(self, name):
         if not name:

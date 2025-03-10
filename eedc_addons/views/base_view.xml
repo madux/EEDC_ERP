@@ -49,7 +49,9 @@
                     <tree string='District' editable="bottom">
                         <field name="name"/>
                         <field name="code"/>
+                        <field name="country_id"/>
                         <field name="state_id"/>
+                        <field name="branch_id"/>
                         <field name="lga_id"/>
                     </tree>
                 </field>

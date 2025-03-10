@@ -7,7 +7,7 @@ from odoo.exceptions import ValidationError, UserError
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
     branch_id = fields.Many2one(
-        'hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+        'multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
 
     @api.model
     def _prepare_picking(self):
@@ -32,4 +32,4 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
     branch_id = fields.Many2one(
-        'hr.district', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())
+        'multi.branch', 'Branch', default=lambda self: self.env['res.partner']._branch_default_get())

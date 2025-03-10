@@ -39,7 +39,7 @@ class AccountReport(models.AbstractModel):
         ctx['company_ids'] = len(company_ids) > 0 and company_ids or [self.env.user.company_id.id]
 
         if options.get('branch'):
-            ctx['branch'] = self.env['hr.district'].browse([int(acc) for acc in options['branch']])
+            ctx['branch'] = self.env['multi.branch'].browse([int(acc) for acc in options['branch']])
 
         if options.get('analytic_accounts'):
             ctx['analytic_account_ids'] = self.env['account.analytic.account'].browse([int(acc) for acc in options['analytic_accounts']])
@@ -63,11 +63,11 @@ class AccountReport(models.AbstractModel):
         searchview_dict = {'options': options, 'context': self.env.context}
         # Check if report needs analytic
         searchview_dict['branch'] = [(t.id, t.name) for t in
-                                                           self.env['hr.district'].search([])] or False
-        # options['selected_branch_names'] = [self.env['hr.district'].browse(int(tag)).name for tag in
+                                                           self.env['multi.branch'].search([])] or False
+        # options['selected_branch_names'] = [self.env['multi.branch'].browse(int(tag)).name for tag in
         #                                           options['branch']]
-        options['selected_branch_names'] = [self.env['hr.district'].browse([int(tag.id)]).name for tag in
-                                                  self.env['hr.district'].search([])]
+        options['selected_branch_names'] = [self.env['multi.branch'].browse([int(tag.id)]).name for tag in
+                                                  self.env['multi.branch'].search([])]
         if options.get('analytic_accounts') is not None:
             searchview_dict['analytic_accounts'] = self.env.user.id in self.env.ref('analytic.group_analytic_accounting').users.ids and [(t.id, t.name) for t in self.env['account.analytic.account'].search([])] or False
             options['selected_analytic_account_names'] = [self.env['account.analytic.account'].browse(int(account)).name for account in options['analytic_accounts']]

@@ -4,6 +4,18 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
+class EhaBranch(models.Model):
+    _inherit = 'multi.branch'
+    _description = 'Branch'
+    
+    # district_ids = fields.One2many( 
+    #     'hr.district', 
+    #     'district_id', 
+    #     string='Districts'
+    #     )
+    
+    
 class MemoModel(models.Model):
     _inherit = 'memo.model'
 
@@ -67,6 +79,7 @@ class AccountAccount(models.Model):
     _inherit = 'account.account'
 
     district_id = fields.Many2one('hr.district', string="District")
+    
 
 class AccountMoveReversal(models.TransientModel):
     _inherit = 'account.move.reversal'

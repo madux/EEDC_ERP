@@ -72,6 +72,7 @@ class AccountMoveMemo(models.Model):
                 self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
                 self.sudo().memo_id.set_cash_advance_as_retired()
             self.memo_id.is_request_completed = True
+            self.sudo().memo_id.move_id = self.id
             self.sudo().memo_id.update_final_state_and_approver()
             # self.memo_id.state = "Done"
             self.sudo().memo_id.update_status_badge()

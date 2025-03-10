@@ -50,10 +50,11 @@ class RequestLine(models.Model):
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested", default=1)
-    used_qty = fields.Float(string="Qty Used")
     amount_total = fields.Float(string="Unit Price")
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
-    used_amount = fields.Float(string="Amount Used")
+    retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
+    used_qty = fields.Float(string="Qty Used", default=1)
+    used_amount = fields.Float(string="Amount Used (per unit)")
     note = fields.Char(string="Note")
     code = fields.Char(string="code")
     to_retire = fields.Boolean(string="To Retire", help="Used to select the ones to retire", default=False)
@@ -70,6 +71,14 @@ class RequestLine(models.Model):
             else:
                 x.sub_total_amount = 0.00
 
+    @api.depends("used_qty", "used_amount")
+    def compute_retire_sub_total(self):
+        for x in self:
+            if (x.used_qty and x.used_amount):
+                x.retire_sub_total_amount =  x.used_qty * x.used_amount
+            else:
+                x.retire_sub_total_amount = 0.00
+                
     distance_from = fields.Text(
         string="From",
         help="For vehicle request use"
