@@ -558,17 +558,34 @@ class Memo_Model(models.Model):
         domain = ['|', ('name', operator, name), ('code', operator, name)]
         return self.search(domain + args, limit=limit).name_get()
     
+    # @api.model
+    # def default_get(self, fields_list):
+    #     defaults = super(Memo_Model, self).default_get(fields_list)
+    #     if 'to_create_document' in self._context:
+    #         val = self._context.get('to_create_document')
+    #         if val == True:
+    #             memo_document_key = self.env['memo.type'].search([('is_document', '=', True)], limit=1)
+    #         defaults['memo_type'] = memo_document_key.id
+            
+    #     if 'is_doc_mgt_request' in self._context:
+    #         val = self._context.get('is_doc_mgt_request')
+    #         if val == True:
+    #             doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
+    #             if doc_mgt_config and doc_mgt_config.memo_type_id:
+    #                 memo_type_id = doc_mgt_config.memo_type_id.id
+    #                 defaults['memo_type'] = memo_type_id
+    #     return defaults
+    
     @api.model
-    def default_get(self, fields_list):
-        defaults = super(Memo_Model, self).default_get(fields_list)
-        if 'is_doc_mgt_request' in self._context:
-            val = self._context.get('is_doc_mgt_request')
-            if val == True:
-                doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
-                if doc_mgt_config and doc_mgt_config.memo_type_id:
-                    memo_type_id = doc_mgt_config.memo_type_id.id
-                    defaults['memo_type'] = memo_type_id
-        return defaults
+    def default_get(self, fields):
+        res = super(Memo_Model, self).default_get(fields)
+        to_create_document = self.env.context.get('to_create_document')
+        memo_document_key = self.env.ref('company_memo.mtype_doc_management_request')
+        memo_document_key = memo_document_key if to_create_document else False
+        res.update({
+            'memo_type': memo_document_key,
+        })
+        return res
     
     @api.depends('stage_id.memo_config_id')
     def _compute_stage_ids(self):
@@ -1245,28 +1262,40 @@ class Memo_Model(models.Model):
         """check if attachments are completed"""
         submittedby = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)])
         for count, rec in enumerate(self.document_request_ids, 1):
-            if not rec.attachment_ids:
-                raise ValidationError(f"""Please ensure requested attachments are uploaded""")
-                
-            no_request_attachment = rec.mapped('attachment_ids').filtered(lambda att: not att.datas)
-            if no_request_attachment:
-                raise ValidationError(f"""Please ensure document request lines at line {count} - attachments are uploaded""")
-            for att in rec.mapped('attachment_ids'):
-                vals = {
-                    'folder_id': rec.request_to_document_folder.id,
-                    'attachment_id': att.id,
-                    # 'attachment_name': att.name,
-                    'memo_id': self.id,
-                    'datas': att.datas,
-                    'res_id': self.id,
-                    'res_model': 'memo.model',
-                    # 'favourited_ids': [(6, 0, [r.user_id.id for r in self.users_followers])],
-                    'is_shared': True,
-                    'submitted_by': submittedby.id,
-                    'submitted_date': fields.Date.today(),
-                    
-                }
-                self.env['documents.document'].create(vals)
+            if rec.attachment_ids or rec.document_documents_ids:
+                pass 
+            else:
+                raise ValidationError(f"""Please ensure requested attachments / documents are uploaded""")
+            
+            if rec.attachment_ids:
+                no_request_attachment = rec.mapped('attachment_ids').filtered(lambda att: not att.datas)
+                if no_request_attachment:
+                    raise ValidationError(f"""Please ensure document request lines at line {count} - attachments are uploaded""")
+                for att in rec.mapped('attachment_ids'):
+                    vals = {
+                        'folder_id': rec.request_to_document_folder.id,
+                        'attachment_id': att.id,
+                        # 'attachment_name': att.name,
+                        'memo_id': self.id,
+                        'datas': att.datas,
+                        'res_id': self.id,
+                        'res_model': 'memo.model',
+                        # 'favourited_ids': [(6, 0, [r.user_id.id for r in self.users_followers])],
+                        'is_shared': True,
+                        'submitted_by': submittedby.id,
+                        'submitted_date': fields.Date.today(),
+                        
+                    }
+                    self.env['documents.document'].create(vals)
+            if rec.document_documents_ids:
+                for doc in rec.document_documents_ids:
+                    doc.copy({
+                        'department_id': self.employee_id.department_id.id,
+                        'partner_id': self.employee_id.user_id.partner_id.id, 
+                        'folder_id': rec.request_to_document_folder.id,
+                        # 'attachment_id': doc.attachment_id.id,
+                        # 'datas': doc.datas,
+                    })
         self.confirm_memo(self.employee_id, "")
         
     def generate_required_artifacts(self, stage_id, obj, code=''):

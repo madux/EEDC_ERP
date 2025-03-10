@@ -175,7 +175,7 @@ class MemoType(models.Model):
         request the static Id of the memo type for use in conditioning
         """,
         )
-    is_document = fields.Boolean("Is document", default=True)
+    is_document = fields.Boolean("Is document", default=False)
     active = fields.Boolean("Active", default=True)
     allow_for_publish = fields.Boolean("Allow to be published?", default=True)
 
@@ -288,7 +288,7 @@ class MemoStage(models.Model):
 class MemoConfig(models.Model):
     _name = "memo.config"
     _description = "Memo setting"
-    _rec_name = "memo_type"
+    _rec_name = "name"
 
     # memo_type = fields.Selection(
     #     [
@@ -316,6 +316,11 @@ class MemoConfig(models.Model):
         domain=lambda self: self.get_publish_memo_types()
         )
     
+    name = fields.Char(
+        string='Name', 
+        copy=False, 
+        )
+    
     @api.onchange('active')
     def onchange_active(self):
         fleet_group = self.env.ref(
@@ -334,7 +339,6 @@ class MemoConfig(models.Model):
         else:
             fleet_group.users = [(3, usr) for usr in approvers]
             self.active = False
-
 
     approver_ids = fields.Many2many(
         'hr.employee',

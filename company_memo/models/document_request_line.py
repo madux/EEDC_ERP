@@ -52,6 +52,17 @@ class DocumentRequestLine(models.Model):
         store=True,
         domain="[('res_model', '=', 'memo.model')]"
         )
+    
+    ## domain to consider <branch, record rule and groups>
+    document_documents_ids = fields.Many2many(
+        'documents.document', 
+        'document_request_document_rel',
+        'document_request_document_id',
+        'document_document_reques_id',
+        string='Documents', 
+        store=True,
+        )
+    
     memo_state = fields.Char(string="Memo State", compute="compute_memo_state")
     
     @api.depends('memo_document_request_id')
@@ -63,25 +74,26 @@ class DocumentRequestLine(models.Model):
                 rec.memo_state = ""
     
     def view_related_file_system(self):
-        action_ref = 'documents.document_action'
-        search_view_ref = 'documents.document_view_search'
-        action = self.env["ir.actions.act_window"]._for_xml_id(action_ref)
+        pass 
+        # action_ref = 'documents.document_action'
+        # search_view_ref = 'documents.document_view_search'
+        # action = self.env["ir.actions.act_window"]._for_xml_id(action_ref)
         
-        # action = self.env["ir.actions.actions"]._for_xml_id(action_ref)
-        action['display_name'] = f"{self.memo_document_request_id.name}: Documents"
-        if search_view_ref:
-            action['search_view_id'] = self.env.ref(search_view_ref).read()[0]
-        action['views'] = [(False, view) for view in action['view_mode'].split(",")]
-        folder_id = self.request_to_document_folder
-        documents = self.env['documents.document'].search([
-            ('folder_id', '=', folder_id.id),
-            ('attachment_id', 'in', self.attachment_ids.ids),
-            ])
-        domain = f"[('id', 'in', {documents.ids})]"
-        # action['domain'] = eval(domain)
-        action['domain'] = [('id', 'in', documents.ids)]
-        # return {'action': action}
-        return action
+        # # action = self.env["ir.actions.actions"]._for_xml_id(action_ref)
+        # action['display_name'] = f"{self.memo_document_request_id.name}: Documents"
+        # if search_view_ref:
+        #     action['search_view_id'] = self.env.ref(search_view_ref).read()[0]
+        # action['views'] = [(False, view) for view in action['view_mode'].split(",")]
+        # folder_id = self.request_to_document_folder
+        # documents = self.env['documents.document'].search([
+        #     ('folder_id', '=', folder_id.id),
+        #     ('attachment_id', 'in', self.attachment_ids.ids),
+        #     ])
+        # domain = f"[('id', 'in', {documents.ids})]"
+        # # action['domain'] = eval(domain)
+        # action['domain'] = [('id', 'in', documents.ids)]
+        # # return {'action': action}
+        # return action
             
      
     @api.onchange('request_from_document_folder')

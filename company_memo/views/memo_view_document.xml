@@ -28,7 +28,8 @@
 						<page string="Attach Documents">
 							<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
 							context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': False, 'default_memo_id': memo_document_request_id}"
-							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'Approve', 'Approve2'])]}">
+							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'Approve', 'Approve2'])]}"
+							>
 								<tree string="Attachment">
 									<field name="name" string="Document Name"/> 
 									<field name="datas" filename="name" string="File"/>
@@ -47,6 +48,25 @@
 										</group>
 									</group>
 								</form>
+							</field>
+						</page>
+						<page name='document_request_id' string='Document Lines'>
+							<field name="document_documents_ids" string = "Document Lines" readonly="0" force_save="1"
+							kanban_view_ref="%(documents.document_view_kanban)s">
+								<tree create="false" edit="false" sample="1">
+									<field name="id" optional="hide"/>
+									<field name="name" string="Document" required="True"/>
+									<field name="url" optional="hide"/>
+									<!-- <field name="tag_ids" widget="documents_many2many_tags" optional="show"/> -->
+									<field name="partner_id" optional="show"/>
+									<field name="owner_id" widget="many2one_avatar_user" optional="show"/>
+									<field name="lock_uid" optional="hide"/>
+									<field name="type" optional="show"/>
+									<field name="create_date" widget="date" optional="show"/>
+								</tree>
+								
+								
+								
 							</field>
 						</page>
 					</notebook>
@@ -130,7 +150,7 @@
 							</group> 
 						</group>
 						<notebook>
-							<page name='document_request_id' string='Document Lines' attrs="{'invisible':[('to_create_document','=', False)]}">
+							<page name='document_request_id' string='Attachment Lines' attrs="{'invisible':[('to_create_document','=', False)]}">
 								<field name="document_request_ids" string = "Document Lines" readonly="0" force_save="1"
 								context="{'default_memo_document_request_id': active_id}">
 									<tree string="">
@@ -143,7 +163,9 @@
 										string="View files" attrs="{'invisible': [('memo_state', 'not in', ['Done'])]}"/>
 									</tree>
 								</field>
+								
 							</page> 
+							
 							<page name="sub_stages" string="Sub Tasks" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">
 								<field name="memo_sub_stage_ids">
 									<tree string="Sub tasks">

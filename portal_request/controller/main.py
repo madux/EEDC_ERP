@@ -123,14 +123,10 @@ class PortalRequest(http.Controller):
 		"""Request portal for employee / portal users
 		"""
 		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
-		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
 		vals = {
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
-			"memo_key_ids": request.env["memo.type"].sudo().search([
-				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
-				]),
 			"memo_key_ids": request.env["memo.type"].sudo().search([
 				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
 				]),

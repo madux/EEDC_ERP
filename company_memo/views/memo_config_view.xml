@@ -13,6 +13,7 @@
                     <sheet>
                         <group>
                             <group>
+                                <field name="name" required="1"/> 
                                 <field name="memo_type" required="1"/> 
                                 <field name="active" default="1" readonly="0"/> 
                                 <field name="department_id" required="1" options="{'no_create':True, 'no_open': False}"/> 
@@ -54,6 +55,7 @@
 			<field name="model">memo.config</field>
 			<field name="arch" type="xml">
 				<search string="Search">
+                    <field name="name"/>
                     <field name="department_id"/>
                     <field name="memo_type"/>
                     <filter string="Active" name="memo_active_filter" domain="[('active','=', True)]"/>
