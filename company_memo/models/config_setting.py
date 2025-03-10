@@ -175,6 +175,7 @@ class MemoType(models.Model):
         request the static Id of the memo type for use in conditioning
         """,
         )
+    is_document = fields.Boolean("Is document", default=True)
     active = fields.Boolean("Active", default=True)
     allow_for_publish = fields.Boolean("Allow to be published?", default=True)
 

@@ -355,6 +355,7 @@ class PortalRequest(http.Controller):
 		user = request.env.user 
 		staff_num = post.get('staff_num')
 		memo_obj = request.env['memo.model'].sudo()
+		employee_obj = request.env['hr.employee'].sudo()
 		if staff_num:
 			domain = [
 				('employee_id.employee_number', '=', staff_num),
@@ -365,13 +366,15 @@ class PortalRequest(http.Controller):
 				('is_cash_advance_retired', '=', False),
 				('state', 'in', ['Done']) # PLEASE DONT REMOVE
 			]
-			cash_advance_not_retired = memo_obj.search(domain, limit=1)
+			employee = employee_obj.search([('employee_number', '=', staff_num)], limit=1)
+			cash_advance_not_retired = memo_obj.search_count(domain)
+			employee_max_cash_advance_limit = employee.maximum_cash_advance_limit
 			_logger.info(f"This is cash advance check staff_num: {staff_num}")
-			if cash_advance_not_retired:
+			if cash_advance_not_retired >= employee_max_cash_advance_limit:
 				_logger.info(f"Cash advance not retired: {cash_advance_not_retired}")
 				return {
 					"status": False,
-					"message": f"You cannot request for another cash advance without retiring an existing one See: {cash_advance_not_retired.id}"
+					"message": f"You cannot request for another cash advance without retiring an existing one. Contact admin to set more cash advance limit for you:"
 				}
 			else:
 				_logger.info(f"Cash advance is retired")
@@ -678,23 +681,12 @@ class PortalRequest(http.Controller):
 		Returns:
 			dict: Response
 		"""
-		_logger.info(f'Checking product for Request type {request_type} {product_id} District {district} check_ qty No ...{qty}')
-		numeric_data = [int, float]
-		# _logger.info(f'BLLLLLLLLLLLLLLLLLLLLLA: {type(qty)}')
-		# if qty.isalpha():
-		# 	return {
-		# 			"status": False,
-		# 			"message": "Quantity must be numeric", 
-		# 			} 
-		# if int(qty) < 1:
-		# 	return {
-		# 			"status": False,
-		# 			"message": "Quantity must be above 1", 
-		# 			}  
-		if product_id:# and type(product_id) in numeric_data:
+		_logger.info(f'Checking product for {product_id} District {district} check_ qty No ...{qty}')
+		if product_id and type(product_id) in [int]:
 			product = request.env['product.product'].sudo().search(
 			[
 				('active', '=', True),
+				# ('detailed_type', '=', 'product'),
 				('id', '=', int(product_id))
 			], 
 			limit=1) 
@@ -708,34 +700,30 @@ class PortalRequest(http.Controller):
 				if request_type in ['material_request'] and product.detailed_type in ['product']:
 					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
 					product_qty = float(qty) if qty else 0
-					_logger.info(f'total_availability: {product_qty} and {total_availability}')
 					if product_qty > total_availability:
-						_logger.info(f'BLLLLLLLLLLLLLLLLLLLLLA: {product_qty} and {total_availability}')
 						return {
 							"status": False,
 							"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
 							}
 					else:
-						_logger.info(f'FFFFFFFFFFFFFFFFFFFFKKKKKKKKKKKK:')
 						return {
 							"status": True,
 							"message": "", 
 							}
 				else:
-					_logger.info(f'XXXXXXXXXXXXXXXXXXXXXXXXX')
 					return {
 						"status": True,
 						"message": "", 
 						}
 			else:
 				return {
-					"status": False,
+					"status": True,
 					"message": "The product does not exist on the inventory", 
 					}
 		else:
 			return {
-				"status": False,
-				"message": "Please ensure you add a valid product", 
+				"status": True,
+				"message": "Please ensure you select a product line", 
 				}
 
 	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0

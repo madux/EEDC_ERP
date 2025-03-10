@@ -142,7 +142,7 @@
 								<field name="to_create_document" invisible="0"/> 
 								<field name="memo_category_id" attrs="{'invisible':[('to_create_document','!=', True)], 'readonly':[('state','not in',['submit','Refuse'])]}"
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
-								<field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True)],'readonly':[('state','not in',['submit'])]}"
+								<field name="document_folder" attrs="{'invisible':[('to_create_document','!=', True)], 'required':[('to_create_document','=', True), ('document_request_ids','=', False)],'readonly':[('state','not in',['submit'])]}"
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 								<!-- <field name = "employee_ids" string="Employee Reciepients" 
 								widget="many2many_tags" attrs="{'invisible': [('internal_memo_all_employee_option', '!=', 'employees')], 'required': [('internal_memo_all_employee_option', '=', 'employee')]}" 
@@ -182,13 +182,16 @@
 										<!-- <field name="code" string="Code" readonly="1" column_invisible="0" force_save="1"/> -->
 										<!-- <field name="quantity_available" string="Quantity" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])],'column_invisible': [('memo_type_key', 'in', ['Payment','Internal', 'leave_request', 'loan'])]}"/>  -->
                                         <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])],'required': [('product_id', '=', False)]}"/> 
-										<field name="quantity_available" string="Unit" force_save="1" sum="Total" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
-                                        <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['recruitment_request','employee_update', 'material_request'])]}"/>
+										<field name="quantity_available" string="Unit" force_save="1" sum="Total" 
+										attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
+                                        <field name="amount_total" string="Unit Price" force_save="1" sum="Total" 
+										attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['recruitment_request','employee_update', 'material_request'])]}"/>
 										<!-- <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['Payment','recruitment_request','employee_update', 'material_request'])]}"/> -->
 										<field name="sub_total_amount"  readonly="1" force_save="1" string="Subtotal" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request','material_request'])], 'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'procurement_request'])]}"/>
-                                        <field name="used_qty" string="Used Qty" force_save="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
-                                        <field name="used_amount" string="Used Amount" force_save="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
-										<field name="note" string="Note" invisible="1" force_save="1"/> 
+                                        <field name="used_qty" string="Used Qty" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="used_amount" string="Used Amount" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="retire_sub_total_amount" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+										<field name="note" string="Note" invisible="1" force_save="1"/>  
 										<field name="driver_assigned" string="Driver" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/> 
                                         <field name="dest_location_id" string="Destination Location" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/>
@@ -199,6 +202,18 @@
 										<field name="retired" string="Retired" force_save="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe', 'cash_advance'])], 'invisible': [('memo_type_key', 'not in', ['soe', 'cash_advance'])]}"/>
 									</tree>
 								</field>
+								<group name="note_group" col="6" class="mt-2 mt-md-0">
+                                    <group colspan="4">
+                                        <!-- <field colspan="2" name="note" nolabel="1" placeholder="Terms and conditions..."/> -->
+                                    </group>
+                                    <group attrs="{'invisible':[('memo_type_key','=','soe')]}" class="fw-bold oe_subtotal_footer oe_right" style="font-size: 30px;" colspan="2" name="sale_total">
+                                        <field name="request_total_amount" nolabel="0" string="Total" colspan="2" readonly="1"/>
+                                    </group>
+                                    <group attrs="{'invisible':[('memo_type_key','!=','soe')]}" class="fw-bold oe_subtotal_footer oe_right" style="font-size: 30px;" colspan="2" name="sale_total">
+                                        <field name="request_total_soe_amount" nolabel="0" string="Total" colspan="2" readonly="1"/>
+                                    </group>
+                                    <div class="clearfix"/>
+                                </group>
 							</page>
 							<!--ADDD-->
 							
@@ -226,12 +241,17 @@
 							</page>
 							<!--ADDD-->
 							<page name='document_request_id' string='Document Lines' attrs="{'invisible':[('to_create_document','=', False)]}">
-								<field name="document_request_ids" string = "Document Lines" readonly="0" force_save="1"
-								context="{'default_memo_document_request_id': active_id}">
+								<field name="document_request_ids" string = "Document Lines" force_save="1"
+								context="{'default_memo_document_request_id': active_id}"
+								attrs="{'readonly': [('state', 'not in', ['submit', 'Approve', 'Approve2'])]}">
 									<tree string="">
 										<field name="memo_document_request_id" invisible="1" column_invisible="1"/> 
-										<field name="request_from_document_folder" required="1"/> 
+										<field name="request_from_document_folder" required="0" invisible="1" /> 
+										<field name="name" required="1"/> 
+										<field name="memo_state" invisible="1"/> 
 										<field name="request_to_document_folder" required="1"/> 
+                        				<button name="view_related_file_system" type="object" class="oe_highlight btn-sm" 
+										string="View files" attrs="{'invisible': [('memo_state', 'not in', ['Done'])]}"/>
 									</tree>
 								</field>
 							</page> 

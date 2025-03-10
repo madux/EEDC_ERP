@@ -9,3 +9,4 @@ from . import helpdesk
 from . import account
 from . import pricelist
 from . import subscription
+from . import models

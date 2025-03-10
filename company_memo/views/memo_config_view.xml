@@ -209,6 +209,8 @@
                         </group>
                         <group>
                             <field name="active" default="1"/> 
+                            <field name="is_document" default="0"/> 
+
                         </group>
                     </group>
                 </form>

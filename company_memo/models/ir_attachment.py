@@ -21,5 +21,19 @@ class IrAttachment(models.Model):
         string="Code", 
         store=True,
         )
+    code = fields.Char(
+        string="Code", 
+        store=True,
+        )
     is_locked = fields.Boolean(string="Is locked", default=False)
     memo_id = fields.Many2one('memo.model', string="Memo Reference")
+    memo_state = fields.Char(string="Memo State", compute="compute_memo_state")
+    
+    @api.depends('memo_id')
+    def compute_memo_state(self):
+        for rec in self:
+            if rec.memo_id:
+                rec.memo_state = rec.memo_id.state
+            else:
+                rec.memo_state = ""
+    
