@@ -42,6 +42,8 @@ class PortalRequestHelpdesk(http.Controller):
 				"team_id": int(post.get("request_type_id")) if post.get("request_type_id") else False,
 				"deadline_date": datetime.strptime(post.get("deadline_date",''), "%m/%d/%Y") if post.get("deadline_date") else False, 
 				"request_date": fields.Date.today(),
+				"partner_address": post.get("address"),
+				"branch_id": post.get("branch_id"),
 			}
 			_logger.info(f"HELPDESK POST DATA {vals}")
 			helpdesk_id = helpdesk.sudo().create(vals)
@@ -67,6 +69,7 @@ class PortalRequestHelpdesk(http.Controller):
 		vals = {
 			"request_type_ids": request.env['helpdesk.team'].sudo().search([('is_published', '=', True)]),
 			"ticket_type_ids": request.env['helpdesk.ticket.type'].sudo().search([]),
+			"branch_ids": request.env['multi.branch'].sudo().search([]),
 			"request_date": datetime.strftime(fields.Date.today(), '%m/%d/%Y')
 		}
 		return request.render("portal_request_helpdesk.portal_helpdesk_form_template", vals)

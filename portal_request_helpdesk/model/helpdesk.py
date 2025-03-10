@@ -29,5 +29,8 @@ class HelpdeskTicket(models.Model):
     request_date = fields.Date(
         string="Request date", 
         )  
+    partner_address = fields.Char(
+        string="Address", 
+        ) 
     
      

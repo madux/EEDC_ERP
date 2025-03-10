@@ -33,12 +33,27 @@ class Memo_Model(models.Model):
         for rec in self:
             rec.attachment_number = attachment.get(rec.id, 0)
 
+    # def action_get_attachment_view(self):
+    #     self.ensure_one()
+    #     res = self.sudo().env.ref('base.action_attachment')
+    #     res['domain'] = [('res_model', '=', 'memo.model'), ('res_id', 'in', self.ids)]
+    #     res['context'] = {'default_res_model': 'memo.model', 'default_res_id': self.id}
+    #     return res
+    
     def action_get_attachment_view(self):
-        self.ensure_one()
-        res = self.sudo().env.ref('base.action_attachment')
-        res['domain'] = [('res_model', '=', 'memo.model'), ('res_id', 'in', self.ids)]
-        res['context'] = {'default_res_model': 'memo.model', 'default_res_id': self.id}
-        return res
+        action_ref = 'base.action_attachment'
+        search_view_ref = 'base.view_attachment_search'
+        action = self.env["ir.actions.act_window"]._for_xml_id(action_ref)
+        action['display_name'] = "Documents"
+        if search_view_ref:
+            action['search_view_id'] = self.env.ref(search_view_ref).read()[0]
+        action['views'] = [(False, view) for view in action['view_mode'].split(",")]
+        action['context'] = {'default_res_model': 'memo.model', 'default_res_id': self.id}
+        documents = self.env['ir.attachment'].search([
+            ('res_model', '=', 'memo.model'), ('res_id', 'in', [self.id])
+            ])
+        action['domain'] = [('id', 'in', documents.ids)]
+        return action
     
     # default to current employee using the system 
     def _default_employee(self):
@@ -99,6 +114,17 @@ class Memo_Model(models.Model):
     project_id = fields.Many2one('account.analytic.account', 'Project')
     vendor_id = fields.Many2one('res.partner', 'Vendor')
     amountfig = fields.Float('Budget Amount', store=True, default=1.0)
+    request_total_amount = fields.Float(
+        'Total Amount',
+        compute="compute_total_request_amount",
+        store=True, 
+        default=0.0)
+    request_total_soe_amount = fields.Float(
+        'Total Amount',
+        compute="compute_total_soe_request_amount",
+        store=True, 
+        default=0.0) 
+    
     description_two = fields.Text('Reasons')
     phone = fields.Char('Phone', store=True, default=lambda self: self.env.user.employee_id.mobile_phone if self.env.user.employee_id else "")
     email = fields.Char('Email', related='employee_id.work_email')
@@ -249,6 +275,11 @@ class Memo_Model(models.Model):
         'memo_id', 
         string ='Request Line',
     )
+    document_request_ids = fields.One2many(
+        'document.request.line', 
+        'memo_document_request_id', 
+        string ='Document request Line',
+    )
     leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
     request_date = fields.Datetime('Request Start Date')
@@ -258,11 +289,27 @@ class Memo_Model(models.Model):
         'memo.config', 
         string="Memo config id",  
         )
+    
+    def get_document_memo(self):
+        document_memo_ids = self.env['memo.config'].search([('memo_type.is_document', '=', True)])
+        return [('id', '=', document_memo_ids.ids)]
+    
+    document_memo_config_id = fields.Many2one(
+        'memo.config', 
+        string="Request Department Config", 
+        domain= lambda self: self.get_document_memo() 
+        )
+    
+    # dummy_document_memo_config_id = fields.Many2one(
+    #     'memo.config', 
+    #     string="Request Department Config",  
+    #     )
+    
     leave_duration = fields.Char(
         string="Duration",
         store=True,
         compute="get_leave_days_taken")
-
+    
     @api.depends('leave_end_date')
     def get_leave_days_taken(self):
         for rec in self:
@@ -348,6 +395,7 @@ class Memo_Model(models.Model):
         store=True,
         domain="[('res_model', '=', 'memo.model')]"
         )
+    
     memo_sub_stage_ids = fields.Many2many(
         'memo.sub.stage', 
         'memo_sub_stage_rel',
@@ -510,17 +558,34 @@ class Memo_Model(models.Model):
         domain = ['|', ('name', operator, name), ('code', operator, name)]
         return self.search(domain + args, limit=limit).name_get()
     
+    # @api.model
+    # def default_get(self, fields_list):
+    #     defaults = super(Memo_Model, self).default_get(fields_list)
+    #     if 'to_create_document' in self._context:
+    #         val = self._context.get('to_create_document')
+    #         if val == True:
+    #             memo_document_key = self.env['memo.type'].search([('is_document', '=', True)], limit=1)
+    #         defaults['memo_type'] = memo_document_key.id
+            
+    #     if 'is_doc_mgt_request' in self._context:
+    #         val = self._context.get('is_doc_mgt_request')
+    #         if val == True:
+    #             doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
+    #             if doc_mgt_config and doc_mgt_config.memo_type_id:
+    #                 memo_type_id = doc_mgt_config.memo_type_id.id
+    #                 defaults['memo_type'] = memo_type_id
+    #     return defaults
+    
     @api.model
-    def default_get(self, fields_list):
-        defaults = super(Memo_Model, self).default_get(fields_list)
-        if 'is_doc_mgt_request' in self._context:
-            val = self._context.get('is_doc_mgt_request')
-            if val == True:
-                doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
-                if doc_mgt_config and doc_mgt_config.memo_type_id:
-                    memo_type_id = doc_mgt_config.memo_type_id.id
-                    defaults['memo_type'] = memo_type_id
-        return defaults
+    def default_get(self, fields):
+        res = super(Memo_Model, self).default_get(fields)
+        to_create_document = self.env.context.get('to_create_document')
+        memo_document_key = self.env.ref('company_memo.mtype_doc_management_request')
+        memo_document_key = memo_document_key.id if to_create_document else False
+        res.update({
+            'memo_type': memo_document_key,
+        })
+        return res
     
     @api.depends('stage_id.memo_config_id')
     def _compute_stage_ids(self):
@@ -543,7 +608,6 @@ class Memo_Model(models.Model):
                 
     @api.constrains('document_folder')
     def check_next_reoccurance_constraint(self):
-        
         if self.document_folder and self.document_folder.next_reoccurance_date:
             start = self.document_folder.next_reoccurance_date + relativedelta(days=-self.document_folder.submission_minimum_range)
             end = self.document_folder.next_reoccurance_date +  relativedelta(days=self.document_folder.submission_maximum_range)
@@ -583,6 +647,22 @@ class Memo_Model(models.Model):
             domain=[('id', '=', 0)]
         return domain
     
+    @api.depends('product_ids.retire_sub_total_amount')
+    def compute_total_soe_request_amount(self):
+        for rec in self:
+            if rec.product_ids:
+                amount = sum([re.retire_sub_total_amount for re in rec.mapped('product_ids')])
+                # raise ValidationError(amount)
+                rec.request_total_soe_amount = amount
+    
+    @api.depends('product_ids.sub_total_amount')
+    def compute_total_request_amount(self):
+        for rec in self:
+            if rec.product_ids:
+                amount = sum([re.sub_total_amount for re in rec.mapped('product_ids')])
+                # raise ValidationError(amount)
+                rec.request_total_amount = amount
+                
     @api.onchange('invoice_ids')
     def get_amount(self):
         if self.invoice_ids:
@@ -623,11 +703,39 @@ class Memo_Model(models.Model):
         has_invoice, has_po, has_so, has_transformer = self.check_po_config(memo_setting)
         if has_po:
             self.has_po = has_po
-            
+    
+    @api.onchange('document_memo_config_id')
+    def get_document_memo_default_stage_id(self):
+        """ Gives default stage_id """
+        if self.document_memo_config_id:
+            if self.document_memo_config_id.stage_ids:
+                memo_setting_stage = self.document_memo_config_id.stage_ids[0]
+                self.stage_id = memo_setting_stage.id if memo_setting_stage else False
+                self.memo_setting_id = self.document_memo_config_id.id
+                self.memo_type_key = self.memo_type.memo_key 
+                self.requested_department_id = self.employee_id.department_id.id
+                self.users_followers = [
+                            (4, self.employee_id.administrative_supervisor_id.id),
+                            ] 
+            else:
+                self.memo_type = False
+                self.stage_id = False
+                self.memo_setting_id = False
+                self.memo_type_key = False
+                self.requested_department_id = False
+                msg = f"No stage configured for the select configuration. Please contact administrator"
+                return {'warning': {
+                            'title': "Validation",
+                            'message':msg,
+                        }
+                }
+        else:
+            self.stage_id = False
+         
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
-        if self.memo_type:
+        if self.memo_type and not self.memo_type.is_document:
             if not self.employee_id.department_id:
                 raise ValidationError("Contact Admin !!!  Employee must be linked to a department")
             if not self.res_users:
@@ -943,7 +1051,8 @@ class Memo_Model(models.Model):
                     ('res_model', '=', self._name)
                 ])
             if not attach_document_ids:
-                raise ValidationError("Please kindly attach documents since this is a document submission request")
+                if not self.document_request_ids:
+                    raise ValidationError("Please kindly attach documents since this is a document submission request")
         if self.memo_type.memo_key == "Payment" and self.mapped('invoice_ids').filtered(
             lambda s: s.mapped('invoice_line_ids').filtered(
                 lambda x: x.price_unit <= 0)):
@@ -994,7 +1103,7 @@ class Memo_Model(models.Model):
         memo_settings = self.env['memo.config'].sudo().search([
             ('memo_type', '=', self.memo_type.id),
             ('department_id', '=', self.employee_id.department_id.id)
-            ], limit=1)
+            ], limit=1) or self.memo_setting_id
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
@@ -1148,7 +1257,47 @@ class Memo_Model(models.Model):
                 'stage_invoice_required': invoice_required if invoice_required else False,
             })
         return inv
-             
+    
+    def confirm_document_to_repo(self):
+        """check if attachments are completed"""
+        submittedby = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)])
+        for count, rec in enumerate(self.document_request_ids, 1):
+            if rec.attachment_ids or rec.document_documents_ids:
+                pass 
+            else:
+                raise ValidationError(f"""Please ensure requested attachments / documents are uploaded""")
+            
+            if rec.attachment_ids:
+                no_request_attachment = rec.mapped('attachment_ids').filtered(lambda att: not att.datas)
+                if no_request_attachment:
+                    raise ValidationError(f"""Please ensure document request lines at line {count} - attachments are uploaded""")
+                for att in rec.mapped('attachment_ids'):
+                    vals = {
+                        'folder_id': rec.request_to_document_folder.id,
+                        'attachment_id': att.id,
+                        # 'attachment_name': att.name,
+                        'memo_id': self.id,
+                        'datas': att.datas,
+                        'res_id': self.id,
+                        'res_model': 'memo.model',
+                        # 'favourited_ids': [(6, 0, [r.user_id.id for r in self.users_followers])],
+                        'is_shared': True,
+                        'submitted_by': submittedby.id,
+                        'submitted_date': fields.Date.today(),
+                        
+                    }
+                    self.env['documents.document'].create(vals)
+            if rec.document_documents_ids:
+                for doc in rec.document_documents_ids:
+                    doc.copy({
+                        'department_id': self.employee_id.department_id.id,
+                        'partner_id': self.employee_id.user_id.partner_id.id, 
+                        'folder_id': rec.request_to_document_folder.id,
+                        # 'attachment_id': doc.attachment_id.id,
+                        # 'datas': doc.datas,
+                    })
+        self.confirm_memo(self.employee_id, "")
+        
     def generate_required_artifacts(self, stage_id, obj, code=''):
         """This generate invoice lines from the configure stage"""
         stage_invoice_line = stage_id.mapped('required_invoice_line')
@@ -1776,7 +1925,7 @@ class Memo_Model(models.Model):
                     'currency_id': self.env.user.company_id.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
-                    'name': f"CADV/ {self.code}",
+                    'name': f"{self.id}/ {self.code}",
                     'move_type': 'in_receipt',
                     'invoice_date': fields.Date.today(),
                     'date': fields.Date.today(),
@@ -1855,23 +2004,19 @@ class Memo_Model(models.Model):
                 self.cash_advance_reference.is_cash_advance_retired = False 
             else:
                 self.cash_advance_reference.is_cash_advance_retired = True
-           
+                for ch in self.cash_advance_reference.mapped('product_ids'):
+                    ch.retired = True
+        
     def generate_soe_entries(self):
-        # self.follower_messages(body)
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
-            self.write({
-                'state': 'Approve2'
-            })
-            
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].search(
             [('type', '=', 'sale'),
-             ('code', '=', 'INV')
+            #  ('code', '=', 'INV')
              ], limit=1)
-            # 5000 - 3000
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
@@ -1885,55 +2030,109 @@ class Memo_Model(models.Model):
                     'currency_id': self.env.user.company_id.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
-                    'name': f"SOE {self.code}",
+                    'name': f"{self.id}/{self.code}",
                     'move_type': 'out_receipt',
                     'invoice_date': fields.Date.today(),
                     'date': fields.Date.today(),
-                    'journal_id': journal_id.id, 
+                    'journal_id': journal_id.id,
+                    'invoice_line_ids': [(0, 0, {
+                            'name': pr.product_id.name if pr.product_id else pr.description,
+                            'ref': f'{self.code}: {pr.product_id.name or pr.description}',
+                            'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+                            'price_unit': pr.used_amount,
+                            'quantity': pr.used_qty,
+                            'discount': 0.0,
+                            'code': pr.code,
+                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+                            'product_id': pr.product_id.id if pr.product_id else None,
+                    }) for pr in self.product_ids],
                 })
                 if self.product_ids_with_qty_to_return():
                     self.to_update_inventory_product = True
+            self.move_id = inv.id
+            return self.record_to_open(
+            "account.move", 
+            view_id,
+            inv.id,
+            f"Journal Entry - {inv.name}"
+            )
+        else:
+            raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
+    
+    # def generate_soe_entries(self):
+    #     
+    #     # self.follower_messages(body)
+    #     is_config_approver = self.determine_if_user_is_config_approver()
+    #     if is_config_approver:
+    #         self.write({
+    #             'state': 'Approve2'
+    #         })
+            
+    #         """Check if the user is enlisted as the approver for memo type
+    #         if approver is an account officer, system generates move and open the exact record"""
+    #         view_id = self.env.ref('account.view_move_form').id
+    #         journal_id = self.env['account.journal'].search(
+    #         [('type', '=', 'sale'),
+    #          ('code', '=', 'INV')
+    #          ], limit=1)
+    #         # 5000 - 3000
+    #         account_move = self.env['account.move'].sudo()
+    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+    #         if not inv:
+    #             partner_id = self.employee_id.user_id.partner_id
+    #             inv = account_move.create({ 
+    #                 'memo_id': self.id,
+    #                 'ref': self.code,
+    #                 'origin': self.code,
+    #                 'partner_id': partner_id.id,
+    #                 'company_id': self.env.user.company_id.id,
+    #                 'currency_id': self.env.user.company_id.currency_id.id,
+    #                 # Do not set default name to account move name, because it
+    #                 # is unique 
+    #                 'name': f"SOE {self.code}",
+    #                 'move_type': 'out_receipt',
+    #                 'invoice_date': fields.Date.today(),
+    #                 'date': fields.Date.today(),
+    #                 'journal_id': journal_id.id, 
+    #             })
+    #             if self.product_ids_with_qty_to_return():
+    #                 self.to_update_inventory_product = True
 
-                for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-                    # cash_advance_amount = self.env['account.move.line'].search([
-                    #     ('code', '=', pr.code)
-                    #     ], limit=1) # locating the existing cash_advance_line to get the initial request amount
-                    # if cash_advance_amount:
-                    # approved_cash_advance_amount = cash_advance_amount.price_unit
-                    balance_remaining = pr.sub_total_amount - pr.used_amount # e.g 5000 - 3000 = 2000
-                    if balance_remaining > 0:
-                        inv.invoice_line_ids = [(0, 0, {
-                            'name': f"{pr.product_id.name or ''}: {self.code}" or f"{pr.description}",
-                            'ref': f'{self.code}: {pr.product_id.name}',
-                            'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            'price_unit': pr.sub_total_amount - pr.used_amount, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
-                            'quantity': 1, # pr.used_qty,
-                            'discount': 0.0,
-                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                            'product_id': pr.product_id.id if pr.product_id else None,
-                        })]# if pr.sub_total_amount - pr.used_amount > 0 else False]
-                        pr.update({'retired': True, 'to_retire': False}) # updating the Line as retired
-                        _logger.info(f'req line id {pr.request_line_id}')
-                        self.update_cash_advance_lines_as_retired(pr.request_line_id) # no longer pr.code
+    #             for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
+    #                 balance_remaining = pr.sub_total_amount - pr.used_amount # e.g 5000 - 3000 = 2000
+    #                 if balance_remaining > 0:
+    #                     inv.invoice_line_ids = [(0, 0, {
+    #                         'name': f"{pr.product_id.name or ''}: {self.code}" or f"{pr.description}",
+    #                         'ref': f'{self.code}: {pr.product_id.name}',
+    #                         'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+    #                         'price_unit': pr.sub_total_amount - pr.used_amount, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
+    #                         'quantity': 1, # pr.used_qty,
+    #                         'discount': 0.0,
+    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+    #                         'product_id': pr.product_id.id if pr.product_id else None,
+    #                     })]# if pr.sub_total_amount - pr.used_amount > 0 else False]
+    #                     pr.update({'retired': True, 'to_retire': False}) # updating the Line as retired
+    #                     _logger.info(f'req line id {pr.request_line_id}')
+    #                     self.update_cash_advance_lines_as_retired(pr.request_line_id) # no longer pr.code
 
-            if inv.amount_total > 0:
-                return self.record_to_open(
-                    "account.move", 
-                    view_id,
-                    inv.id,
-                    f"Journal Entry SOE - {inv.name}"
-                    ) 
-            else:
-                '''Set the retired to true if there is not amount difference to retire'''
-                for rec in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-                    rec.update({'retired': True, 'to_retire': False}) # updating the Line as retired
-                    _logger.info(f'req line id 2 {rec.request_line_id}')
-                    self.update_cash_advance_lines_as_retired(rec.request_line_id)
-                self.sudo().cash_advance_reference.soe_advance_reference = self.id
-                self.is_request_completed = True
-                self.sudo().update_final_state_and_approver()
-                self.update_status_badge()
-            self.set_cash_advance_as_retired()
+    #         if inv.amount_total > 0:
+    #             return self.record_to_open(
+    #                 "account.move", 
+    #                 view_id,
+    #                 inv.id,
+    #                 f"Journal Entry SOE - {inv.name}"
+    #                 ) 
+    #         else:
+    #             '''Set the retired to true if there is not amount difference to retire'''
+    #             for rec in self.mapped('product_ids').filtered(lambda x: x.to_retire):
+    #                 rec.update({'retired': True, 'to_retire': False}) # updating the Line as retired
+    #                 _logger.info(f'req line id 2 {rec.request_line_id}')
+    #                 self.update_cash_advance_lines_as_retired(rec.request_line_id)
+    #             self.sudo().cash_advance_reference.soe_advance_reference = self.id
+    #             self.is_request_completed = True
+    #             self.sudo().update_final_state_and_approver()
+    #             self.update_status_badge()
+    #         self.set_cash_advance_as_retired()
          
     def record_to_open(self, model, view_id, res_id=False, name=False):
         obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
@@ -2001,16 +2200,16 @@ class Memo_Model(models.Model):
                 f"Stock move for SOE {self.code} - {stock.name}"
                 )
         
-    def open_related_record_view(self, model, res_id, view_id, name="Record To approved"):
+    def open_related_record_view(self, model, res_id, view_id, name="Record To approved", view_mode="form", domain=[]):
         ret = {
                 'name': name,
-                'view_mode': 'form',
+                'view_mode': view_mode,
                 'view_id': view_id,
-                'view_type': 'form',
+                'view_type': view_mode,
                 'res_model': model,
                 'res_id': res_id,
                 'type': 'ir.actions.act_window',
-                'domain': [],
+                'domain': domain,
                 'target': 'current'
                 }
         return ret

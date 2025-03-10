@@ -4,7 +4,7 @@
     'author': "Maduka Sopulu",
     'category': 'Portal request',
     'summary': 'Enable helpdesk for external users ',
-    'depends': ['base', 'website', 'portal_request', 'helpdesk'],
+    'depends': ['base', 'website', 'portal_request', 'helpdesk', 'ik_multi_branch'],
     'description': "Added features of users to request for helpdesk on portal request",
     "data": [
         'static/templates/menu.xml',
@@ -16,6 +16,6 @@
     # ],
     'assets': {
         'web.assets_frontend': [
-        '/portal_request/static/src/js/helpdesk_form.js',
+        '/portal_request_helpdesk/static/src/js/helpdesk_form.js',
     ]},
 }

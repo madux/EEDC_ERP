@@ -57,6 +57,12 @@
             <field name="memo_key">recruitment_request</field>
             <field name="active">1</field>
         </record>
+        <record id="mtype_doc_management_request" model="memo.type">
+            <field name="name">Document Management</field>
+            <field name="memo_key">Document</field>
+            <field name="active">1</field>
+            <field name="is_document">1</field>
+        </record>
 
         
          

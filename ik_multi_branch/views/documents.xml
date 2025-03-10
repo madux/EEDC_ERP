@@ -1,0 +1,14 @@
+<odoo>
+  <data>
+    <record id="view_documents_folder_form_extended" model="ir.ui.view">
+        <field name="name">documents.folder.form.extended</field>
+        <field name="model">documents.folder</field>
+        <field name="inherit_id" ref="company_memo.document_folder_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='period_type']" position="after" >
+                <field string="Branch" name="branch_id" />
+            </xpath>
+        </field>
+    </record> 
+  </data>
+</odoo>

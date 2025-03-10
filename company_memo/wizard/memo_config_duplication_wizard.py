@@ -55,6 +55,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
             for dept in self.dept_ids:
                 stage_ids = []
                 new_config = self.env['memo.config'].create({
+                'name': f"{memo_type.name} - {dept.name}",
                 'department_id': dept.id,
                 'memo_type': memo_type.id,
                 'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
@@ -85,10 +86,6 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                         stage_ids.append(new_stage.id)
                     new_config.update({'stage_ids': stage_ids})
 
-
-
-
-            
     # def duplicate_memo_config(self):
     #     active_id = self.env.context.get('active_id')
     #     if active_id:

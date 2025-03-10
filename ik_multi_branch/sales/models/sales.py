@@ -6,7 +6,7 @@ _logger = logging.getLogger(__name__)
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    branch_id = fields.Many2one('hr.district', 'Branch')
+    branch_id = fields.Many2one('multi.branch', 'Branch')
     warehouse_id = fields.Many2one(
         'stock.warehouse',
         string="WH Location",
@@ -68,7 +68,7 @@ class SaleOrder(models.Model):
         if user_branch:
             return defaut_branch
 
-    branch_id = fields.Many2one('hr.district', 'Branch', default=lambda self: self._default_branch())
+    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self._default_branch())
     bill_to = fields.Many2one('res.partner')
     warehouse_id = fields.Many2one(
         'stock.warehouse', string='Warehouse',
@@ -222,5 +222,5 @@ class SaleOrder(models.Model):
     
 class SalesTeam(models.Model):
     _inherit="crm.team"
-    branch_id = fields.Many2one('hr.district', 'Branch', required=False)
+    branch_id = fields.Many2one('multi.branch', 'Branch', required=False)
 

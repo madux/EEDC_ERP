@@ -1,6 +1,7 @@
 from . import res_users
 from . import memo_fleet
 from . import company_memo
+from . import document_request_line
 from . import forward_memo
 from . import account_payment
 from . import request_line
