@@ -1294,7 +1294,7 @@ class Memo_Model(models.Model):
                         'partner_id': self.employee_id.user_id.partner_id.id, 
                         'folder_id': rec.request_to_document_folder.id,
                         # 'attachment_id': doc.attachment_id.id,
-                        # 'datas': doc.datas,
+                        'datas': doc.datas,
                     })
         self.confirm_memo(self.employee_id, "")
         
