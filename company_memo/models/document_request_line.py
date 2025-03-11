@@ -53,7 +53,7 @@ class DocumentRequestLine(models.Model):
         domain="[('res_model', '=', 'memo.model')]"
         )
     
-    ## domain to consider <branch, record rule and groups>
+    ##TODO domain to consider <branch, record rule and groups>
     document_documents_ids = fields.Many2many(
         'documents.document', 
         'document_request_document_rel',
