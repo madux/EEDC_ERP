@@ -627,14 +627,14 @@ class Memo_Model(models.Model):
                 "view_mode": 'form',
                 'res_model': 'mail.compose.message',
                 'type': 'ir.actions.act_window',
-                'target': 'new',
-                'context': {
-                    'default_partner_ids': self.partner_ids.ids,
-                    'default_subject': self.name,
-                    'default_attachment_ids': self.attachment_ids.ids,
-                    'default_body_html': self.description,
-                    'default_body': self.description,
-                },
+                    'target': 'new',
+                    'context': {
+                        'default_partner_ids': self.partner_ids.ids,
+                        'default_subject': self.name,
+                        'default_attachment_ids': self.attachment_ids.ids,
+                        'default_body_html': self.description,
+                        'default_body': self.description,
+                    },
             }
 
     def _get_related_stage(self):
@@ -1275,7 +1275,7 @@ class Memo_Model(models.Model):
                     vals = {
                         'folder_id': rec.request_to_document_folder.id,
                         'attachment_id': att.id,
-                        # 'attachment_name': att.name,
+                        'attachment_name': att.name,
                         'memo_id': self.id,
                         'datas': att.datas,
                         'res_id': self.id,
@@ -1289,12 +1289,16 @@ class Memo_Model(models.Model):
                     self.env['documents.document'].create(vals)
             if rec.document_documents_ids:
                 for doc in rec.document_documents_ids:
+                    
+                    # rec.request_to_document_folder.sudo().write({
+                    #     'document_ids': [(6, 0, [doc.id])] 
+                    # })
                     doc.copy({
                         'department_id': self.employee_id.department_id.id,
                         'partner_id': self.employee_id.user_id.partner_id.id, 
                         'folder_id': rec.request_to_document_folder.id,
                         # 'attachment_id': doc.attachment_id.id,
-                        # 'datas': doc.datas,
+                        'datas': doc.datas,
                     })
         self.confirm_memo(self.employee_id, "")
         
