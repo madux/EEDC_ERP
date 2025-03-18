@@ -1087,7 +1087,8 @@ class Memo_Model(models.Model):
         memo_settings = self.env['memo.config'].sudo().search([
             ('memo_type', '=', memo_type),
             ('department_id', '=', department_id)
-            ], limit=1)
+            ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id
+
         if memo_settings and memo_settings.stage_ids:
             initial_stage_id = memo_settings.stage_ids[0]
         else:
@@ -1100,10 +1101,11 @@ class Memo_Model(models.Model):
         generated from the website or from odoo internal use
         """
         approver_ids = []
-        memo_settings = self.env['memo.config'].sudo().search([
-            ('memo_type', '=', self.memo_type.id),
-            ('department_id', '=', self.employee_id.department_id.id)
-            ], limit=1) or self.memo_setting_id
+        # memo_settings = self.env['memo.config'].sudo().search([
+        #     ('memo_type', '=', self.memo_type.id),
+        #     ('department_id', '=', self.employee_id.department_id.id)
+        #     ], limit=1) or self.memo_setting_id
+        memo_settings = self.document_memo_config_id if self.to_create_document else self.memo_setting_id 
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
@@ -2003,13 +2005,13 @@ class Memo_Model(models.Model):
             
     def set_cash_advance_as_retired(self):
         if self.cash_advance_reference:
-            if self.cash_advance_reference.mapped('product_ids').filtered(
-                lambda pr: pr.retired == False):
-                self.cash_advance_reference.is_cash_advance_retired = False 
-            else:
-                self.cash_advance_reference.is_cash_advance_retired = True
-                for ch in self.cash_advance_reference.mapped('product_ids'):
-                    ch.retired = True
+            # if self.cash_advance_reference.mapped('product_ids').filtered(
+            #     lambda pr: pr.retired == False):
+            #     self.cash_advance_reference.is_cash_advance_retired = False 
+            # else:
+            self.cash_advance_reference.is_cash_advance_retired = True
+            for ch in self.cash_advance_reference.mapped('product_ids'):
+                ch.retired = True
         
     def generate_soe_entries(self):
         is_config_approver = self.determine_if_user_is_config_approver()
@@ -2220,10 +2222,11 @@ class Memo_Model(models.Model):
 
     def update_memo_type_approver(self):
         """update memo type approver"""
-        memo_settings = self.env['memo.config'].sudo().search([
+        memo_settings = self.memo_setting_id or self.env['memo.config'].sudo().search([
                 ('memo_type', '=', self.memo_type.id),
                 ('department_id', '=', self.employee_id.department_id.id)
-                ])
+                ]) if not self.to_create_document else self.document_memo_config_id
+        
         memo_approver_ids = memo_settings.approver_ids
         for appr in memo_approver_ids:
             self.sudo().write({

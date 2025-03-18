@@ -549,7 +549,7 @@
                                                             </th>
                                                             <!-- 7 -->
                                                             <th id="used_amount_for_soe" width="10%">
-                                                                <label>Used Amount</label>
+                                                                <label>Unit Amount Used</label>
                                                             </th>
                                                             <!-- 8 -->
                                                             <th id="note_label" width="10%">
