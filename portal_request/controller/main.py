@@ -455,7 +455,8 @@ class PortalRequest(http.Controller):
 							# building lines for cash advance and soe
 							'used_qty': q.quantity_available, # q.used_qty,
 							'amount_total': q.amount_total,
-							'used_amount': q.sub_total_amount, # q.used_amount,
+							'used_amount': q.amount_total, # q.used_amount,
+							'sub_total_amount': q.sub_total_amount, # q.used_amount,
 							'description': q.description or "",
 							'request_line_id': q.id,
 							} 
@@ -1096,7 +1097,7 @@ class PortalRequest(http.Controller):
 				stage_id = request.env.ref('company_memo.memo_cancel_stage').id
 				body_msg = f"""
 					Dear Sir / Madam, <br/>
-					I wish to notify you that a memo with description \n <br/>\
+					I wish to notify you that a request with description \n <br/>\
 					has been cancel by {request.env.user.name} <br/>\
 					Kindly {get_url(request_record.id)}"""
 				request_record.mail_sending_direct(body_msg)
@@ -1171,7 +1172,7 @@ class PortalRequest(http.Controller):
 						# request_record.write({'state': 'Sent', 'stage_id': stage_id})
 					body_msg = f"""
 					Dear Sir / Madam <br/>\
-					I wish to notify you that a memo with description \n <br/>\
+					I wish to notify you that a request with description \n <br/>\
 					has been approved for validation by {request.env.user.name} <br/>\
 					Kindly {get_url(request_record.id)}"""
 					request_record.mail_sending_direct(body_msg)
@@ -1251,7 +1252,7 @@ class PortalRequest(http.Controller):
 					})
 				body_msg = f"""
 					Dear Sir / Madam, <br/>
-					I wish to notify you that a memo with description \n <br/>\
+					I wish to notify you that a request with description \n <br/>\
 					has been commented by the Manager. <br/>\
 					Kindly {get_url(request_record.id)}"""
 				request_record.message_post(body=body)

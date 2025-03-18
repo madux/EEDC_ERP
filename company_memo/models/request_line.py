@@ -62,7 +62,16 @@ class RequestLine(models.Model):
     state = fields.Char(string="State")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
-
+    total_balance_difference = fields.Float(
+        string="Balance Diff", 
+        compute="compute_balance_difference",
+        help="Balance between total cash advance amount and To retired balance")
+    
+    @api.depends("sub_total_amount", "retire_sub_total_amount")
+    def compute_balance_difference(self):
+        for rec in self:
+            rec.total_balance_difference = rec.sub_total_amount - rec.retire_sub_total_amount
+            
     @api.depends("quantity_available", "amount_total")
     def compute_sub_total(self):
         for x in self:

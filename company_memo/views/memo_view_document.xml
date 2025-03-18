@@ -70,6 +70,18 @@
 				</form>
 			</field>
 		</record>
+
+		<record id ="document_memo_model_inherit_form_view" model ="ir.ui.view">
+			<field name="name">Memo Record inherit for document</field>
+			<field name="model">memo.model</field>
+			<field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
+			<field name ="arch" type="xml">
+				<xpath expr="//button[@name='forward_memo']" position="after">
+                     <button name="confirm_document_to_repo" string="Approve" type="object" class="oe_highlight" 
+					attrs="{'invisible': ['|', '|', ('to_create_document','=', False), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+                </xpath>
+			</field>
+		</record>
 		
 		<record id ="memo_model_document_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record</field>
