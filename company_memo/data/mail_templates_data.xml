@@ -10,7 +10,7 @@
             <field name="body_html">
                 <![CDATA[
                 <p>
-                    <p>Dear Sir/Madam,</p>
+                    <p>Hello!,</p>
                     You are being notified that it is the due date for submission of Document Request: <t t-out="object.name"/>.<br/>
                     Submission starts: <t t-out="object.submission_start_date"/>.<br/>
                     Submission ends: <t t-out="object.expiry_date"/>.<br/>
