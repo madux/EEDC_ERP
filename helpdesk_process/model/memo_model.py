@@ -22,12 +22,21 @@ class ComplaintResolution(models.Model):
 class HelpdeskMemoModel(models.Model):
     _name = 'helpdesk.memo.model'
     _inherit = ['memo.model']
+    
+    # @api.model
+    # def default_get(self, fields):
+    #     res = super(HelpdeskMemoModel, self).default_get(fields)
+    #     memo_helpdesk = self.env.context.get('memo_helpdesk')
+    #     mtype_helpdesk = self.env.ref('helpdesk_process.mtype_helpdesk').id if memo_helpdesk else False
+    #     res.update({
+    #         'memo_type': 26,
+    #     })
+    #     return res
 
-    memo_type = fields.Many2one(
-        'memo.type', 
-        string="Request type", 
-        default=lambda self: self.env.ref('helpdesk_process.mtype_helpdesk').id
-        )
+    # memo_type = fields.Many2one(
+    #     'memo.type', 
+    #     string="Request type", 
+    #     )
     
     helpdesk_memo_config_id = fields.Many2one(
         'memo.config', 

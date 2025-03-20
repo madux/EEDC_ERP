@@ -46,7 +46,7 @@
 							<group> 
 								<label for="helpdesk_memo_config_id"/>
 								<div>
-									<field name="memo_type" string="Category" domain="[('memo_key', '=', 'helpdesk')]" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+									<field name="memo_type" string="Type" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 									<field name="helpdesk_memo_config_id" domain="[('memo_key', '=', 'helpdesk')]" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 									required="1" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								</div>
@@ -54,7 +54,7 @@
 							<group>
 							</group>
 							<group name="left_side_grp"> 
-								<field name="name" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_name" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_partner_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="customer_phone" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_email" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
@@ -207,7 +207,7 @@
 			<field name="view_id" ref="company_memo.memo_model_document_tree_view"/>
 			<field name="search_view_id" ref="company_memo.memo_model_document_search_view"/>
 		   <field name="domain">[('memo_type_key','=','helpdesk')]</field>
-			<field name="context">{'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
+			<field name="context">{'default_memo_helpdesk': 'helpdesk', 'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
 			 <field name="view_mode">tree,form</field>
 		</record>
 

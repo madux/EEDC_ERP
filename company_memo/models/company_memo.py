@@ -94,7 +94,7 @@ class Memo_Model(models.Model):
     memo_type = fields.Many2one(
         'memo.type',
         string='Memo type',
-        required=True,
+        required=False,
         copy=True,
         domain=lambda self: self.get_publish_memo_types(),
         )
@@ -735,6 +735,7 @@ class Memo_Model(models.Model):
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
+        
         if self.memo_type and not self.memo_type.is_document:
             if not self.employee_id.department_id:
                 raise ValidationError("Contact Admin !!!  Employee must be linked to a department")
