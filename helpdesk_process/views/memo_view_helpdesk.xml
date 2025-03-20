@@ -2,78 +2,9 @@
 <odoo>
 	<data>
 
-		<record id ="memo_model_document_request_line_form_view" model ="ir.ui.view">
-			<field name="name">document.request.line</field>
-			<field name="model">document.request.line</field>
-			<field eval="1" name="priority"/>
-			<field name ="arch" type="xml">
-				<form string="">
-					<div class="alert alert-info text-center" role="alert">
-                        Target folders only shows the folders in your Allowed Branch / District
-                    </div>
-					<group>
-						<group>
-							<field name="memo_document_request_id" invisible="1"/> 
-							<field name="memo_state" invisible="1"/> 
-							<field name="dummy_request_from_document_folder_ids" invisible="1"/> 
-							<field name="dummy_request_to_document_folder_ids" invisible="1"/> 
-							<field name="name" required="1" widget="text" placeholder="Enter of document(s)..."/> 
-						</group>
-						<group>
-							<field name="request_to_document_folder" domain="[('id', 'in', dummy_request_to_document_folder_ids)]" required="1"/> 
-							<field name="request_from_document_folder" invisible="1" required="0"/>
-						</group>
-					</group>
-					<notebook> 
-						<page string="Attach Documents">
-							<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
-							context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': False, 'default_memo_id': memo_document_request_id}"
-							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'Approve', 'Approve2'])]}"
-							>
-								<tree string="Attachment">
-									<field name="name" string="Document Name"/> 
-									<field name="datas" filename="name" string="File"/>
-									<field name="public" string="Is public"/> 
-								</tree>
-								<form string="Attachment">
-									<group>
-										<group> 
-											<field name="name" string="Document Name" attrs="{'required': [('memo_state', 'in', ['submit', 'Sent'])]}"/>
-											<field name="memo_id" string="Memo ID" invisible="1"/> 
-											<field name="memo_state" string="Memo State" invisible="1"/>  
-										</group>
-										<group>
-											<field name="datas" filename="name" string="File" attrs="{'invisible': [('memo_state', 'in', ['Draft', 'submit', 'Sent'])], 'required': [('memo_state', 'in', ['Approve', 'Approve2'])]}"/>
-											<field name="public" string="Is public" invisible="1"/>
-										</group>
-									</group>
-								</form>
-							</field>
-						</page>
-						<page name='document_request_id' string='Document Lines'>
-							<field name="document_documents_ids" string = "Document Lines" readonly="0" force_save="1"
-							kanban_view_ref="%(documents.document_view_kanban)s">
-								<tree create="false" edit="false" sample="1">
-									<field name="id" optional="hide"/>
-									<field name="name" string="Document" required="True"/>
-									<field name="url" optional="hide"/>
-									<!-- <field name="tag_ids" widget="documents_many2many_tags" optional="show"/> -->
-									<field name="partner_id" optional="show"/>
-									<field name="owner_id" widget="many2one_avatar_user" optional="show"/>
-									<field name="lock_uid" optional="hide"/>
-									<field name="type" optional="show"/>
-									<field name="create_date" widget="date" optional="show"/>
-								</tree>
-							</field>
-						</page>
-					</notebook>
-				</form>
-			</field>
-		</record>
-
-		<record id ="helpdesk_memo_model_inherit_form_view" model ="ir.ui.view">
+		<!-- <record id ="helpdesk_memo_model_inherit_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record inherit for helpdesk</field>
-			<field name="model">memo.model</field>
+			<field name="model">helpdesk.memo.model</field>
 			<field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
 			<field name ="arch" type="xml">
 				<xpath expr="//button[@name='forward_memo']" position="after">
@@ -81,11 +12,11 @@
 					attrs="{'invisible': ['|', '|', ('memo_type_key','!=', 'helpdesk'), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
                 </xpath>
 			</field>
-		</record>
+		</record> -->
 		
 		<record id ="memo_model_helpdesk_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record</field>
-			<field name="model">memo.model</field>
+			<field name="model">helpdesk.memo.model</field>
 			<field eval="1" name="priority"/>
 			<field name ="arch" type="xml">
 				<form string="Memo Record">
@@ -113,9 +44,11 @@
 						</div>
 						<group>
 							<group> 
-								<label for="memo_type"/>
+								<label for="helpdesk_memo_config_id"/>
 								<div>
-									<field name="memo_type" string="Category" domain="[('memo_key', '=', 'helpdesk')]" required="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+									<field name="memo_type" string="Category" domain="[('memo_key', '=', 'helpdesk')]" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+									<field name="helpdesk_memo_config_id" domain="[('memo_key', '=', 'helpdesk')]" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
+									required="1" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								</div>
 							</group> 
 							<group>
@@ -149,19 +82,19 @@
 								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 							</page> 
 							<page name='complaint_resolution_id' string='Resolution Lines'>
-								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" force_save="1"
-								context="{'default_memo_id': active_id}">
+								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" force_save="1">
+								<!-- context="{'default_memo_id': active_id}"> -->
 									<tree string="">
 										<field name="name"/> 
 										<field name="user_id" readonly="1"/> 
-										<field name="memo_id" readonly="1"/> 
+										<!-- <field name="memo_id" readonly="1"/>  -->
 									</tree>
 								</field>
 							</page> 
 							
 							<page name="attachment" string="Attachments">
 								<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
-								context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
+								context="{'default_res_model': 'helpdesk.memo.model', 'default_res_id': active_id, 'default_public': True}">
 									<tree string="Attachment">
 										<field name="stage_document_name" string="Required Documents"/> 
 										<field name="name" string="Document Name"/> 
@@ -223,7 +156,7 @@
 		</record>
 		<record model="ir.ui.view" id="memo_model_helpdesk_tree_view">
 			<field name="name">Office memo helpdesk tree</field>
-			<field name="model">memo.model</field>
+			<field name="model">helpdesk.memo.model</field>
 			<field name="arch" type="xml">
 				<tree string="Memo Requests">
 					<field name="date"/> 
@@ -240,7 +173,7 @@
 		</record>
 		<record model="ir.ui.view" id="memo_model_helpdesk_search_view">
 			<field name="name">Office Memo helpdesk Search</field>
-			<field name="model">memo.model</field>
+			<field name="model">helpdesk.memo.model</field>
 			<field name="arch" type="xml">
 				<search string="Filter"> 
 					<field name="name"/>
@@ -267,8 +200,8 @@
 		</record>
   
 		<record model="ir.actions.act_window" id="memo_helpdesk_request_action">
-			<field name="name">Complaint Maangement</field>
-			<field name="res_model">memo.model</field>
+			<field name="name">Complaint Management</field>
+			<field name="res_model">helpdesk.memo.model</field>
 			<field name="type">ir.actions.act_window</field>
 			<field name="view_id" ref="company_memo.memo_model_document_tree_view"/>
 			<field name="search_view_id" ref="company_memo.memo_model_document_search_view"/>
