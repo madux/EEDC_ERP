@@ -104,11 +104,11 @@
 						<div class="oe_title">
 						<label for="name"/>
 							<h1 style="color:Tomato;">
-								<field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
+								<field name="name" string="Title" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
 							</h1>
 							<label for="code" string="Request Number"/>
 							<h1>
-								<field name="code" placeholder="Request Number"/>
+								<field name="code" placeholder="REF0001"/>
 							</h1>
 						</div>
 						<group>
@@ -129,8 +129,9 @@
 								<field name="meter_type" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_meter_no" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								
-								<field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
+								<field name="set_staff" string = "Assigned to" readonly="1" invisible="1"/>
 								<field name="demo_staff" invisible="1"/>
+								<field name="state" invisible="1"/>
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 							</group> 
 							<group name="normal_memo_group2"> 
@@ -138,13 +139,15 @@
 								<field name="complaint_start_date" readonly="1"/>
 								<field name="complaint_close_date" readonly="1"/>
 								<field name="complaint_duration" readonly="1"/>
-								<field name="complaint_description" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
 								<field name="status_progress" widget="progressbar" string="Progress(%)" invisible="1"/>
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>   
 							</group> 
 						</group>
 						<notebook>
+							 <page name='description' string='Complaints '>
+								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page> 
 							<page name='complaint_resolution_id' string='Resolution Lines'>
 								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" force_save="1"
 								context="{'default_memo_id': active_id}">
@@ -155,9 +158,7 @@
 									</tree>
 								</field>
 							</page> 
-							 <page name='description' string='Complaints '>
-								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-							</page> 
+							
 							<page name="attachment" string="Attachments">
 								<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
 								context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
@@ -189,7 +190,7 @@
 							<page name='reason_backs' string='Return Reason'>
 								<field name="reason_back" readonly = "0" string = "Add Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 							</page>
-							<page groups="base.group_system" string="Admin Setting Overview">
+							<page string="Admin Setting Overview">
 								<group>
 									<group>
 										<field name="computed_stage_ids" invisible="0"/>
@@ -272,10 +273,51 @@
 			<field name="view_id" ref="company_memo.memo_model_document_tree_view"/>
 			<field name="search_view_id" ref="company_memo.memo_model_document_search_view"/>
 		   <field name="domain">[('memo_type_key','=','helpdesk')]</field>
-			<field name="context">{'form_view_ref': 'company_memo.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
+			<field name="context">{'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
 			 <field name="view_mode">tree,form</field>
 		</record>
-		<menuitem id="internal_memo_helpdesk_request" sequence= "7" name="Complaint Maangement"
-			parent="company_memo.internal_memo_menu_model_main2" action="company_memo.memo_helpdesk_request_action"/>
+
+
+        <menuitem id="internal_memo_helpdesk_main" name="CRMD" groups="base.group_system" action = "memo_helpdesk_request_action" sequence = "5" web_icon="helpdesk_process,static/description/icon.png"/>
+		<menuitem id="internal_memo_helpdesk_request" sequence= "7" name="Complaint Management"
+			parent="helpdesk_process.internal_memo_helpdesk_main" action="helpdesk_process.memo_helpdesk_request_action"/>
+
+		<record model="ir.actions.act_window" id="memo_helpdesk_configuration_action">
+            <field name="name">Memo helpdesk Configuration</field>
+            <field name="res_model">memo.config</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('memo_key', '=', 'helpdesk')]</field>
+            <field name="context">{'search_default_group_memo_department_id': 1}</field>
+        </record>
+
+		<menuitem id="memo_helpdesk_configuration" name="Configuration"
+            parent="internal_memo_helpdesk_main" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
+        <menuitem id="memo_approvers_helpdesk_configuration" name="Approvers"
+            parent="memo_helpdesk_configuration" action="helpdesk_process.memo_helpdesk_configuration_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
+            
+		
+		 <record model="ir.ui.view" id="memo_type_helpdesk_tree_view">
+			<field name="name">Office type helpdesk tree</field>
+			<field name="model">memo.type</field>
+			<field name="arch" type="xml">
+				<tree string="Memo Requests">
+					<field name="name"/>
+					<field name="allow_for_publish"/> 
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="memo_type_helpdesk_action">
+            <field name="name">Memo Type</field>
+            <field name="res_model">memo.type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+			<field name="view_id" ref="helpdesk_process.memo_type_helpdesk_tree_view"/>
+            <field name="domain">[('memo_key', '=', 'helpdesk')]</field>
+        </record>
+        <menuitem id="memo_type_helpdesk_configuration" name="Memo Type(s)"
+            parent="memo_helpdesk_configuration" action="helpdesk_process.memo_type_helpdesk_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
+        
 	</data>
 </odoo>

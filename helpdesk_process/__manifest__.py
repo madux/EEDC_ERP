@@ -9,6 +9,8 @@
     "data": [
         'security/ir.model.access.csv',
         'views/memo_view_helpdesk.xml',
+        'data/memo_type.xml',
+        'data/memo_config.xml',
     ],
     # 'assets': {'web.assets_backend': [
     #     '/eha_website_sale/static/js/membership_subscription.js',

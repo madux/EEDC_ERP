@@ -103,7 +103,7 @@ class Memo_Model(models.Model):
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
-    set_staff = fields.Many2one('hr.employee', string = 'Employee')
+    set_staff = fields.Many2one('hr.employee', string = 'Assigned to')
     demo_staff = fields.Integer(string='User',
                                 default=lambda self: self.env['res.users'].search([
                                     ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff",)

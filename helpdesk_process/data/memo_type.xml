@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mtype_helpdesk" model="memo.type">
+            <field name="name">CRMD / HELPDESK</field>
+            <field name="memo_key">helpdesk</field>
+            <field name="active">1</field>
+        </record>
+    </data>
+</odoo>
