@@ -527,7 +527,7 @@
 					<field name="name"/>
 					<field name="employee_id"/>
 					<field name="memo_type" string="Request type"/>
-					<field name="set_staff" string = "Memo With?"/>
+					<field name="set_staff" string = "Assigned to?"/>
 					<field name="code"/> 
 					<field name="state" invisible="1"/>
 					<field name="stage_id"/>
