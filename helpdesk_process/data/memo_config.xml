@@ -61,6 +61,7 @@
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
             <field name="sequence">30</field>
         </record>
         <record id="memo_stage_helpdesk_bod_process_4" model="memo.stage">
@@ -81,6 +82,19 @@
             (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_3')),
             (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_4')),
             ]"/>
+        </record>
+
+        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_1" model="memo.stage">
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+        </record>
+        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_2" model="memo.stage">
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+        </record>
+        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_3" model="memo.stage">
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+        </record>
+        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_4" model="memo.stage">
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
         </record>
         
     </data>

@@ -23,12 +23,18 @@ class HelpdeskMemoModel(models.Model):
     _name = 'helpdesk.memo.model'
     _inherit = ['memo.model']
 
-    # attrs="{'required': [('memo_type_key', '=', 'helpdesk')]}"
+    memo_type = fields.Many2one(
+        'memo.type', 
+        string="Request type", 
+        default=lambda self: self.env.ref('helpdesk_process.mtype_helpdesk').id
+        )
+    
     helpdesk_memo_config_id = fields.Many2one(
         'memo.config', 
         string="Category", 
         )
     customer_partner_id = fields.Many2one('res.partner', string='Customer ID')
+    customer_name = fields.Char('Customer Name')
     customer_phone = fields.Char('Customer phone')
     customer_phone2 = fields.Char('Customer phone 2')
     customer_meter_no = fields.Char(string='Customer Account / Meter No')

@@ -54,6 +54,7 @@
 							<group>
 							</group>
 							<group name="left_side_grp"> 
+								<field name="name" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_partner_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="customer_phone" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_email" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
