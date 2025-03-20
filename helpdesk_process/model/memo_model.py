@@ -13,6 +13,10 @@ class ComplaintResolution(models.Model):
         string='Responsible',
         default=lambda self: self.env.uid
         )
+    state = fields.Selection([
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved')
+    ], string="Status", default='pending')
     memo_id = fields.Many2one(
         'helpdesk.memo.model', 
         string='Memo ID'
@@ -114,6 +118,31 @@ class HelpdeskMemoModel(models.Model):
         string='Sub Stages', 
         store=True,
         )
+    
+    task_count = fields.Integer(
+        string='Total Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+    resolved_count = fields.Integer(
+        string='Resolved Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+    pending_count = fields.Integer(
+        string='Pending Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+
+    @api.depends('complaint_resolution_ids.state')
+    def _compute_task_stats(self):
+        for memo in self:
+            resolutions = memo.complaint_resolution_ids
+            memo.task_count = len(resolutions)
+            memo.resolved_count = len(resolutions.filtered(lambda r: r.state == 'resolved'))
+            memo.pending_count = len(resolutions.filtered(lambda r: r.state == 'pending'))
+    pending_count = fields.Integer(string='Pending Count')
     
     @api.onchange('helpdesk_memo_config_id')
     def get_helpdesk_memo_config_id_stage_id(self):

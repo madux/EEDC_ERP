@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <!-- Kanban view for Helpdesk Memo -->
+    <record id="helpdesk_memo_view_kanban" model="ir.ui.view">
+      <field name="name">helpdesk.memo.kanban</field>
+      <field name="model">helpdesk.memo.model</field>
+      <field name="priority">200</field>
+      <field name="arch" type="xml">
+        <kanban class="o_kanban_dashboard o_helpdesk_kanban" group_create="0" create="0">
+          <!-- Fields required by the view -->
+          <field name="name"/>
+          <field name="task_count"/>
+          <field name="resolved_count"/>
+          <field name="pending_count"/>
+          <templates>
+            <t t-name="kanban-box">
+              <div class="oe_kanban_global_click">
+                <div class="o_kanban_card_header">
+                  <div class="o_kanban_card_header_title">
+                    <div class="o_primary">
+                      <field name="name"/>
+                    </div>
+                  </div>
+                  <div class="o_kanban_manage_button_section">
+                    <a class="o_kanban_manage_toggle_button o_dropdown_kanban" href="#">
+                      <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/>
+                    </a>
+                  </div>
+                </div>
+                <div class="o_kanban_card_content">
+                  <div class="mb4">
+                    <a name="action_view_resolved" type="object" title="Resolved Tasks" class="d-flex justify-content-between">
+                      <span>Resolved Tasks</span>
+                      <span class="ms-3"><field name="resolved_count"/></span>
+                    </a>
+                  </div>
+                  <div class="mb4">
+                    <a name="action_view_pending" type="object" title="Pending Tasks" class="d-flex justify-content-between">
+                      <span>Pending Tasks</span>
+                      <span class="ms-3"><field name="pending_count"/></span>
+                    </a>
+                  </div>
+                  <div class="mb4">
+                    <a name="action_view_all_tasks" type="object" title="Total Tasks" class="d-flex justify-content-between">
+                      <span>Total Tasks</span>
+                      <span class="ms-3"><field name="task_count"/></span>
+                    </a>
+                  </div>
+                </div>
+                <div class="row pt-4">
+                  <div class="col border-end">
+                    <a name="action_view_resolved" type="object" class="d-flex flex-column align-items-center">
+                      <span class="fw-bold"><field name="resolved_count"/></span>
+                      <span class="text-muted">Resolved</span>
+                    </a>
+                  </div>
+                  <div class="col">
+                    <a name="action_view_pending" type="object" class="d-flex flex-column align-items-center">
+                      <span class="fw-bold"><field name="pending_count"/></span>
+                      <span class="text-muted">Pending</span>
+                    </a>
+                  </div>
+                  <div class="col border-start">
+                    <a name="action_view_all_tasks" type="object" class="d-flex flex-column align-items-center">
+                      <span class="fw-bold"><field name="task_count"/></span>
+                      <span class="text-muted">Total</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </t>
+          </templates>
+        </kanban>
+      </field>
+    </record>
+
+    <!-- Action to open the Kanban view -->
+    <record id="helpdesk_memo_dashboard_action" model="ir.actions.act_window">
+      <field name="name">Helpdesk Memo Overview</field>
+      <field name="res_model">helpdesk.memo.model</field>
+      <field name="view_mode">kanban,tree,form</field>
+      <field name="view_id" ref="helpdesk_memo_view_kanban"/>
+      <field name="context">{}</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+          No memos found.
+        </p>
+        <p>Create a memo to start tracking resolutions and statistics.</p>
+      </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="helpdesk_memo_menu" name="Helpdesk Memos" parent="base.menu_custom" sequence="10"/>
+    <menuitem id="helpdesk_memo_overview_menu" name="Memo Overview" parent="helpdesk_memo_menu"
+              action="helpdesk_memo_dashboard_action" sequence="1"/>
+  </data>
+</odoo>
