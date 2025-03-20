@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+		<record id ="memo_model_document_request_line_form_view" model ="ir.ui.view">
+			<field name="name">document.request.line</field>
+			<field name="model">document.request.line</field>
+			<field eval="1" name="priority"/>
+			<field name ="arch" type="xml">
+				<form string="">
+					<div class="alert alert-info text-center" role="alert">
+                        Target folders only shows the folders in your Allowed Branch / District
+                    </div>
+					<group>
+						<group>
+							<field name="memo_document_request_id" invisible="1"/> 
+							<field name="memo_state" invisible="1"/> 
+							<field name="dummy_request_from_document_folder_ids" invisible="1"/> 
+							<field name="dummy_request_to_document_folder_ids" invisible="1"/> 
+							<field name="name" required="1" widget="text" placeholder="Enter of document(s)..."/> 
+						</group>
+						<group>
+							<field name="request_to_document_folder" domain="[('id', 'in', dummy_request_to_document_folder_ids)]" required="1"/> 
+							<field name="request_from_document_folder" invisible="1" required="0"/>
+						</group>
+					</group>
+					<notebook> 
+						<page string="Attach Documents">
+							<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
+							context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': False, 'default_memo_id': memo_document_request_id}"
+							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'Approve', 'Approve2'])]}"
+							>
+								<tree string="Attachment">
+									<field name="name" string="Document Name"/> 
+									<field name="datas" filename="name" string="File"/>
+									<field name="public" string="Is public"/> 
+								</tree>
+								<form string="Attachment">
+									<group>
+										<group> 
+											<field name="name" string="Document Name" attrs="{'required': [('memo_state', 'in', ['submit', 'Sent'])]}"/>
+											<field name="memo_id" string="Memo ID" invisible="1"/> 
+											<field name="memo_state" string="Memo State" invisible="1"/>  
+										</group>
+										<group>
+											<field name="datas" filename="name" string="File" attrs="{'invisible': [('memo_state', 'in', ['Draft', 'submit', 'Sent'])], 'required': [('memo_state', 'in', ['Approve', 'Approve2'])]}"/>
+											<field name="public" string="Is public" invisible="1"/>
+										</group>
+									</group>
+								</form>
+							</field>
+						</page>
+						<page name='document_request_id' string='Document Lines'>
+							<field name="document_documents_ids" string = "Document Lines" readonly="0" force_save="1"
+							kanban_view_ref="%(documents.document_view_kanban)s">
+								<tree create="false" edit="false" sample="1">
+									<field name="id" optional="hide"/>
+									<field name="name" string="Document" required="True"/>
+									<field name="url" optional="hide"/>
+									<!-- <field name="tag_ids" widget="documents_many2many_tags" optional="show"/> -->
+									<field name="partner_id" optional="show"/>
+									<field name="owner_id" widget="many2one_avatar_user" optional="show"/>
+									<field name="lock_uid" optional="hide"/>
+									<field name="type" optional="show"/>
+									<field name="create_date" widget="date" optional="show"/>
+								</tree>
+							</field>
+						</page>
+					</notebook>
+				</form>
+			</field>
+		</record>
+
+		<record id ="helpdesk_memo_model_inherit_form_view" model ="ir.ui.view">
+			<field name="name">Memo Record inherit for helpdesk</field>
+			<field name="model">memo.model</field>
+			<field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
+			<field name ="arch" type="xml">
+				<xpath expr="//button[@name='forward_memo']" position="after">
+                     <button name="confirm_memo_helpdesk" string="Approve" type="object" class="oe_highlight" 
+					attrs="{'invisible': ['|', '|', ('memo_type_key','!=', 'helpdesk'), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+                </xpath>
+			</field>
+		</record>
+		
+		<record id ="memo_model_helpdesk_form_view" model ="ir.ui.view">
+			<field name="name">Memo Record</field>
+			<field name="model">memo.model</field>
+			<field eval="1" name="priority"/>
+			<field name ="arch" type="xml">
+				<form string="Memo Record">
+				<header>
+					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
+					<button name="confirm_memo_helpdesk" string="Approve" type="object" class="oe_highlight" 
+					attrs="{'invisible': ['|', '|', ('memo_type_key','!=', 'helpdesk'), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+               		<button name="set_draft" states="Refuse" string="Reset &amp; Forward" type="object"/>
+                    <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
+					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
+					<button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
+					<field name="computed_stage_ids" invisible="1" />
+					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
+				</header>
+					<sheet>
+						<div class="oe_title">
+						<label for="name"/>
+							<h1 style="color:Tomato;">
+								<field name="name" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
+							</h1>
+							<label for="code" string="Request Number"/>
+							<h1>
+								<field name="code" placeholder="Request Number"/>
+							</h1>
+						</div>
+						<group>
+							<group> 
+								<label for="memo_type"/>
+								<div>
+									<field name="memo_type" string="Category" domain="[('memo_key', '=', 'helpdesk')]" required="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+								</div>
+							</group> 
+							<group>
+							</group>
+							<group name="left_side_grp"> 
+								<field name="customer_partner_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
+								<field name="customer_phone" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_email" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_address1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_address2" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="meter_type" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_meter_no" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								
+								<field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
+								<field name="demo_staff" invisible="1"/>
+								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+							</group> 
+							<group name="normal_memo_group2"> 
+								<field name="date" invisible="0" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
+								<field name="complaint_start_date" readonly="1"/>
+								<field name="complaint_close_date" readonly="1"/>
+								<field name="complaint_duration" readonly="1"/>
+								<field name="complaint_description" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
+								<field name="status_progress" widget="progressbar" string="Progress(%)" invisible="1"/>
+								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>   
+							</group> 
+						</group>
+						<notebook>
+							<page name='complaint_resolution_id' string='Resolution Lines'>
+								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" force_save="1"
+								context="{'default_memo_id': active_id}">
+									<tree string="">
+										<field name="name"/> 
+										<field name="user_id" readonly="1"/> 
+										<field name="memo_id" readonly="1"/> 
+									</tree>
+								</field>
+							</page> 
+							 <page name='description' string='Complaints '>
+								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page> 
+							<page name="attachment" string="Attachments">
+								<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
+								context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
+									<tree string="Attachment">
+										<field name="stage_document_name" string="Required Documents"/> 
+										<field name="name" string="Document Name"/> 
+										<field name="datas" filename="name" string="File"/>
+										<field name="stage_document_required" string="Is Compulsory"/>
+										<field name="is_locked" string="Locked?" invisible="1"/>
+									</tree>
+									<form string="Attachment">
+										<group>
+											<group>
+												<field name="stage_document_name" string="Required Documents" readonly="1" force_save="1"/> 
+												<field name="name" string="Document Name"/> 
+											</group>
+											<group>
+												<field name="datas" filename="name" string="File"/>
+												<field name="stage_document_required" string="Is Compulsory" readonly="1" force_save="1"/> 
+												<field name="is_locked" string="Locked?" invisible="1"/> 
+											</group>
+										</group>
+									</form>
+								</field>
+							</page>
+							<page name='comments' string='Comments'>
+								<field name="comments" readonly="1" string = "Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page>
+							<page name='reason_backs' string='Return Reason'>
+								<field name="reason_back" readonly = "0" string = "Add Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page>
+							<page groups="base.group_system" string="Admin Setting Overview">
+								<group>
+									<group>
+										<field name="computed_stage_ids" invisible="0"/>
+										<field name="user_is_approver" invisible="0" readonly="0"/>
+										<field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+										<field name="approver_ids" invisible="0" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+									</group>
+									<group>
+										<field name="active" invisible="0" groups="base.group_system"/>
+										<field name="memo_setting_id" invisible="0" force_save="1" 
+										options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+										<field name="memo_type_key" string="Memo key" invisible="0" force_save="1"/> 
+										<field name="to_create_document" invisible="0"/> 
+										<field name="has_sub_stage" invisible="0"/>
+										<field name="state" invisible="0" force_save="1" readonly="0"/>
+										<field name="is_request_completed" readonly="1" invisible="0"/>
+										<field name="memo_bagde_status" invisible="1"/>
+										<field name="memo_bagde_undone" invisible="1"/>
+									</group>
+								</group>
+							</page>
+						</notebook>
+					</sheet>
+					<div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers"/>
+						<field name="message_ids" widget="mail_thread"/>
+					</div>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="memo_model_helpdesk_tree_view">
+			<field name="name">Office memo helpdesk tree</field>
+			<field name="model">memo.model</field>
+			<field name="arch" type="xml">
+				<tree string="Memo Requests">
+					<field name="date"/> 
+					<field name="name"/>
+					<field name="code"/> 
+					<field name="memo_type" string="Category"/>
+					<field name="set_staff" string = "Request With?"/>
+					<field name="complaint_start_date"/>
+					<field name="complaint_close_date"/>
+					<field name="complaint_duration"/>
+					<field name="stage_id"/>
+				</tree>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="memo_model_helpdesk_search_view">
+			<field name="name">Office Memo helpdesk Search</field>
+			<field name="model">memo.model</field>
+			<field name="arch" type="xml">
+				<search string="Filter"> 
+					<field name="name"/>
+					<field name="code"/>
+					<field name="customer_partner_id"/>
+					<field name="customer_phone"/> 
+					<field name="memo_type" string="Category"/>
+					<field name="meter_type"/>
+					<field name="customer_meter_no"/> 
+					<field name="date" />
+					<field name="customer_email" /> 
+					<field name="customer_address1" /> 
+					<field name="customer_address2" /> 
+					<group expand="0" string="Group By">
+						<filter name="name" string="Name" icon="terp-personal" domain="[]" context="{'group by':'name'}" />
+						<filter name="Approve" string="Approve" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
+						<filter name="Sent" string="Sent" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
+						<filter name="Done" string="Done" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
+						<filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
+						<filter name="Date" string="Date" icon="terp-personal" domain="[]" context="{'group by':'date'}" />
+					</group>
+				</search>
+			</field>
+		</record>
+  
+		<record model="ir.actions.act_window" id="memo_helpdesk_request_action">
+			<field name="name">Complaint Maangement</field>
+			<field name="res_model">memo.model</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_id" ref="company_memo.memo_model_document_tree_view"/>
+			<field name="search_view_id" ref="company_memo.memo_model_document_search_view"/>
+		   <field name="domain">[('memo_type_key','=','helpdesk')]</field>
+			<field name="context">{'form_view_ref': 'company_memo.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
+			 <field name="view_mode">tree,form</field>
+		</record>
+		<menuitem id="internal_memo_helpdesk_request" sequence= "7" name="Complaint Maangement"
+			parent="company_memo.internal_memo_menu_model_main2" action="company_memo.memo_helpdesk_request_action"/>
+	</data>
+</odoo>
