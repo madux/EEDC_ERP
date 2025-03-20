@@ -1,8 +1,8 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import logging
-
 _logger = logging.getLogger(__name__)
+
 
 class ComplaintResolution(models.Model):
     _name = 'complaint.resolution'
@@ -18,29 +18,13 @@ class ComplaintResolution(models.Model):
         ('resolved', 'Resolved')
     ], string="Status", default='pending')
     memo_id = fields.Many2one(
-        'helpdesk.memo.model', 
+        'memo.model', 
         string='Memo ID'
         )
-  
-    
-class HelpdeskMemoModel(models.Model):
-    _name = 'helpdesk.memo.model'
-    _inherit = ['memo.model']
-    
-    # @api.model
-    # def default_get(self, fields):
-    #     res = super(HelpdeskMemoModel, self).default_get(fields)
-    #     memo_helpdesk = self.env.context.get('memo_helpdesk')
-    #     mtype_helpdesk = self.env.ref('helpdesk_process.mtype_helpdesk').id if memo_helpdesk else False
-    #     res.update({
-    #         'memo_type': 26,
-    #     })
-    #     return res
 
-    # memo_type = fields.Many2one(
-    #     'memo.type', 
-    #     string="Request type", 
-    #     )
+
+class HelpdeskMemoModel(models.Model):
+    _inherit = 'memo.model'
     
     helpdesk_memo_config_id = fields.Many2one(
         'memo.config', 
@@ -65,7 +49,7 @@ class HelpdeskMemoModel(models.Model):
     
     complaint_start_date = fields.Date('Start Date', default=fields.Date.today())
     complaint_close_date = fields.Date('Closed Date')
-    complaint_duration = fields.Integer('Duration')
+    complaint_duration = fields.Integer('Duration(Days)', compute="get_spent_duration_in_days")
     complaint_description = fields.Text('Complaints')
     complaint_resolution_ids = fields.One2many(
         'complaint.resolution',
@@ -88,12 +72,14 @@ class HelpdeskMemoModel(models.Model):
         )
     
     invoice_ids = fields.Many2many(
-        'hr.employee',
-        'memo_model_helpdesk_employee_rel',
-        'memo_id',
-        'hr_employee_id',
-        string='Approvers'
-        )
+        'account.move', 
+        'memo_invoice_helpdesk_rel',
+        'memo_invoice_helpdesk_id',
+        'invoice_memo_id',
+        string='Invoice', 
+        store=True,
+        domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
+        ) 
     partner_ids = fields.Many2many(
         'res.partner', 
         'memo_res_helpdesk_partner_rel',
@@ -152,7 +138,7 @@ class HelpdeskMemoModel(models.Model):
                 memo_setting_stage = self.helpdesk_memo_config_id.stage_ids[0]
                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                 self.memo_setting_id = self.helpdesk_memo_config_id.id
-                self.memo_type_key = self.memo_type.memo_key 
+                self.memo_type_key = 'helpdesk' # must be hardcorded to helpdesk 
                 self.requested_department_id = self.employee_id.department_id.id
                 self.users_followers = [
                             (4, self.employee_id.administrative_supervisor_id.id),
@@ -172,10 +158,28 @@ class HelpdeskMemoModel(models.Model):
         else:
             self.stage_id = False
     
-    def confirm_memo_helpdesk (self):
+    @api.depends('complaint_close_date')
+    def get_spent_duration_in_days(self):
+        for rec in self:
+            if rec.complaint_start_date and rec.complaint_close_date:
+                duration = rec.complaint_close_date - rec.complaint_start_date
+                rec.complaint_duration = duration.days
+            else:
+                rec.complaint_duration = 0
+    
+    def confirm_memo_helpdesk(self):
         for complain in self:
             if not complain.complaint_resolution_ids.ids:
                 raise ValidationError(
                     'Please add resolution lines'
-                ) 
+                )
+            complain.complaint_close_date = fields.Date.today()
+            complain.confirm_memo(self.employee_id, "")
+            
+    def forward_memo(self):
+        self.complaint_start_date = fields.Date.today()
+        res = super(HelpdeskMemoModel, self).forward_memo()
+        return res
+        
+            
    

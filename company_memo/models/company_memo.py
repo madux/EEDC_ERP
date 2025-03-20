@@ -1068,6 +1068,7 @@ class Memo_Model(models.Model):
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
+        
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',

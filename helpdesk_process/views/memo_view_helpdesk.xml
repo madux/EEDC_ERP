@@ -4,7 +4,7 @@
 
 		<!-- <record id ="helpdesk_memo_model_inherit_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record inherit for helpdesk</field>
-			<field name="model">helpdesk.memo.model</field>
+			<field name="model">memo.model</field>
 			<field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
 			<field name ="arch" type="xml">
 				<xpath expr="//button[@name='forward_memo']" position="after">
@@ -16,7 +16,7 @@
 		
 		<record id ="memo_model_helpdesk_form_view" model ="ir.ui.view">
 			<field name="name">Memo Record</field>
-			<field name="model">helpdesk.memo.model</field>
+			<field name="model">memo.model</field>
 			<field eval="1" name="priority"/>
 			<field name ="arch" type="xml">
 				<form string="Memo Record">
@@ -27,7 +27,7 @@
                		<button name="set_draft" states="Refuse" string="Reset &amp; Forward" type="object"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
 					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
-					<button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
+					<!-- <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/> -->
 					<field name="computed_stage_ids" invisible="1" />
 					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
 				</header>
@@ -48,7 +48,7 @@
 								<div>
 									<field name="memo_type" string="Type" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 									<field name="helpdesk_memo_config_id" domain="[('memo_key', '=', 'helpdesk')]" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
-									required="1" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+									required="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								</div>
 							</group> 
 							<group>
@@ -69,7 +69,7 @@
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 							</group> 
 							<group name="normal_memo_group2"> 
-								<field name="date" invisible="0" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
+								<field name="date" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
 								<field name="complaint_start_date" readonly="1"/>
 								<field name="complaint_close_date" readonly="1"/>
 								<field name="complaint_duration" readonly="1"/>
@@ -83,7 +83,7 @@
 								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 							</page> 
 							<page name='complaint_resolution_id' string='Resolution Lines'>
-								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" force_save="1">
+								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" force_save="1">
 								<!-- context="{'default_memo_id': active_id}"> -->
 									<tree string="">
 										<field name="name"/> 
@@ -95,7 +95,7 @@
 							
 							<page name="attachment" string="Attachments">
 								<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
-								context="{'default_res_model': 'helpdesk.memo.model', 'default_res_id': active_id, 'default_public': True}">
+								context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
 									<tree string="Attachment">
 										<field name="stage_document_name" string="Required Documents"/> 
 										<field name="name" string="Document Name"/> 
@@ -157,14 +157,14 @@
 		</record>
 		<record model="ir.ui.view" id="memo_model_helpdesk_tree_view">
 			<field name="name">Office memo helpdesk tree</field>
-			<field name="model">helpdesk.memo.model</field>
+			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
 				<tree string="Memo Requests">
 					<field name="date"/> 
 					<field name="name"/>
 					<field name="code"/> 
 					<field name="memo_type" string="Category"/>
-					<field name="set_staff" string = "Request With?"/>
+					<field name="set_staff" string = "Assigned to?"/>
 					<field name="complaint_start_date"/>
 					<field name="complaint_close_date"/>
 					<field name="complaint_duration"/>
@@ -174,7 +174,7 @@
 		</record>
 		<record model="ir.ui.view" id="memo_model_helpdesk_search_view">
 			<field name="name">Office Memo helpdesk Search</field>
-			<field name="model">helpdesk.memo.model</field>
+			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
 				<search string="Filter"> 
 					<field name="name"/>
@@ -190,11 +190,12 @@
 					<field name="customer_address2" /> 
 					<group expand="0" string="Group By">
 						<filter name="name" string="Name" icon="terp-personal" domain="[]" context="{'group by':'name'}" />
-						<filter name="Approve" string="Approve" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
-						<filter name="Sent" string="Sent" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
-						<filter name="Done" string="Done" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
+						<filter name="Approve" string="Approved tickets" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
+						<filter name="Sent" string="Tickets Awaiting Approval" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
+						<filter name="Done" string="Completed tickets" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
 						<filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
-						<filter name="Date" string="Date" icon="terp-personal" domain="[]" context="{'group by':'date'}" />
+						<filter name="group_of_assignees" string="Assignees" domain="[]" context="{'group_by' : 'set_staff'}"/>
+						<filter name="group_of_start_date" string="Start date" icon="terp-personal" domain="[]" context="{'group by':'complaint_start_date'}" />
 					</group>
 				</search>
 			</field>
@@ -202,12 +203,12 @@
   
 		<record model="ir.actions.act_window" id="memo_helpdesk_request_action">
 			<field name="name">Complaint Management</field>
-			<field name="res_model">helpdesk.memo.model</field>
+			<field name="res_model">memo.model</field>
 			<field name="type">ir.actions.act_window</field>
-			<field name="view_id" ref="company_memo.memo_model_document_tree_view"/>
-			<field name="search_view_id" ref="company_memo.memo_model_document_search_view"/>
+			<field name="view_id" ref="helpdesk_process.memo_model_helpdesk_tree_view"/>
+			<field name="search_view_id" ref="helpdesk_process.memo_model_helpdesk_search_view"/>
 		   <field name="domain">[('memo_type_key','=','helpdesk')]</field>
-			<field name="context">{'default_memo_helpdesk': 'helpdesk', 'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view', 'search_default_group_to_create_document': 1, 'default_to_create_document': True}</field>
+			<field name="context">{'default_memo_helpdesk': 'helpdesk', 'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view'}</field>
 			 <field name="view_mode">tree,form</field>
 		</record>
 
