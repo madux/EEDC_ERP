@@ -386,9 +386,9 @@
 							</page>
 							<page name='description' string='Memo Body'>
 								<field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-								<field name="has_po" invisible="0"/>
-								<field name="has_so" invisible="0"/>
-								<field name="has_invoice" invisible="0"/>
+								<field name="has_po" invisible="1"/>
+								<field name="has_so" invisible="1"/>
+								<field name="has_invoice" invisible="1"/>
 							</page> 
 							<page name="sub_stages" string="Sub Tasks" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">
 								<!-- invisible="not has_sub_stage"> -->

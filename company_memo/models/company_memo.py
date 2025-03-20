@@ -2517,7 +2517,7 @@ class Memo_Model(models.Model):
                 exp.expiry_mail_sent = True
 
     def unlink(self):
-        for delete in self.filtered(lambda delete: delete.state in ['Sent','Approve2', 'Approve']):
+        for delete in self.filtered(lambda delete: delete.active == True and delete.state in ['Sent','Approve2', 'Approve']):
             raise ValidationError(_('You cannot delete a Memo which is in %s state.') % (delete.state,))
         return super(Memo_Model, self).unlink()
     
