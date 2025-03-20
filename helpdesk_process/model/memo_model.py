@@ -17,7 +17,7 @@ class ComplaintResolution(models.Model):
         'memo.model', 
         string='Memo ID'
         )
-
+  
     
 class HelpdeskMemoModel(models.Model):
     _inherit = 'memo.model'
@@ -26,7 +26,7 @@ class HelpdeskMemoModel(models.Model):
     customer_partner_id = fields.Many2one('res.partner', string='Customer ID')
     customer_phone = fields.Char('Customer phone')
     customer_phone2 = fields.Char('Customer phone 2')
-    customer_meter_no = fields.Char('Customer Account / Meter No', size="25")
+    customer_meter_no = fields.Char(string='Customer Account / Meter No')
     meter_type = fields.Selection([('postpaid', 'Postpaid'),
                                 ('prepaid', 'Prepaid'),
                                 ('direct source', 'Direct Source'),
@@ -47,4 +47,11 @@ class HelpdeskMemoModel(models.Model):
         'complaint.resolution',
         string='Resolution line'
         )
+    
+    def confirm_memo_helpdesk (self):
+        for complain in self:
+            if not complain.complaint_resolution_ids.ids:
+                raise ValidationError(
+                    'Please add resolution lines'
+                ) 
    

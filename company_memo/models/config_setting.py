@@ -315,6 +315,7 @@ class MemoConfig(models.Model):
         copy=False,
         domain=lambda self: self.get_publish_memo_types()
         )
+    memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
     
     name = fields.Char(
         string='Name', 
