@@ -1,0 +1,16 @@
+<templates xml:space="preserve">
+        <!-- This template extends Odoo's core KanbanView template -->
+        <t t-name="helpdesk_process.HelpdeskMemoKanbanView" t-inherit="web.KanbanView" t-inherit-mode="primary" owl="1">
+            <xpath expr="//t[@t-component='props.Renderer']" position="replace">
+                <div class="o_helpdesk_content flex-column d-flex h-100 mw-100">
+                    <!-- Our custom dashboard component -->
+                    <HelpdeskMemoDashboard/>
+                    <!-- Then we display the actual Kanban records -->
+                    <div class="o_helpdesk_wrap_kanban_view flex-grow-1">
+                        <!-- $0 is replaced by the original KanbanView's content -->
+                        $0
+                    </div>
+                </div>
+            </xpath>
+        </t>
+</templates>

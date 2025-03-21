@@ -10,11 +10,14 @@
         'security/ir.model.access.csv',
         'views/memo_view_helpdesk.xml',
         'views/memo_view_helpdesk_kaban.xml',
+        # 'static/src/xml/helpdesk_memo_kanban_view.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
     ],
-    # 'assets': {'web.assets_backend': [
-    #     '/eha_website_sale/static/js/membership_subscription.js',
-        
-    # ]},
+    "assets": {
+        "web.assets_backend": [
+            "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
+            "helpdesk_process/static/src/components/helpdesk_memo_kanban_controller.js",
+        ],
+    },
 }
