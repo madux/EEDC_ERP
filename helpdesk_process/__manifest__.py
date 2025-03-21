@@ -10,7 +10,7 @@
         'security/ir.model.access.csv',
         'views/memo_view_helpdesk.xml',
         'views/memo_view_helpdesk_kaban.xml',
-        # 'static/src/xml/helpdesk_memo_kanban_view.xml',
+        # 'views/helpdesk_memo_dashboard.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
     ],
@@ -18,6 +18,12 @@
         "web.assets_backend": [
             "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
             "helpdesk_process/static/src/components/helpdesk_memo_kanban_controller.js",
+            # "helpdesk_process/static/src/css/dashboard.css"
+        ],
+        "web.assets_qweb": [
+            # "helpdesk_process/views/helpdesk_memo_kanban_view.xml",
+            "helpdesk_process/static/src/components/helpdesk_memo_kanban_view.xml",
+            "helpdesk_process/views/helpdesk_memo_model_dashboard_view.xml",
         ],
     },
 }

@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
   <data>
-    <!-- Kanban view for Helpdesk Memos -->
     <record id="helpdesk_memo_view_kanban" model="ir.ui.view">
       <field name="name">helpdesk.memo.kanban</field>
       <field name="model">memo.model</field>
       <field name="priority">200</field>
       <field name="arch" type="xml">
         <kanban class="o_kanban_dashboard o_helpdesk_kanban" group_create="0" create="0">
-          <!-- List the fields you need to have available in the view -->
           <field name="name"/>
           <field name="task_count"/>
           <field name="resolved_count"/>
@@ -44,7 +42,7 @@
                     <span class="ms-2"><field name="pending_count"/></span>
                   </div>
                 </div>
-                <!-- Optional: Footer with clickable areas for details -->
+                <!-- Footer with clickable areas for details -->
                 <div class="row pt-4">
                   <div class="col border-end">
                     <a name="action_view_resolved" type="object" class="d-flex flex-column align-items-center">

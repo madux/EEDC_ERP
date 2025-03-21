@@ -8,7 +8,6 @@ const { Component, useState, onWillStart } = owl;
 
 /**
  * Dashboard component for memo.model
- * (Adapted from your example).
  */
 export class HelpdeskMemoDashboard extends Component {
     setup() {
@@ -30,7 +29,6 @@ export class HelpdeskMemoDashboard extends Component {
 
     /**
      * Example click handler for custom actions.
-     * Adjust as needed for your use-case.
      */
     async onActionClicked(ev) {
         const actionElement = ev.currentTarget;
@@ -39,26 +37,14 @@ export class HelpdeskMemoDashboard extends Component {
         const searchViewRef = actionElement.getAttribute("search_view_ref");
         const buttonContext = actionElement.getAttribute("context") || "";
 
-        // Example: If the name includes "memo.model", do something special.
-        if (actionRef.includes("memo.model")) {
-            return await this.actionService.doActionButton({
-                resModel: "memo.model",
-                name: "create_action",
-                args: JSON.stringify([actionRef, title, searchViewRef]),
-                context: "",
-                buttonContext,
-                type: "object",
-            });
-        } else {
-            // Otherwise do a simpler call
-            return this.actionService.doActionButton({
-                resModel: "memo.model",
-                name: actionRef,
-                context: "",
-                buttonContext,
-                type: "object",
-            });
-        }
+        // You can adapt this logic as needed
+        return this.actionService.doActionButton({
+            resModel: "memo.model",
+            name: actionRef,
+            context: "",
+            buttonContext,
+            type: "object",
+        });
     }
 
     /**
@@ -68,7 +54,7 @@ export class HelpdeskMemoDashboard extends Component {
     async _fetchData() {
         this.state.dashboardValues = await this.orm.call(
             "memo.model",
-            "retrieve_dashboard",  // Implement this in your Python model if needed
+            "retrieve_dashboard",
             [],
             { context: session.user_context },
         );
@@ -86,5 +72,5 @@ export class HelpdeskMemoDashboard extends Component {
     }
 }
 
-// Register the template name for Owl
+// IMPORTANT: Template name must match the QWeb template's t-name
 HelpdeskMemoDashboard.template = "helpdesk_process.HelpdeskMemoDashboard";
