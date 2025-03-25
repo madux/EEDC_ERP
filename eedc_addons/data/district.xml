@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record model="hr.district" id="dis1">
+            <field name="name">Awka District</field>
+            <field name="state_id" ref="eedc_addons.ng_state_42"/>
+            <!-- <field name="branch_id" ref="163"/> -->
+        </record>
+        <record model="hr.district" id="dis2">
+            <field name="name">Ogidi District</field>
+            <field name="state_id" ref="eedc_addons.ng_state_42"/>
+            <!-- <field name="branch_id" ref="163"/> -->
+        </record>
+        <record model="hr.district" id="dis3">
+            <field name="name">Oshimili</field>
+            <field name="state_id" ref="eedc_addons.ng_state_235"/>
+            <!-- <field name="branch_id" ref="163"/> -->
+        </record>
+    </data>
+</odoo>

@@ -84,6 +84,11 @@ class HRDistrict(models.Model):
         string="Name", 
         required=True
         )
+    # country_id = fields.Many2one(
+    #     'res.country.state',
+    #     string="Country", 
+    #     required=False
+    #     )
 
 class HRLevel(models.Model):
     _name = "hr.level"

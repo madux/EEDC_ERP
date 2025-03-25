@@ -11,9 +11,10 @@
         'views/memo_view_helpdesk.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
+        'static/templates/memo_helpdesk_template.xml',
     ],
-    # 'assets': {'web.assets_backend': [
-    #     '/eha_website_sale/static/js/membership_subscription.js',
-        
-    # ]},
+    'assets': {
+        'web.assets_frontend': [
+        '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
+    ]},
 }

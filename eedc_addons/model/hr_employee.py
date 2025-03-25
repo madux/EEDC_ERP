@@ -5,6 +5,24 @@ from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
 
+# class HRDistrict(models.Model):
+#     _name = "hr.district"
+#     _description = "HR district Addons"
+
+#     name = fields.Char(
+#         string="Name", 
+#         required=True
+#         )
+#     state_id = fields.Many2one(
+#         'res.country.state',
+#         string="Country", 
+#         required=False
+#         )
+#     branch_id = fields.Many2one(
+#         'multi.branch',
+#         string="Branch", 
+#         required=False
+#         )
 
 
 # class HREmployeePublic(models.Model):
