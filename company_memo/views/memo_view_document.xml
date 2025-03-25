@@ -148,7 +148,6 @@
 								<field name="dept_ids" widget="selection" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="start_date" attrs="{'invisible':[('memo_type_key','!=', 'loan')],'required':[('memo_type_key','=','loan')]}"/>
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
-								 
 							</group> 
 							<group name="normal_memo_group2"> 
 								<field name="date" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>

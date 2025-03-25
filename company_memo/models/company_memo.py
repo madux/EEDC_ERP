@@ -94,7 +94,7 @@ class Memo_Model(models.Model):
     memo_type = fields.Many2one(
         'memo.type',
         string='Memo type',
-        required=True,
+        required=False,
         copy=True,
         domain=lambda self: self.get_publish_memo_types(),
         )
@@ -103,7 +103,7 @@ class Memo_Model(models.Model):
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
-    set_staff = fields.Many2one('hr.employee', string = 'Employee')
+    set_staff = fields.Many2one('hr.employee', string = 'Assigned to')
     demo_staff = fields.Integer(string='User',
                                 default=lambda self: self.env['res.users'].search([
                                     ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff",)
@@ -596,6 +596,14 @@ class Memo_Model(models.Model):
                 )
             else:
                 record.computed_stage_ids = False
+                
+    def compute_config_stages_from_website(self, memo_config_id):
+        if memo_config_id:
+            self.computed_stage_ids = memo_config_id.mapped('stage_ids').filtered(
+                lambda publish: publish.publish_on_dashboard
+            )
+        else:
+            self.computed_stage_ids = False
     
     @api.depends('memo_type')
     def _compute_user_cash_advance(self):
@@ -735,6 +743,7 @@ class Memo_Model(models.Model):
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
+        
         if self.memo_type and not self.memo_type.is_document:
             if not self.employee_id.department_id:
                 raise ValidationError("Contact Admin !!!  Employee must be linked to a department")
@@ -1067,6 +1076,7 @@ class Memo_Model(models.Model):
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
+        
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -1087,7 +1097,7 @@ class Memo_Model(models.Model):
         memo_settings = self.env['memo.config'].sudo().search([
             ('memo_type', '=', memo_type),
             ('department_id', '=', department_id)
-            ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id
+            ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id # if self.document_memo_config_id else self.helpdesk_memo_config_id
 
         if memo_settings and memo_settings.stage_ids:
             initial_stage_id = memo_settings.stage_ids[0]
@@ -1105,7 +1115,7 @@ class Memo_Model(models.Model):
         #     ('memo_type', '=', self.memo_type.id),
         #     ('department_id', '=', self.employee_id.department_id.id)
         #     ], limit=1) or self.memo_setting_id
-        memo_settings = self.document_memo_config_id if self.to_create_document else self.memo_setting_id 
+        memo_settings = self.document_memo_config_id if self.to_create_document else self.helpdesk_memo_config_id or self.memo_setting_id 
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
@@ -2517,7 +2527,7 @@ class Memo_Model(models.Model):
                 exp.expiry_mail_sent = True
 
     def unlink(self):
-        for delete in self.filtered(lambda delete: delete.state in ['Sent','Approve2', 'Approve']):
+        for delete in self.filtered(lambda delete: delete.active == True and delete.state in ['Sent','Approve2', 'Approve']):
             raise ValidationError(_('You cannot delete a Memo which is in %s state.') % (delete.state,))
         return super(Memo_Model, self).unlink()
     

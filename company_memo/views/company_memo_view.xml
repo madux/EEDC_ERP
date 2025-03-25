@@ -386,9 +386,9 @@
 							</page>
 							<page name='description' string='Memo Body'>
 								<field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-								<field name="has_po" invisible="0"/>
-								<field name="has_so" invisible="0"/>
-								<field name="has_invoice" invisible="0"/>
+								<field name="has_po" invisible="1"/>
+								<field name="has_so" invisible="1"/>
+								<field name="has_invoice" invisible="1"/>
 							</page> 
 							<page name="sub_stages" string="Sub Tasks" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">
 								<!-- invisible="not has_sub_stage"> -->
@@ -527,7 +527,7 @@
 					<field name="name"/>
 					<field name="employee_id"/>
 					<field name="memo_type" string="Request type"/>
-					<field name="set_staff" string = "Memo With?"/>
+					<field name="set_staff" string = "Assigned to?"/>
 					<field name="code"/> 
 					<field name="state" invisible="1"/>
 					<field name="stage_id"/>
@@ -611,8 +611,8 @@
 			<field name="name">Internal Memo Request</field>
 			<field name="res_model">memo.model</field>
 			<field name="type">ir.actions.act_window</field>
-		   <!-- <field name="domain">[('is_house','=',True)]</field>
-			<field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
+		   <field name="domain">[('memo_type_key','not in',['helpdesk'])]</field>
+			<!-- <field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
 			<field name="search_view_id" ref="view_building_type_search_filter"/> -->
 			 <field name="view_mode">tree,form</field>
 		</record>

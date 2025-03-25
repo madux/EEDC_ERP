@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+		<!-- <record id ="helpdesk_memo_model_inherit_form_view" model ="ir.ui.view">
+			<field name="name">Memo Record inherit for helpdesk</field>
+			<field name="model">memo.model</field>
+			<field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>
+			<field name ="arch" type="xml">
+				<xpath expr="//button[@name='forward_memo']" position="after">
+                     <button name="confirm_memo_helpdesk" string="Approve" type="object" class="oe_highlight" 
+					attrs="{'invisible': ['|', '|', ('memo_type_key','!=', 'helpdesk'), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+                </xpath>
+			</field>
+		</record> -->
+		
+		<record id ="memo_model_helpdesk_form_view" model ="ir.ui.view">
+			<field name="name">Memo Record</field>
+			<field name="model">memo.model</field>
+			<field eval="1" name="priority"/>
+			<field name ="arch" type="xml">
+				<form string="Memo Record">
+				<header>
+					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
+					<button name="confirm_memo_helpdesk" string="Approve" type="object" class="oe_highlight" 
+					attrs="{'invisible': ['|', '|', ('memo_type_key','!=', 'helpdesk'), ('state','in',['submit','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+               		<button name="set_draft" states="Refuse" string="Reset &amp; Forward" type="object"/>
+                    <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
+					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
+					<!-- <button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/> -->
+					<field name="computed_stage_ids" invisible="1" />
+					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
+				</header>
+					<sheet>
+						<div class="oe_title">
+						<label for="name"/>
+							<h1 style="color:Tomato;">
+								<field name="name" string="Title" required="1" placeholder="e.g. Description" attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"/>
+							</h1>
+							<label for="code" string="Request Number"/>
+							<h1>
+								<field name="code" placeholder="REF0001"/>
+							</h1>
+						</div>
+						<group>
+							<group> 
+								<label for="helpdesk_memo_config_id"/>
+								<div>
+									<field name="memo_type" string="Type" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+									<field name="helpdesk_memo_config_id" domain="[('memo_key', '=', 'helpdesk')]" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
+									required="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								</div>
+							</group> 
+							<group>
+							</group>
+							<group name="left_side_grp"> 
+								<field name="customer_name" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_partner_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
+								<field name="customer_phone" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_email" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_address1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_address2" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="meter_type" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="customer_meter_no" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								
+								<field name="set_staff" string = "Assigned to" readonly="1" invisible="1"/>
+								<field name="demo_staff" invisible="1"/>
+								<field name="state" invisible="1"/>
+								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+							</group> 
+							<group name="normal_memo_group2"> 
+								<field name="date" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
+								<field name="complaint_start_date" readonly="1"/>
+								<field name="complaint_close_date" readonly="1"/>
+								<field name="complaint_duration" readonly="1"/>
+								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
+								<field name="status_progress" widget="progressbar" string="Progress(%)" invisible="1"/>
+								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>   
+							</group> 
+						</group>
+						<notebook>
+							 <page name='description' string='Complaints '>
+								<field name="complaint_description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page> 
+							<page name='complaint_resolution_id' string='Resolution Lines'>
+								<field name="complaint_resolution_ids" string = "Resolution Lines" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" force_save="1">
+								<!-- context="{'default_memo_id': active_id}"> -->
+									<tree string="">
+										<field name="name"/> 
+										<field name="user_id" readonly="1"/> 
+										<!-- <field name="memo_id" readonly="1"/>  -->
+									</tree>
+								</field>
+							</page> 
+							
+							<page name="attachment" string="Attachments">
+								<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
+								context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': True}">
+									<tree string="Attachment">
+										<field name="stage_document_name" string="Required Documents"/> 
+										<field name="name" string="Document Name"/> 
+										<field name="datas" filename="name" string="File"/>
+										<field name="stage_document_required" string="Is Compulsory"/>
+										<field name="is_locked" string="Locked?" invisible="1"/>
+									</tree>
+									<form string="Attachment">
+										<group>
+											<group>
+												<field name="stage_document_name" string="Required Documents" readonly="1" force_save="1"/> 
+												<field name="name" string="Document Name"/> 
+											</group>
+											<group>
+												<field name="datas" filename="name" string="File"/>
+												<field name="stage_document_required" string="Is Compulsory" readonly="1" force_save="1"/> 
+												<field name="is_locked" string="Locked?" invisible="1"/> 
+											</group>
+										</group>
+									</form>
+								</field>
+							</page>
+							<page name='comments' string='Comments'>
+								<field name="comments" readonly="1" string = "Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page>
+							<page name='reason_backs' string='Return Reason'>
+								<field name="reason_back" readonly = "0" string = "Add Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+							</page>
+							<page string="Admin Setting Overview">
+								<group>
+									<group>
+										<field name="computed_stage_ids" invisible="0"/>
+										<field name="user_is_approver" invisible="0" readonly="0"/>
+										<field name="approver_id" invisible="0" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+										<field name="approver_ids" invisible="0" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
+									</group>
+									<group>
+										<field name="active" invisible="0" groups="base.group_system"/>
+										<field name="memo_setting_id" invisible="0" force_save="1" 
+										options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+										<field name="memo_type_key" string="Memo key" invisible="0" force_save="1"/> 
+										<field name="to_create_document" invisible="0"/> 
+										<field name="has_sub_stage" invisible="0"/>
+										<field name="state" invisible="0" force_save="1" readonly="0"/>
+										<field name="is_request_completed" readonly="1" invisible="0"/>
+										<field name="memo_bagde_status" invisible="1"/>
+										<field name="memo_bagde_undone" invisible="1"/>
+									</group>
+								</group>
+							</page>
+						</notebook>
+					</sheet>
+					<div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers"/>
+						<field name="message_ids" widget="mail_thread"/>
+					</div>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="memo_model_helpdesk_tree_view">
+			<field name="name">Office memo helpdesk tree</field>
+			<field name="model">memo.model</field>
+			<field name="arch" type="xml">
+				<tree string="Memo Requests">
+					<field name="date"/> 
+					<field name="name"/>
+					<field name="code"/> 
+					<field name="memo_type" string="Category"/>
+					<field name="set_staff" string = "Assigned to?"/>
+					<field name="complaint_start_date"/>
+					<field name="complaint_close_date"/>
+					<field name="complaint_duration"/>
+					<field name="stage_id"/>
+				</tree>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="memo_model_helpdesk_search_view">
+			<field name="name">Office Memo helpdesk Search</field>
+			<field name="model">memo.model</field>
+			<field name="arch" type="xml">
+				<search string="Filter"> 
+					<field name="name"/>
+					<field name="code"/>
+					<field name="customer_partner_id"/>
+					<field name="customer_phone"/> 
+					<field name="memo_type" string="Category"/>
+					<field name="meter_type"/>
+					<field name="customer_meter_no"/> 
+					<field name="date" />
+					<field name="customer_email" /> 
+					<field name="customer_address1" /> 
+					<field name="customer_address2" /> 
+					<group expand="0" string="Group By">
+						<filter name="name" string="Name" icon="terp-personal" domain="[]" context="{'group by':'name'}" />
+						<filter name="Approve" string="Approved tickets" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
+						<filter name="Sent" string="Tickets Awaiting Approval" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
+						<filter name="Done" string="Completed tickets" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
+						<filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
+						<filter name="group_of_assignees" string="Assignees" domain="[]" context="{'group_by' : 'set_staff'}"/>
+						<filter name="group_of_start_date" string="Start date" icon="terp-personal" domain="[]" context="{'group_by':'complaint_start_date'}" />
+						<filter name="group_of_closed_date" string="Closed date" icon="terp-personal" domain="[]" context="{'group_by':'complaint_close_date'}" />
+						<filter name="group_of_customers" string="Customers" icon="terp-personal" domain="[]" context="{'group_by':'customer_name'}" />
+					</group>
+				</search>
+			</field>
+		</record>
+  
+		<record model="ir.actions.act_window" id="memo_helpdesk_request_action">
+			<field name="name">Complaint Management</field>
+			<field name="res_model">memo.model</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_id" ref="helpdesk_process.memo_model_helpdesk_tree_view"/>
+			<field name="search_view_id" ref="helpdesk_process.memo_model_helpdesk_search_view"/>
+		   <field name="domain">[('memo_type_key','=','helpdesk')]</field>
+			<field name="context">{'default_memo_helpdesk': 'helpdesk', 'form_view_ref': 'helpdesk_process.memo_model_helpdesk_form_view'}</field>
+			 <field name="view_mode">tree,form</field>
+		</record>
+
+
+        <menuitem id="internal_memo_helpdesk_main" name="CRMD" groups="base.group_system" action = "memo_helpdesk_request_action" sequence = "5" web_icon="helpdesk_process,static/description/icon.png"/>
+		<menuitem id="internal_memo_helpdesk_request" sequence= "7" name="Complaint Management"
+			parent="helpdesk_process.internal_memo_helpdesk_main" action="helpdesk_process.memo_helpdesk_request_action"/>
+
+		<record model="ir.actions.act_window" id="memo_helpdesk_configuration_action">
+            <field name="name">Memo helpdesk Configuration</field>
+            <field name="res_model">memo.config</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('memo_key', '=', 'helpdesk')]</field>
+            <field name="context">{'search_default_group_memo_department_id': 1}</field>
+        </record>
+
+		<menuitem id="memo_helpdesk_configuration" name="Configuration"
+            parent="internal_memo_helpdesk_main" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
+        <menuitem id="memo_approvers_helpdesk_configuration" name="Approvers"
+            parent="memo_helpdesk_configuration" action="helpdesk_process.memo_helpdesk_configuration_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
+            
+		
+		 <record model="ir.ui.view" id="memo_type_helpdesk_tree_view">
+			<field name="name">Office type helpdesk tree</field>
+			<field name="model">memo.type</field>
+			<field name="arch" type="xml">
+				<tree string="Memo Requests">
+					<field name="name"/>
+					<field name="allow_for_publish"/> 
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="memo_type_helpdesk_action">
+            <field name="name">Memo Type</field>
+            <field name="res_model">memo.type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+			<field name="view_id" ref="helpdesk_process.memo_type_helpdesk_tree_view"/>
+            <field name="domain">[('memo_key', '=', 'helpdesk')]</field>
+        </record>
+        <menuitem id="memo_type_helpdesk_configuration" name="Memo Type(s)"
+            parent="memo_helpdesk_configuration" action="helpdesk_process.memo_type_helpdesk_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
+        
+	</data>
+</odoo>
