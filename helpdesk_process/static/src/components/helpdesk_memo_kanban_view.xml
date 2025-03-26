@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-  <t t-name="helpdesk_process.HelpdeskMemoKanbanView" owl="1">
-    <div class="o_helpdesk_content flex-column d-flex h-100 mw-100">
-      <HelpdeskMemoDashboard/>
-      <div class="o_helpdesk_wrap_kanban_view flex-grow-1">
-        $0
-      </div>
-    </div>
-  </t>
+    <t t-name="helpdesk_process.HelpdeskMemoKanbanView" t-inherit="web.KanbanView" t-inherit-mode="primary" owl="1">
+        <xpath expr="//t[@t-component='props.Renderer']" position="replace">
+            <div class="o_helpdesk_content flex-column d-flex h-100 mw-100">
+                <HelpdeskMemoDashboard/>
+                <!-- Then show the original Kanban cards -->
+                <div class="o_helpdesk_wrap_kanban_view flex-grow-1">
+                    $0
+                </div>
+            </div>
+        </xpath>
+    </t>
 </templates>

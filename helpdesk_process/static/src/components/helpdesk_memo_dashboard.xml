@@ -1,27 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <templates id="template" xml:space="preserve">
-        <!-- 
-            QWeb template for the dashboard.
-            The t-name must match the JS code: 
-            HelpdeskMemoDashboard.template = "helpdesk_process.HelpdeskMemoDashboard"
-        -->
-        <t t-name="helpdesk_process.HelpdeskMemoDashboard" owl="1">
-            <div t-if="state.dashboardValues" class="o_helpdesk_banner align-items-start flex-column flex-lg-row flex-shrink-0 d-flex py-4 border-bottom bg-view">
-                <!-- stats section -->
-                <div class="o_helpdesk_dashboard_stat">
-                    <h2>Total Tickets</h2>
-                    <span><t t-esc="state.dashboardValues.total_tickets"/></span>
-                </div>
-                <div class="o_helpdesk_dashboard_stat">
-                    <h2>Resolved Tickets</h2>
-                    <span><t t-esc="state.dashboardValues.resolved_tickets"/></span>
-                </div>
-                <div class="o_helpdesk_dashboard_stat">
-                    <h2>Pending Tickets</h2>
-                    <span><t t-esc="state.dashboardValues.pending_tickets"/></span>
-                </div>
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="helpdesk_process.HelpdeskMemoDashboard" owl="1">
+        <div t-if="state.dashboardValues" class="o_helpdesk_banner d-flex flex-wrap py-4 border-bottom bg-view">
+            <div class="col text-center">
+                <h3>Total Tickets</h3>
+                <span t-esc="state.dashboardValues.total_tickets"/>
             </div>
-        </t>
-    </templates>
-</odoo>
+            <div class="col text-center">
+                <h3>Resolved Tickets</h3>
+                <span t-esc="state.dashboardValues.resolved_tickets"/>
+            </div>
+            <div class="col text-center">
+                <h3>Pending Tickets</h3>
+                <span t-esc="state.dashboardValues.pending_tickets"/>
+            </div>
+        </div>
+    </t>
+</templates>

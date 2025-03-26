@@ -10,5 +10,4 @@ HelpdeskMemoKanbanController.components = {
     HelpdeskMemoDashboard,
 };
 
-// Use the QWeb template from the assets bundle.
 HelpdeskMemoKanbanController.template = "helpdesk_process.HelpdeskMemoKanbanView";
