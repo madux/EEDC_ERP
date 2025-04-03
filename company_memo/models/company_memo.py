@@ -296,8 +296,9 @@ class Memo_Model(models.Model):
     
     document_memo_config_id = fields.Many2one(
         'memo.config', 
-        string="Request Department Config", 
-        domain= lambda self: self.get_document_memo() 
+        string="Request Document From", 
+        domain= lambda self: self.get_document_memo(),
+        help="Department to request the document from"
         )
     
     # dummy_document_memo_config_id = fields.Many2one(
@@ -2556,9 +2557,16 @@ class Memo_Model(models.Model):
     
     def write(self, vals):
         old_length = len(self.users_followers)
+        old_document_request_length = len(self.document_request_ids)
         res = super(Memo_Model, self).write(vals)
         if 'users_followers' in vals and self.create_uid.id != self.env.uid:
             if len(self.users_followers) < old_length:
                 raise ValidationError("Sorry you cannot remove followers")
+            
+        if 'document_request_ids' in vals and self.memo_state != 'submit':
+            if len(self.document_request_ids) < old_document_request_length:
+                raise ValidationError("Sorry you cannot remove document lines. Please discard the changes")
         return res
+    
+    
     
