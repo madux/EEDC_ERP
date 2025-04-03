@@ -1,39 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
   <data>
+    <!-- Custom Kanban View for Helpdesk Memos -->
     <record id="helpdesk_memo_view_kanban_dashboard" model="ir.ui.view">
       <field name="name">helpdesk.memo.kanban.dashboard</field>
       <field name="model">memo.model</field>
+      <field name="type">kanban</field>
+      <!-- Use a priority high enough to override any defaults -->
       <field name="priority">210</field>
       <field name="arch" type="xml">
-        <kanban class="o_kanban_dashboard o_helpdesk_kanban" group_create="0" create="0">
-
-        <templates>
-            <t t-name="dashboard">
-              <div class="o_helpdesk_dashboard_header o_helpdesk_banner align-items-start flex-column flex-lg-row flex-shrink-0 d-flex py-4 border-bottom bg-view">
-                <div class="col text-center">
-                  <h3>Total Tickets</h3>
-                  <span><field name="task_count"/></span>
-                </div>
-                <div class="col text-center">
-                  <h3>Resolved Tickets</h3>
-                  <span><field name="resolved_count"/></span>
-                </div>
-                <div class="col text-center">
-                  <h3>Pending Tickets</h3>
-                  <span><field name="pending_count"/></span>
-                </div>
-              </div>
-            </t>
-          </templates>
-          
-          <div t-call="dashboard"/>
-
+        <kanban js_class="helpdeskMemoKanbanView" class="o_kanban_dashboard o_helpdesk_kanban" group_create="0" create="0">
+          <!-- List the fields needed by the view -->
           <field name="name"/>
           <field name="task_count"/>
           <field name="resolved_count"/>
           <field name="pending_count"/>
           <templates>
+            <!-- Standard kanban card template -->
             <t t-name="kanban-box">
               <div class="oe_kanban_global_click">
                 <!-- Card Header -->
@@ -91,13 +74,13 @@
         </kanban>
       </field>
     </record>
-
-    <!-- Action for the Kanban view (ensure the domain limits it to helpdesk memos) -->
+    
+    <!-- Action for the Kanban View -->
     <record id="helpdesk_memo_dashboard_action" model="ir.actions.act_window">
       <field name="name">Helpdesk Memos Overview</field>
       <field name="res_model">memo.model</field>
       <field name="view_mode">kanban,tree,form</field>
-      <field name="view_id" ref="helpdesk_process.helpdesk_memo_view_kanban_dashboard"/>
+      <field name="view_id" ref="helpdesk_memo_view_kanban_dashboard"/>
       <field name="domain">[('memo_type_key','=','helpdesk')]</field>
       <field name="context">{}</field>
       <field name="help" type="html">
@@ -109,9 +92,10 @@
         </p>
       </field>
     </record>
-
-    <!-- Menu Item to Access the Kanban Dashboard -->
-    <menuitem id="helpdesk_dashboard_menu" name="Helpdesk Dashboard" parent="helpdesk_process.internal_memo_helpdesk_main"
+    
+    <!-- Menu Item -->
+    <menuitem id="helpdesk_dashboard_menu" name="Helpdesk Dashboard" 
+              parent="helpdesk_process.internal_memo_helpdesk_main"
               action="helpdesk_memo_dashboard_action" sequence="8"/>
   </data>
 </odoo>

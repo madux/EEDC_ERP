@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="helpdesk_process.HelpdeskMemoKanbanView" t-inherit="web.KanbanView" t-inherit-mode="primary" owl="1">
-        <xpath expr="//t[@t-component='props.Renderer']" position="replace">
-            <div class="o_helpdesk_content flex-column d-flex h-100 mw-100">
-                <HelpdeskMemoDashboard/>
-                <!-- Then show the original Kanban cards -->
-                <div class="o_helpdesk_wrap_kanban_view flex-grow-1">
-                    $0
-                </div>
-            </div>
-        </xpath>
-    </t>
+  <!-- Inherit the global KanbanView; this override will be used only for our view that sets js_class="helpdeskMemoKanbanView" -->
+  <t t-name="helpdesk_process.HelpdeskMemoKanbanView" t-inherit="web.KanbanView" t-inherit-mode="inside" owl="1">
+    <xpath expr="//div[contains(@class, 'o_kanban_wrap_kanban')]" position="before">
+      <div class="o_helpdesk_dashboard_container">
+        <HelpdeskMemoDashboard/>
+      </div>
+    </xpath>
+  </t>
 </templates>
