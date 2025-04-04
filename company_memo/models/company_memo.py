@@ -1287,7 +1287,7 @@ class Memo_Model(models.Model):
                     vals = {
                         'folder_id': rec.request_to_document_folder.id,
                         'attachment_id': att.id,
-                        'attachment_name': att.name,
+                        # 'attachment_name': att.name,
                         'memo_id': self.id,
                         'datas': att.datas,
                         'res_id': self.id,

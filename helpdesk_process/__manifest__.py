@@ -9,6 +9,8 @@
     "data": [
         'security/ir.model.access.csv',
         'views/memo_view_helpdesk.xml',
+        'views/memo_view_helpdesk_kaban.xml',
+        # 'views/helpdesk_memo_dashboard.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
         'static/templates/memo_helpdesk_template.xml',
