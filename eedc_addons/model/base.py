@@ -28,6 +28,7 @@ class District(models.Model):
     district_id = fields.Many2one('hr.district', string='Related District')
     simplybook_location_id = fields.Char(string="Simplybook ID")
     active = fields.Boolean(default=True)
+    
 
 
 class ResCountryState(models.Model):

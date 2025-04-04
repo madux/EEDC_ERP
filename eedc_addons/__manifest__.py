@@ -14,6 +14,7 @@
         'views/res_state_inherit_view.xml',
         'data/state_data.xml',
         'data/lga_data.xml',
+        'data/district.xml',
         'views/hr_memo_view.xml',
         'views/res_users_view.xml'
         # 'security/security_view.xml',

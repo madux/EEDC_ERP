@@ -31,6 +31,8 @@ class HelpdeskMemoModel(models.Model):
         string="Category", 
         )
     customer_partner_id = fields.Many2one('res.partner', string='Customer ID')
+    customer_state_id = fields.Many2one('res.country.state', string='State')
+    # customer_district_id = fields.Many2one('multi.branch', string='Customer District')
     customer_name = fields.Char('Customer Name')
     customer_phone = fields.Char('Customer phone')
     customer_phone2 = fields.Char('Customer phone 2')
@@ -51,6 +53,9 @@ class HelpdeskMemoModel(models.Model):
     complaint_close_date = fields.Date('Closed Date')
     complaint_duration = fields.Integer('Duration(Days)', compute="get_spent_duration_in_days")
     complaint_description = fields.Text('Complaints')
+    deadline_date = fields.Date(
+        string="Deadline date", 
+        )
     complaint_resolution_ids = fields.One2many(
         'complaint.resolution',
         'memo_id',

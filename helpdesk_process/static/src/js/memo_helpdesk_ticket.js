@@ -1,4 +1,4 @@
-odoo.define('portal_request.helpdesk_form', function (require) {
+odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
     "use strict";
 
     require('web.dom_ready');
@@ -15,7 +15,7 @@ odoo.define('portal_request.helpdesk_form', function (require) {
             dateFormat: 'mm/dd/yy',
             changeMonth: true,
             changeYear: true,
-            yearRange: '2023:2050',
+            yearRange: '2024:2050',
             maxDate: maxDate,
             minDate: minDate
         });
@@ -67,21 +67,8 @@ odoo.define('portal_request.helpdesk_form', function (require) {
 
     trigger_date_function($('#deadline_date'));
 
-    // $('#deadline_date').datepicker('destroy').datepicker({
-    //     onSelect: function (ev) {
-    //         $('#deadline_date').trigger('blur')
-    //     },
-    //     dateFormat: 'mm/dd/yy',
-    //     changeMonth: true,
-    //     changeYear: true,
-    //     yearRange: '2023:2050',
-    //     maxDate: null,
-    //     minDate: new Date()
-    // });
-    
-
-    publicWidget.registry.PortalRequestHelpdeskFormWidgets = publicWidget.Widget.extend({
-        selector: '#helpdesk-request-form',
+    publicWidget.registry.MemoHelpdeskFormWidgets = publicWidget.Widget.extend({
+        selector: '#memo-request-form',
         start: function(){
             return this._super.apply(this, arguments).then(function(){
                 console.log("started helpdesk form request");
@@ -89,7 +76,7 @@ odoo.define('portal_request.helpdesk_form', function (require) {
         },
         willStart: function(){
             return this._super.apply(this, arguments).then(function(){
-                console.log("...helpdesk willstart...")
+                console.log("...memo helpdesk willstart...")
             })
         },
         events: {
@@ -129,7 +116,7 @@ odoo.define('portal_request.helpdesk_form', function (require) {
                     $.ajax({
                         type: "POST",
                         enctype: 'multipart/form-data',
-                        url: "/ticket/submission",
+                        url: "/customer/ticket/submission",
                         data: formData,
                         processData: false,
                         contentType: false,
@@ -143,7 +130,7 @@ odoo.define('portal_request.helpdesk_form', function (require) {
                             // clearing form content
                             $("#msform")[0].reset();
                             console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                            window.location.href = `/portal-helpdesk-success`;
+                            window.location.href = `/customer-ticket-success`;
                             $btn.attr('disabled', false);
                             $btn.html($btnHtml)
                             $.unblockUI()
