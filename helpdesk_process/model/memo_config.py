@@ -101,41 +101,9 @@ class HelpdeskMemoConfig(models.Model):
             
     def forward_memo(self):
         self.complaint_start_date = fields.Date.today()
-        res = super(HelpdeskMemoModel, self).forward_memo()
+        res = super(HelpdeskMemoConfig, self).forward_memo()
         return res
     
-    # def retrieve_dashboard(self):
-    #     """
-    #     Retrieve dashboard data for the helpdesk memo kanban view
-    #     """
-    #     self.ensure_one()
-    #     result = {
-    #         'total_tickets': 0,
-    #         'resolved_tickets': 0,
-    #         'pending_tickets': 0,
-    #         'high_priority': 0,
-    #         'urgent': 0,
-    #         'avg_resolution_time': 0,
-    #     }
-        
-    #     # Get all helpdesk memos
-    #     memos = self.search([('memo_type_key', '=', 'helpdesk')])
-        
-    #     result['total_tickets'] = len(memos)
-    #     result['resolved_tickets'] = sum(memos.mapped('resolved_count'))
-    #     result['pending_tickets'] = sum(memos.mapped('pending_count'))
-        
-    #     # High priority and urgent counts (you'll need to add these fields if not present)
-    #     # result['high_priority'] = len(memos.filtered(lambda m: m.priority == 'high'))
-    #     # result['urgent'] = len(memos.filtered(lambda m: m.priority == 'urgent'))
-        
-    #     # Average resolution time in days
-    #     closed_memos = memos.filtered(lambda m: m.complaint_close_date)
-    #     if closed_memos:
-    #         total_duration = sum(closed_memos.mapped('complaint_duration'))
-    #         result['avg_resolution_time'] = total_duration / len(closed_memos)
-        
-    #     return result
     
     def retrieve_dashboard(self):
         """Return aggregated stats for all memos, or for the current user, etc."""
@@ -148,5 +116,53 @@ class HelpdeskMemoConfig(models.Model):
             "pending_tickets": pending,
         }
         
+    def action_view_resolved(self):
+        self.ensure_one()
+        return {
+            'name': _("Resolved Tickets"),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'tree,form',
+            'res_model': 'memo.model',
+            'domain': [('helpdesk_memo_config_id', '=', self.id),
+                       ('state', 'in', ['Done', 'done'])
+                       ]
+        }
+        
+    def action_view_pending(self):
+        self.ensure_one()
+        return {
+            'name': _("Pending Tickets"),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'tree,form',
+            'res_model': 'memo.model',
+            'domain': [('helpdesk_memo_config_id', '=', self.id),
+                       ('state', 'in', ['Sent', 'Approve', 'Approve2'])
+                       ]
+        }
+        
+    def action_view_unattended_tasks(self):
+        """
+        Return an action that opens a list view of memos (memo.model)
+        filtered by the current Helpdesk Memo Config record.
+        """
+        self.ensure_one()
+        action = self.env.ref('helpdesk_process.memo_helpdesk_request_action').read()[0]
+        # Filter memos by the current config record's ID.
+        action['domain'] = [('helpdesk_memo_config_id', '=', self.id),
+                            ('state', 'not in', ['Sent', 'Approve', 'Approve2', 'Done', 'done'])
+                            ]
+        return action
+    
+    def action_view_all_tasks(self):
+        """
+        Return an action that opens a list view of memos (memo.model)
+        filtered by the current Helpdesk Memo Config record.
+        """
+        self.ensure_one()
+        action = self.env.ref('helpdesk_process.memo_helpdesk_request_action').read()[0]
+        # Filter memos by the current config record's ID.
+        action['domain'] = [('helpdesk_memo_config_id', '=', self.id)]
+        return action
+
             
    
