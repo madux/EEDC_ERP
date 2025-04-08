@@ -9,33 +9,33 @@
 			<field name ="arch" type="xml">
 				<form string="">
 					<div class="alert alert-info text-center" role="alert">
-                        Target folders only shows the folders in your Allowed Branch / District
+                        Your Target folders only shows the folders in your Allowed Branch / District
                     </div>
 					<group>
 						<group>
 							<field name="memo_document_request_id" invisible="1"/> 
-							<field name="memo_state" invisible="1"/> 
+							<field name="memo_state" invisible="0"/> 
 							<field name="dummy_request_from_document_folder_ids" invisible="1"/> 
 							<field name="dummy_request_to_document_folder_ids" invisible="1"/> 
 							<field name="name" required="1" widget="text" placeholder="Enter of document(s)..."/> 
 						</group>
 						<group>
-							<field name="request_to_document_folder" domain="[('id', 'in', dummy_request_to_document_folder_ids)]" required="1"/> 
+							<field name="request_to_document_folder" string="Your target folder" domain="[('id', 'in', dummy_request_to_document_folder_ids)]" required="1"/> 
 							<field name="request_from_document_folder" invisible="1" required="0"/>
 						</group>
 					</group>
 					<notebook> 
-						<page string="Attach Documents">
+						<page string="Upload from Computer">
 							<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
 							context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': False, 'default_memo_id': memo_document_request_id}"
-							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'Approve', 'Approve2'])]}"
+							attrs="{'readonly': [('memo_state', 'not in', ['Approve', 'Approve2'])]}"
 							>
 								<tree string="Attachment">
 									<field name="name" string="Document Name"/> 
 									<field name="datas" filename="name" string="File"/>
 									<field name="public" string="Is public"/> 
 								</tree>
-								<form string="Attachment">
+								<!-- <form string="Attachment">
 									<group>
 										<group> 
 											<field name="name" string="Document Name" attrs="{'required': [('memo_state', 'in', ['submit', 'Sent'])]}"/>
@@ -47,12 +47,12 @@
 											<field name="public" string="Is public" invisible="1"/>
 										</group>
 									</group>
-								</form>
+								</form> -->
 							</field>
 						</page>
-						<page name='document_request_id' string='Document Lines'>
-							<field name="document_documents_ids" string = "Document Lines" readonly="0" force_save="1"
-							kanban_view_ref="%(documents.document_view_kanban)s">
+						<page name='document_request_id' string='Upload From Repository'>
+							<field name="document_documents_ids" string = "Document Lines" force_save="1"
+							kanban_view_ref="%(documents.document_view_kanban)s" attrs="{'readonly': [('memo_state', 'not in', ['Approve', 'Approve2'])]}">
 								<tree create="false" edit="false" sample="1">
 									<field name="id" optional="hide"/>
 									<field name="name" string="Document" required="True"/>
@@ -137,7 +137,7 @@
 							<group>
 							</group>
 							<group name="normal_memo_group1"> 
-								<field name="document_memo_config_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
+								<field name="document_memo_config_id" string="Requesting from?" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 								required="1" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="phone" readonly="1"/>

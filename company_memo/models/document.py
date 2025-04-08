@@ -305,24 +305,38 @@ class DocumentFolder(models.Model):
         return ret
 
     def _cron_notify_document(self):
-        """
-        
-        """
         folders = self.env['documents.folder'].search([])
         today_date = fields.Date.today() 
-        ready_for_submission = folders.filtered(lambda rec: isinstance(rec.next_reoccurance_date, date) and ((rec.next_reoccurance_date - today_date).days in range(0, rec.submission_minimum_range + 1)))
+        ready_for_submission = folders.filtered(
+            lambda rec: isinstance(rec.next_reoccurance_date, date) 
+            and ((rec.next_reoccurance_date - today_date).days in range(0, rec.submission_minimum_range + 1))
+        )
+        
         for rec in ready_for_submission:
-            deps =  rec.department_ids
-            if deps:
-                for dep in deps:
-                   user_responsible = rec.users_responsible.search([('department_id', '=', dep.id)], limit=1)
-                   obj = rec
-                   template_id = self.env.ref('company_memo.mail_template_document_request_due_notification')
-                   user_email = user_responsible.mapped('work_email')
-                   email_to = dep.manager_id.work_email if dep.manager_id else user_email
-                   email_cc = ','.join(user_email) if dep.manager_id else False
-                   if email_to:
-                        self._send_mail(obj, template_id, email_to, email_cc) 
+            if not rec.users_responsible and not rec.users_followers:
+                print(f'Skipping folder {rec.id}: No responsible users or followers set.')
+                continue  # Skip this folder since there are no users to notify
+
+            print(f'Processing folder {rec.id}')
+            print(f'User Responsible: {rec.users_responsible.ids}')
+            print(f'User Followers: {rec.users_followers.ids}')
+            
+            users_responsible = rec.users_responsible
+            users_followers = rec.users_followers
+            
+            template_id = self.env.ref('company_memo.mail_template_document_request_due_notification')
+            users_responsible = users_responsible.mapped('work_email')
+            users_responsible = [email for email in users_responsible if email]
+            email_to = ','.join(users_responsible) if users_responsible else False
+            follower_emails = users_followers.mapped('work_email')
+            follower_emails = [email for email in follower_emails if email]
+            email_cc = ','.join(follower_emails) if follower_emails else False
+            
+            if email_to:
+                self._send_mail(rec, template_id, email_to, email_cc)
+            else:
+                print(f'Skipping folder {rec.id}: No valid email recipients.')
+
 
     def _cron_get_expiry(self):
         self.send_mail_or_get_expire_defaulting_departments()

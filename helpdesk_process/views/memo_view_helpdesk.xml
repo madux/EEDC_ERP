@@ -195,7 +195,9 @@
 						<filter name="Done" string="Completed tickets" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
 						<filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
 						<filter name="group_of_assignees" string="Assignees" domain="[]" context="{'group_by' : 'set_staff'}"/>
-						<filter name="group_of_start_date" string="Start date" icon="terp-personal" domain="[]" context="{'group by':'complaint_start_date'}" />
+						<filter name="group_of_start_date" string="Start date" icon="terp-personal" domain="[]" context="{'group_by':'complaint_start_date'}" />
+						<filter name="group_of_closed_date" string="Closed date" icon="terp-personal" domain="[]" context="{'group_by':'complaint_close_date'}" />
+						<filter name="group_of_customers" string="Customers" icon="terp-personal" domain="[]" context="{'group_by':'customer_name'}" />
 					</group>
 				</search>
 			</field>

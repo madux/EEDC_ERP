@@ -611,8 +611,8 @@
 			<field name="name">Internal Memo Request</field>
 			<field name="res_model">memo.model</field>
 			<field name="type">ir.actions.act_window</field>
-		   <!-- <field name="domain">[('is_house','=',True)]</field>
-			<field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
+		   <field name="domain">[('memo_type_key','not in',['helpdesk'])]</field>
+			<!-- <field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
 			<field name="search_view_id" ref="view_building_type_search_filter"/> -->
 			 <field name="view_mode">tree,form</field>
 		</record>

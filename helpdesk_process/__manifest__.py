@@ -12,8 +12,12 @@
         'views/memo_view_helpdesk_kaban.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
+        'static/templates/memo_helpdesk_template.xml',
     ],
     "assets": {
+        'web.assets_frontend': [
+            '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
+        ],
         "web.assets_backend": [
             "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
             "helpdesk_process/static/src/components/helpdesk_memo_kanban_controller.js",

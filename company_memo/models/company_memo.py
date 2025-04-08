@@ -596,6 +596,14 @@ class Memo_Model(models.Model):
                 )
             else:
                 record.computed_stage_ids = False
+                
+    def compute_config_stages_from_website(self, memo_config_id):
+        if memo_config_id:
+            self.computed_stage_ids = memo_config_id.mapped('stage_ids').filtered(
+                lambda publish: publish.publish_on_dashboard
+            )
+        else:
+            self.computed_stage_ids = False
     
     @api.depends('memo_type')
     def _compute_user_cash_advance(self):
@@ -1089,7 +1097,7 @@ class Memo_Model(models.Model):
         memo_settings = self.env['memo.config'].sudo().search([
             ('memo_type', '=', memo_type),
             ('department_id', '=', department_id)
-            ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id
+            ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id # if self.document_memo_config_id else self.helpdesk_memo_config_id
 
         if memo_settings and memo_settings.stage_ids:
             initial_stage_id = memo_settings.stage_ids[0]
@@ -1107,7 +1115,7 @@ class Memo_Model(models.Model):
         #     ('memo_type', '=', self.memo_type.id),
         #     ('department_id', '=', self.employee_id.department_id.id)
         #     ], limit=1) or self.memo_setting_id
-        memo_settings = self.document_memo_config_id if self.to_create_document else self.memo_setting_id 
+        memo_settings = self.document_memo_config_id if self.to_create_document else self.helpdesk_memo_config_id or self.memo_setting_id 
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
@@ -1279,7 +1287,7 @@ class Memo_Model(models.Model):
                     vals = {
                         'folder_id': rec.request_to_document_folder.id,
                         'attachment_id': att.id,
-                        'attachment_name': att.name,
+                        # 'attachment_name': att.name,
                         'memo_id': self.id,
                         'datas': att.datas,
                         'res_id': self.id,
