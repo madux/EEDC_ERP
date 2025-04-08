@@ -3,8 +3,8 @@
   <data>
     <!-- Custom Kanban View for Helpdesk Memos -->
     <record id="helpdesk_memo_view_kanban_dashboard" model="ir.ui.view">
-      <field name="name">helpdesk.memo.kanban.dashboard</field>
-      <field name="model">memo.model</field>
+      <field name="name">helpdesk.memo.config.kanban.dashboard</field>
+      <field name="model">memo.config</field>
       <field name="type">kanban</field>
       <!-- Use a priority high enough to override any defaults -->
       <field name="priority">210</field>
@@ -46,6 +46,10 @@
                     <span>Pending: </span>
                     <span class="ms-2"><field name="pending_count"/></span>
                   </div>
+                  <div class="mb4">
+                    <span>Pending: </span>
+                    <span class="ms-2"><field name="unattended_count"/></span>
+                  </div>
                 </div>
                 <!-- Footer with clickable areas for details -->
                 <div class="row pt-4">
@@ -63,8 +67,8 @@
                   </div>
                   <div class="col border-start">
                     <a name="action_view_all_tasks" type="object" class="d-flex flex-column align-items-center">
-                      <span class="fw-bold"><field name="task_count"/></span>
-                      <span class="text-muted">Total</span>
+                      <span class="fw-bold"><field name="unattended_count"/></span>
+                      <span class="text-muted">Unattended</span>
                     </a>
                   </div>
                 </div>
@@ -78,10 +82,10 @@
     <!-- Action for the Kanban View -->
     <record id="helpdesk_memo_dashboard_action" model="ir.actions.act_window">
       <field name="name">Helpdesk Memos Overview</field>
-      <field name="res_model">memo.model</field>
+      <field name="res_model">memo.config</field>
       <field name="view_mode">kanban,tree,form</field>
       <field name="view_id" ref="helpdesk_memo_view_kanban_dashboard"/>
-      <field name="domain">[('memo_type_key','=','helpdesk')]</field>
+      <field name="domain">[('memo_key','=','helpdesk')]</field>
       <field name="context">{}</field>
       <field name="help" type="html">
         <p class="o_view_nocontent_smiling_face">

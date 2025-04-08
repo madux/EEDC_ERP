@@ -4,112 +4,54 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class ComplaintResolution(models.Model):
-    _name = 'complaint.resolution'
-    
-    name = fields.Char('Description')
-    user_id = fields.Many2one(
-        'res.users',
-        string='Responsible',
-        default=lambda self: self.env.uid
-        )
-    state = fields.Selection([
-        ('pending', 'Pending'),
-        ('resolved', 'Resolved')
-    ], string="Status", default='pending')
-    memo_id = fields.Many2one(
-        'memo.model', 
-        string='Memo ID'
-        )
 
+class HelpdeskMemoConfig(models.Model):
+    _inherit = 'memo.config'
+    
+    task_count = fields.Integer(
+        string='Total Tasks',
+        compute="_compute_task_stats",
+        help="Total of all tickets",
+        store=True
+    )
+    resolved_count = fields.Integer(
+        string='Resolved Tasks',
+        compute="_compute_task_stats",
+        help="All Completed tickets",
+        store=True
+    )
+    pending_count = fields.Integer(
+        string='Pending Tasks',
+        compute="_compute_task_stats",
+        help="All tickets in Sent (not moving)",
+        store=True
+    )
+    unattended_count = fields.Integer(
+        string='Unattended Tasks',
+        compute="_compute_task_stats",
+        help="All submit / refused tickets",
+        store=True
+    )
 
-class HelpdeskMemoModel(models.Model):
-    _inherit = 'memo.model'
-    
-    helpdesk_memo_config_id = fields.Many2one(
-        'memo.config', 
-        string="Category", 
-        )
-    customer_partner_id = fields.Many2one('res.partner', string='Customer ID')
-    customer_state_id = fields.Many2one('res.country.state', string='State')
-    # customer_district_id = fields.Many2one('multi.branch', string='Customer District')
-    customer_name = fields.Char('Customer Name')
-    customer_phone = fields.Char('Customer phone')
-    customer_phone2 = fields.Char('Customer phone 2')
-    customer_meter_no = fields.Char(string='Customer Account / Meter No')
-    meter_type = fields.Selection([('postpaid', 'Postpaid'),
-                                ('prepaid', 'Prepaid'),
-                                ('direct source', 'Direct Source'),
-                              ], string='Meter type', index=True,
-                             copy=False,
-                             readonly=False,
-                             store=True, 
-                             )
-    customer_email = fields.Char('Customer Email')
-    customer_address1 = fields.Char('Address 1')
-    customer_address2 = fields.Char('Address 2')
-    
-    complaint_start_date = fields.Date('Start Date', default=fields.Date.today())
-    complaint_close_date = fields.Date('Closed Date')
-    complaint_duration = fields.Integer('Duration(Days)', compute="get_spent_duration_in_days")
-    complaint_description = fields.Text('Complaints')
-    deadline_date = fields.Date(
-        string="Deadline date", 
-        )
-    complaint_resolution_ids = fields.One2many(
-        'complaint.resolution',
-        'memo_id',
-        string='Resolution line'
-        )
-    
-    user_owned_cash_advance_ids = fields.Many2many(
-        'memo.model', 
-        'user_owned_cash_helpdesk_advance_rel',
-        'user_owned_cash_helpdesk_advance_id',
-        'memo_id', string="User owned cash helpdesk advances", store=False)
-    
-    approver_ids = fields.Many2many(
-        'hr.employee',
-        'memo_model_helpdesk_employee_rel',
-        'memo_id',
-        'hr_employee_id',
-        string='Approvers'
-        )
-    
-    invoice_ids = fields.Many2many(
-        'account.move', 
-        'memo_invoice_helpdesk_rel',
-        'memo_invoice_helpdesk_id',
-        'invoice_memo_id',
-        string='Invoice', 
-        store=True,
-        domain="[('type', 'in', ['in_invoice', 'in_receipt']), ('state', '!=', 'cancel')]"
-        ) 
-    partner_ids = fields.Many2many(
-        'res.partner', 
-        'memo_res_helpdesk_partner_rel',
-        'memo_res_partner_id',
-        'memo_partner_id',
-        string='Reciepients', 
-        )
-    attachment_ids = fields.Many2many(
-        'ir.attachment', 
-        'memo_ir_attachment_helpdesk_rel',
-        'memo_ir_attachment_id',
-        'ir_attachment_memo_id',
-        string='Attachment', 
-        store=True,
-        domain="[('res_model', '=', 'memo.model')]"
-        )
-    memo_sub_stage_ids = fields.Many2many(
-        'memo.sub.stage', 
-        'memo_sub_stage_helpdesk_rel',
-        'memo_sub_stage_id',
-        'memo_id',
-        string='Sub Stages', 
-        store=True,
-        )
-    
+    @api.depends('memo_type')
+    def _compute_task_stats(self):
+        for memo in self:
+            resolved_count, pending_count, unattended_count = 0, 0, 0
+            '''this is all memo records that has the configuration of self'''
+            resolutions = self.env['memo.model'].search([('helpdesk_memo_config_id', '=', memo.id)])
+            memo.task_count = len(resolutions.ids)
+            for rec in resolutions:
+                if rec.state in ['Done', 'done']:
+                    resolved_count += 1
+                elif rec.state in ['Sent', 'Approve', 'Approve2']:
+                    pending_count += 1
+                else:
+                    # tickets in refuse and draft / submitted
+                    unattended_count += 1
+                    
+            memo.resolved_count = resolved_count
+            memo.pending_count = pending_count
+            memo.unattended_count = unattended_count
     
     @api.onchange('helpdesk_memo_config_id')
     def get_helpdesk_memo_config_id_stage_id(self):
