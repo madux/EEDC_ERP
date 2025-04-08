@@ -13,6 +13,10 @@ class ComplaintResolution(models.Model):
         string='Responsible',
         default=lambda self: self.env.uid
         )
+    state = fields.Selection([
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved')
+    ], string="Status", default='pending')
     memo_id = fields.Many2one(
         'memo.model', 
         string='Memo ID'
@@ -106,6 +110,31 @@ class HelpdeskMemoModel(models.Model):
         store=True,
         )
     
+    task_count = fields.Integer(
+        string='Total Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+    resolved_count = fields.Integer(
+        string='Resolved Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+    pending_count = fields.Integer(
+        string='Pending Tasks',
+        compute="_compute_task_stats",
+        store=True
+    )
+
+    @api.depends('complaint_resolution_ids.state')
+    def _compute_task_stats(self):
+        for memo in self:
+            resolutions = memo.complaint_resolution_ids
+            memo.task_count = len(resolutions)
+            memo.resolved_count = len(resolutions.filtered(lambda r: r.state == 'resolved'))
+            memo.pending_count = len(resolutions.filtered(lambda r: r.state == 'pending'))
+    pending_count = fields.Integer(string='Pending Count')
+    
     @api.onchange('helpdesk_memo_config_id')
     def get_helpdesk_memo_config_id_stage_id(self):
         """ Gives default stage_id """
@@ -156,6 +185,39 @@ class HelpdeskMemoModel(models.Model):
         self.complaint_start_date = fields.Date.today()
         res = super(HelpdeskMemoModel, self).forward_memo()
         return res
+    
+    def retrieve_dashboard(self):
+        """
+        Retrieve dashboard data for the helpdesk memo kanban view
+        """
+        self.ensure_one()
+        result = {
+            'total_tickets': 0,
+            'resolved_tickets': 0,
+            'pending_tickets': 0,
+            'high_priority': 0,
+            'urgent': 0,
+            'avg_resolution_time': 0,
+        }
+        
+        # Get all helpdesk memos
+        memos = self.search([('memo_type_key', '=', 'helpdesk')])
+        
+        result['total_tickets'] = len(memos)
+        result['resolved_tickets'] = sum(memos.mapped('resolved_count'))
+        result['pending_tickets'] = sum(memos.mapped('pending_count'))
+        
+        # High priority and urgent counts (you'll need to add these fields if not present)
+        # result['high_priority'] = len(memos.filtered(lambda m: m.priority == 'high'))
+        # result['urgent'] = len(memos.filtered(lambda m: m.priority == 'urgent'))
+        
+        # Average resolution time in days
+        closed_memos = memos.filtered(lambda m: m.complaint_close_date)
+        if closed_memos:
+            total_duration = sum(closed_memos.mapped('complaint_duration'))
+            result['avg_resolution_time'] = total_duration / len(closed_memos)
+        
+        return result
         
             
    
