@@ -186,38 +186,49 @@ class HelpdeskMemoModel(models.Model):
         res = super(HelpdeskMemoModel, self).forward_memo()
         return res
     
+    # def retrieve_dashboard(self):
+    #     """
+    #     Retrieve dashboard data for the helpdesk memo kanban view
+    #     """
+    #     self.ensure_one()
+    #     result = {
+    #         'total_tickets': 0,
+    #         'resolved_tickets': 0,
+    #         'pending_tickets': 0,
+    #         'high_priority': 0,
+    #         'urgent': 0,
+    #         'avg_resolution_time': 0,
+    #     }
+        
+    #     # Get all helpdesk memos
+    #     memos = self.search([('memo_type_key', '=', 'helpdesk')])
+        
+    #     result['total_tickets'] = len(memos)
+    #     result['resolved_tickets'] = sum(memos.mapped('resolved_count'))
+    #     result['pending_tickets'] = sum(memos.mapped('pending_count'))
+        
+    #     # High priority and urgent counts (you'll need to add these fields if not present)
+    #     # result['high_priority'] = len(memos.filtered(lambda m: m.priority == 'high'))
+    #     # result['urgent'] = len(memos.filtered(lambda m: m.priority == 'urgent'))
+        
+    #     # Average resolution time in days
+    #     closed_memos = memos.filtered(lambda m: m.complaint_close_date)
+    #     if closed_memos:
+    #         total_duration = sum(closed_memos.mapped('complaint_duration'))
+    #         result['avg_resolution_time'] = total_duration / len(closed_memos)
+        
+    #     return result
+    
     def retrieve_dashboard(self):
-        """
-        Retrieve dashboard data for the helpdesk memo kanban view
-        """
-        self.ensure_one()
-        result = {
-            'total_tickets': 0,
-            'resolved_tickets': 0,
-            'pending_tickets': 0,
-            'high_priority': 0,
-            'urgent': 0,
-            'avg_resolution_time': 0,
+        """Return aggregated stats for all memos, or for the current user, etc."""
+        total = self.search_count([("memo_type_key", "=", "helpdesk")])
+        resolved = sum(self.search([("memo_type_key", "=", "helpdesk")]).mapped("resolved_count"))
+        pending = sum(self.search([("memo_type_key", "=", "helpdesk")]).mapped("pending_count"))
+        return {
+            "total_tickets": total,
+            "resolved_tickets": resolved,
+            "pending_tickets": pending,
         }
-        
-        # Get all helpdesk memos
-        memos = self.search([('memo_type_key', '=', 'helpdesk')])
-        
-        result['total_tickets'] = len(memos)
-        result['resolved_tickets'] = sum(memos.mapped('resolved_count'))
-        result['pending_tickets'] = sum(memos.mapped('pending_count'))
-        
-        # High priority and urgent counts (you'll need to add these fields if not present)
-        # result['high_priority'] = len(memos.filtered(lambda m: m.priority == 'high'))
-        # result['urgent'] = len(memos.filtered(lambda m: m.priority == 'urgent'))
-        
-        # Average resolution time in days
-        closed_memos = memos.filtered(lambda m: m.complaint_close_date)
-        if closed_memos:
-            total_duration = sum(closed_memos.mapped('complaint_duration'))
-            result['avg_resolution_time'] = total_duration / len(closed_memos)
-        
-        return result
         
             
    

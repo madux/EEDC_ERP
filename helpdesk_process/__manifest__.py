@@ -10,13 +10,24 @@
         'security/ir.model.access.csv',
         'views/memo_view_helpdesk.xml',
         'views/memo_view_helpdesk_kaban.xml',
-        # 'views/helpdesk_memo_dashboard.xml',
         'data/memo_type.xml',
         'data/memo_config.xml',
         'static/templates/memo_helpdesk_template.xml',
     ],
-    'assets': {
+    "assets": {
         'web.assets_frontend': [
-        '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
-    ]},
+            '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
+        ],
+        "web.assets_backend": [
+            "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
+            "helpdesk_process/static/src/components/helpdesk_memo_kanban_controller.js",
+            # "helpdesk_process/static/src/css/dashboard.css"
+        ],
+        "web.assets_qweb": [
+            # "helpdesk_process/views/helpdesk_memo_kanban_view.xml",
+            "helpdesk_process/views/helpdesk_memo_model_dashboard_view.xml",
+            "helpdesk_process/static/src/components/helpdesk_memo_kanban_view.xml",
+            "helpdesk_process/views/helpdesk_memo_kanban_view.xml"
+        ],
+    },
 }
