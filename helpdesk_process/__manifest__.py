@@ -13,15 +13,18 @@
         'data/memo_type.xml',
         'data/memo_config.xml',
         'static/templates/memo_helpdesk_template.xml',
+        'static/templates/memo_helpdesk_customer_status.xml',
     ],
     "assets": {
         'web.assets_frontend': [
             '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
+            '/helpdesk_process/static/src/js/memo_helpdesk_status.js',
+            'helpdesk_process/static/src/css/customerInfo.css'
         ],
         "web.assets_backend": [
             "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
             "helpdesk_process/static/src/components/helpdesk_memo_kanban_controller.js",
-            # "helpdesk_process/static/src/css/dashboard.css"
+            # "helpdesk_process/static/src/css/customerInfo.css"
         ],
         "web.assets_qweb": [
             # "helpdesk_process/views/helpdesk_memo_kanban_view.xml",
