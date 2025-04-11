@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-  <!-- Inherit the global KanbanView; this override will be used only for our view that sets js_class="helpdeskMemoKanbanView" -->
   <t t-name="helpdesk_process.HelpdeskMemoKanbanView" t-inherit="web.KanbanView" t-inherit-mode="inside" owl="1">
     <xpath expr="//div[contains(@class, 'o_kanban_wrap_kanban')]" position="before">
       <div class="o_helpdesk_dashboard_container">
