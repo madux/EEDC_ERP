@@ -2022,7 +2022,7 @@ class Memo_Model(models.Model):
             self.cash_advance_reference.is_cash_advance_retired = True
             for ch in self.cash_advance_reference.mapped('product_ids'):
                 ch.retired = True
-        
+    
     def generate_soe_entries(self):
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
@@ -2030,7 +2030,7 @@ class Memo_Model(models.Model):
             if approver is an account officer, system generates move and open the exact record"""
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].search(
-            [('type', '=', 'sale'),
+            [('type', '=', 'bank'),
             #  ('code', '=', 'INV')
              ], limit=1)
             account_move = self.env['account.move'].sudo()
@@ -2047,21 +2047,24 @@ class Memo_Model(models.Model):
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/{self.code}",
-                    'move_type': 'out_receipt',
+                    # 'move_type': 'out_receipt',
+                    'move_type': 'entry',
                     'invoice_date': fields.Date.today(),
                     'date': fields.Date.today(),
                     'journal_id': journal_id.id,
-                    'invoice_line_ids': [(0, 0, {
+                    'line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
                             'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            'price_unit': pr.used_amount,
-                            'quantity': pr.used_qty,
-                            'discount': 0.0,
+                            'debit': pr.retire_sub_total_amount,
                             'code': pr.code,
-                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                            'product_id': pr.product_id.id if pr.product_id else None,
-                    }) for pr in self.product_ids],
+                    }) for pr in self.product_ids] + [(0, 0, {
+                                                            'name': 'Cash Advance to Debit',
+                                                            'account_id': self.cash_advance_reference.move_id.line_ids[0].account_id.id, # account of the cash advance reference used, CASH PACM, to be on debit
+                                                            'credit': sum([r.retire_sub_total_amount for r in self.product_ids]),
+                                                            'debit': 0.00,
+                                                            })],
+                    
                 })
                 if self.product_ids_with_qty_to_return():
                     self.to_update_inventory_product = True
@@ -2074,6 +2077,58 @@ class Memo_Model(models.Model):
             )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
+        
+    # def generate_soe_entries(self):
+    #     is_config_approver = self.determine_if_user_is_config_approver()
+    #     if is_config_approver:
+    #         """Check if the user is enlisted as the approver for memo type
+    #         if approver is an account officer, system generates move and open the exact record"""
+    #         view_id = self.env.ref('account.view_move_form').id
+    #         journal_id = self.env['account.journal'].search(
+    #         [('type', '=', 'sale'),
+    #         #  ('code', '=', 'INV')
+    #          ], limit=1)
+    #         account_move = self.env['account.move'].sudo()
+    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+    #         if not inv:
+    #             partner_id = self.employee_id.user_id.partner_id
+    #             inv = account_move.create({ 
+    #                 'memo_id': self.id,
+    #                 'ref': self.code,
+    #                 'origin': self.code,
+    #                 'partner_id': partner_id.id,
+    #                 'company_id': self.env.user.company_id.id,
+    #                 'currency_id': self.env.user.company_id.currency_id.id,
+    #                 # Do not set default name to account move name, because it
+    #                 # is unique 
+    #                 'name': f"{self.id}/{self.code}",
+    #                 'move_type': 'out_receipt',
+    #                 'invoice_date': fields.Date.today(),
+    #                 'date': fields.Date.today(),
+    #                 'journal_id': journal_id.id,
+    #                 'invoice_line_ids': [(0, 0, {
+    #                         'name': pr.product_id.name if pr.product_id else pr.description,
+    #                         'ref': f'{self.code}: {pr.product_id.name or pr.description}',
+    #                         'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+    #                         'price_unit': pr.used_amount,
+    #                         'quantity': pr.used_qty,
+    #                         'discount': 0.0,
+    #                         'code': pr.code,
+    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+    #                         'product_id': pr.product_id.id if pr.product_id else None,
+    #                 }) for pr in self.product_ids],
+    #             })
+    #             if self.product_ids_with_qty_to_return():
+    #                 self.to_update_inventory_product = True
+    #         self.move_id = inv.id
+    #         return self.record_to_open(
+    #         "account.move", 
+    #         view_id,
+    #         inv.id,
+    #         f"Journal Entry - {inv.name}"
+    #         )
+    #     else:
+    #         raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
     
     # def generate_soe_entries(self):
     #     

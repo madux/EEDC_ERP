@@ -283,8 +283,8 @@ class MemoStage(models.Model):
                 ])
             if memo_duplicate and len(memo_duplicate.ids) > 1:
                 raise ValidationError("You have already created a stage with the same sequence")
-
-
+    
+    
 class MemoConfig(models.Model):
     _name = "memo.config"
     _description = "Memo setting"
@@ -321,6 +321,7 @@ class MemoConfig(models.Model):
         string='Name', 
         copy=False, 
         )
+    memo_category_id = fields.Many2one('memo.category', string="Category") 
     
     @api.onchange('active')
     def onchange_active(self):
@@ -484,9 +485,15 @@ class MemoConfig(models.Model):
 class MemoCategory(models.Model):
     _name = "memo.category"
     _description = "Memo document Category"
+    _rec_name = "name"
 
     name = fields.Char('Name')
-
+    memo_config_ids = fields.Many2many(
+        'memo.config',
+        string='Memo config',
+        )
+    category_type = fields.Char('Type', placeholder="e.g helpdesk")
+    
 
 class MemoDialog(models.TransientModel):
     _name = "memo.dialog"

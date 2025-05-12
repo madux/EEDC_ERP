@@ -46,9 +46,11 @@
 							<group> 
 								<label for="helpdesk_memo_config_id"/>
 								<div>
+									<field name="memo_category_id" readonly="1"/>
 									<field name="memo_type" string="Type" invisible="1" required="0" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 									<field name="helpdesk_memo_config_id" domain="[('memo_key', '=', 'helpdesk')]" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 									required="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+
 								</div>
 							</group> 
 							<group>
@@ -75,7 +77,8 @@
 								<field name="complaint_duration" readonly="1"/>
 								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
 								<field name="status_progress" widget="progressbar" string="Progress(%)" invisible="1"/>
-								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>   
+								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>
+
 							</group> 
 						</group>
 						<notebook>
@@ -215,7 +218,7 @@
 		</record>
 
 
-        <menuitem id="internal_memo_helpdesk_main" name="CRMD" groups="base.group_system" action = "memo_helpdesk_request_action" sequence = "5" web_icon="helpdesk_process,static/description/icon.png"/>
+        <menuitem id="internal_memo_helpdesk_main" name="EEDC-HELPDESK" groups="base.group_system" action = "memo_helpdesk_request_action" sequence = "5" web_icon="helpdesk_process,static/description/icon.png"/>
 		<menuitem id="internal_memo_helpdesk_request" sequence= "7" name="Complaint Management"
 			parent="helpdesk_process.internal_memo_helpdesk_main" action="helpdesk_process.memo_helpdesk_request_action"/>
 
@@ -232,7 +235,6 @@
             parent="internal_memo_helpdesk_main" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
         <menuitem id="memo_approvers_helpdesk_configuration" name="Approvers"
             parent="memo_helpdesk_configuration" action="helpdesk_process.memo_helpdesk_configuration_action" sequence="10" groups="base.group_system,company_memo.mainmemo_manager"/>
-            
 		
 		 <record model="ir.ui.view" id="memo_type_helpdesk_tree_view">
 			<field name="name">Office type helpdesk tree</field>
@@ -255,6 +257,8 @@
         </record>
         <menuitem id="memo_type_helpdesk_configuration" name="Memo Type(s)"
             parent="memo_helpdesk_configuration" action="helpdesk_process.memo_type_helpdesk_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
-        
+        <menuitem id="company_memo_category_configuration" name="Category"
+            parent="memo_helpdesk_configuration" action="company_memo.memo_category_action" sequence="11" groups="base.group_system,company_memo.mainmemo_manager"/>
+
 	</data>
 </odoo>

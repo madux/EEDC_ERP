@@ -44,13 +44,27 @@
                                         <div class="row mb-4">
                                             <strong class="col-md-4">Ticket Category</strong>:
                                             <span class="col-md-6">
-                                                <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
-                                                    <option selected="selected" value="">--Select request type -- </option>
-                                                    <t t-foreach="request_type_ids" t-as="rt">
+                                                <select id="helpdesk_category_id" name="helpdesk_category_id" required="required" class="form-control s_website_form_input">
+                                                    <option value="">--Select category -- </option>
+                                                    <t t-foreach="category_ids" t-as="rt">
                                                         <option t-att-value="rt.id">
                                                             <span t-esc="rt.name"/>
                                                         </option>
                                                     </t>
+                                                </select> 
+                                            </span>
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Ticket Type</strong>:
+                                            <span class="col-md-6">
+                                                <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
+                                                    <option id="memo_config_select_option" selected="selected" value=""></option>
+                                                    <!-- <t t-foreach="category_ids" t-as="rt">
+                                                        <option t-att-value="rt.id">
+                                                            <span t-esc="rt.name"/>
+                                                        </option>
+                                                    </t> -->
                                                 </select> 
                                             </span>
                                         </div>

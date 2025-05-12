@@ -579,7 +579,7 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function TriggerProductField(lastRow_count){
-        $(`input[special_id='${lastRow_count}'`).select2({
+        $(`input[special_id='${lastRow_count}']`).select2({
             ajax: {
               url: '/portal-request-product',
               dataType: 'json',
