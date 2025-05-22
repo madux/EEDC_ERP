@@ -181,7 +181,7 @@
 					<field name="code"/>
 					<field name="customer_partner_id"/>
 					<field name="customer_phone"/> 
-					<field name="memo_type" string="Category"/>
+					<field name="helpdesk_memo_config_id" string="Category"/>
 					<field name="meter_type"/>
 					<field name="customer_meter_no"/> 
 					<field name="date" />

@@ -168,7 +168,7 @@
                                                 <textarea class="form-control s_website_form_input" name="complaint_description" required="1" id="complaint_description" rows="2" labelfor="Description"/>
                                             </span>
                                         </div>
-                                        <div class="row mb-4">
+                                        <div class="row mb-4 d-none">
                                             <strong class="col-md-4">Deadline Date</strong>:
                                             <span class="col-md-6">
                                                 <input type="text" class="form-control datepicker s_website_form_input" id="deadline_date" 

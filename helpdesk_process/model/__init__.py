@@ -1,1 +1,1 @@
-from . import memo_model
+from . import memo_model,memo_config

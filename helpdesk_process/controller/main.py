@@ -71,7 +71,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			# _logger.exception('Unexpected Error while generating ticket: %s' % e)
 			return json.dumps({'status': False, 'message': 'Unexpected Error while generating ticket: %s' % e})
 	
-	@http.route(["/customerTicket"], type='http', auth='public', website=True, website_published=True)
+	@http.route(["/customerTicket"], type='http', auth='public', website=True, website_published=True,  csrf=False)
 	def memo_portal_helpdesk(self):
 		vals = {
 			"request_type_ids": request.env['memo.config'].sudo().search([('memo_key', '=', 'helpdesk')]),
@@ -82,7 +82,59 @@ class MemoPortalRequestHelpdesk(http.Controller):
 		}
 		return request.render("helpdesk_process.memo_helpdesk_form_template", vals)
 
-	@http.route(["/customer-ticket-success"], type='http', auth='public', website=True, website_published=True)
+	@http.route(["/customerTicketStatus"], type='http', auth='public', website=True, website_published=True)
+	def customerTicketStatus(self):
+		vals = {
+			'data': [],
+		}
+		return request.render("helpdesk_process.memo_helpdesk_customer_status_template", vals)
+ 
+	@http.route('/get-customer-ticket', type='json', auth="none", website=True)
+	def get_customer_ticket(self, **post):
+		requests = request.env['memo.model'].sudo()
+		domain = [ 
+   			('helpdesk_memo_config_id', '!=', False),
+   			('code', '=', post.get('ticket_no')),
+		]
+		request_ids = requests.search(domain, limit=1) 
+		_logger.info(f"retriving memo update {request_ids}...")
+		if request_ids and request_ids.helpdesk_memo_config_id.stage_ids: 
+			return {
+					"status": True,
+					"data": [
+         				{
+                 		'name': reco.name.capitalize(), 
+                 		'id': reco.id, 
+                   		'description': reco.description,
+                     	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
+             		],
+                    # "data": [
+         			# 	{
+                 	# 	'name': 'Submitted' if request_ids.state in ['draft','submit'] else request_ids.state,
+                   	# 	'description': "Ticket still in submitted stage",
+                   	# 	'current_status': ,
+                    #  	},
+                    #     {
+                 	# 	'name': 'Approved' if request_ids.state in ['Approve','Approve2'] else request_ids.state,
+                   	# 	'description': "Ticket progress stage",
+                    #  	},
+                    #     {
+                 	# 	'name': 'Completed' if request_ids.state in ['Done','done'] else request_ids.state,
+                   	# 	'description': "Ticket is Now Completed",
+                    #  	} 
+             		# ],
+                    'current_stage_id': request_ids.stage_id.id,
+                    'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
+					"message": "Successfully retrieved",
+					} 
+		else:
+			return {
+				"status": False, 
+				"message": "No matching ticket record found. Contact Admin", 
+			}
+	
+	@http.route(["/customer-ticket-success"], 
+             type='http', auth='public', website=True, website_published=True)
 	def portal_memo_helpdesk_success(self):
 		number = request.session.get('memo_ticket_ref')
 		_logger.info(f'stored session code is {number}')
