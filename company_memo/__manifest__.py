@@ -24,6 +24,7 @@
         'views/res_users.xml',
         'views/memo_forward_view.xml',
         'views/memo_config_view.xml',
+        'views/memo_category.xml',
         'views/account_account_view.xml',
         'views/memo_view_document.xml',
         'views/account_move.xml',

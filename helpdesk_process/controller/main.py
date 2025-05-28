@@ -48,6 +48,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"stage_id": memo_config_obj.stage_ids[0].id,
 				"helpdesk_memo_config_id": int(post.get("helpdesk_memo_config_id")) if post.get("helpdesk_memo_config_id") else False,
 				"memo_setting_id": memo_config_obj.id,
+				"memo_category_id": int(post.get("memo_category_id")) if post.get("memo_category_id") else False,
 				"district_id": int(post.get("district_id")) if post.get("district_id") else False,
 				"customer_state_id": int(post.get("customer_state_id")) if post.get("customer_state_id") else False,
 				"deadline_date": datetime.strptime(post.get("deadline_date",''), "%m/%d/%Y") if post.get("deadline_date") else False, 
@@ -74,6 +75,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 	@http.route(["/customerTicket"], type='http', auth='public', website=True, website_published=True,  csrf=False)
 	def memo_portal_helpdesk(self):
 		vals = {
+			"category_ids": request.env['memo.category'].sudo().search([('category_type', '=ilike', 'helpdesk')]),
 			"request_type_ids": request.env['memo.config'].sudo().search([('memo_key', '=', 'helpdesk')]),
 			# "branch_ids": request.env['multi.branch'].sudo().search([]),
 			"district_ids": request.env['hr.district'].sudo().search([]),
@@ -102,29 +104,29 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			return {
 					"status": True,
 					"data": [
-         				{
-                 		'name': reco.name.capitalize(), 
-                 		'id': reco.id, 
-                   		'description': reco.description,
-                     	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
-             		],
-                    # "data": [
-         			# 	{
-                 	# 	'name': 'Submitted' if request_ids.state in ['draft','submit'] else request_ids.state,
-                   	# 	'description': "Ticket still in submitted stage",
-                   	# 	'current_status': ,
-                    #  	},
-                    #     {
-                 	# 	'name': 'Approved' if request_ids.state in ['Approve','Approve2'] else request_ids.state,
-                   	# 	'description': "Ticket progress stage",
-                    #  	},
-                    #     {
-                 	# 	'name': 'Completed' if request_ids.state in ['Done','done'] else request_ids.state,
-                   	# 	'description': "Ticket is Now Completed",
-                    #  	} 
-             		# ],
-                    'current_stage_id': request_ids.stage_id.id,
-                    'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
+		 				{
+				 		'name': reco.name.capitalize(), 
+				 		'id': reco.id, 
+				   		'description': reco.description,
+					 	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
+			 		],
+					# "data": [
+		 			# 	{
+				 	# 	'name': 'Submitted' if request_ids.state in ['draft','submit'] else request_ids.state,
+				   	# 	'description': "Ticket still in submitted stage",
+				   	# 	'current_status': ,
+					#  	},
+					#     {
+				 	# 	'name': 'Approved' if request_ids.state in ['Approve','Approve2'] else request_ids.state,
+				   	# 	'description': "Ticket progress stage",
+					#  	},
+					#     {
+				 	# 	'name': 'Completed' if request_ids.state in ['Done','done'] else request_ids.state,
+				   	# 	'description': "Ticket is Now Completed",
+					#  	} 
+			 		# ],
+					'current_stage_id': request_ids.stage_id.id,
+					'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
 					"message": "Successfully retrieved",
 					} 
 		else:
@@ -132,9 +134,53 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"status": False, 
 				"message": "No matching ticket record found. Contact Admin", 
 			}
+   
+	@http.route(['/get-helpdesk-config'], type='json', website=True, auth="none", csrf=False)
+	def get_helpdesk_config(self, **post): 
+		category_id = post.get('category_id')
+		# staff_num, existing_order
+		"""use the category_id to get helpdesk configuration
+  			that has the category id.
+		Args:
+			category_id (str): The category Id to be validated 
+		Returns:
+			dict: Response
+		"""
+		_logger.info('Checking check_order No ...')
+		# user = request.env.user 
+		if category_id:
+			domain = [
+				('id', '=', int(category_id)),
+				# ('active', '=', True),
+			]
+			memo_config = request.env['memo.category'].sudo().search(domain, limit=1) 
+			if memo_config:
+				memo_config_ids = memo_config.mapped('memo_config_ids').filtered(
+        		lambda x: x.memo_key in ['helpdesk', 'Helpdesk'])
+				return {
+					"status": True,
+					"data": {
+						'memo_config_ids': [
+							{'id': q.id, 
+							'name': q.name, 
+							} 
+							for q in memo_config_ids
+						]
+					},
+					"message": "", 
+					}
+			else:
+				message = "You cannot proceed because No record was found"
+				return {
+        			"status": False,
+					"message": message,
+					"data": {
+						'memo_config_ids': []
+					},
+				}
 	
 	@http.route(["/customer-ticket-success"], 
-             type='http', auth='public', website=True, website_published=True)
+			 type='http', auth='public', website=True, website_published=True)
 	def portal_memo_helpdesk_success(self):
 		number = request.session.get('memo_ticket_ref')
 		_logger.info(f'stored session code is {number}')

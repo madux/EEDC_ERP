@@ -20,51 +20,25 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
             minDate: minDate
         });
     }
-
-    // let storeOldFieldsValue = function(){
-    //     let storeFieldItem = {};
-    //     $('input,textarea,select,select2').each(function(ev){
-    //         var field_id = $(this);
-    //         storeFieldItem[`${field_id.attr('id')}`] = field_id.val()
-    //     });
-    //     localStorage.setItem('oldValueStore', JSON.stringify(storeFieldItem))
-    // }
-     
-    // let saveChangedFieldsValues = function(thiss){
-    //     let leave_type_id = $("#leave_type_id")
-    //     let leave_start_datex = $("#leave_start_datex")
-    //     let leave_end_datex = $("#leave_end_datex")
-    //     let leave_remaining = $("#leave_remaining")
-    //     let leave_reliever_ids = $("#leave_reliever_ids")
-    //     let description = $("#description")
-    //     let record_id = $(".record_id").attr('id')
-
-    //     // call a save route 
-    //     thiss._rpc({
-    //         route: '/save/data/',
-    //         params: {
-    //             'leave_type_id': leave_type_id.val(),
-    //             'leave_start_date': leave_start_datex.val(),
-    //             'leave_end_date': leave_end_datex.val(),
-    //             // 'leave_remaining': leave_remaining,
-    //             'leave_Reliever': leave_reliever_ids.val(),
-    //             'description': description.val(),
-    //             'memo_id': record_id,
-    //         }
-    //     }).then(function (data) {
-    //         if(data.status){
-    //             console.log('saving record data => ')
-    //             $("#is_edit_mode").prop('checked', false);
-    //         }else{
-    //             alert(data.message);
-    //         }
-            
-    //     }).guardedCatch(function (error) {
-    //         let msg = error.message.message
-    //         alert(`Unknown Error! ${msg}`)
-    //     });
-    // }
-
+    function buildMemoConfigOption(data){
+        console.log("Memo config build loading")
+        let select = $("#helpdesk_memo_config_id").empty();
+        select.append($('<option>', { value: '', text: 'Please select' }));
+        $.each(data, function (index, item) {
+            if (item) {
+                console.log(`Building memo table ${index} ${item}`)
+                select.append(
+                    `
+                    <option value="${item.id}">
+                        <span>${item.name}</span>
+                    </option>
+                    `
+                )
+            } else {
+                console.log('No helpdesk config items found')
+            }
+        });
+    }
     trigger_date_function($('#deadline_date'));
 
     publicWidget.registry.MemoHelpdeskFormWidgets = publicWidget.Widget.extend({
@@ -88,6 +62,44 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
                     input.addClass('is-invalid')
                 }
             }, 
+            'change select[name=helpdesk_category_id]': function(ev){
+                let value = $(ev.target).val();
+                // $("#helpdesk_memo_config_id").val('')
+                if(!value){
+                    alert('You must provide category option!')
+                    return false;
+                };
+                if(value !== ''){
+                    var self = this;
+                    this._rpc({
+                        route: `/get-helpdesk-config`,
+                        params: {
+                            'category_id': value,
+                        },
+                    }).then(function (data) {
+                        console.log('retrieved helpdesk memo category data => '+ JSON.stringify(data))
+                        if (!data.status) {
+                            $(ev.target).val('')
+                            $("#helpdesk_memo_config_id").val('')
+                            // $("#product_ids").val('').trigger('change')
+                            alert(`Validation Error! ${data.message}`)
+                        }else{
+                            // var description = data.data.description; 
+                            // $("#phone_number").val(phone)
+                            // $("#selectDistrict").val(district_id).trigger('change')
+                            let memo_config_ids = data.data.memo_config_ids
+                            buildMemoConfigOption(memo_config_ids);
+                        }
+                    }).guardedCatch(function (error) {
+                        let msg = error.message.message
+                        console.log(msg)
+                        $("#helpdesk_category_id").val('')
+                        alert(`Unknown Error! ${msg}`)
+                    });
+                }else{
+                    alert("Category Must all be provided")
+                }
+            },
 
             'click .submit_btn': function(ev){
                 var list_of_fields = [];
