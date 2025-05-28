@@ -14,6 +14,7 @@
         'data/memo_config.xml',
         'static/templates/memo_helpdesk_template.xml',
         'static/templates/memo_helpdesk_customer_status.xml',
+        'security/ir_rule.xml',
     ],
     "assets": {
         'web.assets_frontend': [
