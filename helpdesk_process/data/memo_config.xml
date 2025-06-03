@@ -1,101 +1,2254 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
-        <record id="memo_stage_helpdesk_adjustment_process_1" model="memo.stage">
-            <field name="name">Initiation</field>
-            <field name="loaded_from_data">1</field>
-            <field name="active">1</field>
-            <field name="publish_on_dashboard">1</field>
-            <field name="sequence">20</field>
-        </record>
-
-        <record id="memo_stage_helpdesk_adjustment_process_2" model="memo.stage">
-            <field name="name">To Approve</field>
-            <field name="loaded_from_data">1</field>
-            <field name="active">1</field>
-            <field name="publish_on_dashboard">1</field>
-            <field name="sequence">30</field>
-        </record>
-
-        <record id="memo_stage_helpdesk_adjustment_process_3" model="memo.stage">
-            <field name="name">Completed</field>
-            <field name="loaded_from_data">1</field>
-            <field name="active">1</field>
-            <field name="publish_on_dashboard">1</field>
-            <field name="sequence">50</field>
-        </record>
-
-        <record id="memo_config_helpdesk_adjustment_process" model="memo.config">
+    <data noupdate="0">
+        <!-- ################## CUSTOMER SERVICE: BILLING ON DISCONNECTION ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_bod_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
             <field name="active">1</field>
-            <field name="name">METER ADJUSTMENT</field>
-            <field name="department_id" ref="hr.dep_administration"/>
-            <field name="stage_ids" eval="[
-            (4, ref('helpdesk_process.memo_stage_helpdesk_adjustment_process_1')),
-            (4, ref('helpdesk_process.memo_stage_helpdesk_adjustment_process_2')),
-            (4, ref('helpdesk_process.memo_stage_helpdesk_adjustment_process_3')),
-            ]"/>
+            <field name="name">BILLING ON DISCONNECTION</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
         </record>
 
-        <record id="helpdesk_process.memo_stage_helpdesk_adjustment_process_1" model="memo.stage">
-            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_adjustment_process"/>
-        </record>
-
-        <!-- ################## BILLING ON DISCONNECTION STAGE ###################  -->
-        <record id="memo_stage_helpdesk_bod_process_1" model="memo.stage">
-            <field name="name">Initiation</field>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_bod_process_1" model="memo.stage">
+            <field name="name">Customer care unit</field>
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="publish_on_dashboard">1</field>
-            <field name="sequence">20</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bod_process"/>
         </record>
-        <record id="memo_stage_helpdesk_bod_process_2" model="memo.stage">
-            <field name="name"> Billing Manager To Approve</field>
+        <record id="memo_stage_helpdesk_cs_bod_process_2" model="memo.stage">
+            <field name="name">Billing Manager</field>
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="publish_on_dashboard">1</field>
-            <field name="sequence">20</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bod_process"/>
         </record>
-        <record id="memo_stage_helpdesk_bod_process_3" model="memo.stage">
+        <record id="memo_stage_helpdesk_cs_bod_process_3" model="memo.stage">
             <field name="name">Customer Care Representative to Close ticket</field>
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="publish_on_dashboard">1</field>
             <field name="is_approved_stage">1</field>
-            <field name="sequence">30</field>
+            <field name="memo_has_condition">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bod_process"/>
         </record>
-        <record id="memo_stage_helpdesk_bod_process_4" model="memo.stage">
-            <field name="name">Completed</field>
+        <record id="memo_stage_helpdesk_cs_bod_process_4" model="memo.stage">
+            <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
             <field name="active">1</field>
             <field name="publish_on_dashboard">1</field>
-            <field name="sequence">50</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bod_process"/>
         </record>
-        <record id="memo_config_helpdesk_bod_process" model="memo.config">
-            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
-            <field name="name">BILLING ON DISCONNECTION</field>
-            <field name="department_id" ref="hr.dep_administration"/>
+
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_bod_process" model="memo.config">
             <field name="stage_ids" eval="[
-            (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_1')),
-            (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_2')),
-            (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_3')),
-            (4, ref('helpdesk_process.memo_stage_helpdesk_bod_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bod_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bod_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bod_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bod_process_4')),
             ]"/>
         </record>
 
-        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_1" model="memo.stage">
-            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+
+        <!-- ################## CUSTOMER SERVICE: BILLING ON PPM CONNECTION STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_bopc_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">BILLING ON PPM CONNECTION</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
         </record>
-        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_2" model="memo.stage">
-            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_bopc_process_1" model="memo.stage">
+            <field name="name">Customer care unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
         </record>
-        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_3" model="memo.stage">
-            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+        <record id="memo_stage_helpdesk_cs_bopc_process_2" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
         </record>
-        <record id="helpdesk_process.memo_stage_helpdesk_bod_process_4" model="memo.stage">
-            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_bod_process"/>
+        <record id="memo_stage_helpdesk_cs_bopc_process_3" model="memo.stage">
+            <field name="name">Meter Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
         </record>
-        
+        <record id="memo_stage_helpdesk_cs_bopc_process_5" model="memo.stage">
+            <field name="name">District Auditor</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bopc_process_7" model="memo.stage">
+            <field name="name">Customer  Representative to close ticket</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bopc_process_4" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_bopc_process_5"/>
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_bopc_process_7"/>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bopc_process_6" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bopc_process_8" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
+        </record>
+
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_bopc_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bopc_process_8')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: BILLING ON WRONG TARRIF AND BILL REPRINT STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_bwr_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">BILLING ON WRONG TARRIF AND BILL REPRINT</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_bwr_process_1" model="memo.stage">
+            <field name="name">Customer care unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bwr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bwr_process_2" model="memo.stage">
+            <field name="name">New Service Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bwr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bwr_process_3" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bwr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bwr_process_4" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bwr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_bwr_process_5" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bwr_process"/>
+        </record>
+
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_bwr_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bwr_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bwr_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bwr_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bwr_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_bwr_process_5')),
+            ]"/>
+        </record>
+
+
+        <!-- ################## CUSTOMER SERVICE: CHANGE OF TARRIF STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_cot_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">CHANGE OF TARRIF</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_cot_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_2" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_3" model="memo.stage">
+            <field name="name">Meter Engineer</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_4" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_5" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_6" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cot_process_7" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cot_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_cot_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cot_process_7')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: METER ISSUES STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_mi_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">METER ISSUES</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_mi_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mi_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_mi_process_2" model="memo.stage">
+            <field name="name">Meter Engineer</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mi_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_mi_process_3" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mi_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_mi_process_4" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mi_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_mi_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_mi_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_mi_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_mi_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_mi_process_4')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: CUSTOMIZATION ISSUES STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_cr_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">CUSTOMIZATION ISSUES</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_cr_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cr_process_2" model="memo.stage">
+            <field name="name">Customization Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cr_process_3" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_cr_process_4" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cr_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_cr_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cr_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cr_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cr_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_cr_process_4')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: DOUBLE BILLING STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_db_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">DOUBLE BILLING</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_db_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_2" model="memo.stage">
+            <field name="name">New Service Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_3" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_4" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_5" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_6" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_db_process_7" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_db_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_db_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_db_process_7')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: INABILITY TO LOAD TOKEN AND TAMPER CODE FOR LEGACY METER STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_itt_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">INABILITY TO LOAD TOKEN AND TAMPER CODE FOR LEGACY METER</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_itt_process_2" model="memo.stage">
+            <field name="name">Meter Engineer</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_itt_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_itt_process_3" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_itt_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_itt_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- Inability to load token, inform meter engineer to go inspect customer's meter -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_itt_process_2"/>
+            <!-- Tamper code issue: generate temper rest code and inform to CCU to close ticket -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_itt_process_3"/>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_itt_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_itt_process_4" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_itt_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_itt_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_itt_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_itt_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_itt_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_itt_process_4')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: NAME CHANGE CORRECTION AND ADDRESS CORRECTION STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_ncc_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">NAME CHANGE CORRECTION AND ADDRESS CORRECTION</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_ncc_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncc_process_2" model="memo.stage">
+            <field name="name">New Service Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncc_process_4" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncc_process_5" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncc_process_3" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- Is approved -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_ncc_process_5"/>
+            <!-- Is not approved -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_ncc_process_4"/>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+
+        <record id="memo_stage_helpdesk_cs_ncc_process_6" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncc_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_ncc_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncc_process_6')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: NERC COMPLAINTS RESOLUTION STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_ncr_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">NERC COMPLAINTS RESOLUTION</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_ncr_process_1" model="memo.stage">
+            <field name="name">Customer Service CHQ</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_2" model="memo.stage">
+            <field name="name">DBM/DCSM</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_3" model="memo.stage">
+            <field name="name">The concerned unit/dept</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_4" model="memo.stage">
+            <field name="name">DCSM</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_5" model="memo.stage">
+            <field name="name">Customer Service CHQ</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_6" model="memo.stage">
+            <field name="name">NERC Forum</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_7" model="memo.stage">
+            <field name="name">Customer Service CHQ</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_8" model="memo.stage">
+            <field name="name">DBM/DCSM</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_9" model="memo.stage">
+            <field name="name">CHQ NERC Committee</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_10" model="memo.stage">
+            <field name="name">CHQ NERC committee AND NERC forum committee</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_11" model="memo.stage">
+            <field name="name">Regulatory Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_12" model="memo.stage">
+            <field name="name">DBM/DCSM and District Auditor</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">11</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_13" model="memo.stage">
+            <field name="name">DCSM</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">12</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_14" model="memo.stage">
+            <field name="name">Customer Service CHQ</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">13</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ncr_process_15" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">14</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ncr_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_ncr_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_8')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_9')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_10')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_11')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_12')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_13')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_14')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ncr_process_15')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: NEW SERVICE PROCESS STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_ns_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">NEW SERVICE PROCESS</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_ns_process_1" model="memo.stage">
+            <field name="name">CMG Offr</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_2" model="memo.stage">
+            <field name="name">Prospective Customer (PC)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_3" model="memo.stage">
+            <field name="name">CMG Offr</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_4" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_5" model="memo.stage">
+            <field name="name">CMG Off</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_6" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_7" model="memo.stage">
+            <field name="name">Technical Feasibility</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_8" model="memo.stage">
+            <field name="name">GIS</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_9" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_10" model="memo.stage">
+            <field name="name">Data Center CHQ</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_11" model="memo.stage">
+            <field name="name">CMG and Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_12" model="memo.stage">
+            <field name="name">CMG</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">11</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_13" model="memo.stage">
+            <field name="name">Metering Department</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">12</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ns_process_14" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">13</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_ns_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_8')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_9')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_10')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_11')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_12')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_13')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ns_process_14')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: REINSERTION OF METER INTO BILLING SYSTEM STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_rm_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">REINSERTION OF METER INTO BILLING SYSTEM</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_rm_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_2" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_3" model="memo.stage">
+            <field name="name">Meter Engineer</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_5" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_7" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_4" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- Is approved -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_rm_process_7"/>
+            <!-- Is not approved -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_rm_process_5"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_6" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_rm_process_8" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rm_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_rm_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_rm_process_8')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: REQUEST FOR ADDITIONAL ACCOUNT STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_ra_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">REQUEST FOR ADDITIONAL ACCOUNT</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_ra_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ra_process_2" model="memo.stage">
+            <field name="name">Network Service Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ra_process_3" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ra_process_4" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ra_process_5" model="memo.stage">
+            <field name="name">Customer Care Unit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_ra_process_6" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ra_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_ra_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_ra_process_6')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: SRD_2 BILL ADJUSTMENT PROCESS STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_srd2_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_2 BILL ADJUSTMENT PROCESS</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_srd2_process_1" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_3" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_6" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_2" model="memo.stage">
+            <field name="name">District Auditor</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- adjustment < ₦200,000 -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd2_process_3"/>
+            <!-- adjustment > ₦200,000 -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd2_process_6"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_4" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_13" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="sequence">12</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_5" model="memo.stage">
+            <field name="name">Customer Service Executive</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <!-- send to CSR to close the ticket -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd2_process_13"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_7" model="memo.stage">
+            <field name="name">Head Billing</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_8" model="memo.stage">
+            <field name="name">Head Audit</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_10" model="memo.stage">
+            <field name="name">MD/CEO</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_11" model="memo.stage">
+            <field name="name">Head Billing</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_9" model="memo.stage">
+            <field name="name">DMD</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- adjustment amount > ₦2M -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd2_process_10"/>
+            <!-- adjustment amount < ₦2M -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd2_process_11"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_12" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">11</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd2_process_14" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">13</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd2_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_srd2_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_8')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_9')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_10')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_11')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_12')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_13')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd2_process_14')),
+            ]"/>
+        </record>
+
+        <!-- ################## CUSTOMER SERVICE: SRD_4 METER RECERTIFICATION OR DEFECTIVE REQUEST STAGE ###################  -->
+        <!-- config -->
+        <record id="memo_config_helpdesk_cs_srd4_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_4 METER RECERTIFICATION OR DEFECTIVE REQUEST</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- stages -->
+        <record id="memo_stage_helpdesk_cs_srd4_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative/Call Center</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_3" model="memo.stage">
+            <field name="name">Manager Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_13" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">12</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_7" model="memo.stage">
+            <field name="name">Manager Metering/Head Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <!-- send to CMS to close ticket -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd4_process_13"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_8" model="memo.stage">
+            <field name="name">Manager Metering/Head Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_2" model="memo.stage">
+            <field name="name">Metering Helpdesk</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- send to CRS to close ticket if complain can be resolved on call -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd4_process_13"/>
+            <!-- no the complain cannot be resolved on call -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd4_process_3"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_4" model="memo.stage">
+            <field name="name">Supervisor Testing, Recertificaiton, Fault Resolution</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_5" model="memo.stage">
+            <field name="name">Meter Engineer/Technician</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_6" model="memo.stage">
+            <field name="name">Manager Metering/Head Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <!-- yes, the meter is demaged or defective -->
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd4_process_8"/>
+            <!-- no the meter is not damaged or defective -->
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd4_process_7"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_9" model="memo.stage">
+            <field name="name">Supervisor Testing, Recertificaiton, Fault Resolution</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_10" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_11" model="memo.stage">
+            <field name="name">Meter Engineer/Technician</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_12" model="memo.stage">
+            <field name="name">Head Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">11</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd4_process_14" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">13</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd4_process"/>
+        </record>
+        <!-- stage_ids -->
+        <record id="memo_config_helpdesk_cs_srd4_process" model="memo.config">
+            <field name="stage_ids" eval="[
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_1')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_2')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_3')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_4')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_5')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_6')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_7')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_8')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_9')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_10')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_11')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_12')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_13')),
+            (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd4_process_14')),
+            ]"/>
+        </record>
+
+        <!-- SRD_5 (MAP) Meter Recertification or Defective Request Process -->
+        <record id="memo_config_helpdesk_cs_srd5_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_5 (MAP) Meter Recertification or Defective Request</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_srd5_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative / Call Centre</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd5_process_2" model="memo.stage">
+            <field name="name">Metering Helpdesk</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd5_process_3" model="memo.stage">
+            <field name="name">Meter Engineer / Technician</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd5_process_4" model="memo.stage">
+            <field name="name">Supervisor Testing, Recertification, Fault Resolution</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd5_process_5" model="memo.stage">
+            <field name="name">Manager Metering / Head Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <!-- Example conditional stage for ticket closure -->
+        <record id="memo_stage_helpdesk_cs_srd5_process_6" model="memo.stage">
+            <field name="name">Close Ticket</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd5_process_7" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd5_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_srd5_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd5_process_7'))
+            ]"/>
+        </record>
+
+        <!-- SRD_7 Complain Related to Duplicate Account / Billing Process -->
+        <record id="memo_config_helpdesk_cs_srd7_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_7 Complain Related to Duplicate Account / Billing</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_srd7_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_2" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_3" model="memo.stage">
+            <field name="name">Feeder Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_5" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_7" model="memo.stage">
+            <field name="name">Customer Service Representative (Close Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_4" model="memo.stage">
+            <field name="name">Billing Manager (Review)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd7_process_5"/>
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd7_process_7"/>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_6" model="memo.stage">
+            <field name="name">Head Metering / Manager Metering</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd7_process_8" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd7_process"/>
+        </record>
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_srd7_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_7')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd7_process_8'))
+            ]"/>
+        </record>
+
+        <!-- SRD_8 Complain Related to Payment not reflected in Bill Process -->
+        <record id="memo_config_helpdesk_cs_srd8_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_8 Complain Related to Payment not reflected in Bill</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_srd8_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative (Log Complaint)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd8_process_3" model="memo.stage">
+            <field name="name">Network Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd8_process_5" model="memo.stage">
+            <field name="name">Customer Service Representative (Close Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd8_process_2" model="memo.stage">
+            <field name="name">Customer Service Representative (Check Payment Status)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd8_process_5"/>
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_srd8_process_3"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd8_process_4" model="memo.stage">
+            <field name="name">Billing Manager</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd8_process_6" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd8_process"/>
+        </record>
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_srd8_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd8_process_6'))
+            ]"/>
+        </record>
+
+        <!-- SRD_9 Fusecall Process -->
+        <record id="memo_config_helpdesk_cs_srd9_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_9 Fusecall</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_srd9_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative / Call Center</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_2" model="memo.stage">
+            <field name="name">Manager O/M (Register Entry)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_3" model="memo.stage">
+            <field name="name">Linemen / Feeder Manager (Attend and Consent)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_4" model="memo.stage">
+            <field name="name">Manager O/M (Ticket Closure)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_5" model="memo.stage">
+            <field name="name">Manager O/M (Monthly Reporting)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_6" model="memo.stage">
+            <field name="name">Network Manager (Review and Sign-off)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_7" model="memo.stage">
+            <field name="name">Manager O/M (Final Submission)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd9_process_8" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd9_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_srd9_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_7')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd9_process_8'))
+            ]"/>
+        </record>
+
+        <!-- SRD_10 Field Complaints Process -->
+        <record id="memo_config_helpdesk_cs_srd10_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">SRD_10 Field Complaints</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_srd10_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative (Collate Complaints)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd10_process_2" model="memo.stage">
+            <field name="name">Customer Service Representative (Send to Customer Care)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd10_process_3" model="memo.stage">
+            <field name="name">Central Customer Care Unit (Resolve Complaint)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd10_process_4" model="memo.stage">
+            <field name="name">EEDC Representative (Informed of Closure)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd10_process_5" model="memo.stage">
+            <field name="name">EEDC Representative (Update Register)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_srd10_process_6" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_srd10_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_srd10_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_srd10_process_6'))
+            ]"/>
+        </record>
+
+        <!-- Complain Related to Recharge and Tamper Code Process -->
+        <record id="memo_config_helpdesk_cs_recharge_tamper_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">Complain Related to Recharge and Tamper Code</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit (Receive Complaint and Log Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_2" model="memo.stage">
+            <field name="name">Customer Care Unit (Assign to Meter Engineer)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_3" model="memo.stage">
+            <field name="name">Meter Engineer (Inspection/Resolution)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_4" model="memo.stage">
+            <field name="name">Meter Engineer (Confirm and Report Resolution)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_5" model="memo.stage">
+            <field name="name">Customer Care Unit (Close Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_6" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <!-- Escalation stages (informational or for audit tracking) -->
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_esc_24h" model="memo.stage">
+            <field name="name">Escalate to Network Manager (after 24hrs SLA breach)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_esc_48h" model="memo.stage">
+            <field name="name">Escalate to Head Metering (after 48hrs SLA breach)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_recharge_tamper_process_esc_72h" model="memo.stage">
+            <field name="name">Escalate to COO (after 72hrs SLA breach)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_recharge_tamper_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_recharge_tamper_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_esc_24h')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_esc_48h')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_recharge_tamper_process_esc_72h'))
+            ]"/>
+        </record>
+
+        <!-- Complaint Related to Unread Meter Process -->
+        <record id="memo_config_helpdesk_cs_unread_meter_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">Complaint Related to Unread Meter Process</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit (Receive Complaint and Log Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_2" model="memo.stage">
+            <field name="name">Customer Care Unit (Forward to Billing Manager)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_3" model="memo.stage">
+            <field name="name">Billing Manager (Obtain Meter Value and Resolve)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_4" model="memo.stage">
+            <field name="name">Customer Care Unit (Inform and Close Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_5" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <!-- Escalation stages (for audit and SLA monitoring) -->
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_esc_4d" model="memo.stage">
+            <field name="name">Escalate to Network Manager (after 4 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_esc_5d" model="memo.stage">
+            <field name="name">Network Manager reports to Manager Billing (after 5 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_esc_6d" model="memo.stage">
+            <field name="name">Manager Billing reports to Head ICT (after 6 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_unread_meter_process_esc_7d" model="memo.stage">
+            <field name="name">Head ICT reports to MD (after 7 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_unread_meter_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_unread_meter_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_esc_4d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_esc_5d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_esc_6d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_unread_meter_process_esc_7d'))
+            ]"/>
+        </record>
+
+        <!-- Complaint Related to Wrong Meter Reading Process -->
+        <record id="memo_config_helpdesk_cs_wrong_meter_reading_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">Complaint Related to Wrong Meter Reading Process</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_1" model="memo.stage">
+            <field name="name">Customer Service Representative (Receive and Log Complaint)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_2" model="memo.stage">
+            <field name="name">Customer Care Unit (Forward to Billing Manager)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_3" model="memo.stage">
+            <field name="name">Billing Manager (Verify Reading Sheet)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_4" model="memo.stage">
+            <field name="name">Meter Engineer (Site Visit and Value Confirmation)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_5" model="memo.stage">
+            <field name="name">Billing Manager (Approval and Correction)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_6" model="memo.stage">
+            <field name="name">Customer Care Unit (Inform and Close Ticket)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_7" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <!-- Escalation stages (for SLA monitoring) -->
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_3d" model="memo.stage">
+            <field name="name">Escalate to Network Manager (after 3 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_4d" model="memo.stage">
+            <field name="name">Network Manager reports to Manager Billing (after 4 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_5d" model="memo.stage">
+            <field name="name">Manager Billing reports to Head ICT (after 5 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_6d" model="memo.stage">
+            <field name="name">Head ICT reports to MD (after 6 days)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">0</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wrong_meter_reading_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_wrong_meter_reading_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_7')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_3d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_4d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_5d')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_wrong_meter_reading_process_esc_6d'))
+            ]"/>
+        </record>
+
+        <!-- Customer Complaints Resolution Process -->
+        <record id="memo_config_helpdesk_cs_customer_complaints_resolution_process" model="memo.config">
+            <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
+            <field name="active">1</field>
+            <field name="name">Customer Complaints Resolution Process</field>
+            <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
+        </record>
+
+        <!-- Stages -->
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_1" model="memo.stage">
+            <field name="name">Customer Care Unit (Receive and Register Complaint)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">0</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_3" model="memo.stage">
+            <field name="name">Applicable Unit/Department (Resolve and Notify)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">2</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_4" model="memo.stage">
+            <field name="name">Customer Care Unit (Notify and Forward for Petition)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">3</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_2" model="memo.stage">
+            <field name="name">Customer Care Unit (Determine Source and Forward)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_3"/>
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_4"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">1</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_5" model="memo.stage">
+            <field name="name">Customer Care Unit (Monitor Escalations)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">4</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <!-- Legal and District conditional path -->
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_6" model="memo.stage">
+            <field name="name">Legal Dept. (Send Hold-on Letter)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">5</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_8" model="memo.stage">
+            <field name="name">Legal Dept. (Respond to Petitioner)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">7</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_9" model="memo.stage">
+            <field name="name">Legal Dept. (Request More Info from District)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">8</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_7" model="memo.stage">
+            <field name="name">Legal Dept. (Review Findings)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="memo_has_condition">1</field>
+            <field name="yes_condition">1</field>
+            <field name="no_condition">1</field>
+            <field name="yes_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_8"/>
+            <field name="no_conditional_stage_id" ref="helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_9"/>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">6</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_10" model="memo.stage">
+            <field name="name">District Office (Provide Findings/Comments)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">9</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_11" model="memo.stage">
+            <field name="name">Customer Care Unit (Close Complaint and Archive Evidence)</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="is_approved_stage">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">10</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+        <record id="memo_stage_helpdesk_cs_customer_complaints_resolution_process_12" model="memo.stage">
+            <field name="name">Done</field>
+            <field name="loaded_from_data">1</field>
+            <field name="active">1</field>
+            <field name="publish_on_dashboard">1</field>
+            <field name="sequence">11</field>
+            <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_customer_complaints_resolution_process"/>
+        </record>
+
+        <!-- Link all stages to the process -->
+        <record id="memo_config_helpdesk_cs_customer_complaints_resolution_process" model="memo.config">
+            <field name="stage_ids" eval="[
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_1')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_2')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_3')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_4')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_5')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_6')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_7')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_8')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_9')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_10')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_11')),
+                (4, ref('helpdesk_process.memo_stage_helpdesk_cs_customer_complaints_resolution_process_12'))
+            ]"/>
+        </record>
     </data>
 </odoo>

@@ -1,4 +1,4 @@
-odoo.define('helpdesk_process.memo_customer_status_form', function (require) {
+odoo.define('helpdesk_process', function (require) {
     "use strict";
 
     require('web.dom_ready');

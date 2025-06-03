@@ -7,7 +7,7 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
 
     let localStorage = window.localStorage;
 
-    let trigger_date_function = function(dateElement, minDate=new Date(), maxDate=null){
+    let trigger_date_function = function (dateElement, minDate = new Date(), maxDate = null) {
         dateElement.datepicker('destroy').datepicker({
             onSelect: function (ev) {
                 dateElement.trigger('blur')
@@ -20,7 +20,7 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
             minDate: minDate
         });
     }
-    function buildMemoConfigOption(data){
+    function buildMemoConfigOption(data) {
         console.log("Memo config build loading")
         let select = $("#helpdesk_memo_config_id").empty();
         select.append($('<option>', { value: '', text: 'Please select' }));
@@ -43,33 +43,49 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
 
     publicWidget.registry.MemoHelpdeskFormWidgets = publicWidget.Widget.extend({
         selector: '#memo-request-form',
-        start: function(){
-            return this._super.apply(this, arguments).then(function(){
+        start: function () {
+            return this._super.apply(this, arguments).then(function () {
                 console.log("started helpdesk form request");
             });
         },
-        willStart: function(){
-            return this._super.apply(this, arguments).then(function(){
+        willStart: function () {
+            return this._super.apply(this, arguments).then(function () {
                 console.log("...memo helpdesk willstart...")
             })
         },
         events: {
             'blur input, select, textarea': function (ev) {
-                let input = $(ev.target)
-                if (input.is(":required") && input.val() !== '') {
-                    input.removeClass('is-invalid').addClass('is-valid')
-                } else if (input.is(":required") && input.val() == '') {
-                    input.addClass('is-invalid')
+                let input = $(ev.target);
+                if (input.is('input[type="tel"]')) {
+                    let phone = input.val().replace(/\s+/g, '');
+                    // Regex for Nigerian mobile numbers
+                    let regex = /^(0[789]\d{9}|\+234[789]\d{9})$/;
+                    if (!regex.test(phone)) {
+                        input.addClass('is-invalid');
+                    } else {
+                        input.removeClass('is-invalid').addClass('is-valid');
+                    }
+                } else if (input.attr('name') === 'customer_meter_no') {
+                    let meterNo = input.val().replace(/\s+/g, '');
+                    // Regex for EEDC meter numbers
+                    let regex = /^[0-9]{11}$/;
+                    if (!regex.test(meterNo)) {
+                        input.addClass('is-invalid');
+                    }
+                    else {
+                        input.removeClass('is-invalid').addClass('is-valid');
+                    }
                 }
-            }, 
-            'change select[name=helpdesk_category_id]': function(ev){
+
+            },
+            'change select[name=helpdesk_category_id]': function (ev) {
                 let value = $(ev.target).val();
                 // $("#helpdesk_memo_config_id").val('')
-                if(!value){
+                if (!value) {
                     alert('You must provide category option!')
                     return false;
                 };
-                if(value !== ''){
+                if (value !== '') {
                     var self = this;
                     this._rpc({
                         route: `/get-helpdesk-config`,
@@ -77,13 +93,13 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
                             'category_id': value,
                         },
                     }).then(function (data) {
-                        console.log('retrieved helpdesk memo category data => '+ JSON.stringify(data))
+                        console.log('retrieved helpdesk memo category data => ' + JSON.stringify(data))
                         if (!data.status) {
                             $(ev.target).val('')
                             $("#helpdesk_memo_config_id").val('')
                             // $("#product_ids").val('').trigger('change')
                             alert(`Validation Error! ${data.message}`)
-                        }else{
+                        } else {
                             // var description = data.data.description; 
                             // $("#phone_number").val(phone)
                             // $("#selectDistrict").val(district_id).trigger('change')
@@ -96,24 +112,24 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
                         $("#helpdesk_category_id").val('')
                         alert(`Unknown Error! ${msg}`)
                     });
-                }else{
+                } else {
                     alert("Category Must all be provided")
                 }
             },
 
-            'click .submit_btn': function(ev){
+            'click .submit_btn': function (ev) {
                 var list_of_fields = [];
-                $('input,textarea,select,select2').filter('[required]:visible').each(function(ev){
-                    var field = $(this); 
-                    if (field.val() == ""){
-                        field.addClass('is-invalid'); 
+                $('input,textarea,select,select2').filter('[required]:visible').each(function (ev) {
+                    var field = $(this);
+                    if (field.val() == "") {
+                        field.addClass('is-invalid');
                         list_of_fields.push(field.attr('labelfor'));
                     }
                 });
-                if (list_of_fields.length > 0){
+                if (list_of_fields.length > 0) {
                     alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
                     return false;
-                }else{
+                } else {
                     let $btn = $('.submit_btn');
                     let $btnHtml = $btn.html()
                     $btn.attr('disabled', 'disabled');
@@ -134,11 +150,11 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
                         contentType: false,
                         cache: false,
                         timeout: 800000,
-                    }).then(function(data) {
-                        if (data.status == false){
+                    }).then(function (data) {
+                        if (data.status == false) {
                             alert(data.message)
                             return false;
-                        }else{
+                        } else {
                             // clearing form content
                             $("#msform")[0].reset();
                             console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
@@ -147,10 +163,10 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
                             $btn.html($btnHtml)
                             $.unblockUI()
                         }
-                    }).catch(function(err) {
+                    }).catch(function (err) {
                         console.log(err);
                         alert(err);
-                    }).then(function() {
+                    }).then(function () {
                         console.log(".")
                     })
 
@@ -158,5 +174,5 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
             },
         },
     });
-// return PortalRequestWidget;
+    // return PortalRequestWidget;
 });
