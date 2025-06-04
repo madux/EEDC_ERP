@@ -1,0 +1,82 @@
+<odoo>
+    <template id="website_relatives_disclosure_form" name="Relative Disclosure Form">
+        <t t-call="website.layout">
+            <t t-call-assets="web.assets_frontend"/>
+            <div class="relatives-disclosure-container">
+                <h2>Relatives Disclosure Form</h2>
+                <form action="/relativesDisclosureForm/submit" method="post" class="relatives-disclosure-form">
+                    <div class="form-group">
+                        <label>Name of Staff</label>
+                        <input type="text" name="employee_id" class="form-control" required="1" placeholder="Enter your name"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Staff Number</label>
+                        <input type="text" name="staff_number" class="form-control" required="1" placeholder="Enter your staff number"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Designation</label>
+                        <input type="text" name="designation" class="form-control" required="1" placeholder="Enter your designation"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="location" class="form-control" required="1" placeholder="Enter your location"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" name="department" class="form-control" required="1" placeholder="Enter your department"/>
+                    </div>
+                    <div class="form-group">
+                        <label>State of Origin</label>
+                        <input type="text" name="state_of_origin" class="form-control" required="1" placeholder="Enter your state of origin"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Village</label>
+                        <input type="text" name="village" class="form-control" required="1" placeholder="Enter your town"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Town</label>
+                        <input type="text" name="town" class="form-control" required="1" placeholder="Enter your town"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Local Government Area</label>
+                        <input type="text" name="lga" class="form-control" required="1" placeholder="Enter your LGA"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender" class="form-control" required="1">
+                            <option value="">Select...</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Marital Status</label>
+                        <select name="marital_status" class="form-control" required="1">
+                            <option value="">Select...</option>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </t>
+    </template>
+    <!-- <template id="website_relatives_disclosure_form_success" name="Relative Disclosure Form Success">
+        <t t-call="website.layout">
+            <div class="container">
+                <h2>Thank You!</h2>
+                <p>Your relatives disclosure form has been successfully submitted.</p>
+            </div>
+        </t>
+    </template> -->
+    <template id="thank_you_template" name="Thank You">
+        <t t-call="website.layout">
+            <div class="container">
+                <h2>Thank you for submitting your relatives disclosure form</h2>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,66 @@
+<odoo>
+    <data>
+        <!-- Relatives Disclosure Form View -->
+        <record id="relatives_disclosure_form_view" model="ir.ui.view">
+            <field name="name">relatives.disclosure.form.form</field>
+            <field name="model">relatives.disclosure.form</field>
+            <field name="arch" type="xml">
+                <form string="Relatives Disclosure Form">
+                    <header>
+                        <!-- <field name="state" widget="statusbar" statusbar_visible="draft,approved,rejected"/> -->
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="employee_id"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="staff_number"/>
+                                <field name="designation"/>
+                                <field name="department"/>
+                                <field name="location"/>
+                                <field name="state_of_origin"/>
+                                <field name="lga"/>
+                                <field name="town"/>
+                                <field name="village"/>
+                                <field name="permanent_address"/>
+                                <field name="gender"/>
+                                <field name="marital_status"/>
+                                <field name="maiden_name" attrs="{'invisible':[('marital_status', '!=', 'married'), ('gender', '!=', 'female')]}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="has_relatives"/>
+                        </group>
+                        <group attrs="{'invisible':[('has_relatives', '=', False)]}">
+                            <field name="relative_ids">
+                                <tree editable="bottom">
+                                    <field name="relative_name"/>
+                                    <field name="relationship"/>
+                                    <field name="relative_department"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="relative_name"/>
+                                        <field name="relationship"/>
+                                        <field name="relative_department"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <!-- <group>
+                            <field name="note"/>
+                            <field name="signed_date"/>
+                        </group> -->
+                    </sheet>
+                    <!-- <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div> -->
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
