@@ -7,12 +7,12 @@
     "depends": ["base", "hr", "hr_recruitment", "company_memo"],
     "license": "LGPL-3",
     "description": "This module provides a form for employees to disclose relatives working in the company.",
-    "icon": "/relatives_disclosure_form/static/description/icon.png",
+    "icon": "relatives_disclosure_form/static/description/icon.png",
     "data": [
         "security/ir.model.access.csv",
-        "views/relatives_disclosure_menu.xml",
         "views/relatives_disclosure_form_view.xml",
         "views/relatives_disclosure_kanban_view.xml",
+        "views/relatives_disclosure_menu.xml",
         "static/templates/relatives_disclosure_form_template.xml",
     ],
     "assets": {

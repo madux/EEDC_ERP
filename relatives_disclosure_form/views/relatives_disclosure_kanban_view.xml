@@ -45,13 +45,8 @@
         <field name="res_model">relatives.disclosure.form</field>
         <field name="view_mode">kanban,tree,form</field>
         <field name="view_id" ref="view_relatives_disclosure_form_kanban"/>
-        <field name="search_view_id" ref="view_relatives_disclosure_form_search"/>
+        <field name="search_view_id" ref="relatives_disclosure_form.view_relatives_disclosure_form_search"/>
     </record>
 
-    <!-- Optional: Kanban Menu Item -->
-    <menuitem id="menu_hr_relatives_disclosure_kanban"
-              name="Disclosure Kanban"
-              parent="menu_hr_relatives_disclosure_root"
-              action="action_relatives_disclosure_kanban"
-              sequence="20"/>
+    
 </odoo>

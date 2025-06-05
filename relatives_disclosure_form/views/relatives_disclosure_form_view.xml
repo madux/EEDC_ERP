@@ -1,11 +1,5 @@
 <odoo>
-    <!-- Menu -->
-    <menuitem id="menu_hr_relatives_disclosure_root" name="Relatives Disclosure" sequence="100"/>
-    <menuitem id="menu_hr_relatives_disclosure_form"
-              name="Disclosure Forms"
-              parent="menu_hr_relatives_disclosure_root"
-              action="action_relatives_disclosure_form"
-              sequence="10"/>
+   
 
     <!-- Tree View -->
     <record id="view_relatives_disclosure_form_tree" model="ir.ui.view">
@@ -127,4 +121,6 @@
             </p>
         </field>
     </record>
+
+    
 </odoo>
