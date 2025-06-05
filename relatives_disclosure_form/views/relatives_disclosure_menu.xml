@@ -1,0 +1,19 @@
+<odoo>
+    <data>
+        <record id="action_relatives_disclosure_form" model="ir.actions.act_window">
+            <field name="name">Relatives Disclosure Forms</field>
+            <field name="res_model">relatives.disclosure.form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="relatives_disclosure_root"
+                  name="Relatives Disclosure"
+                  sequence="10"
+                  action="action_relatives_disclosure_form"
+                  web_icon="relatives_disclosure_form,static/description/icon.png"/>
+        <menuitem id="menu_relatives_disclosure_form"
+                  name="Disclosure Forms"
+                  parent="relatives_disclosure_root"
+                  action="action_relatives_disclosure_form"
+                  sequence="20"/>
+    </data>
+</odoo>

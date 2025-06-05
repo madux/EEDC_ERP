@@ -3,7 +3,8 @@ from odoo.http import request
 
 class RelativesDisclosureFormController(http.Controller):
 
-    @http.route('/relativesDisclosureForm', type='http', auth='public', website=True)
+    # @http.route('/relativesDisclosureForm', type='http', auth='public', website=True)
+    @http.route('/relativesdisclosureform', type='http', auth='public', website=True)
     def relatives_disclosure_form(self, **post):
         return request.render('relatives_disclosure_form.website_relatives_disclosure_form', {})
 
