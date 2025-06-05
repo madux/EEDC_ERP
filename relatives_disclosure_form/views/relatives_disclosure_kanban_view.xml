@@ -1,0 +1,57 @@
+<odoo>
+    <record id="view_relatives_disclosure_form_kanban" model="ir.ui.view">
+        <field name="name">relatives.disclosure.form.kanban</field>
+        <field name="model">relatives.disclosure.form</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard">
+                <field name="employee_id"/>
+                <field name="staff_number"/>
+                <field name="department"/>
+                <field name="state_of_origin"/>
+                <field name="submission_date"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_card_header">
+                                <strong>
+                                    <t t-esc="record.employee_id.value"/>
+                                </strong>
+                                <span style="float:right;">
+                                    <t t-esc="record.staff_number.value"/>
+                                </span>
+                            </div>
+                            <div>
+                                <b>Dept:</b> <t t-esc="record.department.raw_value ? record.department.value : '-'"/>
+                            </div>
+                            <div>
+                                <b>State:</b> <t t-esc="record.state_of_origin.raw_value ? record.state_of_origin.value : '-'"/>
+                            </div>
+                            <div>
+                                <b>Submitted:</b> <t t-esc="record.submission_date.value"/>
+                            </div>
+                            <div>
+                                <b>Relatives:</b> <t t-esc="record.relative_ids.raw_value ? record.relative_ids.raw_value.length : 0"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Window Action for Kanban (with tree and form fallback) -->
+    <record id="action_relatives_disclosure_kanban" model="ir.actions.act_window">
+        <field name="name">Disclosure Kanban</field>
+        <field name="res_model">relatives.disclosure.form</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="view_relatives_disclosure_form_kanban"/>
+        <field name="search_view_id" ref="view_relatives_disclosure_form_search"/>
+    </record>
+
+    <!-- Optional: Kanban Menu Item -->
+    <menuitem id="menu_hr_relatives_disclosure_kanban"
+              name="Disclosure Kanban"
+              parent="menu_hr_relatives_disclosure_root"
+              action="action_relatives_disclosure_kanban"
+              sequence="20"/>
+</odoo>

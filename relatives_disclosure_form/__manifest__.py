@@ -12,6 +12,7 @@
         "security/ir.model.access.csv",
         "views/relatives_disclosure_menu.xml",
         "views/relatives_disclosure_form_view.xml",
+        "views/relatives_disclosure_kanban_view.xml",
         "static/templates/relatives_disclosure_form_template.xml",
     ],
     "assets": {
