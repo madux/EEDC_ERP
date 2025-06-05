@@ -24,8 +24,9 @@ class RelativesDisclosureForm(models.Model):
     maiden_name = fields.Char(string='Maiden Name')
     has_relatives = fields.Boolean(string='Do you have relatives in the company?', default=False)
     relative_ids = fields.One2many('relatives.disclosure.form.relative', 'form_id', string='Relatives')
-    signature = fields.Binary(string='Signature')
-    date = fields.Date(string='Date', default=fields.Date.context_today)
+    signature = fields.Binary('Signature Document')
+    signature_filename = fields.Char('Signature Filename')
+    submission_date = fields.Datetime('Date/Time Submitted', default=fields.Datetime.now)
 
 class RelativesDisclosureFormRelative(models.Model):
     _name = 'relatives.disclosure.form.relative'

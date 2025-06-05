@@ -1,10 +1,11 @@
 <odoo>
+    <!-- Template for the relatives disclosure form -->
     <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
         <t t-call="website.layout">
             <t t-call-assets="web.assets_frontend"/>
             <div class="relatives-disclosure-container">
                 <h2>Relatives Disclosure Form</h2>
-                <form action="/relativesDisclosureForm/submit" method="post" class="relatives-disclosure-form">
+                <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
                     <div class="form-group">
                         <label>Name of Staff</label>
                         <input type="text" name="employee_id" class="form-control" required="1" placeholder="Enter your name"/>
@@ -22,7 +23,9 @@
                         <select name="location" class="form-control" required="1">
                             <option value="">Select...</option>
                             <t t-foreach="locations" t-as="loc">
-                                <option t-att-value="loc.id"><t t-esc="loc.name"/></option>
+                                <option t-att-value="loc.id">
+                                    <t t-esc="loc.name"/>
+                                </option>
                             </t>
                         </select>
                     </div>
@@ -31,16 +34,20 @@
                         <select name="department" class="form-control" required="1">
                             <option value="">Select...</option>
                             <t t-foreach="departments" t-as="dept">
-                                <option t-att-value="dept.id"><t t-esc="dept.name"/></option>
+                                <option t-att-value="dept.id">
+                                    <t t-esc="dept.name"/>
+                                </option>
                             </t>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>State of Origin</label>
-                        <select name="state_of_origin" class="form-control" required="1">
+                        <select name="state_of_origin" id="state_of_origin" class="form-control" required="1">
                             <option value="">Select...</option>
                             <t t-foreach="states" t-as="st">
-                                <option t-att-value="st.id"><t t-esc="st.name"/></option>
+                                <option t-att-value="st.id">
+                                    <t t-esc="st.name"/>
+                                </option>
                             </t>
                         </select>
                     </div>
@@ -54,10 +61,12 @@
                     </div>
                     <div class="form-group">
                         <label>Local Government Area</label>
-                        <select name="lga" class="form-control" required="1">
+                        <select name="lga" id="lga" class="form-control" required="1">
                             <option value="">Select...</option>
                             <t t-foreach="lgas" t-as="lga">
-                                <option t-att-value="lga.id"><t t-esc="lga.name"/></option>
+                                <option t-att-value="lga.id">
+                                    <t t-esc="lga.name"/>
+                                </option>
                             </t>
                         </select>
                     </div>
@@ -87,18 +96,38 @@
                         <label>Maiden Name</label>
                         <input type="text" name="maiden_name" class="form-control" required="1" placeholder="Enter your maiden name"/>
                     </div>
+                    <div class="form-group">
+                        <label>Upload Signature Document</label>
+                        <input type="file" name="signature_file" class="form-control" required="1" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
+                        <small class="form-text text-muted">Upload an image or scanned copy of your signed signature.</small>
+                    </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </t>
     </template>
+
+    <!-- Template for the thank you page after form submission -->
     <template id="thank_you_template" name="Thank You">
         <t t-call="website.layout">
-            <div class="container">
-                <h2>Thank you for submitting your relatives disclosure form</h2>
+            <div class="relatives-disclosure-container" style="text-align: center; padding: 48px 30px;">
+                <div style="margin-bottom: 24px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#4BB543" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="#E9F8ED"/>
+                        <path d="M8.5 13.5l2.5 2.5 4.5-5.5" fill="none" stroke="#4BB543" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2 style="color: #138496; margin-bottom: 16px;">Thank You!</h2>
+                <p style="font-size: 18px; color: #555; margin-bottom: 24px;">
+                Your relatives disclosure form has been <strong>successfully submitted</strong>.
+                </p>
+                <a href="/relativesDisclosureForm" class="btn btn-primary" style="padding: 10px 28px; font-size: 16px; border-radius: 6px; text-decoration: none;">
+                Submit Another
+                </a>
             </div>
         </t>
     </template>
+
 </odoo>
 
 
