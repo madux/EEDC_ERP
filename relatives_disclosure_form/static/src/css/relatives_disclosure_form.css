@@ -1,0 +1,68 @@
+.relatives-disclosure-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+
+.relatives-disclosure-container h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    color: #138496;
+}
+
+.relatives-disclosure-form .form-group {
+    margin-bottom: 22px;
+}
+
+.relatives-disclosure-form label {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.relatives-disclosure-form input,
+.relatives-disclosure-form select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    font-size: 16px;
+    background: #f9f9f9;
+    transition: border 0.2s;
+}
+
+.relatives-disclosure-form input:focus,
+.relatives-disclosure-form select:focus {
+    border-color: #138496;
+    outline: none;
+    background: #fff;
+}
+
+.relatives-disclosure-form button {
+    background: #138496;
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 18px;
+    width: 100%;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.relatives-disclosure-form button:hover {
+    background: #0e6877;
+}
+
+@media (max-width: 600px) {
+    .relatives-disclosure-container {
+        padding: 10px;
+    }
+    .relatives-disclosure-form button {
+        font-size: 16px;
+    }
+}
