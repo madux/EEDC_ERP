@@ -1,11 +1,36 @@
 odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
     "use strict";
-    $(document).ready(function () {
-        function toggleMaidenName() {
-            var gender = $('#gender').val();
-            var marital = $('#marital_status').val();
-            var maidenGroup = $('#maiden_name_group');
+    
+    var publicWidget = require('web.public.widget');
+    var core = require('web.core');
+    
+    publicWidget.registry.RelativesDisclosureForm = publicWidget.Widget.extend({
+        selector: '.relatives-disclosure-form',
+        events: {
+            'change #gender, #marital_status': '_onGenderMaritalChange',
+            'submit': '_onFormSubmit',
+        },
+
+        /**
+         * @override
+         */
+        start: function () {
+            var self = this;
+            return this._super.apply(this, arguments).then(function () {
+                self._toggleMaidenName();
+            });
+        },
+
+        /**
+         * Toggle maiden name field based on gender and marital status
+         * @private
+         */
+        _toggleMaidenName: function () {
+            var gender = this.$('#gender').val();
+            var marital = this.$('#marital_status').val();
+            var maidenGroup = this.$('#maiden_name_group');
             var maidenInput = maidenGroup.find('input[name="maiden_name"]');
+            
             if (gender === 'male' && marital === 'married') {
                 maidenGroup.show();
                 maidenInput.prop('required', true);
@@ -14,14 +39,23 @@ odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
                 maidenInput.prop('required', false);
                 maidenInput.val('');
             }
-        }
-        $('#gender, #marital_status').on('change', toggleMaidenName);
-        toggleMaidenName();
+        },
 
-        // Custom validation on submit
-        $('.relatives-disclosure-form').on('submit', function(e){
+        /**
+         * Handle gender/marital status change
+         * @private
+         */
+        _onGenderMaritalChange: function () {
+            this._toggleMaidenName();
+        },
+
+        /**
+         * Handle form submission with validation
+         * @private
+         */
+        _onFormSubmit: function (e) {
             var errorMessages = [];
-            var $form = $(this);
+            var $form = this.$el;
 
             // Check all visible required fields
             $form.find('input, select, textarea').each(function(){
@@ -35,18 +69,17 @@ odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
                 }
             });
 
-            // You can also check for special rules (e.g., signature file only certain extensions, etc.)
-
             if (errorMessages.length > 0) {
                 e.preventDefault(); // Stop form from submitting
-                $('#form-error-message').html(errorMessages.join('<br>')).show();
+                this.$('#form-error-message').html(errorMessages.join('<br>')).show();
                 $('html, body').animate({
-                    scrollTop: $('#form-error-message').offset().top - 100
+                    scrollTop: this.$('#form-error-message').offset().top - 100
                 }, 300);
             } else {
-                $('#form-error-message').hide();
+                this.$('#form-error-message').hide();
             }
-        });
+        },
     });
-});
 
+    return publicWidget.registry.RelativesDisclosureForm;
+});
