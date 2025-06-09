@@ -1,70 +1,102 @@
 odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
     "use strict";
     
-    var core = require('web.core');
-    var publicWidget = require('web.public.widget');
-
-    publicWidget.registry.RelativesDisclosureForm = publicWidget.Widget.extend({
-        selector: '.relatives-disclosure-form',
-        events: {
-            'change #gender': '_onGenderMaritalChange',
-            'change #marital_status': '_onGenderMaritalChange',
-            'submit': '_onFormSubmit',
-        },
-
-        start: function () {
-            this._toggleMaidenName();
-            return this._super.apply(this, arguments);
-        },
-
-        _toggleMaidenName: function () {
-            var gender = this.$('#gender').val();
-            var marital = this.$('#marital_status').val();
-            var maidenGroup = this.$('#maiden_name_group');
-            var maidenInput = maidenGroup.find('input[name="maiden_name"]');
+    // Simple function to initialize form behavior
+    function initializeForm() {
+        function toggleMaidenName() {
+            var gender = document.getElementById('gender');
+            var marital = document.getElementById('marital_status');
+            var maidenGroup = document.getElementById('maiden_name_group');
+            var maidenInput = maidenGroup ? maidenGroup.querySelector('input[name="maiden_name"]') : null;
             
-            // Show maiden name for females who are married
-            if (gender === 'female' && marital === 'married') {
-                maidenGroup.show();
-                maidenInput.prop('required', true);
-            } else {
-                maidenGroup.hide();
-                maidenInput.prop('required', false);
-                maidenInput.val('');
-            }
-        },
-
-        _onGenderMaritalChange: function () {
-            this._toggleMaidenName();
-        },
-
-        _onFormSubmit: function (e) {
-            var errorMessages = [];
-            var $form = this.$el;
-
-            // Check all visible required fields
-            $form.find('input, select, textarea').each(function(){
-                var $field = $(this);
-                if ($field.is(':visible') && $field.prop('required') && !$field.val()) {
-                    var label = $field.closest('.form-group').find('label').text() || $field.attr('name');
-                    errorMessages.push('Please fill the "' + label + '" field.');
-                    $field.addClass('is-invalid');
+            if (gender && marital && maidenGroup && maidenInput) {
+                // Show maiden name for females who are married
+                if (gender.value === 'female' && marital.value === 'married') {
+                    maidenGroup.style.display = 'block';
+                    maidenInput.required = true;
                 } else {
-                    $field.removeClass('is-invalid');
+                    maidenGroup.style.display = 'none';
+                    maidenInput.required = false;
+                    maidenInput.value = '';
+                }
+            }
+        }
+
+        function validateForm(e) {
+            var errorMessages = [];
+            var form = e.target;
+            var errorDiv = document.getElementById('form-error-message');
+            
+            // Get all form elements
+            var formElements = form.querySelectorAll('input, select, textarea');
+            
+            formElements.forEach(function(field) {
+                // Check if field is visible and required
+                var fieldStyle = window.getComputedStyle(field.closest('.form-group') || field);
+                var isVisible = fieldStyle.display !== 'none';
+                
+                if (isVisible && field.required && !field.value.trim()) {
+                    var label = '';
+                    var labelElement = field.closest('.form-group');
+                    if (labelElement) {
+                        var labelTag = labelElement.querySelector('label');
+                        label = labelTag ? labelTag.textContent : field.name;
+                    } else {
+                        label = field.name;
+                    }
+                    errorMessages.push('Please fill the "' + label + '" field.');
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
                 }
             });
 
             if (errorMessages.length > 0) {
                 e.preventDefault();
-                this.$('#form-error-message').html(errorMessages.join('<br>')).show();
-                $('html, body').animate({
-                    scrollTop: this.$('#form-error-message').offset().top - 100
-                }, 300);
+                if (errorDiv) {
+                    errorDiv.innerHTML = errorMessages.join('<br>');
+                    errorDiv.style.display = 'block';
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             } else {
-                this.$('#form-error-message').hide();
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
             }
-        },
-    });
+        }
 
-    return publicWidget.registry.RelativesDisclosureForm;
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setupEventListeners();
+            });
+        } else {
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            var genderField = document.getElementById('gender');
+            var maritalField = document.getElementById('marital_status');
+            var form = document.querySelector('.relatives-disclosure-form');
+
+            if (genderField) {
+                genderField.addEventListener('change', toggleMaidenName);
+            }
+            if (maritalField) {
+                maritalField.addEventListener('change', toggleMaidenName);
+            }
+            if (form) {
+                form.addEventListener('submit', validateForm);
+            }
+
+            // Initial toggle
+            toggleMaidenName();
+        }
+    }
+
+    // Initialize when the module is loaded
+    initializeForm();
+
+    // Return empty object to satisfy odoo.define
+    return {};
 });
