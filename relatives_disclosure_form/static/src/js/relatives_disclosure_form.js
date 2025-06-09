@@ -1,37 +1,30 @@
 odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
     "use strict";
     
-    var publicWidget = require('web.public.widget');
     var core = require('web.core');
-    
+    var publicWidget = require('web.public.widget');
+
     publicWidget.registry.RelativesDisclosureForm = publicWidget.Widget.extend({
         selector: '.relatives-disclosure-form',
         events: {
-            'change #gender, #marital_status': '_onGenderMaritalChange',
+            'change #gender': '_onGenderMaritalChange',
+            'change #marital_status': '_onGenderMaritalChange',
             'submit': '_onFormSubmit',
         },
 
-        /**
-         * @override
-         */
         start: function () {
-            var self = this;
-            return this._super.apply(this, arguments).then(function () {
-                self._toggleMaidenName();
-            });
+            this._toggleMaidenName();
+            return this._super.apply(this, arguments);
         },
 
-        /**
-         * Toggle maiden name field based on gender and marital status
-         * @private
-         */
         _toggleMaidenName: function () {
             var gender = this.$('#gender').val();
             var marital = this.$('#marital_status').val();
             var maidenGroup = this.$('#maiden_name_group');
             var maidenInput = maidenGroup.find('input[name="maiden_name"]');
             
-            if (gender === 'male' && marital === 'married') {
+            // Show maiden name for females who are married
+            if (gender === 'female' && marital === 'married') {
                 maidenGroup.show();
                 maidenInput.prop('required', true);
             } else {
@@ -41,18 +34,10 @@ odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
             }
         },
 
-        /**
-         * Handle gender/marital status change
-         * @private
-         */
         _onGenderMaritalChange: function () {
             this._toggleMaidenName();
         },
 
-        /**
-         * Handle form submission with validation
-         * @private
-         */
         _onFormSubmit: function (e) {
             var errorMessages = [];
             var $form = this.$el;
@@ -70,7 +55,7 @@ odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
             });
 
             if (errorMessages.length > 0) {
-                e.preventDefault(); // Stop form from submitting
+                e.preventDefault();
                 this.$('#form-error-message').html(errorMessages.join('<br>')).show();
                 $('html, body').animate({
                     scrollTop: this.$('#form-error-message').offset().top - 100
