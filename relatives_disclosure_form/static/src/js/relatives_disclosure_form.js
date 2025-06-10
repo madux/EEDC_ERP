@@ -48,17 +48,58 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
             });
         });
 
-        // Custom validation
+        // Step navigation
+        $('#next-to-relatives').on('click', function (e) {
+            // Validate required fields in the "details" tab first
+            var valid = true;
+            var errorMessages = [];
+            $('#details').find('input, select, textarea').each(function () {
+                var $field = $(this);
+                if ($field.prop('required') && !$field.val()) {
+                    valid = false;
+                    var label = $field.closest('.form-group').find('label').text() || $field.attr('name');
+                    errorMessages.push('Please fill the "' + label + '" field.');
+                    $field.addClass('is-invalid');
+                } else {
+                    $field.removeClass('is-invalid');
+                }
+            });
+            if (!valid) {
+                $('#form-error-message').html(errorMessages.join('<br>')).show();
+                $('html, body').animate({
+                    scrollTop: $('#form-error-message').offset().top - 100
+                }, 300);
+                return;
+            } else {
+                $('#form-error-message').hide();
+            }
+
+            // Move to relatives tab
+            $('#details-tab').removeClass('active');
+            $('#relatives-tab').addClass('active');
+            $('#details').removeClass('show active');
+            $('#relatives').addClass('show active');
+        });
+
+        $('#prev-to-details').on('click', function (e) {
+            // Move back to details tab
+            $('#relatives-tab').removeClass('active');
+            $('#details-tab').addClass('active');
+            $('#relatives').removeClass('show active');
+            $('#details').addClass('show active');
+        });
+
+        // Custom validation on submit (on relatives tab)
         $('.relatives-disclosure-form').on('submit', function (e) {
             var errorMessages = [];
             var $form = $(this);
 
-            // Check all visible required fields
-            $form.find('input, select, textarea').each(function () {
+            // Only validate fields in the relatives tab for submission
+            $('#relatives').find('input, select, textarea').each(function () {
                 var $field = $(this);
-                if ($field.is(':visible') && $field.prop('required') && !$field.val()) {
-                    var label = $field.closest('.form-group').find('label').text() || $field.attr('name');
-                    errorMessages.push('Please fill the "' + label + '" field.');
+                if ($field.prop('required') && !$field.val()) {
+                    var label = $field.closest('.relative-row').find('input[name="relative_name[]"]').val() || $field.attr('name');
+                    errorMessages.push('Please complete all relative fields.');
                     $field.addClass('is-invalid');
                 } else {
                     $field.removeClass('is-invalid');

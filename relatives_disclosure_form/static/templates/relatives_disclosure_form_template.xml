@@ -11,7 +11,7 @@
 
                     <ul class="nav nav-tabs" id="disclosureTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="details-tab" data-toggle="tab" href="#details" role="tab">Disclosure Details</a>
+                            <a class="nav-link active" id="details-tab" data-toggle="tab" href="#details" role="tab">Staff Details</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="relatives-tab" data-toggle="tab" href="#relatives" role="tab">Relatives</a>
@@ -114,9 +114,9 @@
                                 <input type="file" name="signature_file" class="form-control" required="1" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
                                 <small class="form-text text-muted">Upload an image or scanned copy of your signed signature.</small>
                             </div>
+                            <button type="button" class="btn btn-primary" id="next-to-relatives" style="margin-top: 10px;">Next</button>
                         </div>
                         <div class="tab-pane fade" id="relatives" role="tabpanel">
-                            <!-- Hidden templates for selects to clone in JS -->
                             <select id="template_district" style="display:none;">
                                 <option value="">District</option>
                                 <t t-foreach="locations" t-as="loc">
@@ -135,15 +135,17 @@
                             </select>
                             <div id="relatives-container"></div>
                             <button type="button" class="btn btn-secondary" id="add-relative">Add Relative</button>
+                            <div style="margin-top: 15px;">
+                                <button type="button" class="btn btn-light" id="prev-to-details">Previous</button>
+                                <button type="submit" class="btn btn-success" id="submit-btn">Submit</button>
+                            </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </t>
     </template>
 
-    <!-- Thank you page (unchanged) -->
     <template id="thank_you_template" name="Thank You">
         <t t-call="website.layout">
             <div class="relatives-disclosure-container" style="text-align: center; padding: 48px 30px;">

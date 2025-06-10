@@ -57,6 +57,10 @@
 .relatives-disclosure-form button:hover {
     background: #0e6877;
 }
+.relative-row .remove-relative {
+    min-width: 90px;
+}
+
 
 @media (max-width: 600px) {
     .relatives-disclosure-container {

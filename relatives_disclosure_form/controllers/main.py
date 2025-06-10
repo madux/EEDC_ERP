@@ -30,10 +30,11 @@ class RelativesDisclosureFormController(http.Controller):
             signature_filename = signature_file.filename
 
         # Handle relatives before creating form
-        relative_names = request.params.getlist('relative_name[]')
-        relationships = request.params.getlist('relationship[]')
-        relative_districts = request.params.getlist('relative_district[]')
-        relative_departments = request.params.getlist('relative_department[]')
+        relative_names = request.httprequest.form.getlist('relative_name[]')
+        relationships = request.httprequest.form.getlist('relationship[]')
+        relative_districts = request.httprequest.form.getlist('relative_district[]')
+        relative_departments = request.httprequest.form.getlist('relative_department[]')
+
 
         relative_ids = []
         for i in range(len(relative_names)):
