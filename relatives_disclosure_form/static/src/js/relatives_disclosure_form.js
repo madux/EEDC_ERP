@@ -1,102 +1,52 @@
 odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
     "use strict";
-    
-    // Simple function to initialize form behavior
-    function initializeForm() {
+    $(document).ready(function () {
         function toggleMaidenName() {
-            var gender = document.getElementById('gender');
-            var marital = document.getElementById('marital_status');
-            var maidenGroup = document.getElementById('maiden_name_group');
-            var maidenInput = maidenGroup ? maidenGroup.querySelector('input[name="maiden_name"]') : null;
-            
-            if (gender && marital && maidenGroup && maidenInput) {
-                // Show maiden name for females who are married
-                if (gender.value === 'female' && marital.value === 'married') {
-                    maidenGroup.style.display = 'block';
-                    maidenInput.required = true;
-                } else {
-                    maidenGroup.style.display = 'none';
-                    maidenInput.required = false;
-                    maidenInput.value = '';
-                }
+            var gender = $('#gender').val();
+            var marital = $('#marital_status').val();
+            var maidenGroup = $('#maiden_name_group');
+            var maidenInput = maidenGroup.find('input[name="maiden_name"]');
+            if (gender === 'male' && marital === 'married') {
+                maidenGroup.show();
+                maidenInput.prop('required', true);
+            } else {
+                maidenGroup.hide();
+                maidenInput.prop('required', false);
+                maidenInput.val('');
             }
         }
+        $('#gender, #marital_status').on('change', toggleMaidenName);
+        toggleMaidenName();
 
-        function validateForm(e) {
+        // Custom validation on submit
+        $('.relatives-disclosure-form').on('submit', function(e){
             var errorMessages = [];
-            var form = e.target;
-            var errorDiv = document.getElementById('form-error-message');
-            
-            // Get all form elements
-            var formElements = form.querySelectorAll('input, select, textarea');
-            
-            formElements.forEach(function(field) {
-                // Check if field is visible and required
-                var fieldStyle = window.getComputedStyle(field.closest('.form-group') || field);
-                var isVisible = fieldStyle.display !== 'none';
-                
-                if (isVisible && field.required && !field.value.trim()) {
-                    var label = '';
-                    var labelElement = field.closest('.form-group');
-                    if (labelElement) {
-                        var labelTag = labelElement.querySelector('label');
-                        label = labelTag ? labelTag.textContent : field.name;
-                    } else {
-                        label = field.name;
-                    }
+            var $form = $(this);
+
+            // Check all visible required fields
+            $form.find('input, select, textarea').each(function(){
+                var $field = $(this);
+                if ($field.is(':visible') && $field.prop('required') && !$field.val()) {
+                    var label = $field.closest('.form-group').find('label').text() || $field.attr('name');
                     errorMessages.push('Please fill the "' + label + '" field.');
-                    field.classList.add('is-invalid');
+                    $field.addClass('is-invalid');
                 } else {
-                    field.classList.remove('is-invalid');
+                    $field.removeClass('is-invalid');
                 }
             });
+
+            // You can also check for special rules (e.g., signature file only certain extensions, etc.)
 
             if (errorMessages.length > 0) {
-                e.preventDefault();
-                if (errorDiv) {
-                    errorDiv.innerHTML = errorMessages.join('<br>');
-                    errorDiv.style.display = 'block';
-                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                e.preventDefault(); // Stop form from submitting
+                $('#form-error-message').html(errorMessages.join('<br>')).show();
+                $('html, body').animate({
+                    scrollTop: $('#form-error-message').offset().top - 100
+                }, 300);
             } else {
-                if (errorDiv) {
-                    errorDiv.style.display = 'none';
-                }
+                $('#form-error-message').hide();
             }
-        }
-
-        // Wait for DOM to be ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                setupEventListeners();
-            });
-        } else {
-            setupEventListeners();
-        }
-
-        function setupEventListeners() {
-            var genderField = document.getElementById('gender');
-            var maritalField = document.getElementById('marital_status');
-            var form = document.querySelector('.relatives-disclosure-form');
-
-            if (genderField) {
-                genderField.addEventListener('change', toggleMaidenName);
-            }
-            if (maritalField) {
-                maritalField.addEventListener('change', toggleMaidenName);
-            }
-            if (form) {
-                form.addEventListener('submit', validateForm);
-            }
-
-            // Initial toggle
-            toggleMaidenName();
-        }
-    }
-
-    // Initialize when the module is loaded
-    initializeForm();
-
-    // Return empty object to satisfy odoo.define
-    return {};
+        });
+    });
 });
+
