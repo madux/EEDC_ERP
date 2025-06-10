@@ -1,15 +1,5 @@
 <odoo>
-    <data>
-         <!-- Menu -->
-    <!-- <menuitem id="menu_hr_relatives_disclosure_root" name="Relatives Disclosure" sequence="100"/>
-    <menuitem id="menu_hr_relatives_disclosure_form"
-              name="Disclosure Forms"
-              parent="relatives_disclosure_form.menu_hr_relatives_disclosure_root"
-              action="relatives_disclosure_form.action_relatives_disclosure_form"
-              sequence="10"/> -->
-
-
-            
+    <data> 
         <menuitem id="relatives_disclosure_form.relatives_disclosure_root"
                   name="Relatives Disclosure"
                   sequence="10"
@@ -20,12 +10,5 @@
                   parent="relatives_disclosure_form.relatives_disclosure_root"
                   action="relatives_disclosure_form.action_relatives_disclosure_form"
                   sequence="20"/>
-
-            <!-- Optional: Kanban Menu Item -->
-    <!-- <menuitem id="menu_hr_relatives_disclosure_kanban"
-              name="Disclosure Kanban"
-              parent="relatives_disclosure_form.menu_hr_relatives_disclosure_root"
-              action="relatives_disclosure_form.action_relatives_disclosure_kanban"
-              sequence="20"/> -->
     </data>
 </odoo>

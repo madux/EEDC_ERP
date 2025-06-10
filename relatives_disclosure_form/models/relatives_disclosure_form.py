@@ -9,7 +9,7 @@ class RelativesDisclosureForm(models.Model):
     designation = fields.Char(string="Designation")
     location = fields.Many2one('hr.district', string='Location')
     department = fields.Many2one('hr.department', string='Department')
-    state_of_origin = fields.Many2one('res.country.state', string='State of Origin')
+    state_of_origin = fields.Many2one('res.country.state', domain="[('country_id.code', '=', 'NG')]", string='State of Origin')
     village = fields.Char(string='Village')
     town = fields.Char(string='Town')
     lga = fields.Many2one('res.lga', string='LGA')
@@ -22,7 +22,6 @@ class RelativesDisclosureForm(models.Model):
         ('widowed', 'Widowed'),
     ], string='Marital Status')
     maiden_name = fields.Char(string='Maiden Name')
-    has_relatives = fields.Boolean(string='Do you have relatives in the company?', default=False)
     relative_ids = fields.One2many('relatives.disclosure.form.relative', 'form_id', string='Relatives')
     signature = fields.Binary('Signature Document')
     signature_filename = fields.Char('Signature Filename')
