@@ -47,7 +47,7 @@ class RelativesDisclosureFormController(http.Controller):
             'maiden_name': post.get('maiden_name'),
             'signature': signature_data,
             'signature_filename': signature_filename,
-            'submission_date': fields.Datetime.now(),  # Odoo format, or use datetime.now() if not
+            'submission_date': fields.Datetime.now(),  
         }
 
         request.env['relatives.disclosure.form'].sudo().create(vals)

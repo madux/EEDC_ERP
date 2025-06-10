@@ -17,6 +17,7 @@ odoo.define('relatives_disclosure_form.maiden_toggle', function(require){
         }
         $('#gender, #marital_status').on('change', toggleMaidenName);
         toggleMaidenName();
+        console.log("Michael 1")
 
         // Custom validation on submit
         $('.relatives-disclosure-form').on('submit', function(e){
