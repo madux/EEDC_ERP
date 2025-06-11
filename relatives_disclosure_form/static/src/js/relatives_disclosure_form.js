@@ -1,14 +1,5 @@
 odoo.define('relatives_disclosure_form.form_js', function (require) {
     "use strict";
-    // Check if this module is already defined
-    if (odoo.__isDefined && odoo.__isDefined['relatives_disclosure_form.form_js']) {
-        return;  // If it's already defined, skip defining it again
-    }
-
-    // Mark this module as defined
-    odoo.__isDefined = odoo.__isDefined || {};
-    odoo.__isDefined['relatives_disclosure_form.form_js'] = true;
-
     $(document).ready(function () {
         // Maiden name show/hide logic
         function toggleMaidenName() {
