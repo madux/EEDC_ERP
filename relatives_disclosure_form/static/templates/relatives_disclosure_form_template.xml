@@ -20,19 +20,19 @@
                             <div class="tab-pane fade show active" id="details" role="tabpanel">
                                 <div class="form-group">
                                     <label>Name of Staff</label>
-                                    <input type="text" name="employee_id" class="form-control" required="1" placeholder="Enter your name"/>
+                                    <input type="text" name="employee_id" class="form-control" required placeholder="Enter your name"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Staff Number</label>
-                                    <input type="text" name="staff_number" class="form-control" required="1" placeholder="Enter your staff number"/>
+                                    <input type="text" name="staff_number" class="form-control" required placeholder="Enter your staff number"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Designation</label>
-                                    <input type="text" name="designation" class="form-control" required="1" placeholder="Enter your designation"/>
+                                    <input type="text" name="designation" class="form-control" required placeholder="Enter your designation"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Location</label>
-                                    <select name="location" class="form-control" required="1">
+                                    <select name="location" class="form-control" required>
                                         <option value="">Select...</option>
                                         <t t-foreach="locations" t-as="loc">
                                             <option t-att-value="loc.id">
@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Department</label>
-                                    <select name="department" class="form-control" required="1">
+                                    <select name="department" class="form-control" required>
                                         <option value="">Select...</option>
                                         <t t-foreach="departments" t-as="dept">
                                             <option t-att-value="dept.id">
@@ -54,7 +54,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>State of Origin</label>
-                                    <select name="state_of_origin" id="state_of_origin" class="form-control" required="1">
+                                    <select name="state_of_origin" id="state_of_origin" class="form-control" required>
                                         <option value="">Select...</option>
                                         <t t-foreach="states" t-as="st">
                                             <option t-att-value="st.id">
@@ -65,15 +65,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Village</label>
-                                    <input type="text" name="village" class="form-control" required="1" placeholder="Enter your village"/>
+                                    <input type="text" name="village" class="form-control" required placeholder="Enter your village"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Town</label>
-                                    <input type="text" name="town" class="form-control" required="1" placeholder="Enter your town"/>
+                                    <input type="text" name="town" class="form-control" required placeholder="Enter your town"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Local Government Area</label>
-                                    <select name="lga" id="lga" class="form-control" required="1">
+                                    <select name="lga" id="lga" class="form-control" required>
                                         <option value="">Select...</option>
                                         <t t-foreach="lgas" t-as="lga">
                                             <option t-att-value="lga.id">
@@ -84,11 +84,11 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Permanent Address</label>
-                                    <input type="text" name="permanent_address" class="form-control" required="1" placeholder="Enter your permanent address"/>
+                                    <input type="text" name="permanent_address" class="form-control" required placeholder="Enter your permanent address"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Gender</label>
-                                    <select name="gender" id="gender" class="form-control" required="1">
+                                    <select name="gender" id="gender" class="form-control" required>
                                         <option value="">Select...</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
@@ -96,7 +96,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Marital Status</label>
-                                    <select name="marital_status" id="marital_status" class="form-control" required="1">
+                                    <select name="marital_status" id="marital_status" class="form-control" required>
                                         <option value="">Select...</option>
                                         <option value="single">Single</option>
                                         <option value="married">Married</option>
@@ -110,7 +110,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Upload Signature Document</label>
-                                    <input type="file" name="signature_file" class="form-control" required="1" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
+                                    <input type="file" name="signature_file" class="form-control" required accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
                                     <small class="form-text text-muted">Upload an image or scanned copy of your signed signature.</small>
                                 </div>
                                 <button type="button" class="btn btn-primary" id="next-to-relatives" style="margin-top: 10px;">Next</button>
