@@ -24,27 +24,26 @@
                     <div class="oe_title">
                         <label for="employee_id"/>
                         <h1>
-                            <field name="employee_id"/>
+                            <field name="employee_id" placeholder="Enter your name"/>
                         </h1>
                     </div>
                     <notebook>
                         <page string="Disclosure Details">
                             <group>
-                                <field name="staff_number"/>
-                                <field name="designation"/>
-                                <field name="department"/>
-                                <field name="location"/>
-                                <field name="state_of_origin"/>
-                                <field name="village"/>
-                                <field name="town"/>
-                                <field name="lga"/>
-                                <field name="permanent_address"/>
-                                <field name="gender"/>
-                                <field name="marital_status"/>
+                                <field name="staff_number" placeholder="Enter staff number"/>
+                                <field name="designation" placeholder="Enter designation"/>
+                                <field name="department" placeholder="Select department"/>
+                                <field name="location" placeholder="Select district"/>
+                                <field name="state_of_origin" placeholder="Select state of origin"/>
+                                <field name="village" placeholder="Enter village"/>
+                                <field name="town" placeholder="Enter town"/>
+                                <field name="lga" placeholder="Select LGA"/>
+                                <field name="permanent_address" placeholder="Enter permanent address"/>
+                                <field name="gender" placeholder="Select gender"/>
+                                <field name="marital_status" placeholder="Select marital status"/>
                                 <field name="maiden_name"
                                     placeholder="Enter Maiden Name"
-                                    attrs="{'invisible': [('gender', '!=', 'female'), ('marital_status', '!=', 'married')]}"
-                                    />
+                                    attrs="{'invisible': [('marital_status', '!=', 'married')]}"/>
                                 <field name="submission_date" readonly="1"/>
                             </group>
                             <group>
@@ -62,8 +61,8 @@
                                 </tree>
                                 <form>
                                     <group>
-                                        <field name="relative_name"/>
-                                        <field name="relationship"/>
+                                        <field name="relative_name" placeholder="Enter relative name"/>
+                                        <field name="relationship" placeholder="Select relationship"/>
                                     </group>
                                     <group>
                                         <field name="relative_district"/>
