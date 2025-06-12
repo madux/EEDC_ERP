@@ -1,6 +1,5 @@
 from odoo import http, fields
 from odoo.http import request
-from datetime import datetime
 import base64
 
 class RelativesDisclosureFormController(http.Controller):
@@ -18,18 +17,34 @@ class RelativesDisclosureFormController(http.Controller):
             'locations': locations,
             'states': states,
             'lgas': lgas,
-
         })
 
     @http.route('/relativesDisclosureForm/submit', type='http', auth='public', website=True, csrf=False, methods=['POST'])
     def relatives_disclosure_form_submit(self, **post):
-         # Get the file
+        # Get the file
         signature_file = request.httprequest.files.get('signature_file')
         signature_data = False
         signature_filename = ''
         if signature_file:
             signature_data = base64.b64encode(signature_file.read())
             signature_filename = signature_file.filename
+
+        # Handle relatives before creating form
+        relative_names = request.httprequest.form.getlist('relative_name[]')
+        relationships = request.httprequest.form.getlist('relationship[]')
+        relative_districts = request.httprequest.form.getlist('relative_district[]')
+        relative_departments = request.httprequest.form.getlist('relative_department[]')
+
+
+        relative_ids = []
+        for i in range(len(relative_names)):
+            if relative_names[i].strip():  # Skip empty rows
+                relative_ids.append((0, 0, {
+                    'relative_name': relative_names[i],
+                    'relationship': relationships[i],
+                    'relative_district': int(relative_districts[i]) if relative_districts[i] else False,
+                    'relative_department': int(relative_departments[i]) if relative_departments[i] else False,
+                }))
 
         vals = {
             'employee_id': post.get('employee_id'),
@@ -47,9 +62,9 @@ class RelativesDisclosureFormController(http.Controller):
             'maiden_name': post.get('maiden_name'),
             'signature': signature_data,
             'signature_filename': signature_filename,
-            'submission_date': fields.Datetime.now(),  # Odoo format, or use datetime.now() if not
+            'submission_date': fields.Datetime.now(),
+            'relative_ids': relative_ids,
         }
 
         request.env['relatives.disclosure.form'].sudo().create(vals)
         return request.render('relatives_disclosure_form.thank_you_template', {})
-

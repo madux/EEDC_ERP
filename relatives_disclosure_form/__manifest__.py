@@ -4,7 +4,7 @@
     "author": "Michael Ndunwa",
     "category": "Human Resources",
     "summary": "Relatives Disclosure Form for HR",
-    "depends": ["base", "hr", "hr_recruitment", "company_memo"],
+    "depends": ["base", "hr", "eedc_addons", "website"],
     "license": "LGPL-3",
     "description": "This module provides a form for employees to disclose relatives working in the company.",
     "icon": "relatives_disclosure_form/static/description/icon.png",
