@@ -2,8 +2,8 @@
     <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
         <t t-call="website.layout">
             <t t-call-assets="web.assets_frontend"/>
-            <link rel="stylesheet" type="text/css" href="/relatives_disclosure_form/static/src/css/relatives_disclosure_form.css"/>
-            <script type="text/javascript" src="/relatives_disclosure_form/static/src/js/relatives_disclosure_form.js"></script>
+            <!-- <link rel="stylesheet" type="text/css" href="/relatives_disclosure_form/static/src/css/relatives_disclosure_form.css"/> -->
+            <!-- <script type="text/javascript" src="/relatives_disclosure_form/static/src/js/relatives_disclosure_form.js"></script> -->
             <div class="relatives-disclosure-container">
                 <h2>Relatives Disclosure Form</h2>
                 <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
