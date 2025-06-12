@@ -41,7 +41,10 @@
                                 <field name="permanent_address"/>
                                 <field name="gender"/>
                                 <field name="marital_status"/>
-                                <field name="maiden_name"/>
+                                <field name="maiden_name"
+                                    placeholder="Enter Maiden Name"
+                                    attrs="{'invisible': [('gender', '!=', 'female'), ('marital_status', '!=', 'married')]}"
+                                    />
                                 <field name="submission_date" readonly="1"/>
                             </group>
                             <group>
