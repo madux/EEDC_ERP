@@ -1,12 +1,6 @@
 odoo.define('relatives_disclosure_form.form_js', function (require) {
     "use strict";
     $(document).ready(function () {
-        // Initialize Select2 on the required select elements
-        $('#state_of_origin').select2();
-        $('#department').select2();
-        $('#lga').select2();
-
-
         // Maiden name show/hide logic
         function toggleMaidenName() {
             var gender = $('#gender').val();

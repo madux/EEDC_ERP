@@ -3,10 +3,6 @@
         <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
             <t t-call="website.layout">
                 <t t-call-assets="web.assets_frontend"/>
-                <!-- Include Select2 from CDN -->
-                <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"/>
-            
                 <div class="relatives-disclosure-container">
                     <h2>Relatives Disclosure Form</h2>
                     <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
@@ -36,36 +32,36 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Location</label>
-                                    <select name="location" class="form-control" required="required">
+                                    <!-- <select name="location" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <t t-foreach="locations" t-as="loc">
                                             <option t-att-value="loc.id">
                                                 <t t-esc="loc.name"/>
                                             </option>
                                         </t>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group">
                                     <label>Department</label>
-                                    <select name="department" class="form-control" required="required">
+                                    <!-- <select name="department" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <t t-foreach="departments" t-as="dept">
                                             <option t-att-value="dept.id">
                                                 <t t-esc="dept.name"/>
                                             </option>
                                         </t>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group">
                                     <label>State of Origin</label>
-                                    <select name="state_of_origin" id="state_of_origin" class="form-control" required="required">
+                                    <!-- <select name="state_of_origin" id="state_of_origin" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <t t-foreach="states" t-as="st">
                                             <option t-att-value="st.id">
                                                 <t t-esc="st.name"/>
                                             </option>
                                         </t>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group">
                                     <label>Village</label>
@@ -77,14 +73,14 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Local Government Area</label>
-                                    <select name="lga" id="lga" class="form-control" required="required">
+                                    <!-- <select name="lga" id="lga" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <t t-foreach="lgas" t-as="lga">
                                             <option t-att-value="lga.id">
                                                 <t t-esc="lga.name"/>
                                             </option>
                                         </t>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group">
                                     <label>Permanent Address</label>
@@ -92,21 +88,21 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Gender</label>
-                                    <select name="gender" id="gender" class="form-control" required="required">
+                                    <!-- <select name="gender" id="gender" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group">
                                     <label>Marital Status</label>
-                                    <select name="marital_status" id="marital_status" class="form-control" required="required">
+                                    <!-- <select name="marital_status" id="marital_status" class="form-control" required="required">
                                         <option value="">Select...</option>
                                         <option value="single">Single</option>
                                         <option value="married">Married</option>
                                         <option value="divorced">Divorced</option>
                                         <option value="widowed">Widowed</option>
-                                    </select>
+                                    </select> -->
                                 </div>
                                 <div class="form-group" id="maiden_name_group">
                                     <label>Maiden Name</label>
@@ -120,7 +116,7 @@
                                 <button type="button" class="btn btn-primary" id="next-to-relatives" style="margin-top: 10px;">Next</button>
                             </div>
                             <div class="tab-pane fade" id="relatives" role="tabpanel">
-                                <select id="template_district" style="display:none;">
+                                <!-- <select id="template_district" style="display:none;">
                                     <option value="">District</option>
                                     <t t-foreach="locations" t-as="loc">
                                         <option t-att-value="loc.id">
@@ -135,7 +131,7 @@
                                             <t t-esc="dept.name"/>
                                         </option>
                                     </t>
-                                </select>
+                                </select> -->
                                 <div id="relatives-container"></div>
                                 <button type="button" class="btn btn-secondary" id="add-relative">Add Relative</button>
                                 <div style="margin-top: 15px;">
