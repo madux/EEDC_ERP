@@ -54,10 +54,10 @@
                         <page string="Relatives">
                             <field name="relative_ids">
                                 <tree editable="bottom">
-                                    <field name="relative_name"/>
-                                    <field name="relationship"/>
-                                    <field name="relative_district"/>
-                                    <field name="relative_department"/>
+                                    <field name="relative_name" placeholder="Enter relative name"/>
+                                    <field name="relationship" placeholder="Select relationship"/>
+                                    <field name="relative_district" placeholder="Select district"/>
+                                    <field name="relative_department" placeholder="Select department"/>
                                 </tree>
                                 <form>
                                     <group>
