@@ -2,22 +2,22 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
     "use strict";
     $(document).ready(function () {
         // Maiden name show/hide logic
-        // function toggleMaidenName() {
-        //     var gender = $('#gender').val();
-        //     var marital = $('#marital_status').val();
-        //     var maidenGroup = $('#maiden_name_group');
-        //     var maidenInput = maidenGroup.find('input[name="maiden_name"]');
-        //     if (gender === 'female' && marital === 'married') {
-        //         maidenGroup.show();
-        //         maidenInput.prop('required', true);
-        //     } else {
-        //         maidenGroup.hide();
-        //         maidenInput.prop('required', false);
-        //         maidenInput.val('');
-        //     }
-        // }
-        // $('#gender, #marital_status').on('change', toggleMaidenName);
-        // toggleMaidenName();
+        function toggleMaidenName() {
+            var gender = $('#gender').val();
+            var marital = $('#marital_status').val();
+            var maidenGroup = $('#maiden_name_group');
+            var maidenInput = maidenGroup.find('input[name="maiden_name"]');
+            if (gender === 'female' && marital === 'married') {
+                maidenGroup.show();
+                maidenInput.prop('required', true);
+            } else {
+                maidenGroup.hide();
+                maidenInput.prop('required', false);
+                maidenInput.val('');
+            }
+        }
+        $('#gender, #marital_status').on('change', toggleMaidenName);
+        toggleMaidenName();
 
         // Add relative row logic
         $('#add-relative').on('click', function () {
