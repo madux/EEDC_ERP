@@ -17,8 +17,8 @@
     ],
     "assets": {
         "web.assets_frontend": [
+            "/relatives_disclosure_form/static/src/js/relatives_disclosure_form.js",
             "relatives_disclosure_form/static/src/css/relatives_disclosure_form.css",
-            "relatives_disclosure_form/static/src/js/relatives_disclosure_form.js",
         ]
     },
     "application": True,
