@@ -13,7 +13,7 @@
         "views/relatives_disclosure_form_view.xml",
         "views/relatives_disclosure_kanban_view.xml",
         "views/relatives_disclosure_menu.xml",
-        "static/templates/relatives_disclosure_form_template.xml",
+        # "static/templates/relatives_disclosure_form_template.xml",
     ],
     "assets": {
         "web.assets_frontend": [
