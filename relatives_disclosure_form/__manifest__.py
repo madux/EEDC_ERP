@@ -13,7 +13,9 @@
         "views/relatives_disclosure_form_view.xml",
         "views/relatives_disclosure_kanban_view.xml",
         "views/relatives_disclosure_menu.xml",
-        # "static/templates/relatives_disclosure_form_template.xml",
+        "static/templates/relatives_disclosure_form_template.xml",
+        "https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js",  # Select2 JS
+        "https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"  # Select2 CSS
     ],
     "assets": {
         "web.assets_frontend": [
