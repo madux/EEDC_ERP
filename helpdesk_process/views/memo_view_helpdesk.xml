@@ -63,6 +63,7 @@
 								<field name="customer_address1" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_address2" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="meter_type" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
+								<field name="account_no" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								<field name="customer_meter_no" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}"/>
 								
 								<field name="set_staff" string = "Assigned to" readonly="1" invisible="1"/>
@@ -186,6 +187,7 @@
 					<field name="customer_phone"/> 
 					<field name="helpdesk_memo_config_id" string="Category"/>
 					<field name="meter_type"/>
+					<field name="account_no"/> 
 					<field name="customer_meter_no"/> 
 					<field name="date" />
 					<field name="customer_email" /> 
