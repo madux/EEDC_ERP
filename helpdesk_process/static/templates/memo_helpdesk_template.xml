@@ -155,7 +155,7 @@
                                                     <option value="postpaid">
                                                         <span>Postpaid</span>
                                                     </option>
-                                                    <option value="postpaid">
+                                                    <option value="prepaid">  <!-- Fixed: was "postpaid" -->
                                                         <span>Prepaid</span>
                                                     </option>
                                                     <option value="direct source">
@@ -163,11 +163,36 @@
                                                     </option>
                                                 </select>
                                             </span>
-                                        </div> 
-                                        <div class="row mb-4">
+                                        </div>
+                                        <!-- <div class="row mb-4">
                                             <strong class="col-md-4">Customer / Meter No</strong>: 
                                             <span class="col-md-6">
                                                 <input type="text" class="form-control s_website_form_input" name="customer_meter_no" required="true" id="customer_meter_no" labelfor="Customer / Meter No"/>
+                                            </span>
+                                        </div> -->
+                                        <div class="row mb-4 meter_no_field">
+                                            <strong class="col-md-4">Meter No</strong>:
+                                            <span class="col-md-6">
+                                                <input type="text"
+                                                    class="form-control s_website_form_input"
+                                                    name="meter_no"
+                                                    id="meter_no"
+                                                    labelfor="Meter No"
+                                                    placeholder="Enter Meter No"
+                                                    required="true"/>
+                                            </span>
+                                        </div>
+
+                                        <div class="row mb-4 account_no_field" style="display: none;">
+                                            <strong class="col-md-4">Customer Account No</strong>:
+                                            <span class="col-md-6">
+                                                <input type="text"
+                                                    class="form-control s_website_form_input"
+                                                    name="account_no"
+                                                    id="account_no"
+                                                    labelfor="Customer Account No"
+                                                    placeholder="Enter Account No"
+                                                    required="true"/>
                                             </span>
                                         </div>
 

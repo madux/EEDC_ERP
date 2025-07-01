@@ -36,7 +36,8 @@ class HelpdeskMemoModel(models.Model):
     customer_name = fields.Char('Customer Name')
     customer_phone = fields.Char('Customer phone')
     customer_phone2 = fields.Char('Customer phone 2')
-    customer_meter_no = fields.Char(string='Customer Account / Meter No')
+    customer_meter_no = fields.Char(string='Meter No')
+    account_no = fields.Char(string='Customer Account No')
     meter_type = fields.Selection([('postpaid', 'Postpaid'),
                                 ('prepaid', 'Prepaid'),
                                 ('direct source', 'Direct Source'),

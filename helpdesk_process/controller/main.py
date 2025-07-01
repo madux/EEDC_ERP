@@ -44,6 +44,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"complaint_description": post.get("complaint_description"),
 				"meter_type": post.get("meter_type"),
 				"customer_meter_no": post.get("customer_meter_no"),
+				"customer_account_no": post.get("account_no"), 
 				"memo_type_key": 'helpdesk',
 				"stage_id": memo_config_obj.stage_ids[0].id,
 				"helpdesk_memo_config_id": int(post.get("helpdesk_memo_config_id")) if post.get("helpdesk_memo_config_id") else False,
