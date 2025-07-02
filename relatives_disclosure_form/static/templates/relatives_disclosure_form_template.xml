@@ -8,16 +8,19 @@
                     <div id="form-error-message" class="alert alert-danger" style="display:none"></div>
 
                     <div class="step-progress-bar">
-                        <div class="step-item active" data-step="1">
-                            <div class="step-content">
-                                <div class="step-number">1</div>
-                                <div class="step-title">Staff Details</div>
+                        <div class="step-track">
+                            <div class="step-item active" data-step="1">
+                                <div class="step-content">
+                                    <div class="step-number">1</div>
+                                    <div class="step-title">Staff Details</div>
+                                </div>
+                            </div>
+                            <div class="step-item" data-step="2">
+                                <div class="step-dot"></div>
                             </div>
                         </div>
-                        <div class="step-item" data-step="2">
-                            <div class="step-dot"></div>
-                        </div>
                     </div>
+
 
 
 

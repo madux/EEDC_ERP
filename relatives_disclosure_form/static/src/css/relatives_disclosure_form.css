@@ -1,11 +1,22 @@
 .step-progress-bar {
+    /* display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px 0;
+    margin: 0 auto 20px;
+    gap: 0; */
+
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
-    padding: 30px 0;
-    margin: 0 auto 40px;
-    max-width: 500px;
+    width: 100%;
+    max-width: 200px;
+    padding: 10px 0;
+    margin: 0 1px 1px;
     gap: 0;
 }
 
@@ -21,10 +32,31 @@
     transform: translateY(-50%);
 }
 
+.step-track {
+    position: relative;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.step-track::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #d1d5db;
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
+
 .step-item {
     position: relative;
     z-index: 1;
-    flex: 1;
+    flex: 0 1 auto;
     display: flex;
     justify-content: center;
     min-width: 0;
@@ -83,7 +115,7 @@
     padding: 30px;
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
 }
 
 .relatives-disclosure-container h2 {
@@ -133,9 +165,11 @@
     cursor: pointer;
     transition: background 0.2s;
 }
+
 .relatives-disclosure-form button:hover {
     background: #0e6877;
 }
+
 .relative-row .remove-relative {
     min-width: 90px;
 }
@@ -145,6 +179,7 @@
     .relatives-disclosure-container {
         padding: 10px;
     }
+
     .relatives-disclosure-form button {
         font-size: 16px;
     }
