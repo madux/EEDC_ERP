@@ -120,14 +120,13 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 }
             });
             if (!valid) {
-                $('#form-error-message').html(errorMessages.join('<br>')).show();
                 $('html, body').animate({
-                    scrollTop: $('#form-error-message').offset().top - 100
+                    scrollTop: $('.is-invalid').first().offset().top - 100
                 }, 300);
+
                 return;
-            } else {
-                $('#form-error-message').hide();
             }
+            
 
             setActiveStep(2);
 
@@ -141,6 +140,34 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
             $('#relatives').removeClass('show active');
             $('#details').addClass('show active');
         });
+
+        // Field-level blur validation
+        $('.relatives-disclosure-form').on('blur', 'input, select, textarea', function () {
+            var $field = $(this);
+
+            // Skip optional fields
+            if (!$field.prop('required')) return;
+
+            // Strip spaces
+            var value = $field.val().trim();
+
+            // Generic rule: required field must not be empty
+            if (value === '') {
+                $field.addClass('is-invalid').removeClass('is-valid');
+            } else {
+                $field.removeClass('is-invalid').addClass('is-valid');
+            }
+
+            // Additional pattern checks (optional)
+            if ($field.attr('name') === 'employee_id') {
+                // Example: only letters & spaces
+                if (!/^[A-Za-z\s]+$/.test(value)) {
+                    $field.addClass('is-invalid').removeClass('is-valid');
+                }
+            }
+
+        });
+
 
         // Form validation on submit
         $('.relatives-disclosure-form').on('submit', function (e) {
@@ -157,13 +184,12 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
 
             if (errorMessages.length > 0) {
                 e.preventDefault();
-                $('#form-error-message').html(errorMessages.join('<br>')).show();
                 $('html, body').animate({
-                    scrollTop: $('#form-error-message').offset().top - 100
+                    scrollTop: $('.is-invalid').first().offset().top - 100
                 }, 300);
-            } else {
-                $('#form-error-message').hide();
+
             }
+            
         });
     });
 });
