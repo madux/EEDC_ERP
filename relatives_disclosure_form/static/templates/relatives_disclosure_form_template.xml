@@ -1,168 +1,172 @@
 <odoo>
-    <data>
-        <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
-            <t t-call="website.layout">
-                <t t-call-assets="web.assets_frontend"/>
-                <div class="relatives-disclosure-container">
-                    <h2>Relatives Disclosure Form</h2>
-                    <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
-                        <div id="form-error-message" class="alert alert-danger" style="display:none"></div>
+    <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
+        <t t-call="website.layout">
+            <t t-call-assets="web.assets_frontend"/>
+            <div class="relatives-disclosure-container">
+                <h2>Relatives Disclosure Form</h2>
+                <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
+                    <div id="form-error-message" class="alert alert-danger" style="display:none"></div>
 
-                        <ul class="nav nav-tabs" id="disclosureTabs" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active" id="details-tab" data-toggle="tab" href="#details" role="tab">Staff Details</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="relatives-tab" data-toggle="tab" href="#relatives" role="tab">Relatives</a>
-                            </li>
-                        </ul>
-                        <div class="tab-content" id="disclosureTabsContent">
-                            <div class="tab-pane fade show active" id="details" role="tabpanel">
-                                <div class="form-group">
-                                    <label>Name of Staff</label>
-                                    <input type="text" name="employee_id" class="form-control" required="required" placeholder="Enter your name"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Staff Number</label>
-                                    <input type="text" name="staff_number" class="form-control" required="required" placeholder="Enter your staff number"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Designation</label>
-                                    <input type="text" name="designation" class="form-control" required="required" placeholder="Enter your designation"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Location</label>
-                                    <!-- <select name="location" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <t t-foreach="locations" t-as="loc">
-                                            <option t-att-value="loc.id">
-                                                <t t-esc="loc.name"/>
-                                            </option>
-                                        </t>
-                                    </select> -->
-                                </div>
-                                <div class="form-group">
-                                    <label>Department</label>
-                                    <!-- <select name="department" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <t t-foreach="departments" t-as="dept">
-                                            <option t-att-value="dept.id">
-                                                <t t-esc="dept.name"/>
-                                            </option>
-                                        </t>
-                                    </select> -->
-                                </div>
-                                <div class="form-group">
-                                    <label>State of Origin</label>
-                                    <!-- <select name="state_of_origin" id="state_of_origin" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <t t-foreach="states" t-as="st">
-                                            <option t-att-value="st.id">
-                                                <t t-esc="st.name"/>
-                                            </option>
-                                        </t>
-                                    </select> -->
-                                </div>
-                                <div class="form-group">
-                                    <label>Village</label>
-                                    <input type="text" name="village" class="form-control" required="required" placeholder="Enter your village"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Town</label>
-                                    <input type="text" name="town" class="form-control" required="required" placeholder="Enter your town"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Local Government Area</label>
-                                    <!-- <select name="lga" id="lga" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <t t-foreach="lgas" t-as="lga">
-                                            <option t-att-value="lga.id">
-                                                <t t-esc="lga.name"/>
-                                            </option>
-                                        </t>
-                                    </select> -->
-                                </div>
-                                <div class="form-group">
-                                    <label>Permanent Address</label>
-                                    <input type="text" name="permanent_address" class="form-control" required="required" placeholder="Enter your permanent address"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Gender</label>
-                                    <!-- <select name="gender" id="gender" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                    </select> -->
-                                </div>
-                                <div class="form-group">
-                                    <label>Marital Status</label>
-                                    <!-- <select name="marital_status" id="marital_status" class="form-control" required="required">
-                                        <option value="">Select...</option>
-                                        <option value="single">Single</option>
-                                        <option value="married">Married</option>
-                                        <option value="divorced">Divorced</option>
-                                        <option value="widowed">Widowed</option>
-                                    </select> -->
-                                </div>
-                                <div class="form-group" id="maiden_name_group">
-                                    <label>Maiden Name</label>
-                                    <input type="text" name="maiden_name" class="form-control" placeholder="Enter your maiden name"/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Upload Signature Document</label>
-                                    <input type="file" name="signature_file" class="form-control" required="required" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
-                                    <small class="form-text text-muted">Upload an image or scanned copy of your signed signature.</small>
-                                </div>
-                                <button type="button" class="btn btn-primary" id="next-to-relatives" style="margin-top: 10px;">Next</button>
+                    <div class="step-progress-bar">
+                        <div class="step-item active" data-step="1">
+                            <div class="step-content">
+                                <div class="step-number">1</div>
+                                <div class="step-title">Staff Details</div>
                             </div>
-                            <div class="tab-pane fade" id="relatives" role="tabpanel">
-                                <!-- <select id="template_district" style="display:none;">
-                                    <option value="">District</option>
+                        </div>
+                        <div class="step-item" data-step="2">
+                            <div class="step-dot"></div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="tab-content" id="disclosureTabsContent">
+                        <div class="tab-pane fade show active" id="details" role="tabpanel">
+                            <div class="form-group">
+                                <label>Name of Staff</label>
+                                <input type="text" name="employee_id" class="form-control" required="1" placeholder="Enter your name"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Staff Number</label>
+                                <input type="text" name="staff_number" class="form-control" required="1" placeholder="Enter your staff number"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Designation</label>
+                                <input type="text" name="designation" class="form-control" required="1" placeholder="Enter your designation"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select name="location" class="form-control" required="1">
+                                    <option value="">Select...</option>
                                     <t t-foreach="locations" t-as="loc">
                                         <option t-att-value="loc.id">
                                             <t t-esc="loc.name"/>
                                         </option>
                                     </t>
                                 </select>
-                                <select id="template_department" style="display:none;">
-                                    <option value="">Department</option>
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select name="department" class="form-control" required="1">
+                                    <option value="">Select...</option>
                                     <t t-foreach="departments" t-as="dept">
                                         <option t-att-value="dept.id">
                                             <t t-esc="dept.name"/>
                                         </option>
                                     </t>
-                                </select> -->
-                                <div id="relatives-container"></div>
-                                <button type="button" class="btn btn-secondary" id="add-relative">Add Relative</button>
-                                <div style="margin-top: 15px;">
-                                    <button type="button" class="btn btn-light" id="prev-to-details">Previous</button>
-                                    <button type="submit" class="btn btn-success" id="submit-btn">Submit</button>
-                                </div>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>State of Origin</label>
+                                <select name="state_of_origin" id="state_of_origin" class="form-control" required="1">
+                                    <option value="">Select...</option>
+                                    <t t-foreach="states" t-as="st">
+                                        <option t-att-value="st.id">
+                                            <t t-esc="st.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Village</label>
+                                <input type="text" name="village" class="form-control" required="1" placeholder="Enter your village"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Town</label>
+                                <input type="text" name="town" class="form-control" required="1" placeholder="Enter your town"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Local Government Area</label>
+                                <select name="lga" id="lga" class="form-control" required="1">
+                                    <option value="">Select...</option>
+                                    <t t-foreach="lgas" t-as="lga">
+                                        <option t-att-value="lga.id">
+                                            <t t-esc="lga.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Permanent Address</label>
+                                <input type="text" name="permanent_address" class="form-control" required="1" placeholder="Enter your permanent address"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" id="gender" class="form-control" required="1">
+                                    <option value="">Select...</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Marital Status</label>
+                                <select name="marital_status" id="marital_status" class="form-control" required="1">
+                                    <option value="">Select...</option>
+                                    <option value="single">Single</option>
+                                    <option value="married">Married</option>
+                                    <option value="divorced">Divorced</option>
+                                    <option value="widowed">Widowed</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="maiden_name_group">
+                                <label>Maiden Name</label>
+                                <input type="text" name="maiden_name" class="form-control" placeholder="Enter your maiden name"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Upload Signature Document</label>
+                                <input type="file" name="signature_file" class="form-control" required="1" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx"/>
+                                <small class="form-text text-muted">Upload an image or scanned copy of your signed signature.</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="next-to-relatives" style="margin-top: 10px;">Next</button>
+                        </div>
+                        <div class="tab-pane fade" id="relatives" role="tabpanel">
+                            <select id="template_district" style="display:none;">
+                                <option value="">District</option>
+                                <t t-foreach="locations" t-as="loc">
+                                    <option t-att-value="loc.id">
+                                        <t t-esc="loc.name"/>
+                                    </option>
+                                </t>
+                            </select>
+                            <select id="template_department" style="display:none;">
+                                <option value="">Department</option>
+                                <t t-foreach="departments" t-as="dept">
+                                    <option t-att-value="dept.id">
+                                        <t t-esc="dept.name"/>
+                                    </option>
+                                </t>
+                            </select>
+                            <div id="relatives-container"></div>
+                            <button type="button" class="btn btn-secondary" id="add-relative">Add Relative</button>
+                            <div style="margin-top: 15px;">
+                                <button type="button" class="btn btn-light" id="prev-to-details">Previous</button>
+                                <button type="submit" class="btn btn-success" id="submit-btn">Submit</button>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </t>
-        </template>
-
-        <template id="thank_you_template" name="Thank You">
-            <t t-call="website.layout">
-                <div class="relatives-disclosure-container" style="text-align: center; padding: 48px 30px;">
-                    <div style="margin-bottom: 24px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#4BB543" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" fill="#E9F8ED"/>
-                            <path d="M8.5 13.5l2.5 2.5 4.5-5.5" fill="none" stroke="#4BB543" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
                     </div>
-                    <h2 style="color: #138496; margin-bottom: 16px;">Thank You!</h2>
-                    <p style="font-size: 18px; color: #555; margin-bottom: 24px;">
-                    Your relatives disclosure form has been <strong>successfully submitted</strong>.
-                    </p>
-                    <a href="/relativesDisclosureForm" class="btn btn-primary" style="padding: 10px 28px; font-size: 16px; border-radius: 6px; text-decoration: none;">
-                    Submit Another
-                    </a>
+                </form>
+            </div>
+        </t>
+    </template>
+
+    <template id="thank_you_template" name="Thank You">
+        <t t-call="website.layout">
+            <div class="relatives-disclosure-container" style="text-align: center; padding: 48px 30px;">
+                <div style="margin-bottom: 24px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#4BB543" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="#E9F8ED"/>
+                        <path d="M8.5 13.5l2.5 2.5 4.5-5.5" fill="none" stroke="#4BB543" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
-            </t>
-        </template>
-    </data>
+                <h2 style="color: #138496; margin-bottom: 16px;">Thank You!</h2>
+                <p style="font-size: 18px; color: #555; margin-bottom: 24px;">
+                Your relatives disclosure form has been <strong>successfully submitted</strong>.
+                </p>
+                <a href="/relativesDisclosureForm" class="btn btn-primary" style="padding: 10px 28px; font-size: 16px; border-radius: 6px; text-decoration: none;">
+                Submit Another
+                </a>
+            </div>
+        </t>
+    </template>
 </odoo>

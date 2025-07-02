@@ -83,6 +83,28 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
         });
 
         // Step navigation
+        function setActiveStep(stepNumber) {
+            $('.step-item').each(function () {
+                const $item = $(this);
+                const step = parseInt($item.data('step'));
+
+                if (step === stepNumber) {
+                    $item.addClass('active');
+                    $item.html(`
+                <div class="step-content">
+                    <div class="step-number">${step}</div>
+                    <div class="step-title">${step === 1 ? 'Staff Details' : step === 2 ? 'Relatives' : 'Complete'}</div>
+                </div>
+            `);
+                } else {
+                    $item.removeClass('active');
+                    $item.html(`<div class="step-dot"></div>`);
+                }
+            });
+        }
+
+
+
         $('#next-to-relatives').on('click', function (e) {
             var valid = true;
             var errorMessages = [];
@@ -107,15 +129,15 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 $('#form-error-message').hide();
             }
 
-            $('#details-tab').removeClass('active');
-            $('#relatives-tab').addClass('active');
+            setActiveStep(2);
+
             $('#details').removeClass('show active');
             $('#relatives').addClass('show active');
         });
 
         $('#prev-to-details').on('click', function (e) {
-            $('#relatives-tab').removeClass('active');
-            $('#details-tab').addClass('active');
+            setActiveStep(1);
+
             $('#relatives').removeClass('show active');
             $('#details').addClass('show active');
         });
