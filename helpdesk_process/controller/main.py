@@ -44,7 +44,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"complaint_description": post.get("complaint_description"),
 				"meter_type": post.get("meter_type"),
 				"customer_meter_no": post.get("customer_meter_no"),
-				"customer_account_no": post.get("account_no"), 
+				"account_no": post.get("account_no"), 
 				"memo_type_key": 'helpdesk',
 				"stage_id": memo_config_obj.stage_ids[0].id,
 				"helpdesk_memo_config_id": int(post.get("helpdesk_memo_config_id")) if post.get("helpdesk_memo_config_id") else False,
@@ -56,7 +56,9 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"request_date": fields.Date.today(),
 			}
 			_logger.info(f"Memo HELPDESK POST DATA {vals}")
+			_logger.info("About to create..........................")
 			memo_id = memo.sudo().create(vals)
+			_logger.info(f"  ⇒ new memo record: id={memo_id.id}, code={memo_id.code!r}")
 			memo_id.compute_config_stages_from_website(memo_config_obj)
 			_logger.info(f"Memo GENERATED {memo_id}")
 			if 'other_docs' in request.params:
@@ -70,7 +72,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			_logger.info(f"mgbeke POST DATA {memo_id}")
 			return json.dumps({'status': True, 'message': "Form Submitted!"})
 		except Exception as e:
-			# _logger.exception('Unexpected Error while generating ticket: %s' % e)
+			_logger.exception('Unexpected Error while generating ticket: %s' % e)
 			return json.dumps({'status': False, 'message': 'Unexpected Error while generating ticket: %s' % e})
 	
 	@http.route(["/customerTicket"], type='http', auth='public', website=True, website_published=True,  csrf=False)
