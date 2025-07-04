@@ -3,6 +3,107 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
 
     $(document).ready(function () {
         console.log("Relatives Disclosure Form JS Loaded");
+
+        // Staff number validation - SINGLE handler
+        $('#staff_number').on('blur', function () {
+            const staff_num = $(this).val().trim();
+            if (!staff_num) return;
+
+            $.ajax({
+                type: 'POST',
+                url: '/check_staffid',
+                contentType: 'application/json',
+                data: JSON.stringify({ staff_num: staff_num }),
+                success: function (response) {
+                    if (response.status) {
+                        $('#staff_name')
+                            .val(response.data.name)
+                            .prop('readonly', true)
+                            .removeClass('is-invalid')
+                            .addClass('is-valid');
+                        $('#staff_number')
+                            .removeClass('is-invalid')
+                            .addClass('is-valid');
+                    } else {
+                        $('#staff_name')
+                            .val('')
+                            .prop('readonly', false)
+                            .removeClass('is-valid')
+                            .addClass('is-invalid')
+                            .attr('placeholder', 'Enter your name manually');
+                        $('#staff_number')
+                            .addClass('is-invalid')
+                            .removeClass('is-valid');
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#staff_name')
+                        .val('')
+                        .prop('readonly', false)
+                        .removeClass('is-valid')
+                        .addClass('is-invalid')
+                        .attr('placeholder', 'Enter your name manually');
+                    $('#staff_number')
+                        .addClass('is-invalid')
+                        .removeClass('is-valid');
+                    alert("Connection error. Try again.");
+                }
+            });
+        });
+
+
+        $('#state_of_origin').on('change', function () {
+            const rawValue = $(this).val();
+            const state_id = parseInt(rawValue);
+            console.log("Raw state value:", rawValue, "| Parsed:", state_id);
+
+            // Clear LGA dropdown first
+            $('#lga').html('<option value="">Select LGA</option>');
+
+            if (!state_id || isNaN(state_id)) {
+                console.warn("No valid state ID selected");
+                return;
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '/get_lgas_by_state',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "call",
+                    params: {
+                        state_id: state_id
+                    },
+                    id: new Date().getTime()
+                }),
+                success: function (response) {
+                    console.log("LGA Response:", response);
+                    let result = response.result || response;
+                    let options = '<option value="">Select LGA</option>';
+
+                    if (Array.isArray(result) && result.length > 0) {
+                        result.forEach(function (lga) {
+                            options += `<option value="${lga.id}">${lga.name}</option>`;
+                        });
+                    } else {
+                        console.warn("No LGAs found for selected state");
+                        options += '<option value="">No LGAs available</option>';
+                    }
+
+                    $('#lga').html(options);
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error loading LGAs:", error);
+                    console.error("Response:", xhr.responseText);
+                    alert("Failed to load LGAs. Please try again.");
+                    $('#lga').html('<option value="">Select LGA</option>');
+                }
+            });
+        });
+
         // Maiden name show/hide logic
         function toggleMaidenName() {
             var gender = $('#gender').val();
@@ -21,7 +122,7 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
         $('#gender, #marital_status').on('change', toggleMaidenName);
         toggleMaidenName();
 
-        // Ensure add-relative is bound once
+        // Add relative functionality
         $(document).off('click', '#add-relative').on('click', '#add-relative', function () {
             var $container = $('#relatives-container');
 
@@ -30,6 +131,7 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 .removeAttr('id')
                 .show()
                 .attr('name', 'relative_district[]')
+                .attr('required', true)
                 .addClass('form-control');
             $district.find('option:first').text('Select District');
 
@@ -38,6 +140,7 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 .removeAttr('id')
                 .show()
                 .attr('name', 'relative_department[]')
+                .attr('required', true)
                 .addClass('form-control');
             $department.find('option:first').text('Select Department');
 
@@ -103,8 +206,7 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
             });
         }
 
-
-
+        // Next button validation
         $('#next-to-relatives').on('click', function (e) {
             var valid = true;
             var errorMessages = [];
@@ -123,20 +225,17 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 $('html, body').animate({
                     scrollTop: $('.is-invalid').first().offset().top - 100
                 }, 300);
-
                 return;
             }
-            
 
             setActiveStep(2);
-
             $('#details').removeClass('show active');
             $('#relatives').addClass('show active');
         });
 
+        // Previous button
         $('#prev-to-details').on('click', function (e) {
             setActiveStep(1);
-
             $('#relatives').removeClass('show active');
             $('#details').addClass('show active');
         });
@@ -145,10 +244,8 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
         $('.relatives-disclosure-form').on('blur', 'input, select, textarea', function () {
             var $field = $(this);
 
-            // Skip optional fields
             if (!$field.prop('required')) return;
 
-            // Strip spaces
             var value = $field.val().trim();
 
             // Generic rule: required field must not be empty
@@ -158,16 +255,12 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 $field.removeClass('is-invalid').addClass('is-valid');
             }
 
-            // Additional pattern checks (optional)
             if ($field.attr('name') === 'employee_id') {
-                // Example: only letters & spaces
                 if (!/^[A-Za-z\s]+$/.test(value)) {
                     $field.addClass('is-invalid').removeClass('is-valid');
                 }
             }
-
         });
-
 
         // Form validation on submit
         $('.relatives-disclosure-form').on('submit', function (e) {
@@ -187,9 +280,7 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                 $('html, body').animate({
                     scrollTop: $('.is-invalid').first().offset().top - 100
                 }, 300);
-
             }
-            
         });
     });
 });

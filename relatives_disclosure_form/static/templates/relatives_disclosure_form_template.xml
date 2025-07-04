@@ -1,11 +1,9 @@
 <odoo>
     <template id="relatives_disclosure_form_template" name="Relative Disclosure Form">
         <t t-call="website.layout">
-            <t t-call-assets="web.assets_frontend"/>
             <div class="relatives-disclosure-container">
                 <h2>Relatives Disclosure Form</h2>
                 <form action="/relativesDisclosureForm/submit" method="post" enctype="multipart/form-data" class="relatives-disclosure-form">
-                    <!-- <div id="form-error-message" class="alert alert-danger" style="display:none"></div> -->
 
                     <div class="step-progress-bar">
                         <div class="step-track">
@@ -22,18 +20,17 @@
                     </div>
 
 
-
-
                     <div class="tab-content" id="disclosureTabsContent">
                         <div class="tab-pane fade show active" id="details" role="tabpanel">
+                           <div class="form-group">
+                                <label>Staff Number</label>
+                                <input type="text" id="staff_number" name="staff_number" class="form-control" required="1" placeholder="Enter your staff number"/>
+                            </div>
                             <div class="form-group">
                                 <label>Name of Staff</label>
-                                <input type="text" name="employee_id" class="form-control" required="1" placeholder="Enter your name"/>
+                                <input type="text" id="staff_name" name="employee_id" class="form-control" readonly="1" placeholder="Auto-filled from staff number"/>
                             </div>
-                            <div class="form-group">
-                                <label>Staff Number</label>
-                                <input type="text" name="staff_number" class="form-control" required="1" placeholder="Enter your staff number"/>
-                            </div>
+
                             <div class="form-group">
                                 <label>Designation</label>
                                 <input type="text" name="designation" class="form-control" required="1" placeholder="Enter your designation"/>
@@ -62,14 +59,13 @@
                             </div>
                             <div class="form-group">
                                 <label>State of Origin</label>
-                                <select name="state_of_origin" id="state_of_origin" class="form-control" required="1">
+                                <select name="state_of_origin" id="state_of_origin" class="form-control">
                                     <option value="">Select...</option>
-                                    <t t-foreach="states" t-as="st">
-                                        <option t-att-value="st.id">
-                                            <t t-esc="st.name"/>
-                                        </option>
+                                    <t t-foreach="states" t-as="state">
+                                        <option t-att-value="state.id"><t t-esc="state.name"/></option>
                                     </t>
                                 </select>
+
                             </div>
                             <div class="form-group">
                                 <label>Village</label>
@@ -83,11 +79,6 @@
                                 <label>Local Government Area</label>
                                 <select name="lga" id="lga" class="form-control" required="1">
                                     <option value="">Select...</option>
-                                    <t t-foreach="lgas" t-as="lga">
-                                        <option t-att-value="lga.id">
-                                            <t t-esc="lga.name"/>
-                                        </option>
-                                    </t>
                                 </select>
                             </div>
                             <div class="form-group">
