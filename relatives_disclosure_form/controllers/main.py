@@ -1,6 +1,8 @@
 from odoo import http, fields
 from odoo.http import request
 import base64
+import logging
+_logger = logging.getLogger(__name__)
 
 class RelativesDisclosureFormController(http.Controller):
 
@@ -9,7 +11,12 @@ class RelativesDisclosureFormController(http.Controller):
         departments = request.env['hr.department'].sudo().search([])
         locations = request.env['hr.district'].sudo().search([])
         nigeria = request.env['res.country'].sudo().search([('code', '=', 'NG')], limit=1)
-        states = request.env['res.country.state'].sudo().search([('country_id', '=', nigeria.id)]) if nigeria else []
+
+        states = request.env['res.country.state'].sudo().search([
+            ('country_id', '=', nigeria.id),
+            ('lga_ids', '!=', False)
+        ]) if nigeria else []
+
         lgas = request.env['res.lga'].sudo().search([])
 
         return request.render('relatives_disclosure_form.relatives_disclosure_form_template', {
@@ -38,7 +45,7 @@ class RelativesDisclosureFormController(http.Controller):
 
         relative_ids = []
         for i in range(len(relative_names)):
-            if relative_names[i].strip():  # Skip empty rows
+            if relative_names[i].strip(): 
                 relative_ids.append((0, 0, {
                     'relative_name': relative_names[i],
                     'relationship': relationships[i],
@@ -68,3 +75,64 @@ class RelativesDisclosureFormController(http.Controller):
 
         request.env['relatives.disclosure.form'].sudo().create(vals)
         return request.render('relatives_disclosure_form.thank_you_template', {})
+
+    @http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
+    def check_staff_num(self, **post):
+        staff_num = post.get('staff_num')
+        if staff_num:
+            employee = request.env['hr.employee'].sudo().search([
+                ('employee_number', '=', staff_num),
+                ('active', '=', True),
+            ], limit=1)
+            if employee:
+                return {
+                    "status": True,
+                    "data": {
+                        'name': employee.name or "",
+                    },
+                    "message": "",
+                }
+        return {
+            "status": False,
+            "data": {'name': ""},
+            "message": "No matching staff found.",
+        }
+
+
+
+    @http.route('/get_lgas_by_state', type='json', auth='public', csrf=False)
+    def get_lgas_by_state(self, **post):
+        try:
+            # Handle both direct params and nested params structure
+            state_id = post.get('state_id')
+            if not state_id and 'params' in post:
+                state_id = post['params'].get('state_id')
+                
+            if not state_id:
+                _logger.warning("[LGA] state_id is missing.")
+                return []
+
+            try:
+                state_id = int(state_id)
+            except (ValueError, TypeError):
+                _logger.error(f"[LGA] Invalid state_id: {state_id}")
+                return []
+
+            state = request.env['res.country.state'].sudo().browse(state_id)
+            if not state.exists():
+                _logger.warning(f"[LGA] No state found with ID {state_id}")
+                return []
+
+            lgas = state.lga_ids
+            if not lgas:
+                _logger.info(f"[LGA] No LGAs found for state {state.name}")
+                return []
+
+            result = [{'id': lga.id, 'name': lga.name} for lga in lgas]
+            _logger.info(f"[LGA] Returning {len(result)} LGAs for state {state.name}")
+            
+            return result
+
+        except Exception as e:
+            _logger.error(f"[LGA] Exception occurred: {str(e)}")
+            return []
