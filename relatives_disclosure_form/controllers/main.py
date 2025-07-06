@@ -75,29 +75,40 @@ class RelativesDisclosureFormController(http.Controller):
 
         request.env['relatives.disclosure.form'].sudo().create(vals)
         return request.render('relatives_disclosure_form.thank_you_template', {})
+    
+    
 
-    @http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
+    @http.route(['/relativesDisclosureForm/check_staffid'], type='json', website=True, auth="public", csrf=False)
     def check_staff_num(self, **post):
-        staff_num = post.get('staff_num')
-        if staff_num:
-            employee = request.env['hr.employee'].sudo().search([
-                ('employee_number', '=', staff_num),
-                ('active', '=', True),
-            ], limit=1)
-            if employee:
-                return {
-                    "status": True,
-                    "data": {
-                        'name': employee.name or "",
-                    },
-                    "message": "",
-                }
+        staff_num = post.get('staff_num', '').strip()
+
+        if not staff_num:
+            return {
+                "status": False,
+                "data": {"name": "", "phone": "", "work_email": ""},
+                "message": "No staff number provided.",
+            }
+
+        employees = request.env['hr.employee'].sudo().search([('active', '=', True)])
+        matched = employees.filtered(lambda e: e.employee_number and e.employee_number.strip() == staff_num)
+
+        if matched:
+            employee = matched[0]
+            return {
+                "status": True,
+                "data": {
+                    "name": employee.name or "",
+                    "phone": employee.work_phone or employee.mobile_phone or "",
+                    "work_email": employee.work_email or "",
+                },
+                "message": "",
+            }
+
         return {
             "status": False,
-            "data": {'name': ""},
-            "message": "No matching staff found.",
+            "data": {"name": "", "phone": "", "work_email": ""},
+            "message": "Employee with staff ID provided does not exist. Contact Admin",
         }
-
 
 
     @http.route('/get_lgas_by_state', type='json', auth='public', csrf=False)

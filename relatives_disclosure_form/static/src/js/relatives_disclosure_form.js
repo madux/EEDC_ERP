@@ -4,23 +4,36 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
     $(document).ready(function () {
         console.log("Relatives Disclosure Form JS Loaded");
 
-        // Staff number validation - SINGLE handler
+        // Staff number validation
         $('#staff_number').on('blur', function () {
             const staff_num = $(this).val().trim();
-            if (!staff_num) return;
+            if (!staff_num) {
+                console.warn("Staff number is empty or missing.");
+                return;
+            }
 
             $.ajax({
                 type: 'POST',
-                url: '/check_staffid',
+                url: '/relativesDisclosureForm/check_staffid',
                 contentType: 'application/json',
-                data: JSON.stringify({ staff_num: staff_num }),
+                data: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "call",
+                    params: {
+                        staff_num: staff_num
+                    },
+                    id: new Date().getTime()
+                }),
                 success: function (response) {
-                    if (response.status) {
+                    console.log("Response from server:", response);
+
+                    if (response.result && response.result.status) {
                         $('#staff_name')
-                            .val(response.data.name)
+                            .val(response.result.data.name)
                             .prop('readonly', true)
                             .removeClass('is-invalid')
-                            .addClass('is-valid');
+                            .addClass('is-valid')
+                            .attr('placeholder', 'Auto-filled from staff number');
                         $('#staff_number')
                             .removeClass('is-invalid')
                             .addClass('is-valid');
@@ -34,7 +47,10 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                         $('#staff_number')
                             .addClass('is-invalid')
                             .removeClass('is-valid');
-                        alert(response.message);
+
+                        alert(
+                            response.result?.message || "No match found for the provided staff number."
+                        );
                     }
                 },
                 error: function (xhr, status, error) {
@@ -51,7 +67,9 @@ odoo.define('relatives_disclosure_form.form_js', function (require) {
                     alert("Connection error. Try again.");
                 }
             });
+
         });
+
 
 
         $('#state_of_origin').on('change', function () {
