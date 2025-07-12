@@ -14,14 +14,25 @@ class GISDataCollection(http.Controller):
         and logs the received data for analysis before database sync.
         """
         try:
-            json_data = request.jsonrequest
+            # Get JSON data from request body
+            if hasattr(request, 'jsonrequest') and request.jsonrequest:
+                json_data = request.jsonrequest
+            else:
+                # Fallback method - read from request body
+                request_data = request.httprequest.get_data()
+                if request_data:
+                    json_data = json.loads(request_data.decode('utf-8'))
+                else:
+                    json_data = {}
            
             _logger.info("Received GIS JSON data: %s", json.dumps(json_data, indent=2))
            
+            # Log field names for database schema planning
             if isinstance(json_data, dict):
                 field_names = list(json_data.keys())
                 _logger.info("Fields detected: %s", field_names)
             elif isinstance(json_data, list) and json_data:
+                # If it's a list, get field names from first item
                 first_item = json_data[0] if json_data else {}
                 if isinstance(first_item, dict):
                     field_names = list(first_item.keys())
@@ -69,7 +80,16 @@ class GISDataCollection(http.Controller):
         Test endpoint without authentication for initial testing
         """
         try:
-            json_data = request.jsonrequest
+            # Get JSON data from request body
+            if hasattr(request, 'jsonrequest') and request.jsonrequest:
+                json_data = request.jsonrequest
+            else:
+                # Fallback method - read from request body
+                request_data = request.httprequest.get_data()
+                if request_data:
+                    json_data = json.loads(request_data.decode('utf-8'))
+                else:
+                    json_data = {}
            
             _logger.info("TEST - Received GIS JSON data: %s", json.dumps(json_data, indent=2))
            

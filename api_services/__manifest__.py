@@ -1,10 +1,10 @@
 {
-    'name': 'Api Services',
+    'name': 'API Services',
     'version': '1.0',
-    'author': "Paul",
-    'summary': 'For Api services',
+    'category': 'Tools',
+    'summary': 'REST API for different services including GIS Data Collection',
     'depends': ['base'],
-    'description': "Setup quick api service",
-    "data": [
-    ],
+    'data': [],
+    'installable': True,
+    'application': True,
 }
