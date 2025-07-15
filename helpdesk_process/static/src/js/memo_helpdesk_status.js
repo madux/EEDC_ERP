@@ -75,6 +75,7 @@ odoo.define('helpdesk_process.memo_customer_status_form', function (require) {
                         target.val('');
                         renderCustomerTicketStatus(data.data, data.current_stage_id, data.close_stage_id)
                     }else{
+                        target.val('');
                         alert(data.message);
                     }
                     

@@ -1,0 +1,15 @@
+<odoo>
+  <data>
+
+    <record id="ma_import_category" model="ir.module.category">
+        <field name="name">Maach dynamic Import</field>
+        <field name="description">Dynamic Import module</field>
+    </record>
+
+    <record id="ma_import_group_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="ma_import_category" />
+    </record>
+  
+  </data>
+</odoo>

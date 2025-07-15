@@ -109,22 +109,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				 		'id': reco.id, 
 				   		'description': reco.description,
 					 	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
-			 		],
-					# "data": [
-		 			# 	{
-				 	# 	'name': 'Submitted' if request_ids.state in ['draft','submit'] else request_ids.state,
-				   	# 	'description': "Ticket still in submitted stage",
-				   	# 	'current_status': ,
-					#  	},
-					#     {
-				 	# 	'name': 'Approved' if request_ids.state in ['Approve','Approve2'] else request_ids.state,
-				   	# 	'description': "Ticket progress stage",
-					#  	},
-					#     {
-				 	# 	'name': 'Completed' if request_ids.state in ['Done','done'] else request_ids.state,
-				   	# 	'description': "Ticket is Now Completed",
-					#  	} 
-			 		# ],
+			 		], 
 					'current_stage_id': request_ids.stage_id.id,
 					'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
 					"message": "Successfully retrieved",

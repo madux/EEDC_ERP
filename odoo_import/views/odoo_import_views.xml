@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="odoo_import_view_tree" model="ir.ui.view">
+          <field name="name">ma.import.view.tree</field>
+          <field name="model">ma.import</field>
+          <field name="arch" type="xml">
+            <tree string="Dynamic Import Module">
+              <field name="name" required="1"/>
+              <field name="source_host" required="1"/>
+              <field name="source_port" required="1"/>
+              <field name="source_db_name" required="1"/>
+              <field name="source_db_user" required="1"/>
+              <field name="source_db_password"/>
+            </tree>
+          </field>
+        </record>
+
+        <record id="ma_import_view_form" model="ir.ui.view">
+          <field name="name">ma.import.view.form</field>
+          <field name="model">ma.import</field>
+          <field name="arch" type="xml">
+            <form string="Import">
+              <header>
+                  <button name="source_table_columns" type='object' string="Fetch Source Columns" class="oe_highlight"/>
+                  <button name="run_migration" type='object' string="Migrate Data" class="oe_highlight"/>
+              </header>
+              <sheet>
+                <group>
+                    <group>
+                        <field name="source_model" required="1"/>
+                    </group>
+                    <group>
+                        <field name="targe_model" required="1"/>
+                    </group>
+                    <group>
+                        <field name="source_host" required="1"/>
+                        <field name="source_port" required="1"/>
+                        <field name="source_db_name" required="1"/>
+                        <field name="source_db_user" required="1"/>
+                        <field name="source_db_password" />
+                    </group>
+                    <group>
+                        <field name="target_host" />
+                        <field name="target_port" />
+                        <field name="target_db_name" />
+                        <field name="target_db_user" />
+                        <field name="target_db_password" />
+                    </group>
+                </group>
+                <notebook>
+                  <page>
+                      <field name="compactible_field_ids" context="{'default_export_id': active_id, 'default_target_model': target_model}">
+                        <tree string="Lines" editable="bottom">
+                          <field name="import_id" invisible="1"/>
+                          <field name="source_column_name"/>
+                          <field name="source_field_data_type"/>
+                          <field name="source_field_foreign_key"/>
+                          <separator string="|"/>
+                          <field name="target_field_id"/>
+                          <field name="target_field_type_id"/>
+                          <field name="target_field_required_id"/>
+                          <field name="target_field_foreign_key_id"/>
+                        </tree>
+                      </field>
+                  </page>
+                </notebook>
+              </sheet>
+            </form>
+          </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_maach_import">
+            <field name="name">Import Module as XLS</field>
+            <field name="res_model">ma.import</field>
+            <field name="view_mode">form</field>
+            <field name="target">current</field>
+            <field name="view_mode">tree,form</field>
+            <!-- <field name="view_id" ref="view_maach_export_form"/> -->
+        </record>
+
+        <menuitem id="menu_maach_data_import" name="Odoo Dynamic Import" sequence="40"/>
+        <menuitem id="menu1_maach_data_import" name="Import Record" parent="menu_maach_data_import" action="action_maach_import" sequence="1"/>
+    </data>
+</odoo>

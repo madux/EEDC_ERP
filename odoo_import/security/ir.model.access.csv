@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ma_import_user,ma_import_user,model_ma_import,odoo_import.ma_import_group_user,1,1,1,0
+access_ma_import_line_user,ma_import_line_user,model_ma_import_line,odoo_import.ma_import_group_user,1,1,1,1
