@@ -1,0 +1,5 @@
+<record id="mainmemo_manager" model="res.groups">
+            <field name="name">Memo Manager</field>
+            <field name="category_id" ref="category_main_memo_app_group"/>
+            <!-- <field name="users" eval="[(4, ref('base.group_system'))]"/> -->
+        </record>
