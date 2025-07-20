@@ -81,6 +81,16 @@ class HRContractWizard(models.Model):
             )
             
             
-        
-
+class HRContract(models.Model):
+    _inherit = "hr.contract" 
+    
+    employee_number = fields.Char(string="Staff ID")
+    rsa_number = fields.Char(string="RSA Number")
+    prorata = fields.Char(string="Prorata")
+    pension = fields.Char(string="PFA")
+    sort_code = fields.Char(string="Sort code")
+    bank = fields.Char(string="Bank")
+    bank_account = fields.Char(string="Bank Account")
+    hmo = fields.Char(string="HMO")
+    salary_advance = fields.Float(string="Salary Advance")
     
