@@ -93,4 +93,7 @@ class HRContract(models.Model):
     bank_account = fields.Char(string="Bank Account")
     hmo = fields.Char(string="HMO")
     salary_advance = fields.Float(string="Salary Advance")
+    nhf_loan = fields.Float(string="NHF LOAN")
+    overpay = fields.Float(string="Overpay")
+    salary_advance = fields.Float(string="Salary Advance")
     
