@@ -53,6 +53,7 @@
                         <field name="state_id"/>
                         <field name="branch_id"/>
                         <field name="lga_id"/>
+                        <field name="company_id"/>
                     </tree>
                 </field>
             </record>
