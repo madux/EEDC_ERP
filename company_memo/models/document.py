@@ -366,7 +366,7 @@ class DocumentFolder(models.Model):
                                 user_email = user_responsible.mapped('work_email')
                                 email_to = dep.manager_id.work_email if dep.manager_id else user_email
                                 followers_email = folder.users_followers.mapped('work_email')
-                                email_cc = ','.join(followers_email)
+                                email_cc = ','.join(followers_email) if followers_email else ''
                                 if email_to:
                                         self._send_mail(obj, template_id, email_to, email_cc) 
                                 depts.append(dep)

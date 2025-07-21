@@ -1,0 +1,14 @@
+<odoo>
+    <data> 
+        <menuitem id="relatives_disclosure_form.relatives_disclosure_root"
+                  name="Relatives Disclosure"
+                  sequence="10"
+                  action="relatives_disclosure_form.action_relatives_disclosure_form"
+                  web_icon="relatives_disclosure_form,static/description/icon.png"/>
+        <menuitem id="menu_relatives_disclosure_form"
+                  name="Disclosure Forms"
+                  parent="relatives_disclosure_form.relatives_disclosure_root"
+                  action="relatives_disclosure_form.action_relatives_disclosure_form"
+                  sequence="20"/>
+    </data>
+</odoo>

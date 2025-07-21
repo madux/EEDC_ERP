@@ -1,0 +1,73 @@
+<odoo> 
+    <template id="memo_helpdesk_customer_status_template" name="Status Dashboard">
+        <t t-name="Helpdesk Dashboard">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure oe_empty"/>
+                <div id="card" class="card CustomerStatusDashboard">
+                    <div id="card_body" class="card-body">
+                        <!-- <div class="form-row-inline"> -->
+                        <div class="row m-2">
+                            <span class="m-2">Ticket Number:</span>
+                            <input 
+                                class="form-control s_website_form_input mr-5" 
+                                type="text" 
+                                id="customer_info" 
+                                name="customer_info" 
+                                placeholder="Enter ticket number" 
+                                required = "required"
+                                data-fill-with="customer_info"
+                                style="max-width: 300px;"
+                            />
+                            <a href="#" role="button" class="btn btn-primary btn-sm submit_btn m-2" style="max-width: 300px;" id="submit_btn">Submit</a>
+                        </div>
+                        <!-- To be rendered by Javascript -->
+                        <div id="status_display_div d-none"> 
+                            <span class="label-top-left"/>
+                            <div id="status_display" class="progress-container">
+                                <!-- <div class="step completed">
+                                    <div class="circle">1</div>
+                                    <div class="label">Order Received</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="circle">2</div>
+                                    <div class="label">Processing</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="circle">3</div>
+                                    <div class="label">Shipped</div>
+                                </div>
+                                <div class="step current">
+                                    <div class="circle">4</div>
+                                    <div class="label">In Transit</div>
+                                </div>
+                                <div class="step">
+                                    <div class="circle">5</div>
+                                    <div class="label">Delivered</div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="d-none" id="divCusStatus">
+                    <div class="CustomerStatusDashboard">
+                        <span class="label-top-left"/>
+                        <table class="dashboard-table">
+                            <thead>
+                                <th class="room">Category</th>
+                                <th class="name">Name</th>
+                                <th class="status">Status</th>
+                                <th class="physician">Assigned To</th>
+                                <th class="prescription"><i class="fas fa-file-alt"></i></th>
+                                <th class="test"><i class="fas fa-vial"></i></th>
+                                <th class="time">SLA time</th>
+                            </thead>
+                            <tbody>
+                                Ajax Generated table rows
+                            </tbody>
+                        </table>
+                    </div>
+                </div> -->
+            </t>
+        </t>
+    </template>
+</odoo>

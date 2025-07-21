@@ -1,0 +1,31 @@
+<odoo>
+    <data noupdate="1">
+
+        <!-- Custom Category for Helpdesk Process -->
+        <record id="module_category_helpdesk_process" model="ir.module.category">
+            <field name="name">Helpdesk Process</field>
+            <field name="description">Access rights for the Helpdesk Process module</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Customer Care Group -->
+        <record id="group_helpdesk_customer_care" model="res.groups">
+            <field name="name">Customer Care</field>
+            <field name="category_id" ref="helpdesk_process.module_category_helpdesk_process"/>
+        </record>
+
+        <!-- Network Manager Group -->
+        <record id="group_helpdesk_network_manager" model="res.groups">
+            <field name="name">Network Manager</field>
+            <field name="category_id" ref="helpdesk_process.module_category_helpdesk_process"/>
+        </record>
+
+        <!-- Field Operators Group -->
+        <record id="group_helpdesk_operators" model="res.groups">
+            <field name="name">Field Operators</field>
+            <field name="comment">Includes Meter Engineer, OMS, Safety Officer, etc.</field>
+            <field name="category_id" ref="helpdesk_process.module_category_helpdesk_process"/>
+        </record>
+
+    </data>
+</odoo>

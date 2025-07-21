@@ -51,8 +51,8 @@
 							</field>
 						</page>
 						<page name='document_request_id' string='Upload From Repository'>
-							<field name="document_documents_ids" string = "Document Lines" readonly="0" force_save="1"
-							kanban_view_ref="%(documents.document_view_kanban)s">
+							<field name="document_documents_ids" string = "Document Lines" force_save="1"
+							kanban_view_ref="%(documents.document_view_kanban)s" attrs="{'readonly': [('memo_state', 'not in', ['Approve', 'Approve2'])]}">
 								<tree create="false" edit="false" sample="1">
 									<field name="id" optional="hide"/>
 									<field name="name" string="Document" required="True"/>

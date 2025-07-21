@@ -44,13 +44,27 @@
                                         <div class="row mb-4">
                                             <strong class="col-md-4">Ticket Category</strong>:
                                             <span class="col-md-6">
-                                                <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
-                                                    <option selected="selected" value="">--Select request type -- </option>
-                                                    <t t-foreach="request_type_ids" t-as="rt">
+                                                <select id="helpdesk_category_id" name="helpdesk_category_id" required="required" class="form-control s_website_form_input">
+                                                    <option value="">--Select category -- </option>
+                                                    <t t-foreach="category_ids" t-as="rt">
                                                         <option t-att-value="rt.id">
                                                             <span t-esc="rt.name"/>
                                                         </option>
                                                     </t>
+                                                </select> 
+                                            </span>
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">Ticket Type</strong>:
+                                            <span class="col-md-6">
+                                                <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
+                                                    <option id="memo_config_select_option" selected="selected" value=""></option>
+                                                    <!-- <t t-foreach="category_ids" t-as="rt">
+                                                        <option t-att-value="rt.id">
+                                                            <span t-esc="rt.name"/>
+                                                        </option>
+                                                    </t> -->
                                                 </select> 
                                             </span>
                                         </div>
@@ -141,7 +155,7 @@
                                                     <option value="postpaid">
                                                         <span>Postpaid</span>
                                                     </option>
-                                                    <option value="postpaid">
+                                                    <option value="prepaid">  <!-- Fixed: was "postpaid" -->
                                                         <span>Prepaid</span>
                                                     </option>
                                                     <option value="direct source">
@@ -149,11 +163,36 @@
                                                     </option>
                                                 </select>
                                             </span>
-                                        </div> 
-                                        <div class="row mb-4">
+                                        </div>
+                                        <!-- <div class="row mb-4">
                                             <strong class="col-md-4">Customer / Meter No</strong>: 
                                             <span class="col-md-6">
                                                 <input type="text" class="form-control s_website_form_input" name="customer_meter_no" required="true" id="customer_meter_no" labelfor="Customer / Meter No"/>
+                                            </span>
+                                        </div> -->
+                                        <div class="row mb-4 meter_no_field">
+                                            <strong class="col-md-4">Meter No</strong>:
+                                            <span class="col-md-6">
+                                                <input type="text"
+                                                    class="form-control s_website_form_input"
+                                                    name="meter_no"
+                                                    id="meter_no"
+                                                    labelfor="Meter No"
+                                                    placeholder="Enter Meter No"
+                                                    required="true"/>
+                                            </span>
+                                        </div>
+
+                                        <div class="row mb-4 account_no_field" style="display: none;">
+                                            <strong class="col-md-4">Customer Account No</strong>:
+                                            <span class="col-md-6">
+                                                <input type="text"
+                                                    class="form-control s_website_form_input"
+                                                    name="account_no"
+                                                    id="account_no"
+                                                    labelfor="Customer Account No"
+                                                    placeholder="Enter Account No"
+                                                    required="true"/>
                                             </span>
                                         </div>
 
@@ -168,7 +207,7 @@
                                                 <textarea class="form-control s_website_form_input" name="complaint_description" required="1" id="complaint_description" rows="2" labelfor="Description"/>
                                             </span>
                                         </div>
-                                        <div class="row mb-4">
+                                        <div class="row mb-4 d-none">
                                             <strong class="col-md-4">Deadline Date</strong>:
                                             <span class="col-md-6">
                                                 <input type="text" class="form-control datepicker s_website_form_input" id="deadline_date" 
