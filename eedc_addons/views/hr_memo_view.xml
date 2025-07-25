@@ -47,7 +47,7 @@
                 </xpath>
             </field>
         </record>
-        <record model="ir.ui.view" id="memo_config_form_eedc_addons">
+        <!-- <record model="ir.ui.view" id="memo_config_form_eedc_addons">
             <field name="name">memo config view inherited for eedc addons</field>
             <field name="model">memo.config</field>
             <field name="inherit_id" ref="company_memo.memo_config_form"/>
@@ -58,7 +58,7 @@
                                     options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                 </xpath>
             </field>
-        </record>
+        </record> -->
         
     </data>
 </odoo>
