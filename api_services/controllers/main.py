@@ -1,6 +1,8 @@
 import json
 import logging
 import psycopg2
+import requests
+
 from odoo import http
 from odoo.http import request
 from odoo.exceptions import ValidationError
@@ -8,11 +10,24 @@ from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 
+try:
+    import requests
+    REQUESTS_INSTALLED = True
+except ImportError:
+    requests = None
+    REQUESTS_INSTALLED = False
+    _logger.warning(
+        "The 'requests' library is not installed. "
+        "Image download functionality will be disabled. "
+        "To enable it, please run 'pip install requests' on your server."
+    )
+
 
 class GISDataCollection(http.Controller):
     
     def db_connection(self):
-        """Connect to source database using environment variables."""
+        """GIS Data Collection API endpoint that accepts POST requests with JSON content,
+        parses the data, and inserts it into the 'gis_cng_data' table."""
         try:
             conn = psycopg2.connect(
                 dbname=config.get("gis_db_name"),
@@ -29,8 +44,7 @@ class GISDataCollection(http.Controller):
     @http.route('/api/gis-data-collection', type='http', auth='none', methods=['POST'], csrf=False)
     def gis_data_collection(self):
         """
-        GIS Data Collection API endpoint that accepts POST requests with JSON content,
-        parses the data, and inserts it into the 'gis_cng_data' table.
+        Processes and inserts GIS data idempotently into the database.
         """
         try:
             if hasattr(request, 'jsonrequest') and request.jsonrequest:
@@ -52,7 +66,21 @@ class GISDataCollection(http.Controller):
                 cursor = conn.cursor()
 
                 for record in records:
+                    image_data = None
+                    if REQUESTS_INSTALLED and record.get("_attachments") and isinstance(record["_attachments"], list):
+                        image_url = record["_attachments"][0].get("download_url")
+                        if image_url:
+                            try:
+                                response = requests.get(image_url.strip(), timeout=15)
+                                response.raise_for_status()
+                                image_data = response.content
+                                _logger.info(f"Successfully downloaded image for Form74: {record.get('Input_Form74_Number')}")
+                            except requests.exceptions.RequestException as e:
+                                _logger.error(f"Failed to download image from {image_url}: {e}")
+                                image_data = None
+                    
                     data_map = {
+                        'submission_uuid': record.get("_uuid"),
                         'staff_full_name': record.get("Staff_Full_Name"),
                         'staff_id': record.get("Staff_id"),
                         'input_form74_number': record.get("Input_Form74_Number"),
@@ -62,7 +90,8 @@ class GISDataCollection(http.Controller):
                         'customer_alternative_phone_number': record.get("Customer_Alternative_Phone_Number"),
                         'district': record.get("District"),
                         'date': record.get("Date"),
-                        'remarks': ", ".join(record.get("_notes", [])) or None,
+                        'remarks': record.get("Remarks") or None,
+                        'remark_capture': image_data,
                     }
 
                     lat, lon, alt, acc = None, None, None, None
@@ -70,10 +99,7 @@ class GISDataCollection(http.Controller):
                     if isinstance(location_string, str):
                         parts = location_string.split()
                         if len(parts) == 4:
-                            lat = parts[0]
-                            lon = parts[1]
-                            alt = parts[2]
-                            acc = parts[3]
+                            lat, lon, alt, acc = parts[0], parts[1], parts[2], parts[3]
                     
                     data_map.update({
                         'current_location_latitude': lat,
@@ -82,22 +108,23 @@ class GISDataCollection(http.Controller):
                         'current_location_accuracy': acc
                     })
 
-                    columns = data_map.keys()
+                    columns = [k for k, v in data_map.items() if v is not None]
                     values = [data_map[col] for col in columns]
                     
                     sql = f"""
                         INSERT INTO gis_cng_data ({', '.join(columns)})
                         VALUES ({', '.join(['%s'] * len(values))})
+                        ON CONFLICT (submission_uuid) DO NOTHING
                     """
                     
                     cursor.execute(sql, values)
-                    _logger.info("Prepared to insert data for Form74: %s", data_map['input_form74_number'])
-
+                    _logger.info("Processed record with UUID: %s", data_map.get('submission_uuid'))
+                
                 conn.commit()
                 
                 return self._make_json_response({
                     'status': 'success',
-                    'message': f"Successfully inserted {len(records)} record(s).",
+                    'message': f"Successfully processed {len(records)} record(s).",
                 }, status=201)
 
             except Exception as e:
@@ -130,7 +157,8 @@ class GISDataCollection(http.Controller):
             headers={'Content-Type': 'application/json'},
             status=status
         )
-
+    
+    # ... health_check and test_endpoint methods remain the same ...
     @http.route('/api/health', type='http', auth='none', methods=['GET'], csrf=False)
     def health_check(self):
         """Simple health check endpoint."""
