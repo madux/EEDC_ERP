@@ -248,7 +248,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field btn btn-secondary btn-sm ${memo_type == 'soe' ? 'd-none': ''}"> Remove </a>
+                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field fa fa-trash-o p-3 ${memo_type == 'soe' ? 'd-none': ''}"></a>
                         </th>
                     </tr>`
                     
@@ -308,7 +308,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 </th>
 
                 <th width="5%">
-                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field btn btn-secondary btn-sm"> Remove </a>
+                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field fa fa-trash-o p-3"></a>
                 </th>
             </tr>`
         )
@@ -351,7 +351,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     </span>
                 </th>  
                 <th width="5%">
-                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field btn btn-secondary btn-sm"> Remove </a>
+                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field fa fa-trash-o p-3"></a>
                 </th>
             </tr>`
         )
@@ -1014,6 +1014,7 @@ odoo.define('portal_request.portal_request', function (require) {
                          // set the value of selected option to the hidden field
                         let sro = $('#selectRequestOption option:selected')[0].getAttribute("id");
                         $('#selectedRequestOptionId').val(Number(sro));
+                        // $('#selectConfigOptionId').val(Number(sro));
                         if(selectedTarget == "leave_request"){
                             console.log('Yes leave is selected')
                             $('#leave_section').removeClass('d-none');
@@ -1134,17 +1135,179 @@ odoo.define('portal_request.portal_request', function (require) {
                 });
             },
 
+            'change select[name=selectConfigOption]': function(ev){
+                // let selectedTarget = $(ev.target).val();
+                let selectedTarget = $(ev.target);
+                let sro = $('#selectConfigOption option:selected')[0]
+                $('#existing_ref_label').text("Existing Ref #");
+                $('#div_existing_order').addClass('d-none');
+                clearAllElement();
+                let self = this;
+                // checkConfiguredStages(this, selectedTarget);
+                let staff_num = $('#staff_id').val();
+                this._rpc({
+                    route: `/check-configured-stage`,
+                    params: {
+                        'staff_num': staff_num,
+                        'request_config_option': selectedTarget.val(),
+                    },
+                }).then(function (data) {
+                    console.log('checking if stage is configured => '+ JSON.stringify(data))
+                    if (!data.status) {
+                        $('#selectConfigOption').val('')
+                        // alert(`Validation Error! ${data.message}`)
+                        let message = `Validation Error! ${data.message}`
+                        modal_message.text(message)
+                        alert_modal.modal('show');
+                    }
+                    else{
+                         // set the value of selected option to the hidden field
+                        let memo_config_id = sro.getAttribute("id");
+                        let memo_type_id = sro.getAttribute("memo_key_id");
+                        let memo_type_key = sro.getAttribute("memo_type_key");
+                        $('#selectConfigOptionId').val(Number(memo_config_id));
+                        $('#selectedRequestOptionId').val(Number(memo_type_id));
+                        $('#selectRequestOption').val(memo_type_key);
+
+                        if(memo_type_key == "leave_request"){
+                            console.log('Yes leave is selected')
+                            $('#leave_section').removeClass('d-none');
+                            $('#leave_section2').removeClass('d-none');
+                            $('#leave_start_date').attr('required', true);
+                            $('#leave_type_id').attr('required', true);
+                            $('#leave_end_datex').attr('required', true);
+                            $('#product_form_div').addClass('d-none');
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                        }
+                        else if(memo_type_key == "server_access"){
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            $('#product_form_div').addClass('d-none');
+                            $('#label_end_date').removeClass('d-none');
+                            $('#div_system_requirement').removeClass('d-none');
+                            $('#request_end_date').removeClass('d-none');
+                            $('#request_end_date').attr('required', true);
+                            $('#labelDescription').text('Resource Details (IP Adress/Server Name/Database');
+                            $('#div_justification_reason').removeClass('d-none');
+                            $('#justification_reason').attr('required', true);
+                            // $('#justification_reason').addClass("is-valid");
+                            $('#justification_reason').removeClass("d-none");
+                            console.log("server request selected == ", memo_type_key);
+                            displayNonLeaveElement()
+                        }
+                        else if(memo_type_key == 'employee_update'){
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            $('#product_form_div').addClass('d-none');
+                            $('#label_end_date').addClass('d-none');
+                            $('#div_system_requirement').addClass('d-none');
+                            $('#request_end_date').addClass('d-none');
+                            $('#request_end_date').attr('required', false);
+                            $('#labelDescription').text('Description');
+                            $('#div_justification_reason').addClass('d-none');
+                            $('#justification_reason').attr('required', false);
+                            $('#divEmployeeData').removeClass('d-none');
+                            $('#selectEmployeedata').attr('required', true);
+                            $('#employee_item_form_div').removeClass('d-none');
+                            
+                        }
+                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
+                        else if(memo_type_key == "payment_request"){
+                            $('#amount_section').removeClass('d-none');
+                            $('#amount_fig').attr("required", true);
+                            console.log("request selected== ", memo_type_key);
+                            displayNonLeaveElement()
+                        }
+                        // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
+                        else if(memo_type_key == "cash_advance"){
+                            var staff_num = $('#staff_id').val();
+                            self._rpc({
+                                route: `/check-cash-retirement`,
+                                params: {
+                                    'staff_num': staff_num,
+                                    'request_type': memo_type_key,
+                                },
+                            }).then(function (data) {
+                                console.log('retrieved cash advance data => '+ JSON.stringify(data))
+                                if (!data.status) {
+                                    $(ev.target).val('');
+                                    $("#amount_fig").val('')
+                                    $('#amount_section').addClass('d-none');
+                                    $('#product_form_div').addClass('d-none');
+                                    $('.add_item').addClass('d-none')
+                                    alert(`Validation Error! ${data.message}`)
+                                }else{
+                                    // $('#amount_section').removeClass('d-none');
+                                    // $('#amount_fig').attr("required", false);
+                                    console.log("request selected== ", selectedTarget);
+                                    displayNonLeaveElement()
+                                    $('#product_form_div').removeClass('d-none');
+                                    $('.add_item').removeClass('d-none');
+                                }
+                            }).guardedCatch(function (error) {
+                                let msg = error.message.message
+                                console.log(msg)
+                                $("#amount_fig").val('')
+                                $('#amount_section').addClass('d-none');
+                                $('#product_form_div').addClass('d-none');
+                                alert(`Unknown Error! ${msg}`)
+                            }); 
+                        }
+                        else if(memo_type_key == "soe"){
+                            // $('#amount_section').removeClass('d-none');
+                            // $('#amount_fig').attr("required", true); 
+                            displayNonLeaveElement()
+                            $('.add_item').addClass('d-none')
+                            $('#product_form_div').removeClass('d-none'); 
+                            if ($('#selectTypeRequest').val() == "new"){
+                                if ($('#staff_id').val() == ""){
+                                    selectedTarget.val('').trigger('change')
+                                    alert("Please enter staff ID");
+                                }
+                                else{
+                                    $('#existing_order').attr('required', true);
+                                    $('#div_existing_order').removeClass('d-none');
+                                    $('#existing_ref_label').text("Cash Advance Ref #");
+                                    }
+                            }
+                        }
+                         
+                        else{
+                            $('#amount_section').addClass('d-none');
+                            $('#amount_fig').attr("required", false);
+                            console.log("request selected");
+                            displayNonLeaveElement();
+                            $('#product_form_div').removeClass('d-none');
+                        }
+                    }
+                }).guardedCatch(function (error) {
+                    let msg = error.message.message
+                    console.log(msg)
+                    $("#selectConfigOptionId").val('')
+                    $("#selectedRequestOptionId").val('')
+                    $("#selectRequestOption").val('')
+                    alert(`Unknown Error! ${msg}`)
+                });
+            },
+
             'blur input[name=existing_order]': function(ev){
                 let existing_order = $(ev.target).val();
                 var selectRequestOption = $('#selectRequestOption');
-                if(!selectRequestOption.val()){
+                var selectConfigOptionId = $('#selectConfigOptionId');
+                if(!selectConfigOptionId.val()){
                     alert('You must provide Request option!')
                     return false;
                 }
+                // if(!selectRequestOption.val()){
+                //     alert('Request option type not selected!')
+                //     return false;
+                // }
                 // if(existing_order !== '' && $('#staff_id').val() !== "" && $('#selectRequestOption').val() !== ""){  
                 if(existing_order !== '' && $('#staff_id').val() !== ""){
                     var self = this;
                     var staff_num = $('#staff_id').val();
+                    console.log(`THIS IS MY TEST ${staff_num} -- ${existing_order} --- ${selectRequestOption.val()}`)
                     this._rpc({
                         route: `/check_order`,
                         params: {
@@ -1443,6 +1606,8 @@ odoo.define('portal_request.portal_request', function (require) {
                                 // $("#tbody_product").empty()
                                 // $("#tbody_employee").empty()
                                 // console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                                
+                                
                                 window.location.href = `/portal-success`;
                                 console.log("XMLREQUEST Successful====", DataItems);
                             }

@@ -4,9 +4,11 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
 
-class res_users(models.Model):
-    _inherit = 'res.users'
+class resCompany(models.Model):
+    _inherit = 'res.company'
 
-    # memo_flag = fields.Boolean("Memo Flag", default=False)
     user_signature = fields.Binary("Upload User Signature")
-    
+    account_default_debit_account_id = fields.Many2one(
+        "account.account", 
+        string="Default Account",
+        )

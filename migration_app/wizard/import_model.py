@@ -26,8 +26,7 @@ class ImportRecords(models.TransientModel):
             ('email', 'Email Update'),
         ],
         string='Import Type', required=True, index=True,
-        copy=True, default='',
-        track_visibility='onchange'
+        copy=True, default='', 
     )
  
     # def excel_reader(self, index=0):

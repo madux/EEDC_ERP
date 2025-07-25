@@ -24,7 +24,7 @@
                 <field name="name">auditlog.http.session: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_http_session"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -42,7 +42,7 @@
                 <field name="name">hr.employee.transfer: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_employee_transfer"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -60,7 +60,7 @@
                 <field name="name">memo.fleet.maintenance: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_fleet_maintenance"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -78,7 +78,7 @@
                 <field name="name">injection.substation: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_injection_substation"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -96,7 +96,7 @@
                 <field name="name">kba.descriptions: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_kba_descriptions"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -114,7 +114,7 @@
                 <field name="name">memo.stage: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -132,7 +132,7 @@
                 <field name="name">hr.academic: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_academic"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -150,7 +150,7 @@
                 <field name="name">potential.assessment.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_potential_assessment_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -168,7 +168,7 @@
                 <field name="name">multi.branch: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_multi_branch"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -186,7 +186,7 @@
                 <field name="name">documents.folder: Normal users see company related</field>
                 <field name="model_id" ref="documents.model_documents_folder"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -204,7 +204,7 @@
                 <field name="name">score.sheet.export: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_score_sheet_export"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -222,7 +222,7 @@
                 <field name="name">lc.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_lc_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -240,7 +240,7 @@
                 <field name="name">hr.applicant.documentation: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_documentation"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -258,7 +258,7 @@
                 <field name="name">hr.employee.transfer.line: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_employee_transfer_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -276,7 +276,7 @@
                 <field name="name">memo.model: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_model"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -294,7 +294,7 @@
                 <field name="name">res.lga: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_res_lga"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -312,7 +312,7 @@
                 <field name="name">hr.rank: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_rank"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -330,7 +330,7 @@
                 <field name="name">auditlog.log.line.view: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_log_line_view"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -348,7 +348,7 @@
                 <field name="name">employees.import: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_employees_import"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -366,7 +366,7 @@
                 <field name="name">auditlog.http.request: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_http_request"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -384,7 +384,7 @@
                 <field name="name">pms.instruction: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_instruction"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -402,7 +402,7 @@
                 <field name="name">memo.back: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_back"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -420,7 +420,7 @@
                 <field name="name">current.assessment.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_current_assessment_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -438,7 +438,7 @@
                 <field name="name">job.descriptions: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_job_descriptions"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -456,7 +456,7 @@
                 <field name="name">pms.appraisee: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_appraisee"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -474,7 +474,7 @@
                 <field name="name">helpdesk.sla: Normal users see company related</field>
                 <field name="model_id" ref="helpdesk.model_helpdesk_sla"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -492,7 +492,7 @@
                 <field name="name">sign.request: Normal users see company related</field>
                 <field name="model_id" ref="sign.model_sign_request"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -510,7 +510,7 @@
                 <field name="name">request.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_request_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -528,7 +528,7 @@
                 <field name="name">cbt.question.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_question_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -546,7 +546,7 @@
                 <field name="name">auditlog.log: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_log"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -564,7 +564,7 @@
                 <field name="name">hr.recruitment.stage: Normal users see company related</field>
                 <field name="model_id" ref="hr_recruitment.model_hr_recruitment_stage"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -582,7 +582,7 @@
                 <field name="name">hr.unit: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_unit"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -600,7 +600,7 @@
                 <field name="name">memo.stage.invoice.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage_invoice_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -618,7 +618,7 @@
                 <field name="name">hr.job: Normal users see company related</field>
                 <field name="model_id" ref="hr.model_hr_job"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -636,7 +636,7 @@
                 <field name="name">skill.proficiency.scale: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_skill_proficiency_scale"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -654,7 +654,7 @@
                 <field name="name">assessment.description: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_assessment_description"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -672,7 +672,7 @@
                 <field name="name">failed.transformer.movement: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_failed_transformer_movement"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -690,7 +690,7 @@
                 <field name="name">memo.stage.document.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage_document_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -708,7 +708,7 @@
                 <field name="name">hr.certification: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_certification"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -726,7 +726,7 @@
                 <field name="name">training.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_training_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -744,7 +744,7 @@
                 <field name="name">fc.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_fc_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -762,7 +762,7 @@
                 <field name="name">pms.department: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_department"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -780,7 +780,7 @@
                 <field name="name">doc.mgt.config: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_doc_mgt_config"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -798,7 +798,7 @@
                 <field name="name">hr.leave: Normal users see company related</field>
                 <field name="model_id" ref="hr_holidays.model_hr_leave"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -816,7 +816,7 @@
                 <field name="name">hr.level.category: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_level_category"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -834,7 +834,7 @@
                 <field name="name">auditlog.rule: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_rule"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -852,7 +852,7 @@
                 <field name="name">memo.category: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_category"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -870,7 +870,7 @@
                 <field name="name">cbt.answer.line.option: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_answer_line_option"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -888,7 +888,7 @@
                 <field name="name">hr.contract.wizard: Normal users see company related</field>
                 <field name="model_id" ref="hr_payroll_addons.model_hr_contract_wizard"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -906,7 +906,7 @@
                 <field name="name">pms.category: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_category"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -924,7 +924,7 @@
                 <field name="name">kra.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_kra_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -942,7 +942,7 @@
                 <field name="name">memo.sub.stage: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_sub_stage"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -960,7 +960,7 @@
                 <field name="name">hr.district: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_district"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -978,7 +978,7 @@
                 <field name="name">failed.transformer.issue: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_failed_transformer_issue"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -996,7 +996,7 @@
                 <field name="name">pms.year: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_year"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1014,7 +1014,7 @@
                 <field name="name">survey.user_input: Normal users see company related</field>
                 <field name="model_id" ref="survey.model_survey_user_input"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1032,7 +1032,7 @@
                 <field name="name">pms.department.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_department_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1050,7 +1050,7 @@
                 <field name="name">memo.config: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_config"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1068,7 +1068,7 @@
                 <field name="name">ir.attachment: Normal users see company related</field>
                 <field name="model_id" ref="base.model_ir_attachment"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1086,7 +1086,7 @@
                 <field name="name">pms.department.section: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_department_section"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1104,7 +1104,7 @@
                 <field name="name">transformer.district: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_transformer_district"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1122,7 +1122,7 @@
                 <field name="name">issue.stage: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_issue_stage"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1140,7 +1140,7 @@
                 <field name="name">memo.fleet: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_fleet"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1158,7 +1158,7 @@
                 <field name="name">transformer: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_transformer"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1176,7 +1176,7 @@
                 <field name="name">cbt.template.config: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_template_config"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1194,7 +1194,7 @@
                 <field name="name">pms.section: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_section"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1212,7 +1212,7 @@
                 <field name="name">survey.survey: Normal users see company related</field>
                 <field name="model_id" ref="survey.model_survey_survey"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1230,7 +1230,7 @@
                 <field name="name">pms.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_pms_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1248,7 +1248,7 @@
                 <field name="name">hr.experience: Normal users see company related</field>
                 <field name="model_id" ref="eedc_addons.model_hr_experience"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1266,7 +1266,7 @@
                 <field name="name">hr.job.recruitment.request: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_job_recruitment_request"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1284,7 +1284,7 @@
                 <field name="name">hr.level: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_level"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1302,7 +1302,7 @@
                 <field name="name">hr.applicant: Normal users see company related</field>
                 <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1320,7 +1320,7 @@
                 <field name="name">complaint.resolution: Normal users see company related</field>
                 <field name="model_id" ref="helpdesk_process.model_complaint_resolution"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1338,7 +1338,7 @@
                 <field name="name">memo.type: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_type"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1356,7 +1356,7 @@
                 <field name="name">goal.setting.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_goal_setting_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1374,7 +1374,7 @@
                 <field name="name">documentation.type: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_documentation_type"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1392,7 +1392,7 @@
                 <field name="name">document.request.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_document_request_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1410,7 +1410,7 @@
                 <field name="name">hr.work.unit: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_work_unit"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1428,7 +1428,7 @@
                 <field name="name">hr.region: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_region"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1446,7 +1446,7 @@
                 <field name="name">dsm.checklist: Normal users see company related</field>
                 <field name="model_id" ref="failed_transformer_repair.model_dsm_checklist"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1464,7 +1464,7 @@
                 <field name="name">auditlog.log.line: Normal users see company related</field>
                 <field name="model_id" ref="auditlog.model_auditlog_log_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1482,7 +1482,7 @@
                 <field name="name">description.sections: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_description_sections"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1500,7 +1500,7 @@
                 <field name="name">hr.grade: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hr_grade"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1518,7 +1518,7 @@
                 <field name="name">hyr.kra.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_hyr_kra_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
@@ -1536,7 +1536,7 @@
                 <field name="name">qualitycheck.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_qualitycheck_section_line"/>
                 <field name="global" eval="True"/>
-                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="groups" eval="[(4, ref('base.group_system'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
     </data>

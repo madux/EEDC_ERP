@@ -4,6 +4,11 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class MemoConfig(models.Model):
+    _inherit = 'memo.config'
+
+    branch_ids = fields.Many2many(comodel_name='multi.branch', string='Branches')
+   
 
 class EhaBranch(models.Model):
     _inherit = 'multi.branch'

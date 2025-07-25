@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 class RequestLine(models.Model):
     _name = "request.line"
@@ -17,12 +17,7 @@ class RequestLine(models.Model):
     #         products = products
     #     return [('id', 'in', [1,4])]
     
-    @api.onchange('product_id')
-    def onchange_product(self):
-        if self.product_id:
-            if self.memo_type_key == "vehicle_request" and not self.product_id.is_vehicle_product:
-                raise ValidationError("Please ensure to select on vehicle items")
-
+    
     memo_id = fields.Many2one(
         "memo.model", 
         string="Memo ID"
@@ -87,7 +82,18 @@ class RequestLine(models.Model):
                 x.retire_sub_total_amount =  x.used_qty * x.used_amount
             else:
                 x.retire_sub_total_amount = 0.00
-                
+    
+    @api.onchange('product_id')
+    def onchange_product(self):
+        if self.product_id:
+            if self.memo_type_key == "vehicle_request" and not self.product_id.is_vehicle_product:
+                raise ValidationError("Please ensure to select on vehicle items")
+    
+    @api.onchange('quantity_available')
+    def onchange_quantity_available(self):
+        if self.quantity_available:
+            self.check_product_qty()
+            
     distance_from = fields.Text(
         string="From",
         help="For vehicle request use"
@@ -124,4 +130,15 @@ class RequestLine(models.Model):
         )
     memo_type_key = fields.Char('Memo type key', readonly=True)#, related="memo_type.memo_key")
     
-    
+    def check_product_qty(self):
+        if self.quantity_available and self.quantity_available > 0:
+            if self.product_id and self.memo_type_key in ['material_request']:# and self.product_id.detailed_type in ['product']:
+                domain = [('company_id', '=', self.env.user.company_id.id)] 
+                warehouse_location_id = self.env['stock.warehouse'].search(domain, limit=1)
+                stock_location_id = warehouse_location_id.lot_stock_id
+                total_availability = self.env['stock.quant'].sudo()._get_available_quantity(self.product_id, stock_location_id, allow_negative=False) or 0.0
+                product_qty = self.quantity_available 
+                if product_qty > total_availability:
+                    self.quantity_available = 0
+                    raise UserError(f"Request product quantity ({product_qty}) is lesser than the available unit ({total_availability}) in the inventory")
+

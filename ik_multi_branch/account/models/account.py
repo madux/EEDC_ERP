@@ -35,7 +35,7 @@ class AccountJournal(models.Model):
         'multi.branch', 'Branch', default=lambda self: self.env['multi.branch']._branch_default_get(), required=False)
 
     allowed_branch_ids = fields.Many2many(
-        'multi.branch', string='Branchs', required=False) 
+        'multi.branch', string='Branch(s)', required=False) 
     for_public_use = fields.Boolean(string="For Public user")
 
 
