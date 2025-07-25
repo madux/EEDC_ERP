@@ -8,7 +8,7 @@
     'summary': 'Memo application for Companies etc ',
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
-
+    'License': 'AGPL-3.0',
     'depends': [
         'base', 'account', 'purchase', 'stock', 'mail', 'hr', 
         'contacts', 'hr_holidays', 'hr_recruitment',
@@ -21,7 +21,7 @@
         'sequence/sequence.xml',
         'views/company_memo_view.xml',
         'wizard/doc_mgt_config_wizard.xml',
-        'views/res_users.xml',
+        'views/res_base.xml',
         'views/memo_forward_view.xml',
         'views/memo_config_view.xml',
         'views/memo_category.xml',

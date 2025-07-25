@@ -29,7 +29,6 @@
                             <t t-set="entries">
                                 <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
                                     <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
-                                        
                                         <div class="d-grid flex-sm-nowrap">
                                             <a class="portal_button pt-1" href="/portal-request">
                                                 Create Request
@@ -298,10 +297,11 @@
                                                         <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
                                                             <th width="10%">
                                                                 <t t-if="prod.retired">
-                                                                    <span>Retired</span>
+                                                                    <span>
+                                                                        ✔
+                                                                    </span>
                                                                 </t>
                                                                 <t t-else="">
-                                                                    <span>Retired</span>
                                                                 </t>
                                                             </th>
                                                         </t>

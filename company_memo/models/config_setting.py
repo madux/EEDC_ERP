@@ -60,6 +60,7 @@ class MemoSubStageLine(models.Model):
     require_po_confirmation = fields.Boolean("Require PO confirmation", default=False)
     require_so_confirmation = fields.Boolean("Require SO confirmation", default=False)
     require_bill_payment = fields.Boolean("Require PO payment", default=False)
+    require_waybill_detail = fields.Boolean("Require Inventory Reciept", default=False)
 
     def confirm_sub_stage_done(self):
         # validates to ensure all document and invoices are paid or attached
@@ -197,6 +198,7 @@ class MemoStage(models.Model):
     require_po_confirmation = fields.Boolean("Require PO confirmation", default=False)
     require_so_confirmation = fields.Boolean("Require SO confirmation", default=False)
     require_bill_payment = fields.Boolean("Require PO payment", default=False)
+    require_waybill_detail = fields.Boolean("Require Inventory Reciept", default=False)
     memo_has_condition = fields.Boolean(string="Has condition",
                                       default=False, 
                                       help="If there is a condition of yer or no, system determines what stage to jump or move back to")
@@ -395,6 +397,45 @@ class MemoConfig(models.Model):
         the list from the portal
         """
         )
+    
+    company_ids = fields.Many2many(
+        'res.company', 
+        'res_company_memo_config_rel',
+        'company_id',
+        'memo_setting_id',
+        string="Allowed companies",
+        help="""
+        If companies are selected, this will allow 
+        employees with external user option to select 
+        the list from the portal
+        """
+        )
+    allow_multi_vending_on_po = fields.Boolean(
+        string="Allow Multi Vending", 
+        default=True, 
+        help="This only allow users to send PO request to multiple vendors")
+    branch_ids = fields.Many2many(
+        'multi.branch', 
+        string='Districts / Branch(s)', 
+        required=False)
+    
+    receivable_account_id = fields.Many2one(
+        "account.account", 
+        string="Account Receivable"
+        ) 
+    payable_account_id = fields.Many2one(
+        "account.account", 
+        string="Account Payable"
+        ) 
+    advance_account_id = fields.Many2one(
+        "account.account", 
+        string="Advance Account"
+        ) 
+    expense_account_id = fields.Many2one(
+        "account.account", 
+        string="Expense Account"
+        )
+
     
     def write(self, vals):
         res = super(MemoConfig, self).write(vals)

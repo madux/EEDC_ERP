@@ -117,22 +117,25 @@ def format_to_odoo_date(date_str: str) -> str:
 	# 	return response
 	
 class PortalRequest(http.Controller):
+    
+    
 	
 	@http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
 	def portal_request(self):
 		"""Request portal for employee / portal users
 		"""
-		memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+		# memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+		memo_configs = request.env['memo.model'].sudo().get_user_configs()
 		vals = {
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
-			"memo_key_ids": request.env["memo.type"].sudo().search([
-				('id', 'in', memo_config_memo_type_ids), ('allow_for_publish', '=', True)
-				]),
+			"memo_key_ids": [{'id': 0, 'name': ''}],
+			"config_type_ids": memo_configs, # self.get_user_configs ,
 		}
 		return request.render("portal_request.portal_request_template", vals)
-	 
+	
+    
 	@http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
 	def check_staff_num(self, **post):
 		"""Check staff Identification No.
@@ -292,11 +295,12 @@ class PortalRequest(http.Controller):
 	def check_configured_leave(self, **post):
 		staff_num = post.get('staff_num')
 		request_option = post.get('request_option')
-		_logger.info(f'posted to check configured stage ...{staff_num}, {request_option}')
+		request_config_option = post.get('request_config_option')
+		_logger.info(f'posted to check configured stage ...{staff_num}, {request_config_option}')
 		employee_id = request.env['hr.employee'].sudo().search([
 			('employee_number', '=', staff_num)
 			], limit=1)
-		if not any([staff_num, request_option]):
+		if not any([staff_num, request_config_option]):
 			return {
 					"status": False,
 					"message": "Please ensure you provide staff number, request option", 
@@ -304,12 +308,14 @@ class PortalRequest(http.Controller):
 		else:
 			_logger.info('All fields captured')
 
-		if employee_id and employee_id.department_id:
+		# if employee_id and employee_id.department_id:
 			# check if user is from external company, restrict them from using internal applications 
-			memo_setting_id = request.env['memo.config'].sudo().search([
-				('memo_type.memo_key', '=', request_option),
-				('department_id', '=', employee_id.department_id.id)
-				], limit=1) 
+			# memo_setting_id = request.env['memo.config'].sudo().search([
+			# 	('memo_type.memo_key', '=', request_option),
+			# 	('department_id', '=', employee_id.department_id.id)
+			# 	], limit=1) 
+			memo_setting_id = request.env['memo.config'].sudo().search(
+       		[('id', '=', int(request_config_option))], limit=1)
 			if not memo_setting_id or not memo_setting_id.stage_ids:
 				msg = """
 				Please contact system admin to properly 
@@ -337,14 +343,14 @@ class PortalRequest(http.Controller):
 						"status": True,
 						"message": "", 
 						}
-		else:
-			msg = """
-			No Employee record found or employee department 
-			not properly configured. Contact system Admin"""
-			return {
-				"status": False,
-				"message": msg, 
-				}
+			# else:
+			# 	msg = """
+			# 	No Employee record found or employee department 
+			# 	not properly configured. Contact system Admin"""
+			# 	return {
+			# 		"status": False,
+			# 		"message": msg, 
+			# 		}
 		
 	@http.route(['/check-cash-retirement'], type='json', website=True, auth="user", csrf=False)
 	def check_cash_retirement(self, **post):
@@ -360,7 +366,8 @@ class PortalRequest(http.Controller):
 				('memo_type.memo_key', '=', 'cash_advance'),
 				# ('soe_advance_reference', '=', False),
 				('is_cash_advance_retired', '=', False),
-				('state', 'in', ['Done']) # PLEASE DONT REMOVE
+				('state', 'in', ['Done']) # PLEASE DONT REMOVE: until the request is completed, 
+    			# Because its possible the requests was reject, 
 			]
 			employee = employee_obj.search([('employee_number', '=', staff_num)], limit=1)
 			cash_advance_not_retired = memo_obj.search_count(domain)
@@ -370,7 +377,8 @@ class PortalRequest(http.Controller):
 				_logger.info(f"Cash advance not retired: {cash_advance_not_retired}")
 				return {
 					"status": False,
-					"message": f"You cannot request for another cash advance without retiring an existing one. Contact admin to set more cash advance limit for you:"
+					"message": f"""You have exhauseted your maximum cash advance limit of {employee_max_cash_advance_limit} to request. 
+     				You cannot request for another cash advance without retiring an existing one. Contact admin to set more cash advance limit for you:"""
 				}
 			else:
 				_logger.info(f"Cash advance is retired")
@@ -398,25 +406,23 @@ class PortalRequest(http.Controller):
 		Returns:
 			dict: Response
 		"""
-		_logger.info('Checking check_order No ...')
+		_logger.info(f'Checking check_order No {existing_order}...{request_type}')
 		user = request.env.user 
 		if staff_num:
 			domain = [
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('code', '=ilike', existing_order) 
+				('code', '=', existing_order) 
 			]
 			if request_type == "soe":
 				'''this should only return the request cash advance that has
 				  been approved and taken out from the account side
 				'''
 				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
-				domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
 			else:
 				domain += [('state', 'in', ['submit'])]
 			memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
-			
 			if memo_request: 
 				if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
 					return {
@@ -467,7 +473,7 @@ class PortalRequest(http.Controller):
 					}
 			else:
 				message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
-				if request_type == "soe" else "Order ID with staff ID does not exist / has been submitted already. Contact Admin"
+				if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
 				return {
 					"status": False,
 					"data": {
@@ -786,13 +792,13 @@ class PortalRequest(http.Controller):
 			<b>Description: </b> {post.get("description", "")}<br/>
 			<b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
 			"""
-			# memo_type = request.env['memo.type'].search([('memo_key', '=', post.get("selectRequestOption"))], limit=1)
-			memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
+			# memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
+			memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
 			vals = {
 				"employee_id": employee_id.id,
-				"memo_type": memo_type.id,
-				"memo_type_key": memo_type.memo_key,
-				# "Payment" if post.get("selectRequestOption") == "payment_request" else post.get("selectRequestOption"),
+				"memo_type": memo_config.memo_type.id,
+				"memo_setting_id": memo_config.id,
+				"memo_type_key": memo_config.memo_type.memo_key,
 				"email": post.get("email_from"),
 				"phone": post.get("phone_number"),
 				"name": post.get("subject", ''),
@@ -813,6 +819,8 @@ class PortalRequest(http.Controller):
 				"other_system_details": post.get("other_system_details"),
 				"justification_reason": post.get("justification_reason"),
 				"state": "Sent",
+				"company_id": request.env.user.company_id.id,
+                "currency_id": request.env.user.company_id.currency_id.id,
 				"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 				"description": description_body, 
 				"request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
@@ -850,17 +858,16 @@ class PortalRequest(http.Controller):
 			####
 			# memo_id.action_submit_button()
 			stage_id = memo_id.get_initial_stage(
-				memo_id.memo_type.id,
-				memo_id.employee_id.department_id.id or memo_id.dept_ids.id
+				memo_id.id,
 				)
-			_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type} and department {memo_id.employee_id.department_id.name}''')
+			_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type_key} and department {memo_id.employee_id.department_id.name}''')
 			approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
 			if not approver_ids and not next_stage_id:
 				_logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
 				return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
 				# return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
 
-			stage_obj = request.env['memo.stage'].search([('id', '=', next_stage_id)])
+			stage_obj = request.env['memo.stage'].sudo().search([('id', '=', next_stage_id)])
 			approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
 			follower_ids = [(4, r) for r in approver_ids]
 			user_ids = [(4, request.env.user.id)]
@@ -878,7 +885,7 @@ class PortalRequest(http.Controller):
 				'users_followers': follower_ids,
 				'res_users': user_ids,
 				'memo_setting_id': stage_obj.memo_config_id.id,
-				'memo_type_key': memo_id.memo_type.memo_key,
+				'memo_type_key': memo_id.memo_type_key or memo_id.memo_key,
 			})
 			_logger.info(f'''
 				Successfully Registered! with memo id Approver = {approver_ids} \
@@ -893,8 +900,9 @@ class PortalRequest(http.Controller):
 			request.session['memo_ref'] = memo_id.code
 			return json.dumps({'status': True, 'message': "Form Submitted!"})
 		except Exception as ex:
-			_logger.exception("Unexpected Error while sending office memo data: %s" % ex)
-   
+			_logger.exception("Unexpected Error while sending office memo request: %s" % ex)
+			return json.dumps({'status': False, 'message': "Form Submitted!"})
+
 	def generate_request_line(self, DataItems, memo_id):
 		memo_id.sudo().write({'product_ids': False})
 		counter = 1
@@ -905,7 +913,7 @@ class PortalRequest(http.Controller):
 			request_vals = {
 					'memo_id': memo_id.id,
 					'memo_type': memo_id.memo_type.id,
-					'memo_type_key': memo_id.memo_type.memo_key,
+					'memo_type_key': memo_id.memo_type_key,
 					# 'product_id': product_id.id, 
 					'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
 					'description': BeautifulSoup(desc, features="lxml").get_text(),
@@ -998,8 +1006,6 @@ class PortalRequest(http.Controller):
 		
 		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
 		
-		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
-		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
 				else ['leave_request'] if type in ['leave_request'] \
@@ -1017,8 +1023,7 @@ class PortalRequest(http.Controller):
 				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
 		domain += [
-			('memo_type.memo_key', 'in', memo_type),
-			('memo_type.memo_key', 'in', memo_type),
+			('memo_type_key', 'in', memo_type),
 		]
 		if search_param:
 			# if request.httprequest:

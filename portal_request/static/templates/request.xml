@@ -144,21 +144,36 @@
                                                     <input type="text" class="form-control s_website_form_input" name="staff_id" required="1" id="staff_id" labelfor="Staff ID:"/>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
                                                     <span class="s_website_form_label_content">Request Option </span>
                                                     <span class="s_website_form_mark"> *</span>
-                                                    <input type="number" class="d-none form-control s_website_form_input" name="selectedRequestOptionId" id="selectedRequestOptionId"/>
+                                                    <input type="number" class="d-none form-control s_website_form_input" 
+                                                    name="selectedRequestOptionId" id="selectedRequestOptionId"/>
+                                                    <input type="number" class="form-control s_website_form_input" 
+                                                    name="selectConfigOptionId" id="selectConfigOptionId"/>
+                                                    <input type="text" class="form-control s_website_form_input" 
+                                                    name="selectRequestOption" id="selectRequestOption" placeholder="request option eg soe"/>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <select name="selectRequestOption" id="selectRequestOption" required="required" data-init="" class="form-control" labelfor="Request Option">
+                                                    
+                                                    <select name="selectConfigOption" id="selectConfigOption" required="required" data-init="" class="form-control" labelfor="Request Option">
+                                                        <option disabled="true" selected="true" value="">.. Select ..</option>
+                                                        <t t-foreach="config_type_ids" t-as="ct">
+                                                            <option t-att-value="ct.id" t-att-id="ct.id" t-att-memo_key_id="ct.memo_type.id"
+                                                            t-att-memo_type_key="ct.memo_key">
+                                                                <span t-esc="ct.name"/>
+                                                            </option>
+                                                        </t> 
+                                                    </select>
+                                                    <select name="selectRequestOption2" id="selectRequestOption2" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="memo_key_ids" t-as="key">
                                                             <!-- <option t-att-value="key.memo_key"> -->
-                                                            <option t-att-value="key.memo_key" t-att-id="key.id">
-                                                                <span t-esc="key.name"/>
+                                                            <option t-att-value="key.get('id')" t-att-id="key.get('id')">
+                                                                <span t-esc="key.get('name')"/>
                                                             </option>
                                                         </t>
                                                         <!-- <option value="Internal">Internal Request</option>
@@ -186,6 +201,7 @@
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div id ="divEmployeeData" class="d-none s_website_form_field mb-3 col-6 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="divEmployeeData">

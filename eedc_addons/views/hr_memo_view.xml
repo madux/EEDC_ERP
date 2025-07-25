@@ -47,7 +47,18 @@
                 </xpath>
             </field>
         </record>
- 
+        <record model="ir.ui.view" id="memo_config_form_eedc_addons">
+            <field name="name">memo config view inherited for eedc addons</field>
+            <field name="model">memo.config</field>
+            <field name="inherit_id" ref="company_memo.memo_config_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='allowed_for_company_ids']" position="after">
+                    <field name="branch_ids" string="Branches" 
+                                    widget="many2many_tags" 
+                                    options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                </xpath>
+            </field>
+        </record>
         
     </data>
 </odoo>
