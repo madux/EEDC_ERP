@@ -21,52 +21,15 @@
                             <a href="#" role="button" class="btn btn-primary btn-sm submit_btn m-2" style="max-width: 300px;" id="submit_btn">Submit</a>
                         </div>
                         <!-- To be rendered by Javascript -->
-                        <div id="status_display_div d-none"> 
-                            <span class="label-top-left"/>
-                            <div id="status_display" class="progress-container">
-                                <!-- <div class="step completed">
-                                    <div class="circle">1</div>
-                                    <div class="label">Order Received</div>
+                        <div id="status_display_div" class="d-none"> 
+                            <div id="status_display_wrapper" class="customer-status-wrapper">
+                                <div id="status_display" class="progress-container">
+                                    <!-- Dynamic stages will be rendered here via JS -->
                                 </div>
-                                <div class="step completed">
-                                    <div class="circle">2</div>
-                                    <div class="label">Processing</div>
-                                </div>
-                                <div class="step completed">
-                                    <div class="circle">3</div>
-                                    <div class="label">Shipped</div>
-                                </div>
-                                <div class="step current">
-                                    <div class="circle">4</div>
-                                    <div class="label">In Transit</div>
-                                </div>
-                                <div class="step">
-                                    <div class="circle">5</div>
-                                    <div class="label">Delivered</div>
-                                </div> -->
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- <div class="d-none" id="divCusStatus">
-                    <div class="CustomerStatusDashboard">
-                        <span class="label-top-left"/>
-                        <table class="dashboard-table">
-                            <thead>
-                                <th class="room">Category</th>
-                                <th class="name">Name</th>
-                                <th class="status">Status</th>
-                                <th class="physician">Assigned To</th>
-                                <th class="prescription"><i class="fas fa-file-alt"></i></th>
-                                <th class="test"><i class="fas fa-vial"></i></th>
-                                <th class="time">SLA time</th>
-                            </thead>
-                            <tbody>
-                                Ajax Generated table rows
-                            </tbody>
-                        </table>
-                    </div>
-                </div> -->
+                </div>      
             </t>
         </t>
     </template>

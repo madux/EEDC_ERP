@@ -8,70 +8,68 @@
     margin: auto;
 }
 
+/* --- VERTICAL TIMELINE STYLES --- */
+
 .progress-container {
-    display: flex;
-    justify-content: space-between;
     position: relative;
-    padding: 40px 20px;
-}
-
-.progress-container::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 40px;
-    right: 40px;
-    height: 4px;
-    background: #dcdcdc;
-    z-index: 0;
-    transform: translateY(-50%);
-    border-radius: 2px;
-}
-
- 
-
-.step {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-    flex: 1;
+    margin-left: 40px;
+    padding: 20px 10px;
 }
 
+.step {
+    position: relative;
+    padding: 20px 0 20px 40px;
+}
+
+.step::before {
+    content: '';
+    position: absolute;
+    top: 36px; 
+    bottom: 0;
+    left: 16px;
+    width: 3px;
+    background-color: #dcdcdc;
+    z-index: 0;
+}
+
+.step:last-child::before {
+    display: none;
+}
+
+/* Circle */
 .step .circle {
-    width: 40px;
-    height: 40px;
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #e0e0e0;
-    color: #fff;
+    background-color: #e0e0e0;
+    color: #333;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    position: relative;
-    transition: all 0.3s ease;
-    z-index: 2;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1;
+    font-size: 14px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
 }
 
-.step.completed .circle,
-.step.current .circle {
-    background: linear-gradient(135deg, #4caf50, #81c784);
-}
-
-.step.current .circle {
-    background: linear-gradient(135deg, #2196f3, #64b5f6);
-    animation: pulse 1.2s infinite;
-}
-
+/* Stage Label */
 .step .label {
-    margin-top: 12px;
-    font-size: 10vpx;
+    margin-left: 50px;
+    font-size: 15px;
     color: #333;
-    text-align: center;
-    max-width: 80px;
-    word-wrap: break-word;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+/* Status states */
+.step.completed .circle {
+    background-color: #4caf50;
+    color: #fff;
 }
 
 .step.completed .label {
@@ -79,16 +77,123 @@
     font-weight: 600;
 }
 
+.step.current .circle {
+    background-color: #2196f3;
+    color: #fff;
+    animation: pulse 1.2s infinite;
+}
+
 .step.current .label {
     color: #2196f3;
     font-weight: 700;
 }
 
+/* Pulse animation */
 @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+    70% { box-shadow: 0 0 0 8px rgba(33, 150, 243, 0); }
     100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
 }
+
+
+.step.upcoming .circle {
+    background: #e0e0e0;
+}
+
+.step.upcoming .label {
+    color: #aaa;
+}
+
+.circle {
+    font-size: 16px;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.circle .icon {
+    font-size: 16px;
+    font-weight: bold;
+    color: inherit;
+}
+
+.step.completed .icon,
+.step.current .icon {
+    color: white;
+}
+
+.step.upcoming .icon {
+    color: #aaa;
+}
+
+/* Description below label */
+.label .description {
+    font-size: 13px;
+    color: #777;
+    margin-top: 4px;
+    line-height: 1.3;
+}
+
+/* Tag-style stage name */
+.stage-badge {
+    background-color: #e0f7fa;
+    color: #006064;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.step.current .stage-badge {
+    background-color: #004d99;
+    color: white;
+}
+
+.step.completed .stage-badge {
+    background-color: #c8e6c9;
+    color: #256029;
+}
+
+.step.upcoming .stage-badge {
+    background-color: #eee;
+    color: #999;
+}
+
+/* Stage date */
+.stage-date {
+    font-size: 13px;
+    color: #555;
+    margin: 2px 0 4px;
+    font-style: italic;
+}
+
+.step.completed::before {
+    background-color: #4caf50;
+    /* border-left: none; */
+}
+
+.step.current::before {
+    background: repeating-linear-gradient(
+        to bottom,
+        #2196f3,
+        #2196f3 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    /* background-size: 100% 100%; */
+    /* border-left: none; */
+}
+
+/* .step.upcoming::before {
+    background: none;
+} */
+
+
+
 
 .form-inline {
     display: flex;
