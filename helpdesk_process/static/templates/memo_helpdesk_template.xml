@@ -11,6 +11,11 @@
                                     <span>Your ticket Number is # <span t-esc="code"/>.</span>
                                 </h1>
                                 <h1 class="text-center">Thank you for submitting your request. You will get Notification on each processes</h1>
+                                <div class="submit_another_btn">
+                                    <a href="/customerTicket" class="btn btn-primary" style="padding: 10px 28px; font-size: 16px; border-radius: 6px; text-decoration: none;">
+                                    Submit Another
+                                    </a>
+                                </div>
                             </div>
                             <div class="oe_structure" id="oe_go_back"/>
                             <!-- <div class="mb-5 py-2 justify-content-center col-12 s_website_form_submit button_go_back" data-name="Submit Button">
@@ -56,6 +61,13 @@
                                         </div>
 
                                         <div class="row mb-4">
+                                            <strong class="col-md-4">Complain Title</strong>: 
+                                            <span class="col-md-6">
+                                                <input type="text" class="form-control s_website_form_input" name="title" required="true" id="title" labelfor="Title"/>
+                                            </span>
+                                        </div>
+
+                                        <div class="row mb-4">
                                             <strong class="col-md-4">Ticket Type</strong>:
                                             <span class="col-md-6">
                                                 <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
@@ -69,13 +81,6 @@
                                             </span>
                                         </div>
                                         
-                                         
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Title</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" name="title" required="true" id="title" labelfor="Title"/>
-                                            </span>
-                                        </div>
                                         <div class="row mb-4">
                                             <strong class="col-md-4">Customer Name</strong>: 
                                             <span class="col-md-6">
