@@ -132,3 +132,9 @@
 #submit_btn:hover {
     background-color: #1976d2;
 }
+
+.submit_another_btn {
+    margin-top: 1rem !important;
+    display: flex;
+    justify-content: center;
+}
