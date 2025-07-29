@@ -10,6 +10,7 @@ odoo.define('helpdesk_process', function (require) {
     let renderCustomerTicketStatus = function (data, current_stage_id, close_stage_id) {
         $('#status_display').empty();
         $('#status_display_div').removeClass('d-none');
+        $('#toggle-status').removeClass('d-none');
 
         let circle_count = 1;
         let current_stage_reached = false;
@@ -32,7 +33,10 @@ odoo.define('helpdesk_process', function (require) {
 
             const stageLabel = `<span class="stage-badge">${val.name.toUpperCase()}</span>`;
             const date = `<div class="stage-date">Thursday, 07-01</div>`;
-            const description = val.description ? `<div class="description">${val.description}</div>` : '';
+            // Add a short placeholder update line (max 10 words)
+            const updateNote = `<div class="stage-update-note">Stage completed successfully. Awaiting next step...</div>`;
+
+            // const description = val.description ? `<div class="description">${val.description}</div>` : '';
 
             $('#status_display').append(`
                 <div class="${circle_class}">
@@ -40,7 +44,7 @@ odoo.define('helpdesk_process', function (require) {
                     <div class="label">
                         ${stageLabel}
                         ${date}
-                        ${description}
+                        ${updateNote}
                     </div>
                 </div>
             `);
@@ -49,12 +53,22 @@ odoo.define('helpdesk_process', function (require) {
         });
     }
 
-    
     publicWidget.registry.MemoHelpdeskCustomerTicketsFormWidgets = publicWidget.Widget.extend({
         selector: '.CustomerStatusDashboard',
         start: function () {
             return this._super.apply(this, arguments).then(function () {
                 console.log("started Customer status");
+
+                $('#toggle-status').addClass('d-none');
+                $('#status_display_div').addClass('d-none');
+
+                $('#toggle-status').click(function (e) {
+                    e.preventDefault();
+                    $('#status_display_div').toggleClass('d-none');
+                    const isCollapsed = $('#status_display_div').hasClass('d-none');
+                    $('#toggle-arrow').text(isCollapsed ? '▼' : '▲');
+                    $('#toggle-text').text(isCollapsed ? 'Click to view request path' : 'Click to collapse');
+                });
             });
         },
         willStart: function () {
@@ -72,31 +86,37 @@ odoo.define('helpdesk_process', function (require) {
                 }
             },
 
-            'click .submit_btn': function (ev) {
+            'click #submit_btn': function (ev) {
                 let target = $('#customer_info');
                 console.log(`The value of customer info is ${target.val()}`)
-                // Make an api call
+
+                // Reset state
+                $('#status_display_div').addClass('d-none');
+                $('#toggle-status').addClass('d-none');
+                $('#status_display').empty();
+                $('#error-message').addClass('d-none');
+
                 this._rpc({
                     route: `/get-customer-ticket`,
                     params: {
-                        'ticket_no': target.val() // e.g REF00921, 
+                        'ticket_no': target.val()
                     },
                 }).then(function (data) {
                     if (data.status) {
                         console.log('Customer tickets providing => ' + JSON.stringify(data));
                         target.val('');
-                        renderCustomerTicketStatus(data.data, data.current_stage_id, data.close_stage_id)
+                        renderCustomerTicketStatus(data.data, data.current_stage_id, data.close_stage_id);
                     } else {
                         target.val('');
-                        alert(data.message);
+                         $('#status_display_div').addClass('d-none');
+                         $('#toggle-status').addClass('d-none');
+                         $('#error-message').removeClass('d-none');
                     }
-
                 }).guardedCatch(function (error) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
             },
-
         },
     });
 });

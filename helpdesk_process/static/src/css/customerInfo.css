@@ -8,19 +8,155 @@
     margin: auto;
 }
 
+.CustomerStatusDashboard {
+    text-align: left;
+    align-items: flex-start !important;
+}
+
+/* === Hero Section Styles === */
+.hero-section {
+    position: relative;
+    background-image: url('http://212.227.234.219:8070/web/image/540-a2461996/job_page_img1.jpg'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+    padding: 80px 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.hero-card {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    /* margin: auto; */
+    justify-items: start;
+}
+
+.hero-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.hero-subtitle {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.ticket-form,
+.toggle-status {
+    margin-left: 0;
+}
+
+.ticket-form input {
+    height: 48px;
+    font-size: 16px;
+    border-radius: 8px;
+    padding: 0 14px;
+    border: 1px solid #ccc;
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+.btn-search {
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.btn-search:hover {
+    background-color: #1976d2;
+}
+
+.toggle-status {
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: #007bff;
+    text-decoration: underline;
+    max-width: 300px; /* aligns with input */
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s ease-in-out;
+}
+
+.toggle-status:hover {
+    color: #0056b3;
+    cursor: pointer;
+}
+
+#toggle-arrow {
+    font-size: 14px;
+}
+
+
+.error-box {
+    background-color: #ffe5e5;
+    border: 1px solid #ff6b6b;
+    border-radius: 6px;
+    padding: 12px 16px;
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.error-title {
+    color: #d9534f;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.error-subtext {
+    color: #6c757d;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+
+
 /* --- VERTICAL TIMELINE STYLES --- */
+#status_display_div {
+    margin-left: 0 !important;
+}
 
 .progress-container {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-left: 40px;
     padding: 20px 10px;
 }
 
 .step {
     position: relative;
-    padding: 0px 0px 40px 30px;
+    padding: 0px 0px 40px 0px;
 }
 
 .step::before {
@@ -56,14 +192,24 @@
     box-shadow: 0 0 4px rgba(0,0,0,0.1);
 }
 
-/* Stage Label */
 .step .label {
-    margin-left: 50px;
+    margin-left: 40px;
     font-size: 15px;
     color: #333;
     font-weight: 500;
     word-break: break-word;
+    text-align: left; 
+    align-items: flex-start; 
+    display: flex; 
+    flex-direction: column; 
 }
+
+.stage-badge,
+.stage-date,
+.updateNote {
+    text-align: left;
+}
+
 
 /* Status states */
 .step.completed .circle {
@@ -127,8 +273,8 @@
     color: #aaa;
 }
 
-/* Description below label */
-.label .description {
+/* UpdateNote below label */
+.label .updateNote {
     font-size: 13px;
     color: #777;
     margin-top: 4px;
