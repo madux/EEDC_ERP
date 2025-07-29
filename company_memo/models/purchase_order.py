@@ -94,16 +94,16 @@ class PurchaseOrder(models.Model):
         res = super(PurchaseOrder, self).button_confirm()
         return res
     
-    def action_create_invoice(self):
-        if self.memo_id:
-            if not self.memo_id.stage_id.require_bill_payment:
-                raise ValidationError('You are not required to create bill at this stage. Set require bill payment on the current stage')
-            else:
-                if self.memo_id.stage_id.approver_ids and \
-                    self.env.user.id not in [r.user_id.id for r in self.memo_id.stage_id.approver_ids]:
-                    raise ValidationError("You are not allowed to create bill for this Purchase Order")
-        res = super(PurchaseOrder, self).button_confirm()
-        return res
+    # def action_create_invoice(self):
+    #     if self.memo_id:
+    #         if not self.memo_id.stage_id.require_bill_payment:
+    #             raise ValidationError('You are not required to create bill at this stage. Set require bill payment on the current stage')
+    #         else:
+    #             if self.memo_id.stage_id.approver_ids and \
+    #                 self.env.user.id not in [r.user_id.id for r in self.memo_id.stage_id.approver_ids]:
+    #                 raise ValidationError("You are not allowed to create bill for this Purchase Order")
+    #     res = super(PurchaseOrder, self).button_confirm()
+    #     return res
     
     
     # def button_confirm(self):

@@ -39,8 +39,9 @@ class Memo_Model(models.Model):
             project_prefix = ms_config.prefix_code or 'REF'
             dept_suffix = ms_config.department_code or 'X'
         # else:
-        vals['code'] = f"{user_company.company_registry or '' +'/' if user_company.company_registry else ''}{project_prefix}{code_seq}-0{0}"# if po_memo not in ['project_pro'] else "" # e.g [PO-00045-X-100]
+        # vals['code'] = f'REF-0000{}' # f"{user_company.company_registry or '' +'/' if user_company.company_registry else ''}{project_prefix}{code_seq}-0{0}"# if po_memo not in ['project_pro'] else "" # e.g [PO-00045-X-100]
         result = super(Memo_Model, self).create(vals)
+        self.code = f'REF-0000{self.id}'
         
         if self.attachment_ids:
             self.attachment_ids.write({'res_model': self._name, 'res_id': self.id})
