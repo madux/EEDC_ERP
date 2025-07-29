@@ -20,7 +20,7 @@
 
 .step {
     position: relative;
-    padding: 20px 0 20px 40px;
+    padding: 0px 0px 40px 30px;
 }
 
 .step::before {
@@ -28,7 +28,7 @@
     position: absolute;
     top: 36px; 
     bottom: 0;
-    left: 16px;
+    left: 14px;
     width: 3px;
     background-color: #dcdcdc;
     z-index: 0;
@@ -42,7 +42,6 @@
 .step .circle {
     position: absolute;
     left: 0;
-    top: 10px;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -173,7 +172,6 @@
 
 .step.completed::before {
     background-color: #4caf50;
-    /* border-left: none; */
 }
 
 .step.current::before {
@@ -184,16 +182,7 @@
         transparent 6px,
         transparent 12px
     );
-    /* background-size: 100% 100%; */
-    /* border-left: none; */
 }
-
-/* .step.upcoming::before {
-    background: none;
-} */
-
-
-
 
 .form-inline {
     display: flex;
