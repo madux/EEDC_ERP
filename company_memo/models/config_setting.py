@@ -21,6 +21,7 @@ DEFAULT_STAGES = [
 
 class MemoSubStageLine(models.Model):
     _name = "memo.sub.stage"
+    _description = "memo sub stage"
 
     name = fields.Char("Name", required=True)
     code = fields.Char("Name", required=False)
@@ -131,7 +132,8 @@ class MemoSubStageLine(models.Model):
 
 class MemoStageDocumentLine(models.Model):
     _name = "memo.stage.document.line"
-
+    _description = "memo.stage.document.line"
+    
     name = fields.Char("Name", required=True)
     code = fields.Char("Code", required=False)
     compulsory = fields.Boolean("Compulsory", default=False)
@@ -147,7 +149,7 @@ class MemoStageDocumentLine(models.Model):
 
 class MemoStageInvoiceLine(models.Model):
     _name = "memo.stage.invoice.line"
-
+    _description = "MSIL"
     name = fields.Char("Name", required=True)
     compulsory = fields.Boolean("Is Compulsory", default=False)
     memo_invoice_id = fields.Many2one(

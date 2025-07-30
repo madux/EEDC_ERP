@@ -782,17 +782,17 @@ class Memomodel(models.Model):
         'res.company',
         string="Company",
         default=lambda self: self.env.user.company_id.id,
-        compute="compute_related_user_company"
+        # compute="compute_related_user_company"
     )
     
-    @api.depends('user_id')
-    def compute_related_user_company(self):
-        for rec in self:
-            current_company = rec.company_id if rec.company_id else False 
-            if rec.user_id:
-                rec.company_id = rec.user_id.company_id.id
-            else:
-                rec.company_id = current_company.id
+    # @api.depends('user_id')
+    # def compute_related_user_company(self):
+    #     for rec in self:
+    #         current_company = rec.company_id if rec.company_id else False 
+    #         if rec.user_id:
+    #             rec.company_id = rec.user_id.company_id.id
+    #         else:
+    #             rec.company_id = current_company.id
     
     legacy_system_id = fields.Integer(
         string="Legacy system ID", 

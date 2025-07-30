@@ -4,6 +4,7 @@ from odoo.exceptions import ValidationError
 
 class Forward_Wizard(models.TransientModel):
     _name = "memo.foward"
+    _description = "memo forward"
 
     resp = fields.Many2one('res.users', 'Current Sender')
     memo_record = fields.Many2one('memo.model','Memo Reference',)
