@@ -32,10 +32,8 @@ odoo.define('helpdesk_process', function (require) {
             }
 
             const stageLabel = `<span class="stage-badge">${val.name.toUpperCase()}</span>`;
-            const date = `<div class="stage-date">Thursday, 07-01</div>`;
-            // Add a short placeholder update line (max 10 words)
-            const updateNote = `<div class="stage-update-note">Stage completed successfully. Awaiting next step...</div>`;
-
+            const date = val.date ? `<div class="stage-date">${val.date}</div>` : '';
+            const updateNote = val.updateNote ? `<div class="stage-update-note">${val.updateNote}</div>` : '';
             // const description = val.description ? `<div class="description">${val.description}</div>` : '';
 
             $('#status_display').append(`

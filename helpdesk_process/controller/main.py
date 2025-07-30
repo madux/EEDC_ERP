@@ -93,35 +93,57 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			'data': [],
 		}
 		return request.render("helpdesk_process.memo_helpdesk_customer_status_template", vals)
- 
+
 	@http.route('/get-customer-ticket', type='json', auth="none", website=True)
 	def get_customer_ticket(self, **post):
 		requests = request.env['memo.model'].sudo()
-		domain = [ 
-   			('helpdesk_memo_config_id', '!=', False),
-   			('code', '=', post.get('ticket_no')),
+		domain = [
+			('helpdesk_memo_config_id', '!=', False),
+			('code', '=', post.get('ticket_no')),
 		]
-		request_ids = requests.search(domain, limit=1) 
-		_logger.info(f"retriving memo update {request_ids}...")
-		if request_ids and request_ids.helpdesk_memo_config_id.stage_ids: 
+		request_ids = requests.search(domain, limit=1)
+		_logger.info(f"retrieving memo update {request_ids}...")
+
+		if request_ids and request_ids.helpdesk_memo_config_id.stage_ids:
+			# Get configured stages
+			config_stages = request_ids.helpdesk_memo_config_id.stage_ids
+
+			# Get all memo.foward records for this memo
+			forward_records = request.env['memo.foward'].sudo().search([
+				('memo_record', '=', request_ids.id)
+			])
+
+			# Map foward records by stage ID for quick lookup
+			forward_map = {
+				forward.next_stage_id.id: forward for forward in forward_records
+			}
+
+			# Build the stage data with optional date and updateNote
+			data = []
+			for stage in config_stages:
+				forward = forward_map.get(stage.id)
+
+				data.append({
+					'name': stage.name.capitalize(),
+					'id': stage.id,
+					'date': forward.date.strftime("%A, %m-%d") if forward and forward.date else '',
+					'updateNote': forward.description_two if forward else '',
+				})
+
 			return {
-					"status": True,
-					"data": [
-		 				{
-				 		'name': reco.name.capitalize(), 
-				 		'id': reco.id, 
-				   		'description': reco.description,
-					 	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
-			 		], 
-					'current_stage_id': request_ids.stage_id.id,
-					'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
-					"message": "Successfully retrieved",
-					} 
+				"status": True,
+				"data": data,
+				"current_stage_id": request_ids.stage_id.id,
+				"close_stage_id": config_stages[-1].id,
+				"message": "Successfully retrieved",
+			}
 		else:
 			return {
-				"status": False, 
-				"message": "No matching ticket record found. Contact Admin", 
+				"status": False,
+				"message": "No matching ticket record found. Contact Admin",
 			}
+
+
    
 	@http.route(['/get-helpdesk-config'], type='json', website=True, auth="none", csrf=False)
 	def get_helpdesk_config(self, **post): 
