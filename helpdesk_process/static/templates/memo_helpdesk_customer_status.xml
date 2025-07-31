@@ -2,71 +2,43 @@
     <template id="memo_helpdesk_customer_status_template" name="Status Dashboard">
         <t t-name="Helpdesk Dashboard">
             <t t-call="website.layout">
-                <div id="wrap" class="oe_structure oe_empty"/>
-                <div id="card" class="card CustomerStatusDashboard">
-                    <div id="card_body" class="card-body">
-                        <!-- <div class="form-row-inline"> -->
-                        <div class="row m-2">
-                            <span class="m-2">Ticket Number:</span>
-                            <input 
-                                class="form-control s_website_form_input mr-5" 
-                                type="text" 
-                                id="customer_info" 
-                                name="customer_info" 
-                                placeholder="Enter ticket number" 
-                                required = "required"
-                                data-fill-with="customer_info"
-                                style="max-width: 300px;"
-                            />
-                            <a href="#" role="button" class="btn btn-primary btn-sm submit_btn m-2" style="max-width: 300px;" id="submit_btn">Submit</a>
-                        </div>
-                        <!-- To be rendered by Javascript -->
-                        <div id="status_display_div d-none"> 
-                            <span class="label-top-left"/>
-                            <div id="status_display" class="progress-container">
-                                <!-- <div class="step completed">
-                                    <div class="circle">1</div>
-                                    <div class="label">Order Received</div>
+                <section class="hero-section">
+                    <div class="hero-overlay"></div>
+                    <div class="container">
+                        <div class="hero-card text-center p-5 CustomerStatusDashboard">
+                            <h2 class="hero-title">Looking for your request progress?</h2>
+                            <p class="hero-subtitle">Search it using your request ticket number</p>
+
+                            <div class="ticket-form d-flex justify-content-center align-items-center">
+                                <input type="text" id="customer_info" name="customer_info"
+                                    class="form-control me-2 s_website_form_input"
+                                    placeholder="Enter ticket number" required="required" data-fill-with="customer_info"
+                                    style="max-width: 300px;" />
+                                <button id="submit_btn" class="btn btn-search" style="max-width: 60px;">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+
+                            <div id="error-message" class="error-box d-none mt-3">
+                                <div class="error-title">Request not found.</div>
+                                <div class="error-subtext">We couldn’t locate any request matching that number.</div>
+                            </div>
+
+                            <a href="#" id="toggle-status" class="toggle-status mt-3 d-block d-none">
+                                <span id="toggle-arrow">▼</span>
+                                <span id="toggle-text">Click to view request path</span>
+                            </a>
+
+                            <div id="status_display_div" class="d-none">
+                                <div id="status_display_wrapper" class="customer-status-wrapper">
+                                    <div id="status_display" class="progress-container">
+                                        <!-- Dynamic stages will be rendered here via JS -->
+                                    </div>
                                 </div>
-                                <div class="step completed">
-                                    <div class="circle">2</div>
-                                    <div class="label">Processing</div>
-                                </div>
-                                <div class="step completed">
-                                    <div class="circle">3</div>
-                                    <div class="label">Shipped</div>
-                                </div>
-                                <div class="step current">
-                                    <div class="circle">4</div>
-                                    <div class="label">In Transit</div>
-                                </div>
-                                <div class="step">
-                                    <div class="circle">5</div>
-                                    <div class="label">Delivered</div>
-                                </div> -->
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- <div class="d-none" id="divCusStatus">
-                    <div class="CustomerStatusDashboard">
-                        <span class="label-top-left"/>
-                        <table class="dashboard-table">
-                            <thead>
-                                <th class="room">Category</th>
-                                <th class="name">Name</th>
-                                <th class="status">Status</th>
-                                <th class="physician">Assigned To</th>
-                                <th class="prescription"><i class="fas fa-file-alt"></i></th>
-                                <th class="test"><i class="fas fa-vial"></i></th>
-                                <th class="time">SLA time</th>
-                            </thead>
-                            <tbody>
-                                Ajax Generated table rows
-                            </tbody>
-                        </table>
-                    </div>
-                </div> -->
+                </section>
             </t>
         </t>
     </template>

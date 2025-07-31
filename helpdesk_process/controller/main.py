@@ -93,35 +93,61 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			'data': [],
 		}
 		return request.render("helpdesk_process.memo_helpdesk_customer_status_template", vals)
- 
+
 	@http.route('/get-customer-ticket', type='json', auth="none", website=True)
 	def get_customer_ticket(self, **post):
 		requests = request.env['memo.model'].sudo()
-		domain = [ 
-   			('helpdesk_memo_config_id', '!=', False),
-   			('code', '=', post.get('ticket_no')),
+		domain = [
+			('helpdesk_memo_config_id', '!=', False),
+			('code', '=', post.get('ticket_no')),
 		]
-		request_ids = requests.search(domain, limit=1) 
-		_logger.info(f"retriving memo update {request_ids}...")
-		if request_ids and request_ids.helpdesk_memo_config_id.stage_ids: 
+		request_ids = requests.search(domain, limit=1)
+		_logger.info(f"retrieving memo update {request_ids}...")
+
+		if request_ids and request_ids.helpdesk_memo_config_id.stage_ids:
+			# Get configured stages
+			config_stages = request_ids.helpdesk_memo_config_id.stage_ids
+
+			# Get all memo.foward records for this memo
+			forward_records = request.env['memo.foward'].sudo().search([
+				('memo_record', '=', request_ids.id)
+			])
+
+			# Map forward records by current stage (accurate)
+			forward_map = {}
+			for forward in forward_records:
+				if forward.stage_id:
+					_logger.info(f"[DEBUG] Forward ID {forward.id} → stage_id: {forward.stage_id.name} (ID {forward.stage_id.id})")
+					forward_map[forward.stage_id.id] = forward
+
+
+			# Build the stage data with optional date and updateNote
+			data = []
+			for stage in config_stages:
+				forward = forward_map.get(stage.id)
+				_logger.info(f"[MATCHING] Stage: {stage.name} (ID {stage.id}) → Forward: {forward}")
+
+				data.append({
+					'name': stage.name.capitalize(),
+					'id': stage.id,
+					'date': self.get_relative_date(forward.date) if forward and forward.date else '',
+					'updateNote': forward.description_two if forward else '',
+				})
+
 			return {
-					"status": True,
-					"data": [
-		 				{
-				 		'name': reco.name.capitalize(), 
-				 		'id': reco.id, 
-				   		'description': reco.description,
-					 	} for reco in request_ids.helpdesk_memo_config_id.stage_ids
-			 		], 
-					'current_stage_id': request_ids.stage_id.id,
-					'close_stage_id': request_ids.helpdesk_memo_config_id.stage_ids[-1].id, # get the last stage of the config
-					"message": "Successfully retrieved",
-					} 
+				"status": True,
+				"data": data,
+				"current_stage_id": request_ids.stage_id.id,
+				"close_stage_id": config_stages[-1].id,
+				"message": "Successfully retrieved",
+			}
 		else:
 			return {
-				"status": False, 
-				"message": "No matching ticket record found. Contact Admin", 
+				"status": False,
+				"message": "No matching ticket record found. Contact Admin",
 			}
+
+
    
 	@http.route(['/get-helpdesk-config'], type='json', website=True, auth="none", csrf=False)
 	def get_helpdesk_config(self, **post): 
@@ -189,3 +215,23 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			'res_id': res_id,
 		})
 		return attachment_id
+	
+	## Date helper function:
+	def get_relative_date(self, date):
+
+		now = datetime.now()
+		delta = now - date
+
+		if delta.days == 0:
+			if delta.seconds < 60:
+				return "Just now"
+			elif delta.seconds < 3600:
+				minutes = delta.seconds // 60
+				return f"Today, {minutes} minute{'s' if minutes != 1 else ''} ago"
+			else:
+				hours = delta.seconds // 3600
+				return f"Today, {hours} hour{'s' if hours != 1 else ''} ago"
+		elif delta.days == 1:
+			return f"Yesterday, {date.strftime('%H:%M')}"
+		else:
+			return date.strftime("%b %d, %Y")
