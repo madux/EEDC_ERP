@@ -113,15 +113,19 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				('memo_record', '=', request_ids.id)
 			])
 
-			# Map foward records by stage ID for quick lookup
-			forward_map = {
-				forward.next_stage_id.id: forward for forward in forward_records
-			}
+			# Map forward records by current stage (accurate)
+			forward_map = {}
+			for forward in forward_records:
+				if forward.stage_id:
+					_logger.info(f"[DEBUG] Forward ID {forward.id} → stage_id: {forward.stage_id.name} (ID {forward.stage_id.id})")
+					forward_map[forward.stage_id.id] = forward
+
 
 			# Build the stage data with optional date and updateNote
 			data = []
 			for stage in config_stages:
 				forward = forward_map.get(stage.id)
+				_logger.info(f"[MATCHING] Stage: {stage.name} (ID {stage.id}) → Forward: {forward}")
 
 				data.append({
 					'name': stage.name.capitalize(),
