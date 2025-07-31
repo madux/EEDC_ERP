@@ -216,7 +216,7 @@
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
-										<field name="retired" string="Retired" force_save="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe', 'cash_advance'])], 'invisible': [('memo_type_key', 'not in', ['soe', 'cash_advance'])]}"/>
+										<field name="retired" string="Retired" force_save="1" readonly="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/>
 									</tree>
 								</field>
 								<group name="note_group" col="6" class="mt-2 mt-md-0">

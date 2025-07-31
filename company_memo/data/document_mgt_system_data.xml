@@ -12,6 +12,7 @@
             </function>
             <value eval="{'noupdate': False}"/>
         </function>
+        
 
         <record id="documents.documents_internal_folder" model="documents.folder">
             <field name="active">0</field>

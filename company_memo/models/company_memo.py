@@ -18,19 +18,10 @@ class Memo_Model(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "name"
     _order = "id desc"
-        
-    # @api.model
-    # def create(self, vals):
-    #     sequence = self.env['ir.sequence'].next_by_code('memo.model')
-    #     vals['code'] = str(sequence)
-    #     return super(Memo_Model, self).create(vals)
+     
     @api.model
     def create(self, vals):
-        # vals['is_saved'] = True
         code_seq = self.env["ir.sequence"].next_by_code("memo.model") or ""
-        # dept_seq = self.env['ir.sequence'].next_by_code('department-num')
-        # child_code = False
-        # po_memo = vals.get('memo_project_type')
         ms_config = self.env['memo.config'].browse([vals.get('memo_setting_id')])
         project_prefix = 'REF'
         dept_suffix = ''
@@ -38,11 +29,7 @@ class Memo_Model(models.Model):
         if ms_config:
             project_prefix = ms_config.prefix_code or 'REF'
             dept_suffix = ms_config.department_code or 'X'
-        # else:
-        # vals['code'] = f'REF-0000{}' # f"{user_company.company_registry or '' +'/' if user_company.company_registry else ''}{project_prefix}{code_seq}-0{0}"# if po_memo not in ['project_pro'] else "" # e.g [PO-00045-X-100]
         result = super(Memo_Model, self).create(vals)
-        self.code = f'REF-0000{self.id}'
-        
         if self.attachment_ids:
             self.attachment_ids.write({'res_model': self._name, 'res_id': self.id})
         if self.invoice_ids:
@@ -51,6 +38,7 @@ class Memo_Model(models.Model):
         if hasattr(self.env['memo.model'], 'payment_ids'):
             for rec in self.payment_ids:
                 rec.memo_reference = result.id
+        result.code = f"{user_company.name[0].capitalize()}/{project_prefix}0000{result.id}" 
         return result
     
     def _compute_attachment_number(self):
@@ -61,13 +49,6 @@ class Memo_Model(models.Model):
         for rec in self:
             rec.attachment_number = attachment.get(rec.id, 0)
 
-    # def action_get_attachment_view(self):
-    #     self.ensure_one()
-    #     res = self.sudo().env.ref('base.action_attachment')
-    #     res['domain'] = [('res_model', '=', 'memo.model'), ('res_id', 'in', self.ids)]
-    #     res['context'] = {'default_res_model': 'memo.model', 'default_res_id': self.id}
-    #     return res
-    
     def action_get_attachment_view(self):
         action_ref = 'base.action_attachment'
         search_view_ref = 'base.view_attachment_search'
@@ -86,11 +67,11 @@ class Memo_Model(models.Model):
     # default to current employee using the system 
     def _default_employee(self):
         return self.env.context.get('default_employee_id') or \
-        self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        self.env['hr.employee'].sudo().with_context(force_company=False).search([('user_id', '=', self.env.uid)], limit=1).id
 
     def _default_user(self):
         return self.env.context.get('default_user_id') or \
-         self.env['res.users'].search([('id', '=', self.env.uid)], limit=1)
+         self.env['res.users'].sudo().search([('id', '=', self.env.uid)], limit=1)
  
     # memo_type = fields.Selection(
     #     [
@@ -149,7 +130,7 @@ class Memo_Model(models.Model):
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
     set_staff = fields.Many2one('hr.employee', string = 'Assigned to')
     demo_staff = fields.Integer(string='User',
-                                default=lambda self: self.env['res.users'].search([
+                                default=lambda self: self.env['res.users'].sudo().search([
                                     ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff",)
         
     user_ids = fields.Many2one('res.users', string = 'Beneficiary', default =_default_user)
@@ -349,12 +330,6 @@ class Memo_Model(models.Model):
         string="Request Department Config", 
         domain= lambda self: self.get_document_memo() 
         )
-    
-    # dummy_document_memo_config_id = fields.Many2one(
-    #     'memo.config', 
-    #     string="Request Department Config",  
-    #     )
-    
     leave_duration = fields.Char(
         string="Duration",
         store=True,
@@ -680,8 +655,11 @@ class Memo_Model(models.Model):
                 return True
             
     def get_user_configs(self):
+        employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
+            [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
+            ('department_id', '=', employee.department_id.id)
             ])
         user = self.env.user
         user_company = user.company_id.id
@@ -689,8 +667,9 @@ class Memo_Model(models.Model):
         for rec in memo_configs:
             _logger.info(f"Userxxx companies and memo companies {user.company_ids.ids}, {rec.company_ids.ids}")
             """Show memo config where user companies is in memo configs"""
-            if user_company in rec.company_ids.ids or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
+            if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
                 cds.append(rec.id)
+        
         config_ids = self.env['memo.config'].search([('id', 'in', cds)])
         return config_ids
     
@@ -722,6 +701,7 @@ class Memo_Model(models.Model):
     
     @api.onchange('dummy_memo_config_ids')
     def _onchange_dummy_memo_config(self):
+        _logger.info("Defaulting to memo configs")
         if self.dummy_memo_config_ids:
             return {
                 'domain': {
@@ -733,14 +713,9 @@ class Memo_Model(models.Model):
     def onchange_memo_setting_id(self):
         if self.memo_setting_id:
             ms = self.memo_setting_id
-            # if not self.employee_id.department_id:
-            #     raise UserError("Contact Admin !!!  Employee must be linked to a department")
             if ms and ms.stage_ids:
                 memo_setting_stage = ms.stage_ids[0]
                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
-                self.memo_setting_id = ms.id
-                # self.to_show_asset = True if ms.memo_type.memo_key in ['asset'] else False
-                # self.update_validity_set(self.stage_id) 
                 self.memo_type_key = ms.memo_type.memo_key
                 self.memo_type = ms.memo_type
                 self.has_sub_stage = True if memo_setting_stage.sub_stage_ids else False
@@ -748,29 +723,73 @@ class Memo_Model(models.Model):
                     (4, self.employee_id.administrative_supervisor_id.id),
                     ]
                 invoices, documents = self.generate_required_artifacts(self.stage_id, self, '')
-                self.sudo().write({
-                    'invoice_ids': [(4, iv) for iv in invoices],
-                    'attachment_ids': [(4, dc) for dc in documents]
-                    })
-                self.generate_sub_stage_artifacts(self.stage_id)
+                if invoices:
+                    self.write({
+                        'invoice_ids': [(6, 0, [iv]) for iv in invoices if iv] if invoices else False,
+                        # 'attachment_ids': [(4, dc.id) for dc in documents if dc]
+                        })
+                if documents:
+                    self.write({
+                        'attachment_ids': [(6, 0, [dc]) for dc in documents if dc] if documents else False,
+                        })
+                # raise ValidationError(documents)
+                # self.generate_sub_stage_artifacts(memo_setting_stage)
             else:
                 self.memo_type = False
                 self.stage_id = False
-                self.memo_setting_id = False
                 self.memo_type_key = False
-                # self.code = False
                 self.has_sub_stage = False
                 raise UserError("Configuration: No stages configured for the selected request")
         else:
             self.stage_id = False
     
+    # @api.onchange('memo_setting_id')
+    # def onchange_memo_setting_id(self):
+    #     if self.memo_setting_id:
+    #         try:
+    #             ms = self.memo_setting_id
+    #             if ms.stage_ids:
+    #                 memo_setting_stage = ms.stage_ids[0]
+    #                 self.stage_id = memo_setting_stage.id
+    #                 self.memo_type_key = ms.memo_type.memo_key
+    #                 self.memo_type = ms.memo_type
+    #                 self.has_sub_stage = bool(memo_setting_stage.sub_stage_ids)
+
+    #                 # Add followers (memory only)
+    #                 if self.employee_id.administrative_supervisor_id:
+    #                     self.users_followers = [
+    #                         (4, self.employee_id.administrative_supervisor_id.id)
+    #                     ]
+
+    #                 # Generate artifacts but DO NOT write
+    #                 invoices, documents = self.generate_required_artifacts(memo_setting_stage, self, 'context_data_if_needed')
+
+    #                 self.invoice_ids = [(4, iv) for iv in invoices]
+    #                 self.attachment_ids = [(4, dc) for dc in documents]
+
+    #                 # Generate sub-stage artifacts (if this doesn't write)
+    #                 self.generate_sub_stage_artifacts(memo_setting_stage)
+    #             else:
+    #                 self.memo_type = False
+    #                 self.stage_id = False
+    #                 self.memo_setting_id = False
+    #                 self.memo_type_key = False
+    #                 self.has_sub_stage = False
+    #                 raise UserError("Configuration: No stages configured for the selected request")
+    #         except Exception as e:
+    #             raise ValidationError(e)
+    #     else:
+    #         self.stage_id = False
+        
     @api.depends('stage_id.memo_config_id')
     def _compute_stage_ids(self):
+        _logger.info('testing to default stages')
         for record in self:
             if record.stage_id.memo_config_id:
                 record.computed_stage_ids = record.stage_id.memo_config_id.mapped('stage_ids').filtered(
                     lambda publish: publish.publish_on_dashboard
-                )
+                ).ids
+                # record.computed_stage_ids = [(6, 0, [1,3,4])]
             else:
                 record.computed_stage_ids = False
                 
@@ -920,15 +939,18 @@ class Memo_Model(models.Model):
     @api.onchange('memo_type')
     def get_default_stage_id(self):
         """ Gives default stage_id """
-        
         if self.memo_type and not self.memo_type.is_document:
-            if not self.employee_id.department_id:
+            Employee = self.env['hr.employee'].sudo().with_context(force_company=False)
+            employee = Employee.search([('user_id', '=', self.env.uid)], limit=1)
+            self.employee_id = employee.id
+            # raise ValidationError(employee)
+            if not employee.department_id:
                 raise ValidationError("Contact Admin !!! Employee does not have a department assigned")
             if not self.res_users:
-                department_id = self.employee_id.department_id
+                department_id = employee.department_id
                 ms = self.env['memo.config'].sudo().search([
                     ('memo_type', '=', self.memo_type.id),
-                    # ('department_id', '=', department_id.id)
+                    ('department_id', '=', department_id.id)
                     ], limit=1)
                 if ms:
                     has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
@@ -1318,13 +1340,15 @@ class Memo_Model(models.Model):
         #     ('memo_type', '=', self.memo_type.id),
         #     ('department_id', '=', self.employee_id.department_id.id)
         #     ], limit=1) or self.memo_setting_id
-        document_memo_config_id = hasattr(self.env['memo.model'], 'document_memo_config_id')
+        document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
         helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
-        memo_settings = self.document_memo_config_id if document_memo_config_id and self.to_create_document  else self.helpdesk_memo_config_id if helpdesk_memo_config_id else self.memo_setting_id 
+        memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
+            else self.helpdesk_memo_config_id if self.helpdesk_memo_config_id \
+                else self.memo_setting_id 
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
-        _logger.info(f'Found stages are {memo_settings} and {memo_setting_stages.ids}')
+        _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
             last_stage = mstages[-1] if mstages else False # 'e.g 9'
@@ -1333,7 +1357,7 @@ class Memo_Model(models.Model):
                 next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:
                 next_stage_id = self.stage_id.id
-            next_stage_record = self.env['memo.stage'].browse([next_stage_id])
+            next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
             return approver_ids, next_stage_record.id
@@ -1456,7 +1480,7 @@ class Memo_Model(models.Model):
         name = prefix_code
         inv = account_move.search([('name', '=', name)], limit=1) # recasting this means you must recast this line above
         if not inv:
-            partner_id = self.client_id
+            partner_id = self.client_id or self.employee_id.user_id.partner_id or self.create_uid.partner_id
             inv = account_move.create({ 
                 'memo_id': self.id,
                 'ref': name, #f'{prefix_code}-{self.code}',
@@ -1713,7 +1737,7 @@ class Memo_Model(models.Model):
             ], limit=1)
         memo_approver_ids = memo_settings.approver_ids
         user = self.env.user
-        emloyee = self.env['hr.employee'].search([('user_id', '=', user.id)], limit=1)
+        emloyee = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
         is_approver_stage = memo_settings.mapped('stage_ids').filtered(lambda aps: aps.is_approved_stage)
         approver_stage_ids = is_approver_stage[0]
         approvers= []
@@ -2156,11 +2180,12 @@ class Memo_Model(models.Model):
              ('code', '=', 'BILL'),
              ], limit=1)
             if not journal_id:
-                raise UserError(f"You do have any journal set to the current company {self.env.user.company_id.name} with type 'purchase', 'BILL'")
+                raise UserError(f"You do have any journal set to the current company {self.env.user.company_id.name} with type in 'purchase' and journal code set as 'BILL'")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
-                partner_id = self.employee_id.user_id.partner_id
+                partner_id = self.client_id or self.employee_id.user_id.partner_id or self.create_uid.partner_id
+                # partner_id = self.employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
@@ -2186,6 +2211,7 @@ class Memo_Model(models.Model):
                             'quantity': pr.quantity_available,
                             'discount': 0.0,
                             'code': pr.code,
+                            'company_id': self.env.user.company_id.id,
                             'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
                             'product_id': pr.product_id.id if pr.product_id else None,
                     }) for pr in self.product_ids],

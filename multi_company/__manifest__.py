@@ -14,6 +14,7 @@
     "data": [
         # 'security/ir.model.access.csv',
         'security/security.xml',
+        'security/rule.xml',
         # 'views/ir.model.access.csv',
     ],
     # 'assets': {'web.assets_backend': [
