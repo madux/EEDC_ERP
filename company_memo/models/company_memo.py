@@ -1314,6 +1314,7 @@ class Memo_Model(models.Model):
                     'default_resp': self.env.uid,
                     'default_dummy_conditional_stage_ids': [(6, 0, condition_stages)],
                     'default_has_conditional_stage': True if self.stage_id.memo_has_condition else False,
+                    'default_stage_id': self.stage_id.id,
                 },
             }
     """The wizard action passes the employee whom the memo was director to this function."""
