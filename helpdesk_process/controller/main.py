@@ -130,7 +130,7 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				data.append({
 					'name': stage.name.capitalize(),
 					'id': stage.id,
-					'date': forward.date.strftime("%A, %m-%d") if forward and forward.date else '',
+					'date': self.get_relative_date(forward.date) if forward and forward.date else '',
 					'updateNote': forward.description_two if forward else '',
 				})
 
@@ -215,3 +215,23 @@ class MemoPortalRequestHelpdesk(http.Controller):
 			'res_id': res_id,
 		})
 		return attachment_id
+	
+	## Date helper function:
+	def get_relative_date(self, date):
+
+		now = datetime.now()
+		delta = now - date
+
+		if delta.days == 0:
+			if delta.seconds < 60:
+				return "Just now"
+			elif delta.seconds < 3600:
+				minutes = delta.seconds // 60
+				return f"Today, {minutes} minute{'s' if minutes != 1 else ''} ago"
+			else:
+				hours = delta.seconds // 3600
+				return f"Today, {hours} hour{'s' if hours != 1 else ''} ago"
+		elif delta.days == 1:
+			return f"Yesterday, {date.strftime('%H:%M')}"
+		else:
+			return date.strftime("%b %d, %Y")
