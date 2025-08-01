@@ -54,12 +54,14 @@ odoo.define('helpdesk_process', function (require) {
     publicWidget.registry.MemoHelpdeskCustomerTicketsFormWidgets = publicWidget.Widget.extend({
         selector: '.CustomerStatusDashboard',
         start: function () {
-            return this._super.apply(this, arguments).then(function () {
+            return this._super.apply(this, arguments).then(() => {
                 console.log("started Customer status");
 
+                // Reset UI
                 $('#toggle-status').addClass('d-none');
                 $('#status_display_div').addClass('d-none');
 
+                // Handle toggle
                 $('#toggle-status').click(function (e) {
                     e.preventDefault();
                     $('#status_display_div').toggleClass('d-none');
@@ -67,6 +69,22 @@ odoo.define('helpdesk_process', function (require) {
                     $('#toggle-arrow').text(isCollapsed ? '▼' : '▲');
                     $('#toggle-text').text(isCollapsed ? 'Click to view request path' : 'Click to collapse');
                 });
+
+                // Auto-fill from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const ticketCode = urlParams.get('code');
+
+                if (ticketCode) {
+                    const input = document.getElementById('customer_info');
+                    if (input) {
+                        input.value = ticketCode;
+
+                        // Trigger click event to auto-submit
+                        setTimeout(() => {
+                            $('#submit_btn').trigger('click');
+                        }, 200); // short delay ensures DOM is ready
+                    }
+                }
             });
         },
         willStart: function () {
@@ -83,10 +101,16 @@ odoo.define('helpdesk_process', function (require) {
                     input.addClass('is-invalid')
                 }
             },
-
             'click #submit_btn': function (ev) {
                 let target = $('#customer_info');
-                console.log(`The value of customer info is ${target.val()}`)
+                let $btn = $('#submit_btn');
+
+                // Spinner setup
+                const originalHTML = $btn.html();
+                $btn.attr('disabled', 'disabled');
+                $btn.html('<i class="fa fa-spinner fa-spin"></i>');
+
+                console.log(`The value of customer info is ${target.val()}`);
 
                 // Reset state
                 $('#status_display_div').addClass('d-none');
@@ -100,19 +124,25 @@ odoo.define('helpdesk_process', function (require) {
                         'ticket_no': target.val()
                     },
                 }).then(function (data) {
+                    $btn.removeAttr('disabled');
+                    $btn.html(originalHTML);
+
                     if (data.status) {
                         console.log('Customer tickets providing => ' + JSON.stringify(data));
                         target.val('');
                         renderCustomerTicketStatus(data.data, data.current_stage_id, data.close_stage_id);
                     } else {
                         target.val('');
-                         $('#status_display_div').addClass('d-none');
-                         $('#toggle-status').addClass('d-none');
-                         $('#error-message').removeClass('d-none');
+                        $('#status_display_div').addClass('d-none');
+                        $('#toggle-status').addClass('d-none');
+                        $('#error-message').removeClass('d-none');
                     }
                 }).guardedCatch(function (error) {
-                    let msg = error.message.message
-                    alert(`Unknown Error! ${msg}`)
+                    $btn.removeAttr('disabled');
+                    $btn.html(originalHTML);
+
+                    let msg = error.message.message;
+                    alert(`Unknown Error! ${msg}`);
                 });
             },
         },
