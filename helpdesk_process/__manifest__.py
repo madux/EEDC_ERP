@@ -21,7 +21,8 @@
         'web.assets_frontend': [
             '/helpdesk_process/static/src/js/memo_helpdesk_ticket.js',
             '/helpdesk_process/static/src/js/memo_helpdesk_status.js',
-            'helpdesk_process/static/src/css/customerInfo.css'
+            'helpdesk_process/static/src/css/customerInfo.css',
+            'helpdesk_process/static/src/css/memo_helpdesk_form.css'
         ],
         "web.assets_backend": [
             "helpdesk_process/static/src/components/helpdesk_memo_dashboard.js",
