@@ -34,7 +34,7 @@
                         		<field name="has_completed_nysc" required="1"/>
                         		<field name="linkedin_account" required="1"/>
                         		<field name="applied_date" required="1"/>
-                        		<field name="applicant_cv_link"/>
+                        		<field name="brief_introduction"/>
                             </group>
                         </group> 
                     </sheet>
