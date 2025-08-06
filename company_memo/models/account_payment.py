@@ -24,9 +24,10 @@ class AccountPayment(models.Model):
 
     def action_post(self):
         res = super(AccountPayment, self).action_post()
-        if self.memo_reference:
-            # self.memo_reference.state = "Done"
-            self.memo_reference.is_request_completed = True
-            self.sudo().memo_reference.update_final_state_and_approver()
+        if self.memo_reference and self.memo_reference.memo_setting_id.stage_ids:
+            if self.memo_reference.memo_setting_id.stage_ids[-1].id != self.memo_reference.stage_id.id:
+                # self.memo_reference.state = "Done"
+                self.memo_reference.is_request_completed = True
+                self.sudo().memo_reference.update_final_state_and_approver()
         return res
  

@@ -1914,6 +1914,8 @@ class Memo_Model(models.Model):
             vals = {
                 'scheduled_date': fields.Date.today(),
                 'picking_type_id': stock_picking_type_out.id,
+                'location_id': self.source_location_id.id,
+                'location_dest_id': self.dest_location_id.id,
                 'origin': self.code,
                 'memo_id': self.id,
                 'partner_id': self.employee_id.user_id.partner_id.id,
@@ -2738,6 +2740,7 @@ class Memo_Model(models.Model):
                         'default_partner_id':self.vendor_id.id or self.employee_id.user_id.partner_id.id, 
                         'default_memo_reference': self.id,
                         'default_communication': self.name,
+                        'default_currency_id': self.env.user.company_id.currency_id.id,
                 },
                 'domain': [],
             })

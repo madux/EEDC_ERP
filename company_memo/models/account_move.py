@@ -66,16 +66,17 @@ class AccountMoveMemo(models.Model):
                 rec.memo_state = rec.memo_id.state
 
     def action_post(self):
-        if self.memo_id:
-            if self.memo_id.memo_type.memo_key == "soe":
-                '''This is added to help send the soe reference to the related cash advance'''
-                self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
-                self.sudo().memo_id.set_cash_advance_as_retired()
-            self.memo_id.is_request_completed = True
-            self.sudo().memo_id.move_id = self.id
-            self.sudo().memo_id.update_final_state_and_approver()
-            # self.memo_id.state = "Done"
-            self.sudo().memo_id.update_status_badge()
+        if self.memo_id and self.memo_id.memo_setting_id.stage_ids:
+            if self.memo_id.memo_setting_id.stage_ids[-1].id != self.memo_id.stage_id.id:
+                if self.memo_id.memo_type.memo_key == "soe":
+                    '''This is added to help send the soe reference to the related cash advance'''
+                    self.sudo().memo_id.cash_advance_reference.soe_advance_reference = self.memo_id.id
+                    self.sudo().memo_id.set_cash_advance_as_retired()
+                self.memo_id.is_request_completed = True
+                self.sudo().memo_id.move_id = self.id
+                self.sudo().memo_id.update_final_state_and_approver()
+                # self.memo_id.state = "Done"
+                self.sudo().memo_id.update_status_badge()
         return super(AccountMoveMemo, self).action_post()
     
 class AccountMove(models.Model):

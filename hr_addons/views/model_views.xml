@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <odoo>
+		<record id="view_emp_query_form" model="ir.ui.view">
+			<field name="name">hr.employee.query</field>
+			<field name="model">hr.employee.query</field>
+			<field name="arch" type="xml">
+				<form string="Query" create="1">
+                    <header>
+						<button 
+                            name="button_approve" 
+                            string="Approve" 
+                            class="oe_highlight" 
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'draft')]}"
+                            confirm="Are you sure you want to migrate" 
+                            groups="hr.group_hr_manager"
+                        />
+                        <button 
+                            name="button_reverse" 
+                            string="Approve" 
+                            class="oe_highlight" 
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'approve')]}"
+                            confirm="Are you sure you want to migrate" 
+                            groups="hr.group_hr_manager"
+                        />
+                        <field name="state" widget="statusbar" />
+					</header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                        		<field name="name" required="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                        		<field name="name" required="1"/>
+                        		<field name="employee_id" required="1"/>
+                        		<field name="query_date" required="1"/>
+                            </group>
+                            <group>
+                        		<field name="query_approved_date" required="1"/>
+                        		<field name="resolution" required="1"/>
+                        		<field name="reverse_reason" required="1"/>
+                            </group>
+                        </group> 
+                    </sheet>
+                </form>
+			</field>
+		</record>
+
+		<record id="view_emp_query_tree" model="ir.ui.view">
+			<field name="name">view.hr.employee.query</field>
+			<field name="model">hr.employee.query</field>
+			<field name="arch" type="xml">
+				<tree string="Query" create="1">
+                    <field name="name" required="1"/>
+                    <field name="employee_id" required="1"/>
+                    <field name="query_date" required="1"/>
+                    <field name="query_approved_date" required="1"/>
+                    <field name="state" required="1"/>
+                    					
+                </tree>
+			</field>
+		</record>
+
+		<record id="action_hr_employee_query_id" model="ir.actions.act_window">
+			<field name="name">Query</field>
+			<field name="res_model">hr.employee.query</field>
+			<field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+			<field name="view_id" eval="False"/>
+			<field name="help" type="html">
+				<p class="oe_view_nocontent_create">
+					Click To Create.
+				</p>
+			</field>
+		</record>
+        <menuitem id="view_hr_warning_menu_staff_action" name="Staff Action" sequence="8" parent="hr.menu_hr_root"
+        groups="hr.group_hr_manager"/>
+
+        <menuitem id="view_hr_query_menu" name="Queries" sequence="24" parent="view_hr_warning_menu_staff_action" action="hr_addons.action_hr_employee_query_id"
+    groups="hr.group_hr_manager"/>
+
+    <record id="view_emp_warning_form" model="ir.ui.view">
+			<field name="name">hr.employee.warning</field>
+			<field name="model">hr.employee.warning</field>
+			<field name="arch" type="xml">
+				<form string="warning" create="1">
+                    <header>
+						<button 
+                            name="button_approve" 
+                            string="Approve" 
+                            class="oe_highlight btn-sm" 
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'draft')]}"
+                            confirm="Are you sure you want approve" 
+                            groups="hr.group_hr_manager"
+                        />
+                        <button 
+                            name="button_reverse" 
+                            string="Reverse" 
+                            class="btn-sm" 
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'approve')]}"
+                            confirm="Are you sure you want to reverse" 
+                            groups="hr.group_hr_manager"
+                        />	
+                        <field name="state" widget="statusbar" />
+					</header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                        		<field name="name" required="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                        		<field name="name" required="1"/>
+                        		<field name="employee_id" required="1"/>
+                        		<field name="warning_date" required="1"/>
+                            </group>
+                            <group>
+                        		<field name="warning_approved_date" required="1"/>
+                        		<field name="resolution" required="1"/>
+                            </group>
+                        </group>
+						<!-- <notebook>
+							<page name="job_role_ids" string="Job Functions / Positions" invisible="0">
+								<field name="job_role_ids" 
+								    required="1" options="{'no_quick_create':True}">
+									<form string="Job Functions / Positions">
+										<group>
+											<group>
+												<field name="name" required="1"/> 
+												<field name="department_id" required="1"/> 
+											</group>
+											<group>
+												<field name="description" string="Job description"/>
+                                                <field name="company_id" invisible="1" force_save="1"/>
+											</group>
+										</group>
+										</form>
+										<tree string="Job Functions / Position" delete="true" create="true">
+                                            <field name="name" required="1" string="Job Position"/>   
+											<field name="department_id" required="1"/> 
+											<field name="description" string="Job description"/>
+										</tree>
+								</field>
+							</page>
+						</notebook> -->
+                    </sheet>
+                </form>
+			</field>
+		</record>
+
+		<record id="view_emp_warning_tree" model="ir.ui.view">
+			<field name="name">view.hr.employee.warning</field>
+			<field name="model">hr.employee.warning</field>
+			<field name="arch" type="xml">
+				<tree string="warning" create="1">
+                    <field name="name" required="1"/>
+                    <field name="employee_id" required="1"/>
+                    <field name="warning_date" required="1"/>
+                    <field name="warning_approved_date" required="1"/>
+                    <field name="resolution" required="1"/>
+                </tree>
+			</field>
+		</record>
+
+		<record id="action_hr_employee_warning_id" model="ir.actions.act_window">
+			<field name="name">warning</field>
+			<field name="res_model">hr.employee.warning</field>
+			<field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+			<field name="view_id" eval="False"/>
+			<field name="help" type="html">
+				<p class="oe_view_nocontent_create">
+					Click To Create.
+				</p>
+			</field>
+		</record>
+        
+        <menuitem id="view_hr_warning_menu" name="Warnings" sequence="30" parent="view_hr_warning_menu_staff_action" action="hr_addons.action_hr_employee_warning_id"
+    groups="hr.group_hr_manager"/>
+</odoo>
