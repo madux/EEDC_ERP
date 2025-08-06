@@ -35,6 +35,7 @@
                         		<field name="linkedin_account" required="1"/>
                         		<field name="applied_date" required="1"/>
                         		<field name="brief_introduction"/>
+                        		<field name="applicant_ipaddress" invisible="0"/>
                             </group>
                         </group> 
                     </sheet>

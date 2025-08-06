@@ -19,6 +19,7 @@ class ApplicantPool(models.Model):
     has_completed_nysc = fields.Boolean("has completed nysc")
     linkedin_account = fields.Char("Linkedin")
     brief_introduction = fields.Text("Introduction")
+    applicant_ipaddress = fields.Text("Ip Address")
     applied_date = fields.Date("Applied Date", default=fields.Date.today())
     applicant_cv_link = fields.Char("CV Link", 
                              help="""Used to store the url of the applicant for 
