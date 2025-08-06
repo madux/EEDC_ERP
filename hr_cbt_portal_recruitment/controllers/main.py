@@ -1,4 +1,4 @@
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 from odoo.exceptions import UserError, ValidationError
 # from odoo.addons.eha_website.controllers.controllers import EhaWebsite
@@ -273,3 +273,97 @@ class WebsiteHrRecruitment(http.Controller):
 	@http.route(["/documentation-success"], type='http', auth='public', website=True, website_published=True)
 	def documentation_success(self): 
 		return request.render("hr_cbt_portal_recruitment.hr_documentation_success_template", {})
+
+
+	#### Applicant Pool Form Template ####
+	@http.route('/applicant-pool', type='http', auth='public', website=True)
+	def applicant_pool_form(self, **post):
+		return request.render('hr_cbt_portal_recruitment.hr_applicant_pool_form_template', {})
+
+	@http.route('/applicant-pool-form/submit', type='http', auth='public', website=True, csrf=False, methods=['POST'])
+	def applicant_pool_form_submit(self, **post):
+		try:
+			_logger.info(f"Received form data: {post}")
+			# Extract form data and create vals dictionary
+			vals = {
+				'first_name': post.get('first_name', '').strip(),
+				'middle_name': post.get('middle_name', '').strip(),
+				'last_name': post.get('last_name', '').strip(),
+				'phone_number': post.get('phone_number', '').strip(),
+				'email': post.get('email', '').strip(),
+				'applicant_cv_link': post.get('applicant_cv_link', '').strip(),
+				'linkedin_account': post.get('linkedin_account', '').strip(),
+				'has_completed_nysc': post.get('has_completed_nysc', '').strip(),
+				'brief_introduction': post.get('brief_introduction', '').strip(),
+				'applicant_ipaddress': post.get('applicant_ipaddress', '').strip(),
+				'applied_date': fields.Datetime.now(),
+				'state': 'draft',
+			}
+			_logger.info(f"Processed vals: {vals}")
+			
+			# Validate required fields
+			required_fields = ['first_name', 'middle_name', 'last_name', 'phone_number', 'email', 'applicant_cv_link', 'linkedin_account', 'has_completed_nysc']
+			missing_fields = [field for field in required_fields if not vals.get(field)]
+			
+			if missing_fields:
+				_logger.error(f"Missing required fields: {missing_fields}")
+				return request.render('hr_cbt_portal_recruitment.applicant_error_template', {
+					'error_title': 'Missing Required Fields',
+					'error_message': 'Please fill in all required fields and try again.',
+					'missing_fields': missing_fields
+				})
+			
+			# Check IP address restriction before creating
+			ip_address = vals.get('applicant_ipaddress', '')
+			if ip_address:
+				five_days_ago = fields.Datetime.now() - timedelta(days=5)
+				existing_application = request.env['hr.applicant.pool'].sudo().search([
+					('applicant_ipaddress', '=', ip_address),
+					('applied_date', '>=', five_days_ago)
+				], limit=1)
+				
+				if existing_application:
+					_logger.warning(f"IP address {ip_address} attempted duplicate submission within 5 days")
+					return request.render('hr_cbt_portal_recruitment.applicant_error_template', {
+						'error_title': 'Submission Restricted',
+						'error_message': 'You have already submitted an application within the last 5 days. Please try again later.',
+						'show_retry': False
+					})
+			
+			# Create the applicant pool record
+			applicant_pool = request.env['hr.applicant.pool'].sudo().create(vals)
+			
+			_logger.info(f"Successfully created applicant pool record with ID: {applicant_pool.id}")
+			
+			return request.render('hr_cbt_portal_recruitment.thank_you_template', {
+				'applicant_name': f"{vals['first_name']} {vals['last_name']}"
+			})
+			
+		except Exception as e:
+			_logger.error(f"Error creating applicant pool record: {str(e)}")
+			return request.render('hr_cbt_portal_recruitment.applicant_error_template', {
+				'error_title': 'Submission Error',
+				'error_message': 'An error occurred while processing your application. Please try again later.',
+				'technical_error': str(e) if request.env.user.has_group('base.group_system') else None
+			})
+
+	@http.route(['/applicant-pool-form/check_ipaddress'], type='json', website=True, auth="public", csrf=False)
+	def check_ip_address(self, **post):
+		try:
+			ip_address = post.get('ip_address', '').strip()
+			
+			if not ip_address:
+				return {'restricted': False}
+			
+			# Check if IP has submitted within last 5 days
+			five_days_ago = fields.Datetime.now() - timedelta(days=5)
+			existing_application = request.env['hr.applicant.pool'].sudo().search([
+				('applicant_ipaddress', '=', ip_address),
+				('applied_date', '>=', five_days_ago)
+			], limit=1)
+			
+			return {'restricted': bool(existing_application)}
+			
+		except Exception as e:
+			_logger.error(f"Error checking IP address: {str(e)}")
+			return {'restricted': False}  # Allow submission on error
