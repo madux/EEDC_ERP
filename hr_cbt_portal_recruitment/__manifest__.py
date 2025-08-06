@@ -31,6 +31,7 @@
         'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
+        'views/hr_applicant_pool.xml',
         'views/career.xml',
         'static/src/xml/website_hr_recruitment_templates.xml',
         'static/src/xml/hr_documentation_request.xml',
