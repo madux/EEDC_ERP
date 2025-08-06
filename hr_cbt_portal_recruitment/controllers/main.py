@@ -295,7 +295,7 @@ class WebsiteHrRecruitment(http.Controller):
 				'linkedin_account': post.get('linkedin_account', '').strip(),
 				'has_completed_nysc': post.get('has_completed_nysc', '').strip(),
 				'brief_introduction': post.get('brief_introduction', '').strip(),
-				'applicant_ipaddress': post.get('applicant_ipaddress', '').strip(),
+				# 'applicant_ipaddress': post.get('applicant_ipaddress', '').strip(),
 				'applied_date': fields.Datetime.now(),
 				'state': 'draft',
 			}
@@ -312,23 +312,23 @@ class WebsiteHrRecruitment(http.Controller):
 					'error_message': 'Please fill in all required fields and try again.',
 					'missing_fields': missing_fields
 				})
-			
-			# Check IP address restriction before creating
-			ip_address = vals.get('applicant_ipaddress', '')
-			if ip_address:
+			# Check if the email address has submitted within the past 5 days.
+			email = vals.get('email')
+			if email:
 				five_days_ago = fields.Datetime.now() - timedelta(days=5)
 				existing_application = request.env['hr.applicant.pool'].sudo().search([
-					('applicant_ipaddress', '=', ip_address),
+					('email', '=', email),
 					('applied_date', '>=', five_days_ago)
 				], limit=1)
-				
+
 				if existing_application:
-					_logger.warning(f"IP address {ip_address} attempted duplicate submission within 5 days")
+					_logger.warning(f"Email {email} attempted duplicate submission within 5 days")
 					return request.render('hr_cbt_portal_recruitment.applicant_error_template', {
 						'error_title': 'Submission Restricted',
 						'error_message': 'You have already submitted an application within the last 5 days. Please try again later.',
 						'show_retry': False
 					})
+
 			
 			# Create the applicant pool record
 			applicant_pool = request.env['hr.applicant.pool'].sudo().create(vals)
@@ -347,23 +347,4 @@ class WebsiteHrRecruitment(http.Controller):
 				'technical_error': str(e) if request.env.user.has_group('base.group_system') else None
 			})
 
-	@http.route(['/applicant-pool-form/check_ipaddress'], type='json', website=True, auth="public", csrf=False)
-	def check_ip_address(self, **post):
-		try:
-			ip_address = post.get('ip_address', '').strip()
-			
-			if not ip_address:
-				return {'restricted': False}
-			
-			# Check if IP has submitted within last 5 days
-			five_days_ago = fields.Datetime.now() - timedelta(days=5)
-			existing_application = request.env['hr.applicant.pool'].sudo().search([
-				('applicant_ipaddress', '=', ip_address),
-				('applied_date', '>=', five_days_ago)
-			], limit=1)
-			
-			return {'restricted': bool(existing_application)}
-			
-		except Exception as e:
-			_logger.error(f"Error checking IP address: {str(e)}")
-			return {'restricted': False}  # Allow submission on error
+	
