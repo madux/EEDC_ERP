@@ -7,14 +7,14 @@ class StockPicking(models.Model):
     
     wh_code = fields.Char(string="Warehouse code", size=5)
     
-    @api.constrains('wh_code')
-    def _check_wh_code(self):
-        for record in self:
-            whl = self.env['stock.location'].search([
-                ('wh_code', '=', self.wh_code)
-                ], limit=2)
-            if whl and len([r.id for r in whl]) > 1: 
-                raise UserError(f"{record.wh_code} is already exiting the system, kindly change")
+    # @api.constrains('wh_code')
+    # def _check_wh_code(self):
+    #     for record in self:
+    #         whl = self.env['stock.location'].search([
+    #             ('wh_code', '=', self.wh_code)
+    #             ], limit=2)
+    #         if whl and len([r.id for r in whl]) > 1: 
+    #             raise UserError(f"{record.wh_code} is already exiting the system, kindly change")
 
 # class StockPicking(models.Model):
 #     _inherit = "stock.picking"
