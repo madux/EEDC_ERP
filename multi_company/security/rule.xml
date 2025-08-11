@@ -15,7 +15,6 @@
         <record id="hr.hr_employee_comp_rule" model="ir.rule">
 			<field name="active">0</field> 
 			<field name="domain_force">[('company_id', 'in', company_ids)]</field> 
-            <!-- eval="False" /> -->
         </record>
         <record id="hr.hr_employee_public_comp_rule" model="ir.rule">
 			<field name="active" eval="False" />

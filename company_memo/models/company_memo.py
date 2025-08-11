@@ -534,8 +534,16 @@ class Memo_Model(models.Model):
     def validate_necessary_components(self):
         '''check relevant fields necessary for different memo type'''
         request_list = ['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']
-        if self.memo_type_key in request_list and not self.product_ids:
-            raise ValidationError("Please enter request lines")
+        if self.memo_type_key in request_list:
+            if not self.product_ids:
+                raise ValidationError("Please enter request lines")
+        
+        '''Check for lines without qty'''
+        if self.memo_type_key in ['material_request']:
+            
+            for ln in self.product_ids:
+                if ln.quantity_available < 1:
+                    raise UserError(f"{ln.product_id.name} must have product unit greater than 0")
         
         invoice_list = ['Payment']
         if self.memo_type_key in invoice_list and not self.product_ids:
@@ -935,6 +943,15 @@ class Memo_Model(models.Model):
                 }
         else:
             self.stage_id = False
+            
+    def get_default_picking_id(self):
+        op_type = self.env['stock.picking.type'].sudo().search([
+            '|', 
+            ('company_id', '=', self.env.user.company_id.id),
+            ('company_id', '=', self.company_id.id),
+            ('code', '=', 'internal'),
+            ], limit=1)
+        return op_type.id if op_type else False 
          
     @api.onchange('memo_type')
     def get_default_stage_id(self):
@@ -962,7 +979,7 @@ class Memo_Model(models.Model):
                     self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                     self.memo_setting_id = ms.id
                     self.memo_type_key = self.memo_type.memo_key  
-                    picking_id = self.env.ref('stock.picking_type_internal').id
+                    picking_id = self.get_default_picking_id()
                     self.picking_type_id = picking_id
                     self.requested_department_id = self.employee_id.department_id.id
                     self.users_followers = [
@@ -1078,7 +1095,7 @@ class Memo_Model(models.Model):
             rec.write({'state': "Done"})
      
     def Cancel(self):
-        if self.employee_id.user_id.id != self.env.uid:
+        if self.env.uid not in [self.employee_id.user_id.id, self.create_uid.id]:
             raise ValidationError(
                 'Sorry!!! you are not allowed to cancel a memo not initiated by you.'
                 ) 
@@ -1087,7 +1104,7 @@ class Memo_Model(models.Model):
                 'You cannot cancel a memo that is currently undergoing management approval'
                 )
         for rec in self:
-            rec.sudo.write({
+            rec.sudo().write({
                 'state': "submit", 
                 'direct_employee_id': False, 
                 'partner_id':False, 
@@ -1215,7 +1232,7 @@ class Memo_Model(models.Model):
     
     def generate_po_from_request(self):
         if not self.user_in_stage_exists():
-            raise ValidationError("You are not allowed to generate a PO lines")
+            raise ValidationError("You are not allowed to generate a PO lines. Kindly use request item tabs to request")
         if self.mapped('po_ids').filtered(
             lambda s: s.selected and s.state not in ['draft', 'sent', 'cancel']):
             raise UserError("You cannot generate PO again")
@@ -1894,22 +1911,21 @@ class Memo_Model(models.Model):
 
     def generate_stock_material_request(self, body_msg, body):
         user = self.env.user
-        if not self.dest_location_id or not self.source_location_id or not self.picking_type_id:
+        if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
             raise ValidationError('Please enter the source or destination location and or operation type')
-        if not self.picking_type_id.company_id.id == user.company_id.id:
-            raise ValidationError('Operation type does not related to the company you are currently assigned to')
-        if not self.source_location_id.company_id.id == user.company_id.id:
-            raise ValidationError('Source Location does not related to the company you are currently assigned to')
-        if not self.dest_location_id.company_id.id == user.company_id.id:
-            raise ValidationError('Destination location does not related to the company you are currently assigned to')
+        if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
+            raise ValidationError(f'Operation type does not relate to the company {self.company_id.name} this request was initiated from')
+        if not self.source_location_id.company_id.id == self.company_id.id:
+            raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
+        if not self.dest_location_id.company_id.id == self.company_id.id:
+            raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
         stock_picking_type_out = self.picking_type_id # self.env.ref('stock.picking_type_out')
-        stock_picking = self.env['stock.picking']
+        stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
         
-        warehouse_location_id = self.env['stock.warehouse'].search([
-            ('company_id', '=', user.company_id.id) 
+        warehouse_location_id = self.env['stock.warehouse'].sudo().search([
+            ('company_id', '=', self.company_id.id) 
         ], limit=1)
-        # destination_location_id = self.env.ref('stock.stock_location_customers')
         if not existing_picking:
             vals = {
                 'scheduled_date': fields.Date.today(),
@@ -2031,6 +2047,16 @@ class Memo_Model(models.Model):
         )
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
+        
+    @api.onchange('dest_location_id')
+    def on_change_of_destination_location(self):
+        if self.dest_location_id:
+            if not self.source_location_id:
+                raise ValidationError("Please first select the source location")
+            else:
+                if self.dest_location_id.id == self.source_location_id.id:
+                    self.source_location_id = False
+                    raise ValidationError("Destination location and source location cannot be the same")
             
     def generate_vehicle_request(self, body_msg):
         # generate fleet asset
@@ -2574,6 +2600,8 @@ class Memo_Model(models.Model):
             })
       
     def view_related_record(self):
+        if self.env.uid not in [r.user_id.id for r in self.users_followers]:
+            raise ValidationError("You are not responsioble to view this")
         if self.memo_type.memo_key == "material_request":
             view_id = self.env.ref('stock.view_picking_form').id
             return self.record_to_open('stock.picking', view_id)

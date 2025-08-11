@@ -44,7 +44,7 @@ class RequestLine(models.Model):
         string="Description"
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
-    quantity_available = fields.Float(string="Qty Requested", default=1)
+    quantity_available = fields.Float(string="Qty Requested", default=0)
     amount_total = fields.Float(string="Unit Price")
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
@@ -133,12 +133,18 @@ class RequestLine(models.Model):
     def check_product_qty(self):
         if self.quantity_available and self.quantity_available > 0:
             if self.product_id and self.memo_type_key in ['material_request']:# and self.product_id.detailed_type in ['product']:
-                domain = [('company_id', '=', self.env.user.company_id.id)] 
-                warehouse_location_id = self.env['stock.warehouse'].search(domain, limit=1)
+                # domain = ['|',('company_id', '=', self.env.user.company_id.id), 
+                #           ('company_id', 'in', self.env.user.company_ids.ids)] 
+                domain = [('company_id', '=', self.company_id.id), ('branch_id', '=', self.env.user.branch_id.id)] 
+                # use the above domain because it will restrict products to warehouse company and branch 
+                warehouse_location_id = self.env['stock.warehouse'].sudo().search(domain, limit=1)
                 stock_location_id = warehouse_location_id.lot_stock_id
-                total_availability = self.env['stock.quant'].sudo()._get_available_quantity(self.product_id, stock_location_id, allow_negative=False) or 0.0
+                total_availability = self.env['stock.quant'].sudo()._get_available_quantity(
+                    self.product_id, stock_location_id, allow_negative=False) or 0.0
                 product_qty = self.quantity_available 
                 if product_qty > total_availability:
                     self.quantity_available = 0
-                    raise UserError(f"Request product quantity ({product_qty}) is lesser than the available unit ({total_availability}) in the inventory")
+                    raise UserError(f"""
+                                    Request product quantity ({product_qty}) is lesser than the available unit ({total_availability}) in the inventory. 
+                                    Contact system Admin to assign you to the warehouse of current company and current user branch where those products are located.""")
 

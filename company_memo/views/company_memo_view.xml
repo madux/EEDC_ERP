@@ -24,7 +24,7 @@
 					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
 					<button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object"/>
                     <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
-					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" />
+					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" confirm="Are you sure to cancel?"/>
 					<button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
 					<field name="computed_stage_ids" invisible="1" />
 					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
@@ -162,9 +162,12 @@
 								<field name="status_progress" widget="progressbar" string="Progress(%)"/>
 								<!-- <field name="code"/>  -->
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
-                                <field name="source_location_id" string="Source Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
-                                <field name="dest_location_id" string="Destination Location" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
-                                <field name="picking_type_id" string="Operation Type" force_save="1" domain="[('code', '=', ['internal', 'outgoing'])]" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
+                                <field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
+                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
+                                <field name="picking_type_id" string="Operation Type" force_save="1" 
+								domain="[('code', '=', ['internal', 'outgoing'])]" 
+								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
+								attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
 								   
 								<field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
@@ -188,6 +191,7 @@
 										<field name="memo_id" string="Memo" invisible="1" force_save="1" column_invisible="1"/> 
 										<field name="memo_type" string="Memo type" invisible="1" force_save="1" column_invisible="1"/> 
 										<field name="product_id" string="Product" force_save="1"
+										options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 										 attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['material_request'])], 
 										 'invisible': [('memo_type_key', 'in', ['material_request'])], 'readonly':[('state','not in',['submit','Refuse'])],'required':[('memo_type_key','in',['procurement_request', 'cash_advance', 'soe', 'vehicle_request'])], 
 										}"/> 
@@ -521,7 +525,7 @@
 								<field name="is_supervior" readonly="0" invisible="1"/>
 								<field name="supervisor_comment" string = "Supervisor Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('is_supervior','=',False)]}"/>
 							</page>
-							<page name='manager_comment' string="Manager's Comments">
+							<page name='manager_comment' string="Manager's Comments" invisible="1">
 								<field name="is_manager" readonly="0" invisible="1"/>
 								<field name="manager_comment" readonly="0" string = "Manager Comments" placeholder="Notes..." widget="html" attrs="{'readonly':[('is_manager','=',False)]}"/>
 							</page>
@@ -532,7 +536,7 @@
 							<page invisible="1">
 								<field name="computed_stage_ids" invisible="0"/>
 							</page>
-							<page name="aos" string="Admin Overview Settings" invisible="0">
+							<page name="aos" string="Overview" invisible="0">
 								<group>
 									<group>
 										
