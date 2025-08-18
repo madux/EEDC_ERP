@@ -39,7 +39,7 @@
         </record>
 
         <record id="memo_category_metering" model="memo.category">
-            <field name="name">Metering</field>
+            <field name="name">Metering/PPM</field>
             <field name="category_type">helpdesk</field>
         </record>
 

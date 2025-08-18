@@ -4,9 +4,11 @@ from odoo.exceptions import ValidationError
 
 class Forward_Wizard(models.TransientModel):
     _name = "memo.foward"
+    _description = "memo forward"
 
     resp = fields.Many2one('res.users', 'Current Sender')
     memo_record = fields.Many2one('memo.model','Memo Reference',)
+    stage_id = fields.Many2one('memo.stage', string="Stage at Time of Forward", readonly=True)
     description_two = fields.Text('Comment')
     date = fields.Datetime('Date', default=lambda self: fields.datetime.now())#, default=fields.Datetime.now())
     direct_employee_id = fields.Many2one('hr.employee', 'Direct To')
@@ -66,6 +68,13 @@ class Forward_Wizard(models.TransientModel):
     #         raise ValidationError('Please select an Employee to Direct To')
     #     next_stage_id = self.get_next_stage_artifact()
     #     return self.memo_record.confirm_memo(self.direct_employee_id.name, msg)#, next_stage_id[1])
+
+    @api.model
+    def default_get(self, fields):
+        res = super().default_get(fields)
+        if 'stage_id' not in res:
+            res['stage_id'] = self.env.context.get('default_stage_id')
+        return res
     
     def forward_memo(self): # Always available, 
         if self.memo_record.memo_type.memo_key == "Payment":

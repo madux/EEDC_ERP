@@ -62,6 +62,7 @@
         # 'covid_consumables/oeha_covid_consumables_views.xml',
         'pricelist/product_pricelist_views.xml',
         'account/security/ir_rule.xml',
+        'stock/security/ir_rule.xml',
     ],
     # 'assets': {
     #     'web.assets_backend': [

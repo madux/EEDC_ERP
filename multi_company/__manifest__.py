@@ -14,7 +14,9 @@
     "data": [
         # 'security/ir.model.access.csv',
         'security/security.xml',
+        'security/rule.xml',
         # 'views/ir.model.access.csv',
+        'data/res_company_data.xml'
     ],
     # 'assets': {'web.assets_backend': [
     #     '/eha_website_sale/static/js/membership_subscription.js',

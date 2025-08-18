@@ -785,7 +785,7 @@ class Memomodel(models.Model):
         # compute="compute_related_user_company"
     )
     
-    # @api.depends('employee_id')
+    # @api.depends('user_id')
     # def compute_related_user_company(self):
     #     for rec in self:
     #         current_company = rec.company_id if rec.company_id else False 

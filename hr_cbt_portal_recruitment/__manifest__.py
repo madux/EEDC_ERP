@@ -31,9 +31,11 @@
         'views/menu_inheritance.xml',
         'views/hr_job_views.xml',
         'views/hr_applicant_view.xml',
+        'views/hr_applicant_pool.xml',
         'views/career.xml',
         'static/src/xml/website_hr_recruitment_templates.xml',
         'static/src/xml/hr_documentation_request.xml',
+        'static/templates/hr_applicant_pool_form_template.xml',
         'views/hr_employee.xml',
         'views/hr_recruitment_request.xml',
         'views/hr_recruitment_stage_inherit.xml',
@@ -67,6 +69,8 @@
         'web.assets_frontend': [
         '/hr_cbt_portal_recruitment/static/src/js/recruitment_apply_form.js',
         '/hr_cbt_portal_recruitment/static/src/js/documentation_request.js',
+        '/hr_cbt_portal_recruitment/static/src/css/hr_applicant_pool_form_templates.css',
+        '/hr_cbt_portal_recruitment/static/src/js/hr_applicant_pool_form_templates.js',
     ]},
     'qweb': [
         # 'static/src/xml/custom_template.xml',

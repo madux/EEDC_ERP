@@ -17,14 +17,14 @@
                                 <field name="memo_type" required="1"/> 
                                 <field name="memo_key" required="1"/> 
                                 <field name="active" default="1" readonly="0"/> 
-                                <field name="department_id" required="0" options="{'no_create':True, 'no_open': False}"/> 
+                                <field name="department_id" required="1" options="{'no_create':True, 'no_open': False}"/> 
                                 <field name="memo_category_id" required="0" options="{'no_create':True, 'no_open': False}"/> 
                             </group>
                             <group>
                                 <field name="prefix_code" string="Prefix Code" placeholder="e.g PF for project file"/>
                                 <field name="department_code" string="Department suffix" placeholder="K, Y, A"/>
                                 <field name="approver_ids" string="Employees for Follow up" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
-                                <field name="company_ids" string="Allow companies" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                                <field name="company_ids" required="1" string="Allow companies" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                                 <field name="allowed_for_company_ids" string="Allow Contact" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                                 <field name="send_to_initiator_on_refusal"/>
                                 <field name="allow_multi_vending_on_po"/>

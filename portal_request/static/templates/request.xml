@@ -152,9 +152,9 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                     <input type="number" class="d-none form-control s_website_form_input" 
                                                     name="selectedRequestOptionId" id="selectedRequestOptionId"/>
-                                                    <input type="number" class="form-control s_website_form_input" 
+                                                    <input type="number" class="d-none form-control s_website_form_input" 
                                                     name="selectConfigOptionId" id="selectConfigOptionId"/>
-                                                    <input type="text" class="form-control s_website_form_input" 
+                                                    <input type="text" class="d-none form-control s_website_form_input" 
                                                     name="selectRequestOption" id="selectRequestOption" placeholder="request option eg soe"/>
                                                 </label>
                                                 <div class="col-sm">
@@ -168,7 +168,7 @@
                                                             </option>
                                                         </t> 
                                                     </select>
-                                                    <select name="selectRequestOption2" id="selectRequestOption2" required="required" data-init="" class="form-control" labelfor="Request Option">
+                                                    <select name="selectRequestOption2" id="selectRequestOption2" required="required" data-init="" class="d-none form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="memo_key_ids" t-as="key">
                                                             <!-- <option t-att-value="key.memo_key"> -->

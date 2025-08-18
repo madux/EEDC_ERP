@@ -78,7 +78,9 @@ class HREmployee(models.Model):
     mother_name = fields.Char(string="Mother's Name")
     mother_phone = fields.Char(string="Mother's Phone")
     manager = fields.Boolean(string="Is a Manager")
-
+    query_number = fields.Integer(string="Query", copy=False, compute="compute_number_queries") 
+    warning_number = fields.Integer(string="Warning", copy=False, compute="compute_number_warning") 
+    
     def transfer_employee_action(self):
         rec_ids = self.env.context.get('active_ids', [])
         employee = self.env['hr.employee']

@@ -1,240 +1,169 @@
 <odoo>
     <data>
-        <template name="memo_request_helpdesk_success_template" id="memo_request_helpdesk_success_template">
-            <t t-call="website.layout">
-                <div id="wrap" class="oe_structure oe_empty h-100">
-                    <div class="container d-flex flex-column justify-content-center h-70">
-                        <div class="oe_structure" id="oe_structure_portal_request_thanks_you"/>
-                            <div class="row justify-content-center p-5">
-                                <h1 class="text-center">
-                                    <i class="fa fa-check-circle fa-1x text-success me-2" role="img" aria-label="Success" title="Success"/>
-                                    <span>Your ticket Number is # <span t-esc="code"/>.</span>
-                                </h1>
-                                <h1 class="text-center">Thank you for submitting your request. You will get Notification on each processes</h1>
-                            </div>
-                            <div class="oe_structure" id="oe_go_back"/>
-                            <!-- <div class="mb-5 py-2 justify-content-center col-12 s_website_form_submit button_go_back" data-name="Submit Button">
-                                <div style="width: 200px;" class="s_website_form_label"/>
-                                <a href="/my/requests" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">View Requests</a>
-                                <a href="/" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text oe_right">Go Back</a>
-                            </div> -->
-                    </div>
-                </div>
-            </t>
-        </template>
-
-        <template id="memo_helpdesk_form_template" name="Ticket form">
+        <template id="memo_helpdesk_form_template" name="Ticket Form">
             <t t-call="portal.portal_layout">
                 <t t-set="wrapwrap_classes" t-value="'o_portal_bg_dark'"/>
-                    <section class="s_website_form pt16 pb16 o_colored_level memo-request-form" id="memo-request-form" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
-                    <div class="navbar-light  py-0 mb-2">
-                        <!-- <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
-                            Back
-                        </a> -->
-                    </div>
-                    <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
-                        <div class="row mt16 o_project_portal_sidebar">
-                            <div id="request_content" class="col-12 col-lg justify-content-end">
-                                <div id="card" class="card">
-                                    <div id="card_body" class="card-body">
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Request date</strong>: <span class="col-md-6" disabled="true" t-esc="request_date"/>
-                                             <!-- t-options='{"widget": "datetime", "hide_seconds": True}'/> -->
-                                        </div><br/>
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Ticket Category</strong>:
-                                            <span class="col-md-6">
-                                                <select id="helpdesk_category_id" name="helpdesk_category_id" required="required" class="form-control s_website_form_input">
-                                                    <option value="">--Select category -- </option>
-                                                    <t t-foreach="category_ids" t-as="rt">
-                                                        <option t-att-value="rt.id">
-                                                            <span t-esc="rt.name"/>
-                                                        </option>
-                                                    </t>
-                                                </select> 
-                                            </span>
-                                        </div>
+                <section id="memo-request-form" class="memo-helpdesk-container s_website_form o_colored_level" data-snippet="s_website_form" data-name="Memo Form">
+                    <h2 class="text-center" style="color: #138496; margin-bottom: 32px;">Helpdesk Ticket Request</h2>
 
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Ticket Type</strong>:
-                                            <span class="col-md-6">
-                                                <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required" class="form-control s_website_form_input" labelfor="Request type" >
-                                                    <option id="memo_config_select_option" selected="selected" value=""></option>
-                                                    <!-- <t t-foreach="category_ids" t-as="rt">
-                                                        <option t-att-value="rt.id">
-                                                            <span t-esc="rt.name"/>
-                                                        </option>
-                                                    </t> -->
-                                                </select> 
-                                            </span>
-                                        </div>
-                                        
-                                         
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Title</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" name="title" required="true" id="title" labelfor="Title"/>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Customer Name</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" name="customer_name" required="true" id="customer_name" labelfor="Customer name"/>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Customer Phone</strong>: 
-                                            <span class="col-md-6">
-                                                    <input type="tel" class="form-control s_website_form_input" required="required" name="customer_phone" data-fill-with="phone" id="customer_phone" labelfor="Customer Phone"/>
-                                            </span>
-                                        </div>
+                    <form id="msform" method="post" enctype="multipart/form-data"
+                          class="memo-helpdesk-form o_mark_required"
+                          data-mark="*" data-pre-fill="true">
 
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Customer Email</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="email" class="form-control s_website_form_input" required="required" name="customer_email" data-fill-with="email" id="customer_email" labelfor="Customer Email"/>
-                                            </span>
-                                        </div> 
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Customer Address</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" required="required" name="customer_address1" data-fill-with="email" id="customer_address1" labelfor="Customer Address"/>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4 d-none">
-                                            <strong class="col-md-4">Customer Address</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" name="customer_address2" data-fill-with="email" id="customer_address2" labelfor="Customer Address 2"/>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">State</strong>:
-                                            <span class="col-md-6">
-                                                <select id="customer_state_id" name="customer_state_id" required="required" class="form-control s_website_form_input" labelfor="State">
-                                                    <option selected="selected" value="">--select--</option>
-                                                    <t t-foreach="state_ids" t-as="st">
-                                                        <option t-att-value="st.id">
-                                                            <span t-esc="st.name"/>
-                                                        </option>
-                                                    </t>
-                                                </select>
-                                            </span>
-                                        </div> 
-                                        
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">District</strong>:
-                                            <span class="col-md-6">
-                                                <select id="district_id" name="district_id" required="required" class="form-control s_website_form_input" labelfor="District">
-                                                    <option selected="selected" value="">--select--</option>
-                                                    <t t-foreach="district_ids" t-as="br">
-                                                        <option t-att-value="br.id">
-                                                            <span t-esc="br.name"/>
-                                                        </option>
-                                                    </t>
-                                                </select>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4 d-none">
-                                            <strong class="col-md-4">Branch</strong>:
-                                            <span class="col-md-6">
-                                                <select id="branch_id" name="branch_id" required="required" class="form-control s_website_form_input" labelfor="Branch / District">
-                                                    <option selected="selected" value="">--select--</option>
-                                                    <t t-foreach="branch_ids" t-as="br">
-                                                        <option t-att-value="br.id">
-                                                            <span t-esc="br.name"/>
-                                                        </option>
-                                                    </t>
-                                                </select>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Meter type</strong>:
-                                            <span class="col-md-6">
-                                                <select id="meter_type" name="meter_type" required="required" class="form-control s_website_form_input" labelfor="Meter type">
-                                                    <option selected="selected" value="">--select--</option>
-                                                    <option value="postpaid">
-                                                        <span>Postpaid</span>
-                                                    </option>
-                                                    <option value="prepaid">  <!-- Fixed: was "postpaid" -->
-                                                        <span>Prepaid</span>
-                                                    </option>
-                                                    <option value="direct source">
-                                                        <span>Direct Source</span>
-                                                    </option>
-                                                </select>
-                                            </span>
-                                        </div>
-                                        <!-- <div class="row mb-4">
-                                            <strong class="col-md-4">Customer / Meter No</strong>: 
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control s_website_form_input" name="customer_meter_no" required="true" id="customer_meter_no" labelfor="Customer / Meter No"/>
-                                            </span>
-                                        </div> -->
-                                        <div class="row mb-4 meter_no_field">
-                                            <strong class="col-md-4">Meter No</strong>:
-                                            <span class="col-md-6">
-                                                <input type="text"
-                                                    class="form-control s_website_form_input"
-                                                    name="meter_no"
-                                                    id="meter_no"
-                                                    labelfor="Meter No"
-                                                    placeholder="Enter Meter No"
-                                                    required="true"/>
-                                            </span>
-                                        </div>
-
-                                        <div class="row mb-4 account_no_field" style="display: none;">
-                                            <strong class="col-md-4">Customer Account No</strong>:
-                                            <span class="col-md-6">
-                                                <input type="text"
-                                                    class="form-control s_website_form_input"
-                                                    name="account_no"
-                                                    id="account_no"
-                                                    labelfor="Customer Account No"
-                                                    placeholder="Enter Account No"
-                                                    required="true"/>
-                                            </span>
-                                        </div>
-
-                                        
-                                        <!-- <strong class="col-md-4">Description:</strong>
-                                        <div class="row m-2 mb-4 mb-5" name="descriptionDiv">
-                                            <textarea class="form-control s_website_form_input" name="complaint_description" required="1" id="complaint_description" rows="2" labelfor="Description"/>
-                                        </div> -->
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Description:</strong>:
-                                            <span class="col-md-6">
-                                                <textarea class="form-control s_website_form_input" name="complaint_description" required="1" id="complaint_description" rows="2" labelfor="Description"/>
-                                            </span>
-                                        </div>
-                                        <div class="row mb-4 d-none">
-                                            <strong class="col-md-4">Deadline Date</strong>:
-                                            <span class="col-md-6">
-                                                <input type="text" class="form-control datepicker s_website_form_input" id="deadline_date" 
-                                                name="deadline_date" labelfor="Deadline Date"
-                                                />
-                                            </span>
-                                        </div>
-
-                                        <div class="row mb-4">
-                                            <strong class="col-md-4">Document</strong>:
-                                            <span class="col-md-6">
-                                                <input type="file" class="form-control s_website_form_input" name="other_docs" id="other_docs" multiple="multiple" placeholder="Hold shift / Ctrl to select multiple files"/>
-                                            </span>
-                                        </div> 
-                                        <div class="mb-0 py-2 col-12 s_website_form_submit" data-name="Submit Button">
-                                            <div style="width: 200px;" class="s_website_form_label"/>
-                                            <a href="#" role="button" class="btn btn-primary btn-lg o_default_snippet_text submit_btn center" id="submit_btn">Submit</a>
-                                            <span id="s_website_form_result"/>
-                                        </div>
-                                    </div>
-                                </div> 
-
-                            </div>
+                        <div class="form-group">
+                            <label for="request_date">Request Date</label>
+                            <input type="text" t-att-value="request_date" class="form-control s_website_form_input" readonly="1" labelfor="Request Date"/>
                         </div>
+
+                        <div class="form-group">
+                            <label for="helpdesk_category_id">Ticket Category</label>
+                            <select id="helpdesk_category_id" name="helpdesk_category_id" required="required"
+                                    class="form-control s_website_form_input" labelfor="Ticket Category">
+                                <option value="">-- Select Category --</option>
+                                <t t-foreach="category_ids" t-as="rt">
+                                    <option t-att-value="rt.id"><t t-esc="rt.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="title">Complain Title</label>
+                            <input type="text" name="title" id="title" class="form-control s_website_form_input" required="true" placeholder="Enter Title" labelfor="Title"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="helpdesk_memo_config_id">Ticket Type</label>
+                            <select id="helpdesk_memo_config_id" name="helpdesk_memo_config_id" required="required"
+                                    class="form-control s_website_form_input" labelfor="Ticket Type">
+                                <option value="">-- Select Type --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer_name">Customer Name</label>
+                            <input type="text" name="customer_name" id="customer_name" class="form-control s_website_form_input" required="true" placeholder="Enter Customer Name" labelfor="Customer Name"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer_phone">Customer Phone</label>
+                            <input type="tel" name="customer_phone" id="customer_phone" class="form-control s_website_form_input" required="true" placeholder="Enter Phone Number" labelfor="Customer Phone"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer_email">Customer Email</label>
+                            <input type="email" name="customer_email" id="customer_email" class="form-control s_website_form_input" required="true" placeholder="Enter Email" labelfor="Customer Email"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer_address1">Customer Address</label>
+                            <input type="text" name="customer_address1" id="customer_address1" class="form-control s_website_form_input" required="true" placeholder="Enter Address" labelfor="Customer Address"/>
+                        </div>
+
+                        <div class="form-group d-none">
+                            <label for="customer_address2">Customer Address (2)</label>
+                            <input type="text" name="customer_address2" id="customer_address2" class="form-control s_website_form_input"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer_state_id">State</label>
+                            <select id="customer_state_id" name="customer_state_id" class="form-control s_website_form_input" required="true" labelfor="State">
+                                <option value="">-- Select State --</option>
+                                <t t-foreach="state_ids" t-as="st">
+                                    <option t-att-value="st.id"><t t-esc="st.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="district_id">District</label>
+                            <select id="district_id" name="district_id" class="form-control s_website_form_input" required="true" labelfor="District">
+                                <option value="">-- Select District --</option>
+                                <t t-foreach="district_ids" t-as="br">
+                                    <option t-att-value="br.id"><t t-esc="br.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="form-group d-none">
+                            <label for="branch_id">Branch</label>
+                            <select id="branch_id" name="branch_id" class="form-control s_website_form_input" labelfor="Branch">
+                                <option value="">-- Select Branch --</option>
+                                <t t-foreach="branch_ids" t-as="br">
+                                    <option t-att-value="br.id"><t t-esc="br.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="meter_type">Meter Type</label>
+                            <select id="meter_type" name="meter_type" required="true" class="form-control s_website_form_input" labelfor="Meter Type">
+                                <option value="">-- Select Meter Type --</option>
+                                <option value="postpaid">Postpaid</option>
+                                <option value="prepaid">Prepaid</option>
+                                <option value="direct source">Direct Source</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group meter_no_field">
+                            <label for="meter_no">Meter No</label>
+                            <input type="text" name="meter_no" id="meter_no" class="form-control s_website_form_input" placeholder="Enter Meter No" required="true" labelfor="Meter No"/>
+                        </div>
+
+                        <div class="form-group account_no_field" style="display: none;">
+                            <label for="account_no">Customer Account No</label>
+                            <input type="text" name="account_no" id="account_no" class="form-control s_website_form_input" placeholder="Enter Account No" labelfor="Customer Account No"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="complaint_description">Description</label>
+                            <textarea name="complaint_description" id="complaint_description" class="form-control s_website_form_input" rows="3" required="true" placeholder="Enter complaint details..." labelfor="Description"></textarea>
+                        </div>
+
+                        <div class="form-group d-none">
+                            <label for="deadline_date">Deadline Date</label>
+                            <input type="text" name="deadline_date" id="deadline_date" class="form-control datepicker s_website_form_input" labelfor="Deadline Date"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="other_docs">Upload Supporting Document</label>
+                            <input type="file" name="other_docs" id="other_docs" class="form-control s_website_form_input" multiple="multiple"/>
+                            <small class="form-text text-muted">Hold Ctrl/Shift to select multiple files</small>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <a href="#" role="button" class="btn btn-primary submit_btn" id="submit_btn">Submit</a>
+                        </div>
+
                     </form>
                 </section>
             </t>
         </template>
+
+        <template name="memo_request_helpdesk_success_template" id="memo_request_helpdesk_success_template">
+            <t t-call="website.layout">
+                <div class="memo-helpdesk-container" style="text-align: center; padding: 48px 30px;">
+                    <div style="margin-bottom: 24px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#4BB543" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="#E9F8ED"/>
+                            <path d="M8.5 13.5l2.5 2.5 4.5-5.5" fill="none" stroke="#4BB543" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h2 style="color: #138496; margin-bottom: 16px;">Thank You!</h2>
+                    <p style="font-size: 18px; color: #555; margin-bottom: 24px;">
+                        Your ticket has been <strong>successfully submitted</strong>.<br/>
+                        Ticket Number: <strong>#<span t-esc="code"/></strong>
+                    </p>
+                    <div style="margin-bottom: 12px;">
+                        <a t-attf-href="/customerTicketStatus?code=#{code}" style="color: #138496; font-size: 16px; text-decoration: none;">
+                            <i class="fa fa-arrow-right me-1"></i> Click to check your request status...
+                        </a>
+                    </div>
+                    <a href="/customerTicket" class="btn btn-primary" style="padding: 10px 28px; font-size: 16px; border-radius: 6px; text-decoration: none;">
+                        Submit Another
+                    </a>
+                </div>
+            </t>
+        </template>
+
     </data>
 </odoo>

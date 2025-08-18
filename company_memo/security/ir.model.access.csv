@@ -1,5 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_id_main_memo,access_name_main_memo,model_memo_model,,1,1,1,1
+access_id_main_memo,access_name_main_memo,model_memo_model,base.group_user,1,1,1,1
 access_id_memo_purchase,access_name_memo_purchase,purchase.model_purchase_order,company_memo.mainmemo_officer,1,1,1,0
 access_id_memo_back,access_name_memo_back,model_memo_back,,1,1,1,0
 access_id_memo_foward,access_name_memo_foward,model_memo_foward,,1,1,1,0
@@ -24,6 +24,8 @@ access_memo_dialog,memo_dialog_name,company_memo.model_memo_dialog,,1,1,1,1
 access_memo_fleet_maintenance,memo_fleet_maintenance_name,company_memo.model_memo_fleet_maintenance,,1,1,1,1
 access_doc_mgt_config_admin,doc_mgt_config_admin,company_memo.model_doc_mgt_config,documents.group_documents_manager,1,1,1,1
 access_doc_mgt_config_wizard_admin,doc_mgt_config_wizard_admin,company_memo.model_doc_mgt_config_wizard,documents.group_documents_manager,1,1,1,1
+access_memo_sub_stage_user,memo_sub_stage_name,company_memo.model_memo_sub_stage,,1,1,0,0
+access_memo_sub_stage_admin,memo_sub_stage_admin_name,company_memo.model_memo_sub_stage,base.group_system,1,1,1,1
 
 access_doc_mgt_config_user,doc_mgt_config_user,company_memo.model_doc_mgt_config,,1,1,0,0
 access_admin_memo_stage_document_line,admin_memo_stage_document_line_name,company_memo.model_memo_stage_document_line,base.group_system,1,1,1,1

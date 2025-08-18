@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="1">
+    <record id="partner_main_power" model="res.partner">
+      <field name="name">MAIN POWER</field>
+      <field name="is_company">True</field>
+      <field name="street">Enugu</field>
+      <field name="city">Enugu</field>
+      <!-- <field name="state_id" ref="__export__.res_country_state_683_dcf0acdb"/> -->
+      <field name="country_id" ref="base.ng"/>
+    </record>
+
+    <record id="partner_firstpower" model="res.partner">
+      <field name="name">FIRSTPOWER</field>
+      <field name="is_company">True</field>
+      <field name="street">Anambra</field>
+      <field name="city">Awka</field>
+    </record>
+
+    <record id="partner_new_era" model="res.partner">
+      <field name="name">NEW ERA</field>
+      <field name="is_company">True</field>
+      <field name="street">Abia</field>
+      <field name="city">Umuahia</field>
+    </record>
+
+    <record id="partner_transpower" model="res.partner">
+      <field name="name">TRANSPOWER</field>
+      <field name="is_company">True</field>
+      <field name="street">Imo</field>
+      <field name="city">Owerri</field>
+    </record>
+
+    <record id="partner_east_land" model="res.partner">
+      <field name="name">EAST LAND</field>
+      <field name="is_company">True</field>
+      <field name="street">Ebonyi</field>
+      <field name="city">Ebonyi</field>
+    </record>
+
+    <record id="partner_enugu_edp" model="res.partner">
+      <field name="name">EEDC Holding Company (Holdco)</field>
+      <field name="is_company">True</field>
+      <field name="street">Enugu</field>
+      <field name="city">Enugu</field>
+    </record>
+
+    
+    <record id="company_main_power" model="res.company">
+      <field name="name">MAIN POWER</field>
+      <field name="partner_id" ref="partner_main_power"/>
+      <field name="street">Enugu</field>
+    </record>
+
+    <record id="company_firstpower" model="res.company">
+      <field name="name">FIRSTPOWER</field>
+      <field name="partner_id" ref="partner_firstpower"/>
+      <field name="street">Anambra</field>
+    </record>
+
+    <record id="company_new_era" model="res.company">
+      <field name="name">NEW ERA</field>
+      <field name="partner_id" ref="partner_new_era"/>
+      <field name="street">Abia</field>
+    </record>
+
+    <record id="company_transpower" model="res.company">
+      <field name="name">TRANSPOWER</field>
+      <field name="partner_id" ref="partner_transpower"/>
+      <field name="street">Imo</field>
+    </record>
+
+    <record id="company_east_land" model="res.company">
+      <field name="name">EAST LAND</field>
+      <field name="partner_id" ref="partner_east_land"/>
+      <field name="street">Ebonyi</field>
+    </record>
+
+    <record id="company_enugu_edp" model="res.company">
+      <field name="name">EEDC Holding Company (Holdco)</field>
+      <field name="partner_id" ref="partner_enugu_edp"/>
+      <field name="street">Enugu</field>
+    </record>
+
+  </data>
+</odoo>

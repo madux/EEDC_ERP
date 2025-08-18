@@ -20,6 +20,9 @@
 			<field name="implied_ids" eval="[(6, 0, [ref('company_memo.mainmemo_officer')])]" />
         </record>
 
+        
+        	
+
 	    <record id="mainmemo_audit" model="res.groups">
             <field name="name">Memo Auditor</field>
             <field name="category_id" ref="category_main_memo_app_group"/>

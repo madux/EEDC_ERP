@@ -21,6 +21,7 @@ DEFAULT_STAGES = [
 
 class MemoSubStageLine(models.Model):
     _name = "memo.sub.stage"
+    _description = "memo sub stage"
 
     name = fields.Char("Name", required=True)
     code = fields.Char("Name", required=False)
@@ -131,7 +132,8 @@ class MemoSubStageLine(models.Model):
 
 class MemoStageDocumentLine(models.Model):
     _name = "memo.stage.document.line"
-
+    _description = "memo.stage.document.line"
+    
     name = fields.Char("Name", required=True)
     code = fields.Char("Code", required=False)
     compulsory = fields.Boolean("Compulsory", default=False)
@@ -147,7 +149,7 @@ class MemoStageDocumentLine(models.Model):
 
 class MemoStageInvoiceLine(models.Model):
     _name = "memo.stage.invoice.line"
-
+    _description = "MSIL"
     name = fields.Char("Name", required=True)
     compulsory = fields.Boolean("Is Compulsory", default=False)
     memo_invoice_id = fields.Many2one(
@@ -318,7 +320,6 @@ class MemoConfig(models.Model):
         domain=lambda self: self.get_publish_memo_types()
         )
     memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
-    
     name = fields.Char(
         string='Name', 
         copy=False, 
@@ -367,7 +368,7 @@ class MemoConfig(models.Model):
     department_id = fields.Many2one(
         'hr.department',
         string='Department',
-        required=True,
+        required=False,
         copy=False
         )
     prefix_code = fields.Char(
@@ -454,10 +455,24 @@ class MemoConfig(models.Model):
     def _check_duplicate_memo_type(self):
         memo = self.env['memo.config'].sudo()
         for rec in self:
-            duplicate = memo.search([('memo_type', '=', rec.memo_type.id), ('memo_key', '!=', 'helpdesk'), ('department_id', '=', rec.department_id.id)], limit=2)
-            if len([r for r in duplicate]) > 1:
-                raise ValidationError("A memo type has already been configured for this record, kindly locate it and select the approvers")
-           
+            duplicate = memo.search([('memo_type', '=', rec.memo_type.id),
+                                      ('memo_key', '!=', 'helpdesk'), 
+                                      ('department_id', '=', rec.department_id.id),
+                                      ('id', '!=', rec.id),
+                                      ], limit=1)
+            if duplicate:
+                company_found = [
+                        result for result in rec.company_ids.ids if result in duplicate.company_ids.ids 
+                        ]
+                
+                if company_found:
+                    #  if len([r for r in duplicate]) > 1:
+                    raise ValidationError(
+                    f"""A memo config with type {rec.memo_type.name}
+                    and department: {rec.department_id.name}
+                    has already been configured for this companies 
+                    {','.join([self.env['res.company'].sudo().browse([r]).name for r in company_found])}, 
+                    kindly discard locate it and select the approvers""")
 
     def auto_configuration(self):
         # TODO: To be used to dynamically generate configurations 

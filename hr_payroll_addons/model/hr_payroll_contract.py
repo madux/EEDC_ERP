@@ -6,6 +6,7 @@ class HREmployee(models.Model):
     _inherit = "hr.employee"
     
     monthly_wage = fields.Float(string="Monthly Wage")
+    annual_salary = fields.Float(string="Annual Salary")
     
     def create_employee_contract_action(self):
         rec_ids = self.env.context.get('active_ids', [])

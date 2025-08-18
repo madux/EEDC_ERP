@@ -1,7 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-
-
+    
+    
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
@@ -13,7 +13,7 @@ class StockPicking(models.Model):
         res = super(StockPicking, self)._action_done()
         # self.update_memo_status('Done')
         if self.memo_id:
-            self.memo_id.is_request_completed = True
+            # self.memo_id.is_request_completed = True # Done remove because it will set the process to done automatically 
             self.sudo().memo_id.update_final_state_and_approver()
             self.sudo().memo_id.update_status_badge()
         return res
@@ -22,7 +22,7 @@ class StockPicking(models.Model):
         res = super(StockPicking, self).button_validate()
         # self.update_memo_status('Done')
         if self.memo_id:
-            self.memo_id.is_request_completed = True
+            self.memo_id.is_request_completed = True # Done remove because it will set the process to done automatically 
             self.sudo().memo_id.update_final_state_and_approver()
             self.sudo().memo_id.update_status_badge()
         return res

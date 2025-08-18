@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="hr_view_employee_inherited_form_for_hraddons">
+            <field name="name">hr.employee</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                 
+                <xpath expr="//div[@name='button_box']" position="inside">
+                     <button name="register_employee_query" type="object" groups="hr.group_hr_user" class="oe_stat_button" icon="fa-fire">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="query_number" readonly="1" force_save="1"/>
+                            </span>
+                            <span class="o_stat_text">
+                                Queries
+                            </span>
+                        </div>
+                    </button>
+                    <button name="register_employee_warning" type="object" groups="hr.group_hr_user" class="oe_stat_button" icon="fa-exclamation-triangle">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="warning_number" readonly="1" force_save="1"/>
+                            </span>
+                            <span class="o_stat_text">
+                                Warnings
+                            </span>
+                        </div>
+                    </button>
+                </xpath>
+
+                <xpath expr="//notebook/page[@name='public']" position="after">
+                    <page name="employee_query_history" string="Disciplinary / Staff Action" readonly="1">
+                        <separator string="Queries"/>
+                        <field name="employee_query_history" 
+                            required="1" options="{'no_quick_create':True}">
+                            <tree string="-" delete="false" create="false">
+                                <field name="name" required="1"/>
+                                <field name="employee_id" required="1"/>
+                                <field name="query_date" required="1"/>
+                                <field name="query_approved_date" required="1"/>
+                                <field name="state" required="1"/>
+                                <button 
+                                    name="button_approve" 
+                                    string="Approve" 
+                                    class="oe_highlight btn-sm" 
+                                    type="object"
+                                    attrs="{'invisible': [('state', '!=', 'draft')]}"
+                                    comfirm="Are you sure you want approve" 
+                                    groups="hr.group_hr_manager"
+                                />
+                                <button 
+                                    name="button_reverse" 
+                                    string="Reverse" 
+                                    class="btn-sm" 
+                                    type="object"
+                                    attrs="{'invisible': [('state', '!=', 'approve')]}"
+                                    comfirm="Are you sure you want to reverse" 
+                                    groups="hr.group_hr_manager"
+                                />
+                            </tree>
+                        </field>
+                        <separator string="Warnings"/>
+
+                        <field name="employee_warning_history" 
+                            required="1" options="{'no_quick_create':True}">
+                            <tree string="-" delete="false" create="false">
+                                <field name="name" required="1"/>
+                                <field name="employee_id" required="1"/>
+                                <field name="warning_date" required="1"/>
+                                <field name="warning_approved_date" required="1"/>
+                                <field name="state" required="1"/>
+                                <button 
+                                    name="button_approve" 
+                                    string="Approve" 
+                                    class="oe_highlight btn-sm" 
+                                    type="object"
+                                    attrs="{'invisible': [('state', '=', 'draft')]}"
+                                    comfirm="Are you sure you want approve" 
+                                    groups="hr.group_hr_manager"
+                                />
+                                <button 
+                                    name="button_reverse" 
+                                    string="Reverse" 
+                                    class="btn-sm" 
+                                    type="object"
+                                    attrs="{'invisible': [('state', '=', 'approve')]}"
+                                    comfirm="Are you sure you want to reverse" 
+                                    groups="hr.group_hr_manager"
+                                />
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- <record id="ir_action_server_hr_transfer" model="ir.actions.server">
+			<field name="name">Employee(s) Transfer</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="binding_model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="state">code</field>
+            <field name="groups_id" eval="[(6, 0, [
+			ref('base.group_system'),
+            ref('hr_pms.group_pms_officer_id'),
+			])]"/>
+            <field name="code">action=model.transfer_employee_action()</field>
+        </record> -->
+
+    </data>
+</odoo>

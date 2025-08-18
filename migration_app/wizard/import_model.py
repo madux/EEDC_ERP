@@ -482,6 +482,7 @@ class ImportRecords(models.TransientModel):
 
 class MigrationDialogModel(models.TransientModel):
     _name="hr.migration.confirm.dialog"
+    _description = "Migration dialog"
     
     def get_default(self):
         if self.env.context.get("message", False):

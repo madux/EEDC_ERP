@@ -15,8 +15,10 @@
         'data/state_data.xml',
         'data/lga_data.xml',
         'data/district.xml',
+        'data/stock_location.xml',
         'views/hr_memo_view.xml',
-        'views/res_users_view.xml'
+        'views/res_users_view.xml',
+        'views/stock.xml'
         # 'security/security_view.xml',
         # 'data/eha_base_extension_data.xml',
         # 'data/email_template.xml',
