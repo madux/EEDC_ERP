@@ -663,7 +663,9 @@ class Memo_Model(models.Model):
                 return True
             
     def get_user_configs(self):
-        employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
+        # employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
+        #     [('user_id', '=', self.env.uid)], limit=1)
+        employee = self.env['hr.employee'].sudo().search(
             [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
@@ -678,7 +680,7 @@ class Memo_Model(models.Model):
             if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
                 cds.append(rec.id)
         
-        config_ids = self.env['memo.config'].search([('id', 'in', cds)])
+        config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
         return config_ids
     
     @api.model
@@ -728,7 +730,7 @@ class Memo_Model(models.Model):
                 self.memo_type = ms.memo_type
                 self.has_sub_stage = True if memo_setting_stage.sub_stage_ids else False
                 self.users_followers = [
-                    (4, self.employee_id.administrative_supervisor_id.id),
+                    (4, self.sudo().employee_id.administrative_supervisor_id.id),
                     ]
                 invoices, documents = self.generate_required_artifacts(self.stage_id, self, '')
                 if invoices:
@@ -1913,6 +1915,8 @@ class Memo_Model(models.Model):
         user = self.env.user
         if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
             raise ValidationError('Please enter the source or destination location and or operation type')
+        # if self.sudo().dest_location_id and self.sudo().dest_location_id.branch_id.id not in self.employee_id.user_id.branch_id.id:
+        #     raise ValidationError("Destination location Branch does not correspond to the requester's branch")
         if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Operation type does not relate to the company {self.company_id.name} this request was initiated from')
         if not self.source_location_id.company_id.id == self.company_id.id:

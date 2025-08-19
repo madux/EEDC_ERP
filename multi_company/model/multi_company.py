@@ -6,6 +6,19 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+class HrEmployee(models.Model):
+    _inherit = "hr.employee"
+    _description = "HR model - multi_company"
+
+    company_id = fields.Many2one(
+        'res.company',
+        string="Company",
+        store=True,
+        default=lambda self: self.env.user.company_id.id,
+        related="user_id.company_id",
+    )
+ 
+ 
 class Transformer(models.Model):
     _inherit = "transformer"
     _description = "transformer model for multi-company"
@@ -20,7 +33,6 @@ class Transformer(models.Model):
         string="Legacy system ID", 
     )
 
-    
 
 class Auditloglog(models.Model):
     _inherit = "auditlog.log"

@@ -15,7 +15,7 @@
         'data/state_data.xml',
         'data/lga_data.xml',
         'data/district.xml',
-        'data/stock_location.xml',
+        # 'data/stock_location.xml',
         'views/hr_memo_view.xml',
         'views/res_users_view.xml',
         'views/stock.xml'
