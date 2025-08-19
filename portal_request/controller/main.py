@@ -129,7 +129,7 @@ class PortalRequest(http.Controller):
 		vals = {
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
 			# "district_ids": request.env["multi.branch"].sudo().search([]),
-			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
+			"leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
 			"memo_key_ids": [{'id': 0, 'name': ''}],
 			"config_type_ids": memo_configs, # self.get_user_configs ,
 		}
