@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- views/memo_view.xml - Modify your existing Purchase Order page -->
+
+    <record id="view_memo_form_rfq_upload" model="ir.ui.view">
+        <field name="name">memo.model.form.rfq.upload</field>
+        <field name="model">memo.model</field>
+        <field name="inherit_id" ref="company_memo.memo_model_form_view_3"/>  
+        <field name="arch" type="xml">
+            
+            <!-- Add RFQ fields to the form (hidden) -->
+            <xpath expr="//field[@name='memo_type_key']" position="after">
+                <field name="rfq_uploaded" invisible="1"/>
+                <field name="rfq_upload_date" invisible="1"/>
+            </xpath>
+            
+            <!-- Add RFQ Upload Section at the top of Purchase Order page -->
+            <xpath expr="//page[@name='PurchaseOrder']" position="inside">
+                
+                <!-- RFQ Upload Section for procurement requests -->
+                <div attrs="{'invisible': [('memo_type_key', '!=', 'procurement_request')]}" class="mb16">
+                    <group string="RFQ Management" class="oe_border_info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button name="download_rfq_template" 
+                                        string="Download RFQ Template" 
+                                        type="object" 
+                                        class="btn-info oe_highlight"
+                                        icon="fa-download"
+                                        help="Download Excel template for RFQ data"/>
+                            </div>
+                            <div class="col-md-6">
+                                <button name="action_upload_rfq_wizard" 
+                                        string="Upload RFQ Excel" 
+                                        type="object" 
+                                        class="btn-success oe_highlight"
+                                        icon="fa-upload"
+                                        attrs="{'invisible': [('state', 'not in', ['submit', 'Sent'])]}"
+                                        help="Upload and process RFQ data from Excel"/>
+                            </div>
+                        </div>
+                        
+                        <!-- RFQ Upload Status -->
+                        <div class="row mt8" attrs="{'invisible': [('rfq_uploaded', '=', False)]}">
+                            <div class="col-md-12">
+                                <div class="alert alert-success" style="margin-bottom: 0;">
+                                    <i class="fa fa-check-circle"/> 
+                                    <strong>RFQ uploaded successfully on </strong>
+                                    <field name="rfq_upload_date" readonly="1" widget="datetime" style="display: inline;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </group>
+                    
+                    <!-- Separator between RFQ section and PO generation -->
+                    <separator string="Purchase Order Generation" class="mt16 mb8"/>
+                </div>
+                
+            </xpath>
+            
+            <!-- Add RFQ source field to the po_ids tree view -->
+            <xpath expr="//field[@name='po_ids']//tree//field[@name='amount_total']" position="after">
+                <field name="rfq_source" string="Source" widget="badge" 
+                       decoration-info="rfq_source == 'manual'" 
+                       decoration-success="rfq_source == 'excel_upload'"
+                       decoration-warning="rfq_source == 'system_generated'"
+                       optional="show"/>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <!-- RFQ Upload Wizard View -->
+    <record id="view_rfq_upload_wizard_form" model="ir.ui.view">
+        <field name="name">rfq.upload.wizard.form</field>
+        <field name="model">rfq.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload RFQ Excel">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Upload RFQ Excel File</h1>
+                    </div>
+                    
+                    <group>
+                        <field name="memo_id" readonly="1"/>
+                        <field name="rfq_excel_file" widget="binary" filename="rfq_excel_filename" required="1"/>
+                        <field name="rfq_excel_filename" invisible="1"/>
+                    </group>
+                    
+                    <div class="alert alert-info mt16">
+                        <strong>Instructions:</strong>
+                        <ul>
+                            <li>Download the RFQ template first if you haven't already</li>
+                            <li>Fill in all required columns in the Excel file</li>
+                            <li>Make sure vendor information is accurate</li>
+                            <li>Product codes should match existing products or new ones will be created</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning mt8">
+                        <strong>Required Columns:</strong><br/>
+                        VENDOR CODE, VENDOR NAME, VENDOR EMAIL, VENDOR PHONE, VENDOR ADDRESS, 
+                        PRODUCT CODE, PRODUCT NAME, QTY TO SUPPLY, PRICE PER QUANTITY
+                    </div>
+                </sheet>
+                
+                <footer>
+                    <button name="action_download_template" 
+                            string="Download Template" 
+                            type="object" 
+                            class="btn-secondary"/>
+                    <button name="action_upload_rfq" 
+                            string="Upload &amp; Process" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action for RFQ Upload Wizard -->
+    <record id="action_rfq_upload_wizard" model="ir.actions.act_window">
+        <field name="name">Upload RFQ Excel</field>
+        <field name="res_model">rfq.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_memo_id': active_id}</field>
+    </record>
+</odoo>
