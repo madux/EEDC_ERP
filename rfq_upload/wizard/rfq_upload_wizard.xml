@@ -1,161 +1,160 @@
-<!-- wizard/rfq_upload_wizard.xml -->
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-   
-    <!-- RFQ Upload Wizard Form View -->
     <record id="view_rfq_upload_wizard_form" model="ir.ui.view">
         <field name="name">rfq.upload.wizard.form</field>
         <field name="model">rfq.upload.wizard</field>
         <field name="arch" type="xml">
-            <form string="Upload RFQ Excel">
+            <form string="RFQ Upload Wizard">
                 <sheet>
                     <div class="oe_title">
                         <h1>
                             <i class="fa fa-upload text-primary"/>
-                            Upload RFQ Excel File
+                            RFQ Upload Wizard
                         </h1>
-                        <p class="text-muted">Upload vendor quotations from Excel file</p>
+                        <p class="text-muted">Download template with your request items, get vendor quotations, then upload to create purchase orders</p>
                     </div>
-                   
-                    <!-- State indicator -->
+                    
                     <div class="oe_button_box" name="button_box">
                         <field name="state" widget="statusbar" statusbar_visible="draft,validating,validated,processing,done"/>
                     </div>
-                   
+                    
                     <group>
                         <group>
-                            <field name="memo_id" readonly="1" widget="selection"/>
-                        </group>
-                        <group>
+                            <field name="memo_id" readonly="1"/>
                             <field name="rfq_excel_file"
                                    widget="binary"
                                    filename="rfq_excel_filename"
-                                   required="1"
-                                   accept=".xlsx,.xls"
+                                   accept=".xlsx,.xls,.csv"
                                    attrs="{'readonly': [('state', 'in', ['processing', 'done'])]}"/>
                             <field name="rfq_excel_filename" invisible="1"/>
                         </group>
+                        <group>
+                            <!-- <label for="memo_details" string="Memo Details"/>
+                            <div name="memo_details">
+                                <div><strong>Request Number:</strong> <field name="memo_id" readonly="1" nolabel="1" widget="char" attrs="{'invisible': [('memo_id', '=', False)]}"/></div>
+                                <div><strong>Items in Request:</strong> <span class="text-muted">Will be pre-populated in template</span></div>
+                            </div> -->
+                        </group>
                     </group>
 
-                    <!-- Processing Options -->
                     <group string="Processing Options" attrs="{'invisible': [('state', 'in', ['processing', 'done'])]}">
                         <group>
-                            <field name="validate_only"/>
-                            <field name="create_missing_products"/>
+                            <field name="validate_only" help="Check this to only validate the file without creating purchase orders"/>
+                            <field name="create_missing_products" attrs="{'invisible': [('validate_only', '=', True)]}"/>
                         </group>
                         <group>
-                            <field name="create_missing_vendors"/>
-                            <field name="group_by_vendor"/>
+                            <field name="create_missing_vendors" attrs="{'invisible': [('validate_only', '=', True)]}"/>
+                            <field name="group_by_vendor" attrs="{'invisible': [('validate_only', '=', True)]}"/>
                         </group>
                     </group>
-                   
+                    
                     <notebook>
                         <page name="instructions" string="Instructions" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
                             <div class="alert alert-info">
-                                <h4><i class="fa fa-info-circle"/> Instructions</h4>
-                                <ol>
-                                    <li><strong>Download Template:</strong> Click "Download Template" to get the Excel template</li>
-                                    <li><strong>Fill Data:</strong> Complete all required columns with accurate vendor and product information</li>
-                                    <li><strong>Vendor Info:</strong> Ensure vendor emails and phone numbers are valid</li>
-                                    <li><strong>Products:</strong> Use existing product codes or provide product names for new product creation</li>
-                                    <li><strong>Upload:</strong> Select the completed Excel file and click "Upload &amp; Process"</li>
+                                <h4><i class="fa fa-info-circle"/> Step-by-Step Instructions</h4>
+                                <ol class="mb0">
+                                    <li><strong>Download Template:</strong> Click "Download Template" button below to get an Excel file pre-populated with your request items</li>
+                                    <li><strong>Get Vendor Quotes:</strong> Send the template to vendors or fill in vendor quotations manually</li>
+                                    <li><strong>Complete Vendor Info:</strong> Fill in vendor details (name, email, phone, address) for each quote</li>
+                                    <li><strong>Set Prices:</strong> Enter the quoted prices from vendors (quantities are already filled from your request)</li>
+                                    <li><strong>Upload File:</strong> Upload the completed Excel file using the file picker above</li>
+                                    <li><strong>Process:</strong> Click "Upload &amp; Process" to create purchase orders automatically</li>
                                 </ol>
                             </div>
-                           
-                            <div class="alert alert-warning">
-                                <h4><i class="fa fa-exclamation-triangle"/> Required Columns</h4>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Vendor Information:</strong>
-                                        <ul>
-                                            <li>VENDOR CODE</li>
-                                            <li>VENDOR NAME</li>
-                                            <li>VENDOR EMAIL</li>
-                                            <li>VENDOR PHONE</li>
-                                            <li>VENDOR ADDRESS</li>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="alert alert-success">
+                                        <h5><i class="fa fa-download"/> Template Features</h5>
+                                        <ul class="mb0">
+                                            <li>Pre-populated with your requested items</li>
+                                            <li>Product codes and names already filled</li>
+                                            <li>Quantities from your request included</li>
+                                            <li>Ready to send to vendors</li>
                                         </ul>
                                     </div>
-                                    <div class="col-md-6">
-                                        <strong>Product Information:</strong>
-                                        <ul>
-                                            <li>PRODUCT CODE</li>
-                                            <li>PRODUCT NAME</li>
-                                            <li>QTY TO SUPPLY</li>
-                                            <li>PRICE PER QUANTITY</li>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-warning">
+                                        <h5><i class="fa fa-exclamation-triangle"/> Required Information</h5>
+                                        <strong>You must fill in:</strong>
+                                        <ul class="mb0">
+                                            <li>Vendor Name (required)</li>
+                                            <li>Vendor Email (recommended)</li>
+                                            <li>Price Per Quantity (required)</li>
+                                            <li>Vendor Phone &amp; Address (optional)</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
-                           
-                            <div class="alert alert-success">
-                                <h4><i class="fa fa-lightbulb-o"/> Tips for Better Results</h4>
-                                <ul>
-                                    <li>Use consistent vendor names to avoid duplicate vendor creation</li>
-                                    <li>Provide valid email addresses for automatic vendor communication</li>
-                                    <li>Use existing product codes when possible to link with current inventory</li>
-                                    <li>Ensure numeric values for quantities and prices (no text or special characters)</li>
-                                    <li>Validate your file before processing to catch errors early</li>
+                            
+                            <div class="alert alert-info">
+                                <h5><i class="fa fa-lightbulb-o"/> Pro Tips</h5>
+                                <ul class="mb0">
+                                    <li><strong>Multiple Vendors:</strong> You can quote the same item from different vendors - separate POs will be created</li>
+                                    <li><strong>Vendor Emails:</strong> Include valid email addresses for automatic vendor communication</li>
+                                    <li><strong>Consistent Names:</strong> Use consistent vendor names to avoid creating duplicate vendors</li>
+                                    <li><strong>Validation:</strong> Use "Validate File" button to check for errors before processing</li>
                                 </ul>
                             </div>
                         </page>
 
-                        <!-- Validation Results Page -->
                         <page name="validation_results" 
                               string="Validation Results" 
                               attrs="{'invisible': [('validation_result', '=', '')]}">
+                            <div class="alert alert-info mb8">
+                                <i class="fa fa-info-circle"/> Validation checks your file for errors and missing information.
+                            </div>
                             <group>
                                 <field name="validation_result" 
                                        widget="text" 
                                        readonly="1"
                                        nolabel="1"
-                                       attrs="{'invisible': [('validation_result', '=', '')]}"/>
+                                       class="o_field_text_validation_result"/>
                             </group>
                         </page>
 
-                        <!-- Processing Results Page -->
                         <page name="processing_results" 
                               string="Processing Results" 
                               attrs="{'invisible': [('processing_result', '=', '')]}">
+                            <div class="alert alert-success mb8">
+                                <i class="fa fa-check-circle"/> Processing complete! Review the results below.
+                            </div>
                             <group>
                                 <field name="processing_result" 
                                        widget="text" 
                                        readonly="1"
                                        nolabel="1"
-                                       attrs="{'invisible': [('processing_result', '=', '')]}"/>
+                                       class="o_field_text_processing_result"/>
                             </group>
                         </page>
                     </notebook>
 
-                    <!-- Hidden fields for state management -->
                     <field name="state" invisible="1"/>
                 </sheet>
                 
                 <footer>
-                    <!-- Download Template Button -->
                     <button name="action_download_template" 
-                            string="Download Template" 
+                            string="1. Download Template" 
                             type="object" 
-                            class="btn-info"
+                            class="btn-primary"
                             icon="fa-download"
                             attrs="{'invisible': [('state', 'in', ['processing'])]}"/>
                     
-                    <!-- Validate File Button -->
                     <button name="action_validate_file" 
-                            string="Validate File" 
+                            string="2. Validate File" 
                             type="object" 
                             class="btn-warning"
                             icon="fa-check-circle"
-                            attrs="{'invisible': [('state', 'in', ['processing', 'done']), ('rfq_excel_file', '=', False)]}"/>
+                            attrs="{'invisible': ['|', ('state', 'in', ['processing', 'done']), ('rfq_excel_file', '=', False)]}"/>
                     
-                    <!-- Upload & Process Button -->
                     <button name="action_upload_rfq" 
-                            string="Upload &amp; Process" 
+                            string="3. Upload &amp; Process" 
                             type="object" 
-                            class="btn-primary"
+                            class="btn-success"
                             icon="fa-upload"
                             attrs="{'invisible': [('rfq_excel_file', '=', False)]}"/>
                     
-                    <!-- Reset Button -->
                     <button name="action_reset" 
                             string="Reset" 
                             type="object" 
@@ -163,13 +162,11 @@
                             icon="fa-refresh"
                             attrs="{'invisible': [('state', 'in', ['draft', 'processing'])]}"/>
                     
-                    <!-- Cancel Button -->
                     <button string="Cancel" 
                             class="btn-secondary" 
                             special="cancel"
                             attrs="{'invisible': [('state', 'in', ['processing'])]}"/>
                     
-                    <!-- Close Button (for completed processes) -->
                     <button string="Close" 
                             class="btn-primary" 
                             special="cancel"
@@ -179,22 +176,12 @@
         </field>
     </record>
 
-    <!-- Window Action for RFQ Upload Wizard -->
     <record id="action_rfq_upload_wizard" model="ir.actions.act_window">
-        <field name="name">Upload RFQ Excel</field>
+        <field name="name">RFQ Upload Wizard</field>
         <field name="res_model">rfq.upload.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
         <field name="view_id" ref="view_rfq_upload_wizard_form"/>
         <field name="context">{'default_memo_id': active_id}</field>
     </record>
-
-    <!-- Menu item (optional - if you want it in the main menu) -->
-    <record id="menu_rfq_upload_wizard" model="ir.ui.menu">
-        <field name="name">RFQ Upload</field>
-        <field name="action" ref="action_rfq_upload_wizard"/>
-        <field name="parent_id" ref="purchase.menu_procurement_management"/>
-        <field name="sequence" ref="15"/>
-    </record>
-
 </odoo>

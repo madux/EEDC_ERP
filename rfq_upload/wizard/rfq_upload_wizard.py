@@ -1,39 +1,268 @@
 # wizard/rfq_upload_wizard.py
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+import base64
+import io
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class RFQUploadWizard(models.TransientModel):
     _name = 'rfq.upload.wizard'
     _description = 'RFQ Upload Wizard'
     
-    memo_id = fields.Many2one('memo.model', string="Memo", required=True)
-    rfq_excel_file = fields.Binary(string="RFQ Excel File", required=True)
+    memo_id = fields.Many2one('memo.model', string="Memo", required=True, readonly=True)
+    rfq_excel_file = fields.Binary(string="RFQ Excel File", required=False)
     rfq_excel_filename = fields.Char(string="Filename")
     
-    def action_upload_rfq(self):
-        """Process the uploaded RFQ file - basic version"""
+    # Processing options
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('validating', 'Validating'),
+        ('validated', 'Validated'),
+        ('processing', 'Processing'),
+        ('done', 'Done')
+    ], default='draft', string="State")
+    
+    validate_only = fields.Boolean(string="Validate Only", default=False, 
+                                   help="Only validate the file without creating purchase orders")
+    create_missing_products = fields.Boolean(string="Create Missing Products", default=True,
+                                           help="Create new products if not found in system")
+    create_missing_vendors = fields.Boolean(string="Create Missing Vendors", default=True,
+                                          help="Create new vendors if not found in system")
+    group_by_vendor = fields.Boolean(string="Group by Vendor", default=True,
+                                   help="Create one PO per vendor")
+    
+    # Results
+    validation_result = fields.Text(string="Validation Result", readonly=True)
+    processing_result = fields.Text(string="Processing Result", readonly=True)
+    
+    def action_download_template(self):
+        """Download RFQ template with populated data from memo"""
+        return self.memo_id.download_rfq_template()
+    
+    def action_validate_file(self):
+        """Validate uploaded Excel file"""
         if not self.rfq_excel_file:
             raise ValidationError(_("Please upload a file first."))
         
-        # Update memo with file data
-        self.memo_id.write({
-            'rfq_excel_file': self.rfq_excel_file,
-            'rfq_excel_filename': self.rfq_excel_filename,
-            'rfq_uploaded': True,
-            'rfq_upload_date': fields.Datetime.now(),
-        })
+        self.state = 'validating'
         
+        try:
+            # Parse the uploaded file
+            rfq_data = self._parse_excel_file()
+            
+            # Validate the data
+            validation_errors = self._validate_rfq_data(rfq_data)
+            
+            if validation_errors:
+                self.validation_result = "Validation Errors Found:\n\n" + "\n".join(validation_errors)
+                self.state = 'draft'
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Validation Failed'),
+                        'message': _('Please check validation results and correct the errors.'),
+                        'sticky': False,
+                        'type': 'warning'
+                    }
+                }
+            else:
+                self.validation_result = f"✓ File validation successful!\n\nFound {len(rfq_data)} valid RFQ lines."
+                self.state = 'validated'
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Validation Successful'),
+                        'message': _('File is valid and ready for processing.'),
+                        'sticky': False,
+                        'type': 'success'
+                    }
+                }
+                
+        except Exception as e:
+            self.validation_result = f"Error during validation: {str(e)}"
+            self.state = 'draft'
+            raise ValidationError(_("Error validating file: %s") % str(e))
+    
+    def action_upload_rfq(self):
+        """Process the uploaded RFQ file and create purchase orders"""
+        if not self.rfq_excel_file:
+            raise ValidationError(_("Please upload a file first."))
+        
+        self.state = 'processing'
+        
+        try:
+            # Parse the uploaded file
+            rfq_data = self._parse_excel_file()
+            
+            # Validate the data first
+            if not self.validate_only:
+                validation_errors = self._validate_rfq_data(rfq_data)
+                if validation_errors:
+                    raise ValidationError(_("Validation failed:\n%s") % "\n".join(validation_errors))
+            
+            if self.validate_only:
+                # Only validate, don't create POs
+                self.processing_result = f"Validation completed successfully.\nFound {len(rfq_data)} valid RFQ lines.\nNo purchase orders created (validation only mode)."
+                self.state = 'done'
+                return self._show_success_message("File validated successfully!")
+            else:
+                # Create purchase orders
+                created_pos = self.memo_id.create_or_update_po_from_rfq(rfq_data)
+                
+                # Update memo with file data
+                self.memo_id.write({
+                    'rfq_excel_file': self.rfq_excel_file,
+                    'rfq_excel_filename': self.rfq_excel_filename,
+                    'rfq_uploaded': True,
+                    'rfq_upload_date': fields.Datetime.now(),
+                })
+                
+                # Prepare result message
+                result_message = f"RFQ processing completed successfully!\n\n"
+                result_message += f"• Processed {len(rfq_data)} RFQ lines\n"
+                result_message += f"• Created {len(created_pos)} Purchase Orders\n\n"
+                
+                if created_pos:
+                    result_message += "Created Purchase Orders:\n"
+                    for po in created_pos:
+                        result_message += f"• {po.name} - {po.partner_id.name} (Total: {po.currency_id.symbol}{po.amount_total:.2f})\n"
+                
+                self.processing_result = result_message
+                self.state = 'done'
+                
+                return self._show_success_message(f"Successfully created {len(created_pos)} Purchase Orders!")
+                
+        except Exception as e:
+            self.processing_result = f"Error during processing: {str(e)}"
+            self.state = 'draft'
+            _logger.error("RFQ processing error: %s", str(e))
+            raise ValidationError(_("Error processing RFQ file: %s") % str(e))
+    
+    def action_reset(self):
+        """Reset wizard to initial state"""
+        self.write({
+            'state': 'draft',
+            'validation_result': '',
+            'processing_result': '',
+            'rfq_excel_file': False,
+            'rfq_excel_filename': '',
+        })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Reset Complete'),
+                'message': _('Wizard has been reset. You can upload a new file.'),
+                'sticky': False,
+                'type': 'info'
+            }
+        }
+    
+    def _parse_excel_file(self):
+        """Parse uploaded Excel/CSV file and return RFQ data"""
+        try:
+            # Decode the uploaded file
+            file_data = base64.b64decode(self.rfq_excel_file)
+            
+            # Try to parse with pandas first
+            try:
+                import pandas as pd
+                
+                # Check file extension
+                if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
+                    df = pd.read_csv(io.BytesIO(file_data))
+                else:
+                    df = pd.read_excel(io.BytesIO(file_data))
+                
+                # Convert to list of dictionaries
+                return df.to_dict('records')
+                
+            except ImportError:
+                # Fallback for CSV files without pandas
+                if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
+                    return self._parse_csv_fallback(file_data.decode('utf-8'))
+                else:
+                    raise ValidationError(_("Pandas is required for Excel file processing. Please install it or use CSV format."))
+                    
+        except Exception as e:
+            raise ValidationError(_("Error reading file: %s. Please ensure the file is a valid Excel or CSV file.") % str(e))
+    
+    def _parse_csv_fallback(self, csv_content):
+        """Parse CSV content without pandas"""
+        import csv
+        import io
+        
+        reader = csv.DictReader(io.StringIO(csv_content))
+        return list(reader)
+    
+    def _validate_rfq_data(self, rfq_data):
+        """Validate RFQ data and return list of errors"""
+        errors = []
+        required_columns = [
+            'VENDOR NAME', 'PRODUCT NAME', 'QTY TO SUPPLY', 'PRICE PER QUANTITY'
+        ]
+        
+        if not rfq_data:
+            errors.append("No data found in uploaded file")
+            return errors
+        
+        # Check for required columns
+        first_row = rfq_data[0]
+        missing_columns = [col for col in required_columns if col not in first_row]
+        if missing_columns:
+            errors.append(f"Missing required columns: {', '.join(missing_columns)}")
+            return errors
+        
+        # Validate each row
+        for idx, row in enumerate(rfq_data, 1):
+            row_errors = []
+            
+            # Check required fields
+            if not row.get('VENDOR NAME', '').strip():
+                row_errors.append("Vendor name is required")
+            
+            if not row.get('PRODUCT NAME', '').strip() and not row.get('PRODUCT CODE', '').strip():
+                row_errors.append("Product name or product code is required")
+            
+            # Validate quantity
+            try:
+                qty = float(row.get('QTY TO SUPPLY', 0))
+                if qty <= 0:
+                    row_errors.append("Quantity must be greater than 0")
+            except (ValueError, TypeError):
+                row_errors.append("Invalid quantity format")
+            
+            # Validate price
+            try:
+                price = float(row.get('PRICE PER QUANTITY', 0))
+                if price < 0:
+                    row_errors.append("Price cannot be negative")
+            except (ValueError, TypeError):
+                row_errors.append("Invalid price format")
+            
+            # Validate email format if provided
+            vendor_email = row.get('VENDOR EMAIL', '').strip()
+            if vendor_email and '@' not in vendor_email:
+                row_errors.append("Invalid email format")
+            
+            if row_errors:
+                errors.append(f"Row {idx}: {'; '.join(row_errors)}")
+        
+        return errors
+    
+    def _show_success_message(self, message):
+        """Show success notification"""
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Success'),
-                'message': _('RFQ file uploaded successfully. You can now process it manually.'),
+                'message': message,
                 'sticky': False,
                 'type': 'success'
             }
         }
-    
-    def action_download_template(self):
-        """Download RFQ template"""
-        return self.memo_id.download_rfq_template()

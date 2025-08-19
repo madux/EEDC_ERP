@@ -13,7 +13,7 @@
     "data": [
         'security/ir.model.access.csv',
         'views/memo_view.xml',
-        # 'wizard/rfq_upload_wizard.xml',
+        'wizard/rfq_upload_wizard.xml',
     ],
     'installable': True,
     'auto_install': False,

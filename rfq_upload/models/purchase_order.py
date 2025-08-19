@@ -1,5 +1,4 @@
-# models/purchase_order.py - Extend purchase order model
-
+# models/purchase_order.py
 from odoo import models, fields, api
 
 class PurchaseOrder(models.Model):
@@ -11,8 +10,6 @@ class PurchaseOrder(models.Model):
         ('system_generated', 'System Generated')
     ], string="RFQ Source", default='manual', readonly=True)
     
-    # memo_state = fields.Char(related='memo_id.state', string="Memo State", readonly=True)
-    
     @api.model
     def create(self, vals):
         """Override create to set RFQ source"""
@@ -23,33 +20,3 @@ class PurchaseOrder(models.Model):
             vals['rfq_source'] = 'system_generated'
         
         return super(PurchaseOrder, self).create(vals)
-
-
-# Add method to memo model for the wizard action
-class MemoModelExtended(models.Model):
-    _inherit = 'memo.model'
-    
-    def action_upload_rfq_wizard(self):
-        """Open RFQ upload wizard"""
-        return {
-            'name': 'Upload RFQ Excel',
-            'type': 'ir.actions.act_window',
-            'res_model': 'rfq.upload.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_memo_id': self.id,
-                'rfq_excel_upload': True
-            }
-        }
-    
-    def action_download_rfq_template(self):
-        """Download RFQ template - calls the existing method"""
-        return self.download_rfq_template()
-    
-    @api.model
-    def _create_or_update_po(self, vendor, line_data):
-        """Override to set context for RFQ source"""
-        # Set context to indicate this is from Excel upload
-        return super(MemoModelExtended, self.with_context(rfq_excel_upload=True))._create_or_update_po(vendor, line_data)
-    
