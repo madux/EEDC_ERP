@@ -10,10 +10,11 @@
     'category': 'HR',
     'summary': '',
     'description': "",
-    'depends': ['base'],
+    'depends': ['base', 'hr', 'stock'],
     "data": [
         'security/ir.model.access.csv',
         'wizard/import_employee_view.xml',
+        'wizard/import_product_wizard.xml',
         
     ],
     "sequence": 3,
