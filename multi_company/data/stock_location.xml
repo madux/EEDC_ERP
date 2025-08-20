@@ -187,7 +187,7 @@
             <field name="branch_id" ref="multi_company.branch0019"/>
 
         </record>
-        <record model="stock.location" id="view_store005">
+        <record model="stock.location" id="view_store006">
             <field name="name">VIEW EASTLAND</field>
             <field name="wh_code">v0005</field>
             <field name="usage">view</field>
