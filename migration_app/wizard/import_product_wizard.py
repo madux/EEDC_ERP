@@ -185,6 +185,8 @@ class ImportProductWizard(models.TransientModel):
         #     _logger.info(f"Set quantity for product {product_id} to {qty}")
             
         def create_stock_quant(product, location, qty):
+            if qty <= 0:
+                return
             self.env['stock.quant']._update_available_quantity(product, location, qty)
         
         if self.import_type == "product":
