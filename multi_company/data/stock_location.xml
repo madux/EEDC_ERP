@@ -151,7 +151,7 @@
             <field name="name">VIEW HOLDCO</field>
             <field name="wh_code">v0001</field>
             <field name="usage">view</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>
@@ -201,7 +201,7 @@
             <field name="name">PRODUCTION CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">pr0001</field>
             <field name="usage">production</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>
@@ -252,7 +252,7 @@
             <field name="name">INVENTORY ADJUSTMENT CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">il0001</field>
             <field name="usage">inventory</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>
@@ -304,7 +304,7 @@
             <field name="name">TRANSIT CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">TR0001</field>
             <field name="usage">transit</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>
@@ -356,7 +356,7 @@
             <field name="name">VENDOR CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">sup0001</field>
             <field name="usage">supplier</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>
@@ -406,7 +406,7 @@
             <field name="name">CUSTOMER CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">cus0001</field>
             <field name="usage">customer</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
             <field name="branch_id" ref="multi_company.branch001"/>
 
         </record>

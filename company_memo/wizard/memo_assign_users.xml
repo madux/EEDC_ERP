@@ -29,10 +29,11 @@
                         <field name="dummy_config_ids" nolabel="1" widget="one2many_list">
                             <tree editable="top">
                                 <field name="memo_config_wizard_id"/>
-                                <field name="memo_config_id"/>
+                                <field name="memo_config_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" invisible="1" column_invisible="1"/>
                                 <field name="include_intial_done"/>
-                                <field name="memo_stage_ids" domain="[('id', 'in', dummy_memo_stage_ids)]" widget="many2many_tags"/>
-                                <field name="dummy_memo_stage_ids" widget="many2many_tags" readonly="0"/>
+                                <field name="memo_stage_ids" domain="[('id', 'in', dummy_memo_stage_ids)]" widget="many2many_tags"
+                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                                <field name="dummy_memo_stage_ids" widget="many2many_tags" readonly="1" invisible="1" column_invisible="1"/>
                             </tree>
                         </field>    
                     </page>
