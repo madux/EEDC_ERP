@@ -213,6 +213,7 @@ class ImportProductWizard(models.TransientModel):
                             # 'list_price': unit_price,
                             'standard_price': unit_price,
                             'description': name,
+                            'tracking': 'serial',
                             'default_code': stock_code,
                             'qty_available': qty,
                             'property_stock_inventory': self.property_stock_inventory.id,
@@ -250,6 +251,7 @@ class ImportProductWizard(models.TransientModel):
                         'uom_id': self.create_uom(unit_of_measure),
                         'list_price': unit_price,
                         'description': name,
+                        'tracking': 'serial',
                         'default_code': stock_code,
                         'qty_available': float(qty) if type(qty) in [str, int, float] else 0,
                         'company_id': self.company_id.id
