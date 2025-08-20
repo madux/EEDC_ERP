@@ -6,7 +6,8 @@
             <field name="arch" type="xml">
                 <form string="Import ">
                     <header>
-                        <button name="import_records_action" string="Migrate Employee Record" type="object"  class="oe_highlight"/>
+                        <button name="import_records_action" string="Migrate Record" type="object"  class="oe_highlight"/>
+                        <button name="check_product_availability" string="Check product availablity" type="object"  class="oe_highlight"/>
                         <button string="Cancel" class="oe_link" special="cancel"/>
                     </header>
                     <group>
@@ -20,6 +21,7 @@
                         <group>
                             <field name="data_file" filename="name"/>
                             <field name="filename" invisible="1"/> 
+                            <field name="product_id"/> 
                         </group>
                     </group>
                 </form>

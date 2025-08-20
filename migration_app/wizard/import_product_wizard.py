@@ -29,6 +29,8 @@ class ImportProductWizard(models.TransientModel):
     )
     company_id = fields.Many2one("res.company","Company", required=True)
     location_id = fields.Many2one("stock.location","Store Location", required=True)
+    product_id = fields.Many2one("product.product","Product")
+    
     property_stock_inventory = fields.Many2one("stock.location","Adjustment Store Location", required=True)
     
         
@@ -60,6 +62,28 @@ class ImportProductWizard(models.TransientModel):
             return p_uom_id.id
         else:
             return p_uom.id
+        
+    def _clean_numeric_value(self, value):
+        """Clean and convert various formats to float"""
+        if not value:
+            return 0.0
+        
+        if isinstance(value, (int, float)):
+            return float(value)
+        
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return 0.0
+            
+            value = value.replace(',', '').replace(' ', '')
+            
+            try:
+                return float(value)
+            except ValueError:
+                return 0.0
+        
+        return 0.0
 
     def import_records_action(self):
         if self.data_file:
@@ -118,36 +142,50 @@ class ImportProductWizard(models.TransientModel):
         #     }
         #     quants = quant.sudo().create(values) 
         #     # quants.action_apply_inventory()
-        def create_stock_quant(product, qty):
-            if qty <= 0:
-                return
+        
+        # def create_stock_quant(product, qty):
+        #     if qty <= 0:
+        #         return
                 
-            product_id = product.id if hasattr(product, 'id') else product
+        #     product_id = product.id if hasattr(product, 'id') else product
             
-            existing_quant = self.env['stock.quant'].search([
-                ('product_id', '=', product_id),
-                ('location_id', '=', self.location_id.id),
-                ('company_id', '=', self.company_id.id),
-            ], limit=1)
+        #     existing_quant = self.env['stock.quant'].search([
+        #         ('product_id', '=', product_id),
+        #         ('location_id', '=', self.location_id.id),
+        #         ('company_id', '=', self.company_id.id),
+        #     ], limit=1)
             
-            if existing_quant:
-                existing_quant.sudo().write({
-                    'inventory_quantity': qty,
-                })
-                existing_quant.sudo().action_apply_inventory()
-                _logger.info(f"Updated existing quant for product {product_id} with qty {qty}")
-            else:
-                quant_vals = {
-                    'product_id': product_id,
-                    'location_id': self.location_id.id,
-                    'company_id': self.company_id.id,
-                    'inventory_quantity': qty,
-                    'quantity': 0,
-                }
-                new_quant = self.env['stock.quant'].sudo().create(quant_vals)
-                new_quant.sudo().action_apply_inventory()
-                _logger.info(f"Created new quant for product {product_id} with qty {qty}")
+        #     if existing_quant:
+        #         existing_quant.sudo().write({
+        #             'quantity': qty,
+        #             'reserved_quantity': 0,
+        #         })
+        #         _logger.info(f"Updated existing quant for product {product_id} with qty {qty}")
+        #     else:
+        #         quant_vals = {
+        #             'product_id': product_id,
+        #             'location_id': self.location_id.id,
+        #             'company_id': self.company_id.id,
+        #             'quantity': qty,
+        #             'reserved_quantity': 0,
+        #         }
+        #         new_quant = self.env['stock.quant'].sudo().create(quant_vals)
+        #         _logger.info(f"Created new quant for product {product_id} with qty {qty}")
+        
+        # def create_stock_quant(product_id, qty):
+        #     if qty <= 0:
+        #         return
             
+        #     change_qty_wizard = self.env['stock.change.quantity'].create({
+        #         'product_id': product_id,
+        #         'new_quantity': qty,
+        #         'location_id': self.location_id.id,
+        #     })
+        #     change_qty_wizard.change_product_qty()
+        #     _logger.info(f"Set quantity for product {product_id} to {qty}")
+            
+        def create_stock_quant(product, location, qty):
+            self.env['stock.quant']._update_available_quantity(product, location, qty)
         
         if self.import_type == "product":
             for row in file_data:
@@ -155,86 +193,33 @@ class ImportProductWizard(models.TransientModel):
                 # try:
                 name = str(row[1]).strip() if row[1] else ''
                 unit_of_measure = str(row[2]).strip() if row[2] else ''
-                unit_price = float(row[3]) if row[3] and str(row[3]).isdigit() else 0
-                qty = row[4] 
-                categ_name = row[5]
-                stock_code = row[6]
+                unit_price = self._clean_numeric_value(row[3])
+                qty = self._clean_numeric_value(row[4])
+                categ_name = categ_name = str(row[5]).strip() if row[5] else ''
+                stock_code = stock_code = str(row[6]).strip() if row[6] else ''
                 if find_existing_product(row[1]):
                     unsuccess_records.append(f'Product with {str(row[1])} Already exists')
                 else:
                     if name and stock_code:
                         _logger.info(f"Processing {row[0]} - {name} and the qty = {qty}")
-                        qty_val = 0
-                        if qty:
-                            if type(qty) == str: # and qty.isdigit():
-                                qty_val = qty.replace(',', '')
-                                # if qty_val.isdigit()
-                                _logger.info(f"ISUSUUUUUUUUUU STRING {qty} - {type(qty)}")
-                                qty_val = float(qty_val) if qty_val.isdigit() else 0
                         
-                                    
-                            elif type(qty) in [float]:
-                                # 34,45
-                                # qty_val = str(qty)
-                                # qty_val = float(qty_val)
-                                qty_val = qty
-                                _logger.info(f"ISUSUUUUUUUUUU FLOAT {qty} - {type(qty)}")
-                                
-                                
-                            elif type(qty) in [int]:
-                                # 34,45
-                                qty_val = str(qty)
-                                qty_val = int(qty_val)
-                                _logger.info(f"ISUSUUUUUUUUUU INTERGER {qty} - {type(qty)}")
-                                
-                            
-                            else:
-                                qty_val = 0 
-                        _logger.info(f" QTY AVAILABLE TO CREATE {qty_val} - {type(qty_val)}")
-                        
-                        
-                        price = 0
-                        if unit_price:
-                            if type(unit_price) == str:
-                                price = qty.replace(',', '')
-                                _logger.info(f"PRICE STRING {unit_price} - {type(unit_price)}")
-                                price = float(price)
-                        
-                                    
-                            elif type(unit_price) in [float]:
-                                # 34,45
-                                # qty_val = str(qty)
-                                # qty_val = float(qty_val)
-                                price = unit_price
-                                _logger.info(f"ISUSUUUUUUUUUU FLOAT {unit_price} - {type(unit_price)}")
-                                
-                                
-                            elif type(unit_price) in [int]:
-                                # 34,45
-                                price = str(qty)
-                                qty_val = int(price)
-                                _logger.info(f"PRICE INTERGER {unit_price} - {type(unit_price)}")
-                                
-                            
-                            else:
-                                qty_val = 0 
                         vals = {
                             'name': name,
                             'detailed_type': 'product',
                             'categ_id': self.create_category(categ_name),
                             'uom_id': self.env.ref('uom.product_uom_unit').id,
                             # 'list_price': unit_price,
-                            'standard_price': price,
+                            'standard_price': unit_price,
                             'description': name,
                             'default_code': stock_code,
-                            'qty_available': qty_val,
+                            'qty_available': qty,
                             'property_stock_inventory': self.property_stock_inventory.id,
                             'company_id': self.company_id.id
                         }
                         product = create_product(vals)
                         _logger.info(f"CREATED ODOO PRODUCT RECORD {self.env['product.product'].browse([product]).name} - {self.env['product.product'].browse([product]).qty_available}")
-                        
-                        quant = create_stock_quant(product, qty_val)
+                        product_ref = self.env['product.product'].browse([product])
+                        quant = create_stock_quant(product_ref, self.location_id, qty)
                         success_records.append(vals.get('name'))
                     else:
                         unsuccess_records.append(f'Product at {count} does not have any name or code values')
@@ -268,7 +253,7 @@ class ImportProductWizard(models.TransientModel):
                         'company_id': self.company_id.id
                     }
                     product.update(vals)
-                    create_stock_quant(product, vals)
+                    create_stock_quant(product, self.location_id, vals.get('qty_available'))
                     success_records.append(vals.get('name'))
                 else:
                     unsuccess_records.append(f'Product at {count} could not be found')
@@ -279,7 +264,13 @@ class ImportProductWizard(models.TransientModel):
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
         
-
+    def check_product_availability(self):
+        if not self.product_id:
+            raise ValidationError("Please select product and location ")
+        total_availability = self.env['stock.quant'].sudo()._get_available_quantity(
+                    self.product_id, self.location_id, allow_negative=False)
+        raise ValidationError(f"Here is the available qty total_availability == {total_availability}")
+        
     def confirm_notification(self,popup_message):
         view = self.env.ref('migration_app.hr_migration_confirm_dialog_view')
         view_id = view and view.id or False
