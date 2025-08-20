@@ -1,0 +1,69 @@
+/* Overlay + blur */
+.appraisal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); backdrop-filter: blur(2px); opacity: 0; visibility: hidden; transition: all .25s ease; z-index: 1040; }
+.appraisal-overlay.is-open { opacity: 1; visibility: visible; }
+#appraisal-root.blurred { filter: blur(3px); pointer-events: none; user-select: none; }
+
+/* Modal shell */
+.appraisal-modal { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .25s ease; }
+.appraisal-modal.is-open { opacity: 1; visibility: visible; }
+.appraisal-modal__dialog { width: min(860px, 96vw); background: #fff; border-radius: 10px; box-shadow: 0 15px 40px rgba(0,0,0,.18); overflow: hidden; }
+.appraisal-modal__header { display:flex; align-items:center; justify-content:space-between; padding: 14px 18px; border-bottom: 2px solid #3498db; }
+.appraisal-modal__header h4 { margin: 0; color: #34495e; }
+.appraisal-modal__close { border: 0; background: transparent; font-size: 20px; color: #34495e; padding: 6px; border-radius: 6px; transition: transform .15s ease, background .15s ease; }
+.appraisal-modal__close:hover { transform: rotate(90deg) scale(1.06); background: #f0f4f8; }
+.appraisal-modal__body { position: relative; padding: 18px; max-height: 70vh; overflow: auto; background: #f8f9fa; }
+.appraisal-modal__footer { padding: 12px 18px; background: #fff; border-top: 1px solid #e9ecef; display:flex; align-items:center; gap: 12px; }
+
+/* Buttons styled to match Applicant Pool */
+.appraisal-btn-primary { background: linear-gradient(135deg,#3498db,#2980b9); border: none; border-radius: 25px; font-weight:600; box-shadow: 0 4px 15px rgba(52,152,219,.3); transition: transform .2s ease, box-shadow .2s ease; }
+.appraisal-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52,152,219,.4); }
+.appraisal-btn-outline { border: 2px solid #3498db; border-radius: 25px; font-weight: 600; color: #3498db; background: transparent; }
+.appraisal-btn-outline:hover { background: rgba(52,152,219,.08); }
+
+/* Wizard */
+.wizard-topbar { display:flex; align-items:center; gap: 12px; }
+.wizard-counter { color:#7f8c8d; font-weight:600; }
+.wizard-slides { position: relative; }
+.wizard-slide { display:none; }
+.wizard-slide.is-active { display:block; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from {opacity:0; transform: translateY(4px);} to {opacity:1; transform:none;} }
+
+.kpi-list { display:grid; gap: 12px; }
+.kpi-row { display:flex; align-items:center; justify-content:space-between; gap: 12px; }
+.kpi-row label { margin:0; color:#2c3e50; }
+.kpi-row select { min-width: 90px; }
+
+.summary-box { text-align:center; }
+
+/* Disabled button look */
+.appraisal-btn-primary[disabled], .appraisal-btn-outline[disabled] {
+  opacity: .6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Step descriptions */
+.wizard-description {
+  margin-bottom: 12px;
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  border-left: 3px solid #3498db;
+  padding-left: 10px;
+}
+
+/* Make metrics visually match KPI rows */
+.metric-like .kpi-row label { font-weight: 600; color: #2c3e50; }
+.metric-like .kpi-value { font-weight: 700; color: #2c3e50; }
+
+/* Invalid input */
+.form-control.is-invalid {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 0.2rem rgba(231,76,60,.25) !important;
+}
+
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .appraisal-modal__dialog { width: 88vw; }
+}

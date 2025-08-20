@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data>
+    <template id="appraisal_system_page" name="Appraisal System Page">
+      <t t-call="website.layout">
+        <div id="appraisal-root" class="applicant-pool-container" style="max-width: 880px; margin: 40px auto; padding: 20px;">
+
+          <!-- Header -->
+          <div style="text-align:center; margin-bottom: 26px;">
+            <h2 style="color:#2c3e50; margin-bottom: 8px;">Employee Details</h2>
+            <p style="color:#7f8c8d;">Review employee info and start an appraisal or view goal settings.</p>
+          </div>
+
+          <!-- Card -->
+          <div class="applicant-pool-form" style="background:#f8f9fa; padding: 26px 28px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.1);">
+            <!-- Details grid -->
+            <div id="employee-details" class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Name <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="Enter your name" required="required"/>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Staff ID <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="e.g: EEDC-00123" required="required"/>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Department <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="Enter your department" required="required"/>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Email <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="email" class="form-control" placeholder="email@example.com" required="required"/>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Role <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="Enter your role" required="required"/>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Year <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="e.g: 2025" data-year="true" required="required"/>
+              </div>
+
+              <div class="col-md-12 mb-4">
+                <label class="form-label" style="font-weight:600; color:#2c3e50;">
+                  Supervisor <span style="color: #e74c3c;">*</span>
+                </label>
+                <input type="text" class="form-control" placeholder="Enter your Supervisor name" required="required"/>
+              </div>
+            </div>
+
+            <!-- Actions (disabled until details valid) -->
+            <div class="d-flex justify-content-center gap-3" style="gap:16px;">
+              <button id="btn-view-goals" type="button" class="btn btn-outline-primary btn-lg appraisal-btn-outline"
+                      disabled="disabled" aria-disabled="true" title="Fill all employee details to proceed">
+                <i class="fa fa-list-ul" style="margin-right:8px;"></i>View Goals Settings
+              </button>
+              <button id="btn-start-appraisal" type="button" class="btn btn-primary btn-lg appraisal-btn-primary"
+                      disabled="disabled" aria-disabled="true" title="Fill all employee details to proceed">
+                <i class="fa fa-play" style="margin-right:8px;"></i>Start Appraisal
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overlay & Modals -->
+        <div id="appraisal-overlay" class="appraisal-overlay" aria-hidden="true"></div>
+
+        <!-- Modal: View Goals Settings -->
+        <div id="modal-goals" class="appraisal-modal" role="dialog" aria-modal="true" aria-labelledby="goalsTitle" aria-hidden="true">
+          <div class="appraisal-modal__dialog" role="document">
+            <div class="appraisal-modal__header">
+              <h4 id="goalsTitle"><i class="fa fa-bullseye" style="margin-right:8px;"></i>View Goals Settings</h4>
+              <button class="appraisal-modal__close" data-close="true">
+                <i class="fa fa-times" aria-label="Close"></i>
+              </button>
+            </div>
+            <div class="appraisal-modal__body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                  <thead>
+                    <tr>
+                      <th style="width:70px;">S/N</th>
+                      <th>Name</th>
+                      <th style="width:160px;">Target</th>
+                      <th style="width:160px;">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>1</td><td>Build App</td><td>Release v1.0</td><td>2025-09-30</td></tr>
+                    <tr><td>2</td><td>Improve SLA</td><td>≥ 99.9%</td><td>2025-12-31</td></tr>
+                    <tr><td>3</td><td>Reduce Bugs</td><td>≤ 0.3/kloc</td><td>2025-10-31</td></tr>
+                    <tr><td>4</td><td>Mentor Juniors</td><td>2 mentees</td><td>2025-11-15</td></tr>
+                    <tr><td>5</td><td>Security Hardening</td><td>Pass audit</td><td>2025-11-30</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="appraisal-modal__footer">
+              <button class="btn btn-secondary" data-close="true">Close</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal: Start Appraisal (Wizard) -->
+        <div id="modal-wizard" class="appraisal-modal" role="dialog" aria-modal="true" aria-labelledby="wizardTitle" aria-hidden="true">
+          <div class="appraisal-modal__dialog" role="document">
+            <div class="appraisal-modal__header">
+              <div class="wizard-topbar">
+                <span class="wizard-counter" id="wizardCounter">1/5</span>
+                <h4 id="wizardTitle">Departmental Appraisal</h4>
+              </div>
+              <button class="appraisal-modal__close" data-close="true">
+                <i class="fa fa-times" aria-label="Close"></i>
+              </button>
+            </div>
+
+            <!-- Wizard body -->
+            <div class="appraisal-modal__body">
+              <!-- Slides container -->
+              <div id="wizardSlides" class="wizard-slides">
+                <!-- Step 1 -->
+                <section class="wizard-slide is-active" data-step="1" data-title="Departmental Appraisal">
+                  <div class="wizard-description">Overview of department-level scores contributing to this appraisal cycle.</div>
+                  <div class="kpi-list metric-like">
+                    <div class="kpi-row"><label>Employee Rating</label><select><option>1</option><option>2</option><option selected="selected">3</option><option>4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Manager Review</label><select><option>1</option><option>2</option><option>3</option><option selected="selected">4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Review Rating</label><select><option selected="selected">1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+                    <!-- <div class="kpi-row"><label>TOTAL</label><span class="kpi-value">30</span></div> -->
+                  </div>
+                </section>
+
+                <!-- Step 2 -->
+                <section class="wizard-slide" data-step="2" data-title="KPI / Goals Review">
+                  <div class="wizard-description">Rate each assigned goal from 1–5 based on completion quality and impact.</div>
+                  <div class="kpi-list">
+                    <div class="kpi-row"><label>Build App</label><select><option>1</option><option>2</option><option selected="selected">3</option><option>4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Improve SLA</label><select><option>1</option><option>2</option><option>3</option><option selected="selected">4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Reduce Bugs</label><select><option selected="selected">1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+                  </div>
+                </section>
+
+                <!-- Step 3 -->
+                <section class="wizard-slide" data-step="3" data-title="Behavioral Competencies">
+                  <div class="wizard-description">Evaluate soft skills and behaviors that support high performance.</div>
+                  <div class="kpi-list">
+                    <div class="kpi-row"><label>Teamwork</label><select><option>1</option><option>2</option><option>3</option><option selected="selected">4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Communication</label><select><option>1</option><option>2</option><option selected="selected">3</option><option>4</option><option>5</option></select></div>
+                    <div class="kpi-row"><label>Initiative</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option selected="selected">5</option></select></div>
+                  </div>
+                </section>
+
+                <!-- Step 4 -->
+                <section class="wizard-slide" data-step="4" data-title="360° Feedback">
+                  <div class="wizard-description">Provide qualitative feedback from peers and managers to add context.</div>
+                  <div class="form-group mb-3">
+                    <label>Peer Feedback</label>
+                    <textarea class="form-control" rows="3" placeholder="Peers’ comments..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label>Manager Feedback</label>
+                    <textarea class="form-control" rows="3" placeholder="Manager’s comments..."></textarea>
+                  </div>
+                </section>
+
+                <!-- Step 5 -->
+                <section class="wizard-slide" data-step="5" data-title="Summary">
+                  <div class="wizard-description">Review all entries and confirm the appraisal for submission.</div>
+                  <div class="summary-box">
+                    <p><strong>Summary (dummy):</strong> Ratings and notes will be displayed here for final review.</p>
+                    <button class="btn btn-primary btn-lg appraisal-btn-primary" disabled="disabled">
+                      <i class="fa fa-paper-plane" style="margin-right:8px;"></i>Submit Appraisal
+                    </button>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div class="appraisal-modal__footer">
+              <div class="d-flex justify-content-between w-100">
+                <button id="btnCloseWizard" class="btn btn-secondary" data-close="true">Close</button>
+                <div>
+                  <button id="btnPrev" class="btn btn-outline-primary appraisal-btn-outline" disabled="disabled"><i class="fa fa-chevron-left" style="margin-right:6px;"></i>Previous</button>
+                  <button id="btnNext" class="btn btn-primary appraisal-btn-primary"><span>Continue</span><i class="fa fa-chevron-right" style="margin-left:6px;"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </t>
+    </template>
+  </data>
+</odoo>

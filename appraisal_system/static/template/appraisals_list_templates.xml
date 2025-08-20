@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data>
+    <template id="appraisals_list_page" name="Appraisals List Page">
+      <t t-call="website.layout">
+        <div id="appraisals-root" class="applicant-pool-container" style="max-width: 1000px; margin: 40px auto; padding: 20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <h2 style="color:#2c3e50; margin:0;">Appraisals</h2>
+            <div class="app-toolbar sticky">
+              <div class="view-toggle" role="group" aria-label="View toggle">
+                <button id="btnTree" class="btn btn-outline-primary appraisal-btn-outline" data-view="tree"><i class="fa fa-table" style="margin-right:6px;"></i>Tree</button>
+                <button id="btnKanban" class="btn btn-outline-primary appraisal-btn-outline" data-view="kanban"><i class="fa fa-th-large" style="margin-right:6px;"></i>Kanban</button>
+              </div>
+              <div class="search-wrap">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <input id="appq" type="search" class="form-control" placeholder="Search employee, department, year…"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-card">
+            <!-- Tree view -->
+            <div id="appTree" class="app-tree" aria-label="Tree view">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th class="sortable" data-col="employee">Employee <i class="fa fa-sort"></i></th>
+                      <th class="sortable" data-col="year" style="width:140px;">Appraisal Year <i class="fa fa-sort"></i></th>
+                      <th style="width:220px;">Department</th>
+                      <th style="width:110px; text-align:right;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="appTbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Kanban view -->
+            <div id="appKanban" class="app-kanban" aria-label="Kanban view" style="display:none;">
+              <div id="appCards" class="kanban-grid"></div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="appEmpty" class="empty-state" style="display:none;">
+              <div class="empty-inner">
+                <i class="fa fa-folder-open" aria-hidden="true"></i>
+                <p>No appraisals match your search.</p>
+                <button id="btnClearSearch" class="btn btn-outline-primary appraisal-btn-outline">Clear search</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </t>
+    </template>
+  </data>
+</odoo>
