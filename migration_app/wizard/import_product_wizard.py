@@ -185,6 +185,8 @@ class ImportProductWizard(models.TransientModel):
         #     _logger.info(f"Set quantity for product {product_id} to {qty}")
             
         def create_stock_quant(product, location, qty):
+            if qty <= 0:
+                return
             self.env['stock.quant']._update_available_quantity(product, location, qty)
         
         if self.import_type == "product":
@@ -211,6 +213,7 @@ class ImportProductWizard(models.TransientModel):
                             # 'list_price': unit_price,
                             'standard_price': unit_price,
                             'description': name,
+                            'tracking': 'serial',
                             'default_code': stock_code,
                             'qty_available': qty,
                             'property_stock_inventory': self.property_stock_inventory.id,
@@ -248,6 +251,7 @@ class ImportProductWizard(models.TransientModel):
                         'uom_id': self.create_uom(unit_of_measure),
                         'list_price': unit_price,
                         'description': name,
+                        'tracking': 'serial',
                         'default_code': stock_code,
                         'qty_available': float(qty) if type(qty) in [str, int, float] else 0,
                         'company_id': self.company_id.id
