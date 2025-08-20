@@ -245,6 +245,211 @@
             <field name="company_id" ref="multi_company.company_firstpower"/>
             <field name="branch_id" ref="multi_company.branch0019"/>
 
-        </record>         
+        </record> 
+        <!-- INVENTORY LOSS /ADJUSTMENT  -->
+
+        <record model="stock.location" id="inventory_loss_location_store001">
+            <field name="name">INVENTORY ADJUSTMENT CHQ DISTRIBUTION STORE</field>
+            <field name="wh_code">il0001</field>
+            <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
+        </record>
+        <record model="stock.location" id="inventory_loss_location_store0002">
+            <field name="name">INVENTORY ADJUSTMENT MAINPOWER STORE</field>
+            <field name="wh_code">il00002</field>
+           <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
+
+        </record>
+
+        <record model="stock.location" id="inventory_loss_location_store003">
+            <field name="name">INVENTORY ADJUSTMENT TRANSPOWER STORE</field>
+            <field name="wh_code">il00003</field>
+           <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
+
+        </record>
+        <record model="stock.location" id="inventory_loss_location_store0004">
+            <field name="name">INVENTORY ADJUSTMENT NEW ERA STORE</field>
+            <field name="wh_code">il00004</field>
+           <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+
+        </record>
+        <record model="stock.location" id="inventory_loss_location_store005">
+            <field name="name">INVENTORY ADJUSTMENT EASTLAND STORE</field>
+            <field name="wh_code">il00005</field>
+           <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
+        </record>
+        <record model="stock.location" id="inventory_loss_location_store0006">
+            <field name="name">INVENTORY ADJUSTMENT FIRSTPOWER STORE</field>
+            <field name="wh_code">il00006</field>
+           <field name="usage">inventory</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
+
+        </record> 
+        
+        <!-- TRANSIT -->
+
+        <record model="stock.location" id="transit__location_store001">
+            <field name="name">TRANSIT CHQ DISTRIBUTION STORE</field>
+            <field name="wh_code">TR0001</field>
+            <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
+        </record>
+        <record model="stock.location" id="transit__location_store0002">
+            <field name="name">TRANSIT MAINPOWER STORE</field>
+            <field name="wh_code">TR00002</field>
+           <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
+
+        </record>
+
+        <record model="stock.location" id="transit__location_store003">
+            <field name="name">TRANSIT TRANSPOWER STORE</field>
+            <field name="wh_code">TR00003</field>
+           <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
+
+        </record>
+        <record model="stock.location" id="transit__location_store0004">
+            <field name="name">TRANSIT NEW ERA STORE</field>
+            <field name="wh_code">TR00004</field>
+           <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+
+        </record>
+        <record model="stock.location" id="transit__location_store005">
+            <field name="name">TRANSIT EASTLAND STORE</field>
+            <field name="wh_code">TR00005</field>
+           <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
+        </record>
+        <record model="stock.location" id="transit__location_store0006">
+            <field name="name">TRANSIT FIRSTPOWER STORE</field>
+            <field name="wh_code">TR00006</field>
+           <field name="usage">transit</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
+
+        </record> 
+
+        <!--VENDOR  -->
+
+        <record model="stock.location" id="vendor_location_store001">
+            <field name="name">VENDOR CHQ DISTRIBUTION STORE</field>
+            <field name="wh_code">sup0001</field>
+            <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
+        </record>
+        <record model="stock.location" id="vendor_location_store0002">
+            <field name="name">VENDOR MAINPOWER STORE</field>
+            <field name="wh_code">sup00002</field>
+           <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
+
+        </record>
+
+        <record model="stock.location" id="vendor_location_store003">
+            <field name="name">VENDOR TRANSPOWER STORE</field>
+            <field name="wh_code">sup00003</field>
+           <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
+
+        </record>
+        <record model="stock.location" id="vendor_location_store0004">
+            <field name="name">VENDOR NEW ERA STORE</field>
+            <field name="wh_code">sup00004</field>
+           <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+
+        </record>
+        <record model="stock.location" id="vendor_location_store005">
+            <field name="name">VENDOR EASTLAND STORE</field>
+            <field name="wh_code">sup00005</field>
+           <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
+        </record>
+        <record model="stock.location" id="vendor_location_store0006">
+            <field name="name">VENDOR FIRSTPOWER STORE</field>
+            <field name="wh_code">sup00006</field>
+           <field name="usage">supplier</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
+
+        </record> 
+        
+        <record model="stock.location" id="customer_location_store001">
+            <field name="name">CUSTOMER CHQ DISTRIBUTION STORE</field>
+            <field name="wh_code">cus0001</field>
+            <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
+        </record>
+        <record model="stock.location" id="customer_location_store0002">
+            <field name="name">CUSTOMER MAINPOWER STORE</field>
+            <field name="wh_code">cus00002</field>
+           <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
+
+        </record>
+
+        <record model="stock.location" id="customer_location_store003">
+            <field name="name">CUSTOMER TRANSPOWER STORE</field>
+            <field name="wh_code">cus00003</field>
+           <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
+
+        </record>
+        <record model="stock.location" id="customer_location_store0004">
+            <field name="name">CUSTOMER NEW ERA STORE</field>
+            <field name="wh_code">cus00004</field>
+           <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+
+        </record>
+        <record model="stock.location" id="customer_location_store005">
+            <field name="name">CUSTOMER EASTLAND STORE</field>
+            <field name="wh_code">cus00005</field>
+           <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
+        </record>
+        <record model="stock.location" id="customer_location_store0006">
+            <field name="name">CUSTOMER FIRSTPOWER STORE</field>
+            <field name="wh_code">cus00006</field>
+           <field name="usage">customer</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
+
+        </record>
     </data>
 </odoo>
