@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <template id="inventory_form_page" name="Inventory Form Page">
+      <t t-call="website.layout">
+        <!-- <div id="inv-root" class="inv-container" style="max-width: 980px; margin: 40px auto; padding: 20px;"> -->
+        <div id="inv-root" class="inv-container" style="margin: 40px auto; padding: 20px;">
+
+          <!-- Header -->
+          <div class="inv-header">
+            <h2>Inventory Form</h2>
+          </div>
+
+          <!-- Card body -->
+          <div class="inv-card">
+            <!-- Top grid -->
+            <div id="inv-top-grid" class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Customer/Client:<span class="req">*</span></label>
+                <input type="text" class="form-control inv-field" data-key="customer" placeholder="Enter customer name"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Operation type:<span class="req">*</span></label>
+                <!-- custom dropdown trigger -->
+                <button type="button" class="form-control inv-select" id="opTypeBtn" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="inv-select__value" data-key="operationType" data-placeholder="Select operation type ▽">Select operation type ▽</span>
+                </button>
+                <!-- dropdown -->
+                <div id="opTypeMenu" class="inv-menu" role="listbox" aria-label="Operation type" hidden="hidden"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Reference:</label>
+                <input type="text" class="form-control inv-field" data-key="reference" placeholder="Enter reference number"/>
+              </div>
+              <div class="col-md-6 d-flex align-items-end">
+                <button id="btnTruck" class="btn btn-primary inv-btn-primary w-100" type="button">
+                  <i class="fa fa-truck" style="margin-right:8px;"></i>Truck Details
+                </button>
+              </div>
+            </div>
+
+            <hr class="inv-divider"/>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle inv-table" id="stocksTable">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th style="width:100px;">Quantity</th>
+                    <th>Source location</th>
+                    <th>Destination location</th>
+                    <th style="width:90px;">Reserve</th>
+                    <th style="width:100px;">Unit</th>
+                    <th>Colour</th>
+                    <th style="width:130px;">Status</th>
+                    <th style="width:40px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="stocksBody">
+                  <tr class="inv-empty">
+                    <td colspan="9"><span class="text-muted">No stock lines yet. Click “Add Stocks”.</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex">
+              <button id="btnAddLine" class="btn btn-outline-primary inv-btn-outline" type="button">
+                Add Stocks <span class="inv-plus">+</span>
+              </button>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button id="btnFakeSubmit" class="btn btn-primary inv-btn-primary" type="button">
+                Preview JSON
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overlay & Modal (Truck Details) -->
+        <div id="inv-overlay" class="inv-overlay" aria-hidden="true"></div>
+        <div id="truckModal" class="inv-modal" role="dialog" aria-modal="true" aria-labelledby="truckTitle" hidden="hidden">
+          <div class="inv-modal__dialog">
+            <div class="inv-modal__header">
+              <h4 id="truckTitle"><i class="fa fa-truck" style="margin-right:8px;"></i>Truck Details</h4>
+              <button class="inv-modal__close" data-close="true"><i class="fa fa-times" aria-label="Close"></i></button>
+            </div>
+            <div class="inv-modal__body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Truck Reg. No:</label>
+                  <input type="text" class="form-control inv-truck" data-key="regNo" placeholder="Enter truck reg. number"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Truck Driver:</label>
+                  <input type="text" class="form-control inv-truck" data-key="driver" placeholder="Enter driver name"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Driver No.:</label>
+                  <input type="text" class="form-control inv-truck" data-key="driverNo" placeholder="Enter driver’s number"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Driver Address:</label>
+                  <input type="text" class="form-control inv-truck" data-key="address" placeholder="Enter driver’s address"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Start Location:</label>
+                  <input type="text" class="form-control inv-truck" data-key="startLoc" placeholder="Enter source location"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Destination Location:</label>
+                  <input type="text" class="form-control inv-truck" data-key="destLoc" placeholder="Enter destination location"/>
+                </div>
+              </div>
+            </div>
+            <div class="inv-modal__footer">
+              <button class="btn btn-secondary" data-close="true">Close</button>
+              <button id="btnSaveTruck" class="btn btn-primary inv-btn-primary" type="button">Save</button>
+            </div>
+          </div>
+        </div>
+      </t>
+    </template>
+
+  </data>
+</odoo>
