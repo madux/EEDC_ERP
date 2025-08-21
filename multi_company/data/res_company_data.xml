@@ -76,11 +76,11 @@
       <field name="street">Ebonyi</field>
     </record>
 
-    <record id="company_enugu_edp" model="res.company">
+    <!-- <record id="company_enugu_edp" model="res.company">
       <field name="name">EEDC Holding Company (Holdco)</field>
       <field name="partner_id" ref="partner_enugu_edp"/>
       <field name="street">Enugu</field>
-    </record>
+    </record> -->
 
   </data>
 </odoo>

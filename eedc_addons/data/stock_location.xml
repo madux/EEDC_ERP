@@ -4,106 +4,163 @@
         <record model="stock.location" id="store001">
             <field name="name">CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">0001</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
         </record>
         <record model="stock.location" id="store0002">
             <field name="name">CHQ STATIONERY STORE</field>
             <field name="wh_code">0002</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
         </record>
 
         <record model="stock.location" id="store003">
             <field name="name">ABAKILIKI STORE</field>
             <field name="wh_code">0003</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
         </record>
         <record model="stock.location" id="store0004">
             <field name="name">EKWULUOBIA STORE</field>
             <field name="wh_code">0004</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0004"/>
+
         </record>
         <record model="stock.location" id="store005">
             <field name="name">OGUI STORE</field>
             <field name="wh_code">0005</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch005"/>
+
         </record>
         <record model="stock.location" id="store0006">
             <field name="name">ABAKPA STORE</field>
             <field name="wh_code">0006</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0006"/>
+
         </record>
         <record model="stock.location" id="store007">
             <field name="name">AWKUNANAW STORE</field>
             <field name="wh_code">0007</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch007"/>
+
         </record>
         <record model="stock.location" id="store0008">
             <field name="name">NSUKKA STORE</field>
             <field name="wh_code">0008</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0008"/>
+
         </record>
         <record model="stock.location" id="store009">
             <field name="name">UMUAHIA STORE</field>
             <field name="wh_code">0009</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch009"/>
+
         </record>
         <record model="stock.location" id="store0010">
             <field name="name">ARIARIA STORE</field>
             <field name="wh_code">0010</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0010"/>
+
         </record>
-
-
         <record model="stock.location" id="store0011">
             <field name="name">ABA STORE</field>
             <field name="wh_code">0011</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+        
         </record>
         <record model="stock.location" id="store0012">
             <field name="name">ORLU STORE</field>
             <field name="wh_code">0012</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0012"/>
+        
         </record>
         <record model="stock.location" id="store0013">
             <field name="name">NEW OWERRI STORE</field>
             <field name="wh_code">0013</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0013"/>
+        
         </record>
         <record model="stock.location" id="store0014">
             <field name="name">MBAISE STORE</field>
             <field name="wh_code">0014</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0014"/>
+        
         </record>
         <record model="stock.location" id="store0015">
             <field name="name">OWERRI STORE</field>
             <field name="wh_code">0015</field>
+            <field name="company_id" ref="multi_company.company_transpower"/> 
+            <field name="branch_id" ref="multi_company.branch0015"/>
+        
         </record>
 
         <record model="stock.location" id="store0016">
             <field name="name">OGBARU STORE</field>
             <field name="wh_code">0016</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/> 
+            <field name="branch_id" ref="multi_company.branch0016"/>
+        
         </record>
         <record model="stock.location" id="store0017">
             <field name="name">ONITSHA STORE</field>
             <field name="wh_code">0017</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/> 
+            <field name="branch_id" ref="multi_company.branch0017"/>
+        
         </record>
         <record model="stock.location" id="store0018">
             <field name="name">NNEWI STORE</field>
             <field name="wh_code">0018</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/> 
+            <field name="branch_id" ref="multi_company.branch0018"/>
+        
         </record>
 
         <record model="stock.location" id="store0019">
             <field name="name">AWKA STORE</field>
             <field name="wh_code">0019</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/> 
+            <field name="branch_id" ref="multi_company.branch0019"/>
+        
         </record>
        
         <record model="stock.location" id="store0021">
             <field name="name">OGIDI STORE</field>
             <field name="wh_code">0021</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/> 
+            <field name="branch_id" ref="multi_company.branch0021"/>
+        
         </record>
-        <record model="stock.location" id="store0022">
-            <field name="name">AWKA STORE</field>
-            <field name="wh_code">0022</field>
-        </record>
-
+         
 
         <!-- views -->
 
         <record model="stock.location" id="view_store001">
-            <field name="name">VIEW EEDC</field>
+            <field name="name">VIEW HOLDCO</field>
             <field name="wh_code">v0001</field>
             <field name="usage">view</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
         </record>
         <record model="stock.location" id="view_store0002">
             <field name="name">VIEW MAIN POWER</field>
             <field name="wh_code">v0002</field>
             <field name="usage">view</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
 
         </record>
 
@@ -111,25 +168,31 @@
             <field name="name">VIEW TRANSPOWER</field>
             <field name="wh_code">v0003</field>
             <field name="usage">view</field>
-
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
         </record>
 
         <record model="stock.location" id="view_store0004">
             <field name="name">VIEW NEW ERA</field>
             <field name="wh_code">v0004</field>
             <field name="usage">view</field>
-
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
         </record>
         <record model="stock.location" id="view_store005">
             <field name="name">VIEW FIRSTPOWER</field>
             <field name="wh_code">v0005</field>
             <field name="usage">view</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
 
         </record>
         <record model="stock.location" id="view_store005">
             <field name="name">VIEW EASTLAND</field>
             <field name="wh_code">v0005</field>
             <field name="usage">view</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
 
         </record>
         <!-- PRODUCTION  -->
@@ -138,33 +201,50 @@
             <field name="name">PRODUCTION CHQ DISTRIBUTION STORE</field>
             <field name="wh_code">pr0001</field>
             <field name="usage">production</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="branch_id" ref="multi_company.branch001"/>
+
         </record>
         <record model="stock.location" id="production_store0002">
             <field name="name">PRODUCTION MAINPOWER STORE</field>
             <field name="wh_code">pr00002</field>
             <field name="usage">production</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
+            <field name="branch_id" ref="multi_company.branch0002"/>
+
         </record>
 
         <record model="stock.location" id="production_store003">
             <field name="name">PRODUCTION TRANSPOWER STORE</field>
             <field name="wh_code">pr00003</field>
             <field name="usage">production</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+            <field name="branch_id" ref="multi_company.branch0015"/>
+
         </record>
         <record model="stock.location" id="production_store0004">
             <field name="name">PRODUCTION NEW ERA STORE</field>
             <field name="wh_code">pr00004</field>
             <field name="usage">production</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+            <field name="branch_id" ref="multi_company.branch0011"/>
+
         </record>
         <record model="stock.location" id="production_store005">
             <field name="name">PRODUCTION EASTLAND STORE</field>
             <field name="wh_code">pr00005</field>
             <field name="usage">production</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
         </record>
         <record model="stock.location" id="production_store0006">
             <field name="name">PRODUCTION FIRSTPOWER STORE</field>
             <field name="wh_code">pr00006</field>
             <field name="usage">production</field>
-        </record>
-         
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+            <field name="branch_id" ref="multi_company.branch0019"/>
+
+        </record>         
     </data>
 </odoo>

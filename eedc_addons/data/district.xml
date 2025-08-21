@@ -16,5 +16,6 @@
             <field name="state_id" ref="eedc_addons.ng_state_235"/>
             <!-- <field name="branch_id" ref="163"/> -->
         </record>
+        
     </data>
 </odoo>

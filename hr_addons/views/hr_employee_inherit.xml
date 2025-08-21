@@ -46,7 +46,7 @@
                                     string="Approve" 
                                     class="oe_highlight btn-sm" 
                                     type="object"
-                                    attrs="{'invisible': [('state', '=', 'draft')]}"
+                                    attrs="{'invisible': [('state', '!=', 'draft')]}"
                                     comfirm="Are you sure you want approve" 
                                     groups="hr.group_hr_manager"
                                 />
@@ -55,7 +55,7 @@
                                     string="Reverse" 
                                     class="btn-sm" 
                                     type="object"
-                                    attrs="{'invisible': [('state', '=', 'approve')]}"
+                                    attrs="{'invisible': [('state', '!=', 'approve')]}"
                                     comfirm="Are you sure you want to reverse" 
                                     groups="hr.group_hr_manager"
                                 />
