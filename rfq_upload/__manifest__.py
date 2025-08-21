@@ -12,6 +12,7 @@
     },
     "data": [
         'security/ir.model.access.csv',
+        'views/res_partner_views.xml',
         'views/memo_view.xml',
         'wizard/rfq_upload_wizard.xml',
     ],

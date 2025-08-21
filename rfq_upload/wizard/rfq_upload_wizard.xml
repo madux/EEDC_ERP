@@ -29,11 +29,11 @@
                             <field name="rfq_excel_filename" invisible="1"/>
                         </group>
                         <group>
-                            <!-- <label for="memo_details" string="Memo Details"/>
+                            <label for="memo_details" string="Memo Details"/>
                             <div name="memo_details">
                                 <div><strong>Request Number:</strong> <field name="memo_id" readonly="1" nolabel="1" widget="char" attrs="{'invisible': [('memo_id', '=', False)]}"/></div>
                                 <div><strong>Items in Request:</strong> <span class="text-muted">Will be pre-populated in template</span></div>
-                            </div> -->
+                            </div>
                         </group>
                     </group>
 

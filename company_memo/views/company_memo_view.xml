@@ -387,7 +387,8 @@
 							<page name="PurchaseOrder" string="Purchase Order" 
                             attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment'])]}">
 								<button name="generate_po_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate Purchase Order"/>
-								<field name="po_ids" force_save="1" readonly="0" domain="[('id', '=', 0)]"
+								<!-- <field name="po_ids" force_save="1" readonly="0" domain="[('id', '=', 0)]" -->
+								<field name="po_ids" force_save="1" readonly="0"
 								context="{'default_memo_id': active_id, 'default_memo_state': state, 'default_partner_id': client_id, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
                                     <tree string="PO" editable="bottom" create="0" delete="0" no_open="0" decoration-info="state == 'draft'" decoration-primary="state in ['done']" decoration-success="state in ['purchase']" decoration-danger="state == 'draft'" export_xlsx="1">
                                         <field name="selected" string="Verify Vendor" readonly = "0"/> 

@@ -15,7 +15,6 @@ class RFQUploadWizard(models.TransientModel):
     rfq_excel_file = fields.Binary(string="RFQ Excel File", required=False)
     rfq_excel_filename = fields.Char(string="Filename")
     
-    # Processing options
     state = fields.Selection([
         ('draft', 'Draft'),
         ('validating', 'Validating'),
@@ -33,7 +32,6 @@ class RFQUploadWizard(models.TransientModel):
     group_by_vendor = fields.Boolean(string="Group by Vendor", default=True,
                                    help="Create one PO per vendor")
     
-    # Results
     validation_result = fields.Text(string="Validation Result", readonly=True)
     processing_result = fields.Text(string="Processing Result", readonly=True)
     
@@ -49,10 +47,8 @@ class RFQUploadWizard(models.TransientModel):
         self.state = 'validating'
         
         try:
-            # Parse the uploaded file
             rfq_data = self._parse_excel_file()
             
-            # Validate the data
             validation_errors = self._validate_rfq_data(rfq_data)
             
             if validation_errors:
@@ -95,25 +91,21 @@ class RFQUploadWizard(models.TransientModel):
         self.state = 'processing'
         
         try:
-            # Parse the uploaded file
             rfq_data = self._parse_excel_file()
             
-            # Validate the data first
             if not self.validate_only:
                 validation_errors = self._validate_rfq_data(rfq_data)
                 if validation_errors:
                     raise ValidationError(_("Validation failed:\n%s") % "\n".join(validation_errors))
             
             if self.validate_only:
-                # Only validate, don't create POs
                 self.processing_result = f"Validation completed successfully.\nFound {len(rfq_data)} valid RFQ lines.\nNo purchase orders created (validation only mode)."
                 self.state = 'done'
                 return self._show_success_message("File validated successfully!")
             else:
-                # Create purchase orders
-                created_pos = self.memo_id.create_or_update_po_from_rfq(rfq_data)
+                options = {'create_vendors': self.create_missing_vendors, 'create_products' :self.create_missing_products}
+                created_pos = self.memo_id.create_or_update_po_from_rfq(rfq_data, options)
                 
-                # Update memo with file data
                 self.memo_id.write({
                     'rfq_excel_file': self.rfq_excel_file,
                     'rfq_excel_filename': self.rfq_excel_filename,
@@ -121,7 +113,6 @@ class RFQUploadWizard(models.TransientModel):
                     'rfq_upload_date': fields.Datetime.now(),
                 })
                 
-                # Prepare result message
                 result_message = f"RFQ processing completed successfully!\n\n"
                 result_message += f"• Processed {len(rfq_data)} RFQ lines\n"
                 result_message += f"• Created {len(created_pos)} Purchase Orders\n\n"
@@ -165,24 +156,19 @@ class RFQUploadWizard(models.TransientModel):
     def _parse_excel_file(self):
         """Parse uploaded Excel/CSV file and return RFQ data"""
         try:
-            # Decode the uploaded file
             file_data = base64.b64decode(self.rfq_excel_file)
             
-            # Try to parse with pandas first
             try:
                 import pandas as pd
                 
-                # Check file extension
                 if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
                     df = pd.read_csv(io.BytesIO(file_data))
                 else:
                     df = pd.read_excel(io.BytesIO(file_data))
                 
-                # Convert to list of dictionaries
                 return df.to_dict('records')
                 
             except ImportError:
-                # Fallback for CSV files without pandas
                 if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
                     return self._parse_csv_fallback(file_data.decode('utf-8'))
                 else:
@@ -203,32 +189,31 @@ class RFQUploadWizard(models.TransientModel):
         """Validate RFQ data and return list of errors"""
         errors = []
         required_columns = [
-            'VENDOR NAME', 'PRODUCT NAME', 'QTY TO SUPPLY', 'PRICE PER QUANTITY'
+            'VENDOR CODE' ,'VENDOR NAME', 'PRODUCT NAME', 'QTY TO SUPPLY', 'PRICE PER QUANTITY'
         ]
         
         if not rfq_data:
             errors.append("No data found in uploaded file")
             return errors
         
-        # Check for required columns
         first_row = rfq_data[0]
         missing_columns = [col for col in required_columns if col not in first_row]
         if missing_columns:
             errors.append(f"Missing required columns: {', '.join(missing_columns)}")
             return errors
         
-        # Validate each row
         for idx, row in enumerate(rfq_data, 1):
             row_errors = []
             
-            # Check required fields
+            if not row.get('VENDOR CODE', '').strip():
+                row_errors.append("Vendor code is required")
+                
             if not row.get('VENDOR NAME', '').strip():
                 row_errors.append("Vendor name is required")
             
             if not row.get('PRODUCT NAME', '').strip() and not row.get('PRODUCT CODE', '').strip():
                 row_errors.append("Product name or product code is required")
             
-            # Validate quantity
             try:
                 qty = float(row.get('QTY TO SUPPLY', 0))
                 if qty <= 0:
@@ -236,7 +221,6 @@ class RFQUploadWizard(models.TransientModel):
             except (ValueError, TypeError):
                 row_errors.append("Invalid quantity format")
             
-            # Validate price
             try:
                 price = float(row.get('PRICE PER QUANTITY', 0))
                 if price < 0:
@@ -244,7 +228,6 @@ class RFQUploadWizard(models.TransientModel):
             except (ValueError, TypeError):
                 row_errors.append("Invalid price format")
             
-            # Validate email format if provided
             vendor_email = row.get('VENDOR EMAIL', '').strip()
             if vendor_email and '@' not in vendor_email:
                 row_errors.append("Invalid email format")
