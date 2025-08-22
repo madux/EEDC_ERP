@@ -81,7 +81,7 @@
             <field name="inherit_id" ref="sale.view_order_tree" />
             <field name="arch" type="xml">
                 <field name="name" position="after">
-                    <field name="branch_id"/>
+                    <field name="branch_id" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -93,7 +93,7 @@
             <field name="inherit_id" ref="sale.view_quotation_tree" />
             <field name="arch" type="xml">
                 <field name="name" position="after">
-                    <field name="branch_id" string="Section"/>
+                    <field name="branch_id" string="Branch" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -106,7 +106,7 @@
             <field name="arch" type="xml">
 
                 <field name="name" position="before">
-                    <field name="branch_id" string="Section"/>
+                    <field name="branch_id" string="Branch" options="{'no_create': True, 'no_open': True}"/>
                 </field>
 
                 <filter name="salesperson" position="before">
@@ -122,7 +122,7 @@
             <field name="inherit_id" ref="sale.view_order_line_tree" />
             <field name="arch" type="xml">
                 <field name="order_id" position="after">
-                    <field name="branch_id"/>
+                    <field name="branch_id" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -133,7 +133,7 @@
             <field name="inherit_id" ref="sale.sale_order_line_view_form_readonly" />
             <field name="arch" type="xml">
                 <field name="order_id" position="after">
-                    <field name="branch_id"/>
+                    <field name="branch_id" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -159,7 +159,7 @@
             <field name="inherit_id" ref="sale_analysis_report.sale_analysis_report_tree"/>
             <field name="arch" type="xml">
                 <field name="product_id" position="after">
-                    <field name="branch_id" string="Section / Branch"/>
+                    <field name="branch_id" string="Branch" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -170,7 +170,7 @@
             <field name="inherit_id" ref="sales_team.crm_team_view_tree"/>
             <field name="arch" type="xml">
                 <field name="name" position="before">
-                    <field name="branch_id"/>
+                    <field name="branch_id" options="{'no_create': True, 'no_open': True}"/>
                 </field>
             </field>
         </record>
@@ -181,7 +181,7 @@
             <field name="inherit_id" ref="sales_team.crm_team_view_search"/>
             <field name="arch" type="xml">
                 <field name="name" position="before">
-                    <field name="branch_id" string="District"/>
+                    <field name="branch_id" string="District" options="{'no_create': True, 'no_open': True}"/>
                 </field>
                 <filter name="team_leader" position="before">
                     <filter name="branch_id" string="District" domain="[]" context="{'group_by':'branch_id'}"/>

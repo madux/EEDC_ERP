@@ -189,29 +189,107 @@ class PortalRequest(http.Controller):
 					"message": "Employee with staff ID provided does not exist. Contact Admin", 
 				}
 			
-	@http.route(
-			['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
-			type='json', website=True, auth="user", csrf=False)
-	def get_leave_allocation(self,leave_type,staff_num):
+	# @http.route(
+	# 		['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+	# 		type='json', website=True, auth="user", csrf=False)
+	# def get_leave_allocation(self,leave_type,staff_num):
+	# 	"""Check staff Identification No.
+	# 	Args:
+	# 		staff_num (str): The Id No to be validated
+	# 	Returns:
+	# 		dict: Response
+	# 	"""
+	# 	_logger.info('Checking Staff ID No ...')
+	# 	user = request.env.user
+	# 	if staff_num:
+	# 		employee = request.env['hr.employee'].sudo().search(
+	# 		[('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
+	# 		if employee:
+	# 			# get leave artifacts
+	# 			leave_allocation = request.env['hr.leave.allocation'].sudo()
+	# 			leave_allocation_id = leave_allocation.search([
+	# 				('holiday_status_id', '=', leave_type),
+	# 				('employee_id.employee_number', '=', staff_num)
+	# 				], limit=1)
+	# 			if leave_allocation_id:
+	# 				return {
+	# 					"status": True,
+	# 					"data": {
+	# 						'number_of_days_display': leave_allocation_id.number_of_days_display,
+	# 					},
+	# 					"message": "", 
+	# 				}
+	# 			else:
+	# 				return {
+	# 				"status": False,
+	# 				"data": {
+	# 					'number_of_days_display': "",
+	# 				},
+	# 				"message": "No allocation set up for the employee. Contact Admin", 
+	# 				}
+	# 		else:
+	# 			return {
+	# 				"status": False,
+	# 				"data": {
+	# 					'number_of_days_display': "",
+	# 				},
+	# 				"message": "Employee with staff ID provided does not exist. Contact Admin", 
+	# 				}
+	# 	return {
+	# 			"status": False,
+	# 			"data": {
+	# 				'number_of_days_display': "",
+	# 			},
+	# 			"message": "Please select staff ID. Contact Admin", 
+	# 			}
+	# ['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+	@http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
+	def get_leave_allocation(self, **post):
 		"""Check staff Identification No.
 		Args:
 			staff_num (str): The Id No to be validated
 		Returns:
 			dict: Response
 		"""
-		_logger.info('Checking Staff ID No ...')
+		_logger.info(f'Checking Staff leave ID No ... {post}')
+		staff_num = post.get('staff_num')
+		leave_type = post.get('leave_id')
 		user = request.env.user
 		if staff_num:
+			_logger.info('staff number found ...')
 			employee = request.env['hr.employee'].sudo().search(
 			[('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
 			if employee:
+				_logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
+
 				# get leave artifacts
 				leave_allocation = request.env['hr.leave.allocation'].sudo()
+				# Get today's year
+				current_year = date.today().year
+				# Define the range
+				within_this_start_year = date(current_year, 1, 1)    # Jan 1
+				within_this_end_year = date(current_year, 12, 31)    # Dec 31
 				leave_allocation_id = leave_allocation.search([
-					('holiday_status_id', '=', leave_type),
-					('employee_id.employee_number', '=', staff_num)
+					('holiday_status_id', '=', int(leave_type)),
+					('employee_id', '=', employee.id),
+					('date_from', '>=', within_this_start_year),
+					('date_from', '<=', within_this_end_year),
+					('active', '=', True),
+					# ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
 					], limit=1)
-				if leave_allocation_id:
+				leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
+				# _logger.info('staff number found ...')
+				_logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
+    
+				if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
+					return {
+						"status": False,
+						"data": {
+							'number_of_days_display': "",
+						},
+						"message": "No allocation set up for the employee. Contact Admin", 
+						}
+				else: # if leave_allocation_id:
 					return {
 						"status": True,
 						"data": {
@@ -219,14 +297,7 @@ class PortalRequest(http.Controller):
 						},
 						"message": "", 
 					}
-				else:
-					return {
-					"status": False,
-					"data": {
-						'number_of_days_display': "",
-					},
-					"message": "No allocation set up for the employee. Contact Admin", 
-					}
+
 			else:
 				return {
 					"status": False,
@@ -240,8 +311,9 @@ class PortalRequest(http.Controller):
 				"data": {
 					'number_of_days_display': "",
 				},
-				"message": "Please select staff ID. Contact Admin", 
+				"message": "Please select2 staff ID. Contact Admin", 
 				}
+  
 	@http.route(['/check-overlapping-leave'], type='json', website=True, auth="user", csrf=False)
 	def check_overlapping_leave(self, **post):
 		staff_num = post.get('data').get('staff_num')
@@ -514,6 +586,19 @@ class PortalRequest(http.Controller):
 		products = request.env["product.product"].sudo().search(domain)
 		return json.dumps({
 			"results": [{"id": item.id,"text": f'{item.name} {item.id}', 'qty': item.qty_available} for item in products],
+			"pagination": {
+				"more": True,
+			}
+		})
+  
+	@http.route(['/portal-request-employee-reliever'], type='http', website=True, auth="user", csrf=False)
+	def get_employee_reliever(self, **post):
+		available_employees = []
+		query = request.params.get('q', '') 
+		domain = [('active', '=', True), ('name', 'ilike', query)]#, ('id', 'in', available_employees)]
+		employees = request.env["hr.employee"].sudo().search(domain)
+		return json.dumps({
+			"results": [{"id": item.id, "text": f'{item.name} - {item.employee_number}'} for item in employees],
 			"pagination": {
 				"more": True,
 			}
@@ -807,6 +892,7 @@ class PortalRequest(http.Controller):
 				"leave_type_id": post.get("leave_type_id", ""),
 				"leave_start_date": leave_start_date,
 				"leave_end_date": leave_end_date,
+				"leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
 				"applicationChange": True if post.get("applicationChange") == "on" else False,
 				"enhancement": True if post.get("enhancement") == "on" else False,
 				"datapatch": True if post.get("datapatch") == "on" else False,
@@ -858,7 +944,7 @@ class PortalRequest(http.Controller):
 			####
 			# memo_id.action_submit_button()
 			stage_id = memo_id.get_initial_stage(
-				memo_id.id,
+				memo_config.id,
 				)
 			_logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type_key} and department {memo_id.employee_id.department_id.name}''')
 			approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
@@ -1054,6 +1140,62 @@ class PortalRequest(http.Controller):
 		else:
 			return 0
 
+	@http.route("/print/memo/invoice/<int:id>",
+                type='http', auth="user", website=True, csrf=False)
+	def view_result(self, id, **kwargs):
+		"""View Invoice.
+        """
+		memo_id = id # kwargs.get('memo_id')
+		# memoRecord = request.env['memo.model'].sudo().search([('id', '=', int(memo_id))], limit=1)
+		invoice = request.env['account.move'].sudo().search([('memo_id', '=', int(memo_id))], limit=1)
+		payment = request.env['account.payment'].sudo().search([('memo_reference', '=', int(memo_id))], limit=1)
+		template = ""
+		id_render = 0
+		if invoice:
+			template = "account.account_invoices"
+			id_render = invoice.id
+
+		elif payment:
+			template = "account.action_report_payment_receipt"
+			id_render = payment.id
+		_logger.info(f"WHICH TEMPLATE NEEDED TO BE PRINTED {template}")
+		report_id = request.env.ref(template) 
+		if not report_id:
+			_logger.info(f"NO TEMPLATE STILL FOUND {template}")
+			pass #raise NotFound(f"No template found for printing {template}")
+		else:
+			# pdf, report_format = report_id.sudo().render_qweb_pdf(report_id, id_render)
+			pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf(template, [id_render])
+   
+			pdfhttpheaders = [
+            ('Content-Type', 'application/pdf'), ('Content-Length', u'%s' %
+                                                  len(pdf)), 
+            ('Content-Disposition', 'inline; filename={}'.format(invoice and invoice.id or payment and payment.id))]
+			return request.make_response(pdf, headers=pdfhttpheaders)
+
+	@http.route(['/check-employee-still-onleave'], type='json', website=True, auth="user", csrf=False)
+	def employee_still_on_leave(self, **post):
+		'''Check if employee is absent and return a validation message'''
+		employee_id = post.get('employee_id', 0)
+		start_date = post.get('start_date')
+		end_date = post.get('end_date')
+		_logger.info(f"lost for {post}")
+		employee_obj = request.env['hr.employee'].sudo().browse([int(employee_id or 0)])
+		_logger.info(f'WHO IS EMPLOYEE {employee_obj}')
+		if employee_obj and employee_obj.hr_icon_display in ['presence_holiday_present', 'presence_holiday_absent']:
+			'''Check if employee is on leave and return validation message'''
+			msg = """The employee to relieve you is currently on leave / Absent"""
+			return {
+				"status": False,
+				"message": msg, 
+				} 
+		else:
+			_logger.info('EMPLOYEE NOT ON LEAVE')
+			return {
+				"status": True,
+				"message": "", 
+				}
+   
 	@http.route('/my/request/view/<string:id>', type='http', auth="user", website=True)
 	def my_single_request(self, id):
 		id = int(id) if id else 0
@@ -1076,12 +1218,23 @@ class PortalRequest(http.Controller):
 			('res_model', '=', 'memo.model'),
 			('res_id', '=', requests.id)
 			])
+		leave_allocation = request.env['hr.leave.allocation'].sudo()
+		leave_allocation_id = leave_allocation.search([
+					('holiday_status_id', '=', int(requests.leave_type_id.id)),
+					('employee_id', '=', requests.employee_id.id),
+					], limit=1)
 		values = {
 			'req': requests,
+			'is_edit_mode': 'on' if requests.state in ['draft', 'submit', 'refuse', 'cancel'] else 'off',
    			'leave_taken': self.get_leave_days_taken(requests),
 			'current_user': user.id,
+			'staff_num': user.id,
+   			'employee_ids': request.env['hr.employee'].sudo().search([('active', '=', True)]),
+			"leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
 			'record_attachment_ids': memo_attachment_ids,
-			}
+			"number_of_days_display": leave_allocation_id.number_of_days_display,
+   			"description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
+		}
 		return request.render("portal_request.request_form_template", values) 
 	
 	@http.route('/my/request/update', type='json', auth="user", website=True)
@@ -1202,6 +1355,50 @@ class PortalRequest(http.Controller):
 					}
 		# return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
 	
+	@http.route('/save/data', type='json', auth="user", website=True)
+	def save_data(self, **post):
+		memo = request.env['memo.model'].sudo()
+		domain = [
+			('id', '=', int(post.get('memo_id'))),
+		]
+		request_record = memo.search(domain, limit=1)
+		_logger.info(f"retriving memo update {request_record}...")
+		if request_record:
+			# leave_start_date = datetime.strptime(post.get("leave_start_date",''), "%m/%d/%Y") if post.get("leave_start_date") else fields.Date.today()
+			# leave_end_date = datetime.strptime(post.get("leave_end_date",''), "%m/%d/%Y") \
+			# 	if post.get("leave_end_date") else leave_start_date + relativedelta(days=1)
+			leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
+			leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
+			values = {
+				'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
+                'leave_start_date': leave_start_date,
+                'leave_end_date': leave_end_date,
+				"leave_Reliever": int(post.get("leave_Reliever")) if post.get("leave_Reliever") else False,
+                'description': post.get('description'),
+			}
+			request_record.update(values)
+			return {
+					"status": True,
+					"message": "Data successfully Updated",
+					}
+		else:
+			return {
+					"status": False,
+					"message": "No match memo record to save records",
+					}
+   
+	#'2024-11-18 00:00:00' does not match format '%m/%d/%Y'
+	def compute_date_format(self, date_format):
+		# date_format: '2024-11-18 00:00:00 or '11/08/2024'
+		date = False
+		if date_format:
+			if '-' in date_format:
+				datefmt = datetime.strptime(date_format, "%Y-%m-%d %H:%M:%S")
+				date = datetime.strptime(datefmt.strftime('%m/%d/%Y'), '%m/%d/%Y')
+			else:
+				date = datetime.strptime(date_format, "%m/%d/%Y")
+		return date
+
 	@http.route('/update/data', type='json', auth="user", website=True)
 	def update_my_request_status(self, **post):
 		request_id = request.env['memo.model'].sudo()

@@ -10,6 +10,10 @@
                     <attribute name="readonly">1</attribute>
                     <attribute name="required">0</attribute>
                 </xpath>
+
+                <xpath expr="//field[@name='work_email']" position="attributes">
+                    <attribute name="required">1</attribute>
+                </xpath>
                 <!-- <xpath expr="//div[@class='oe_title']" position="inside">
                     <h1>
                         <div class="row">

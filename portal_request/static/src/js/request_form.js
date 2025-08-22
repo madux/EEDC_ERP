@@ -19,7 +19,115 @@ odoo.define('portal_request.portal_request_form', function (require) {
     // hiding the components until options is indicated
     divRefuseCommentMessage.hide()
     modalfooter4cancel.hide()
-    refuseCommentMessage.attr('required', false)
+    refuseCommentMessage.attr('required', false);
+
+    let checkOverlappingLeaveDate = function(thiis){
+        var message = ""
+        var staff_num = $('#staff_id').val();
+        if(staff_num !== "" && $('#leave_start_date').val() !== '' && $('#leave_end_datex').val() !== ""){
+            thiis._rpc({
+                route: `/check-overlapping-leave`,
+                params: {
+                    'data': {
+                        'staff_num': staff_num,
+                        'start_date': $('#leave_start_date').val(),
+                        'end_date': $('#leave_end_datex').val(),
+                    }
+                },
+            }).then(function (data) { 
+                if (!data.status) {
+                    $("#leave_start_date").val('')
+                    $("#leave_end_datex").val('') //.trigger('change')
+                    $('#leave_start_date').attr('required', true);
+                    $('#leave_start_date').addClass('is-invalid', true);
+                    let message = `Validation Error! ${data.message}`
+                    console.log("not Passed for leave, ", message)
+                    // alert(message); 
+                    // return false
+                    modal_message.text(message)
+                    alert_modal.modal('show');
+
+                }else{
+                    console.log("Passed for leave")
+                }
+            }).guardedCatch(function (error) {
+                let msg = error.message.message
+                console.log(msg)
+                $("#leave_end_datex").val('')
+                message = `Unknown Error! ${msg}`
+                modal_message.text(message)
+                alert_modal.modal('show');
+                return false;
+            });
+        } 
+    } 
+
+    let saveChangedFieldsValues = function(thiss){
+        let leave_type_id = $("#leave_type_id")
+        let leave_start_datex = $("#leave_start_datex")
+        let leave_end_datex = $("#leave_end_datex")
+        let leave_remaining = $("#leave_remaining")
+        let leave_reliever_ids = $("#leave_reliever_ids")
+        let description = $("#description")
+        let record_id = $(".record_id").attr('id')
+
+        // call a save route 
+        thiss._rpc({
+            route: '/save/data/',
+            params: {
+                'leave_type_id': leave_type_id.val(),
+                'leave_start_date': leave_start_datex.val(),
+                'leave_end_date': leave_end_datex.val(),
+                // 'leave_remaining': leave_remaining,
+                'leave_Reliever': leave_reliever_ids.val(),
+                'description': description.val(),
+                'memo_id': record_id,
+            }
+        }).then(function (data) {
+            if(data.status){
+                console.log('saving record data => ')
+                $("#is_edit_mode").prop('checked', false);
+            }else{
+                alert(data.message);
+            }
+            
+        }).guardedCatch(function (error) {
+            let msg = error.message.message
+            alert(`Unknown Error! ${msg}`)
+        });
+    }
+
+    let makeWritableFieldsEditable = function(){
+        console.log('All writable fields are now readable to edit');
+        // store values of old records in localstorage ==> oldValueStore
+        // check if the status of the record is not the first stage. 
+        //consider putting this in the controller
+        // 1. Set all the fields not readonly,
+        // set is_edit_mode checkbox to true
+        storeOldFieldsValue();
+        // $('input,textarea,select,select2').filter('[readonly]:visible').each(function(ev){
+        $('input,textarea,select,select2').each(function(ev){
+            var field = $(this); 
+            var field = $(this); 
+            field.prop('readonly', false);
+            field.prop('disabled', false);
+
+            $('input[name=is_edit_mode]').prop('checked', true);
+            trigger_date_function($('#leave_start_datex'))
+            trigger_date_function($('#leave_end_datex'))
+            // open the description text for editting
+            // $('#description').prop('contenteditable', true)
+            // trigger leave date
+            
+        });
+
+    }
+
+    let lockFieldsFunction = function(){
+        $('input, select, textarea, select2').each(function(ev){
+            $(this).prop('disabled', true) 
+        })
+    }
 
     publicWidget.registry.PortalRequestFormWidgets = publicWidget.Widget.extend({
         selector: '#portal-request-form',
@@ -38,6 +146,197 @@ odoo.define('portal_request.portal_request_form', function (require) {
             })
         },
         events: {
+            'click .editbtn': function(ev){
+                console.log("EDIT MODE ACTIVATED")
+                // hide editbtn 
+                // display save and discard option
+                // enable all fields to be writtable 
+                let edit = $(ev.target);
+                let save = $('#save');
+                let back = $('#previous')
+                let discard = $('#discard')
+
+                edit.addClass('d-none');
+                back.addClass('d-none');
+                save.removeClass('d-none');
+                discard.removeClass('d-none');
+                makeWritableFieldsEditable();
+            },
+
+            'click #save': function(ev){
+                // hide save btn 
+                // hide discard button
+                // disable all fields to be readonly 
+                let save = $(ev.target);
+                let edit = $('#editbtn');
+                let back = $('#previous')
+                let discard = $('#discard')
+
+                edit.removeClass('d-none');
+                back.removeClass('d-none');
+                save.addClass('d-none');
+                discard.addClass('d-none');
+                // saveChangedFieldsValues();
+
+                let leave_type_id = $("#leave_type_id")
+                let leave_start_datex = $("#leave_start_datex")
+                let leave_end_datex = $("#leave_end_datex")
+                let leave_remaining = $("#leave_remaining")
+                let leave_reliever_ids = $("#leave_reliever_ids")
+                let description = $("#description")
+                let record_id = $(".record_id").attr('id')
+                console.log('saving record data => 1')
+                // call a save route 
+                this._rpc({
+                    route: `/save/data`,
+                    params: {
+                        'leave_type_id': leave_type_id.val(),
+                        'leave_start_date': leave_start_datex.val(),
+                        'leave_end_date': leave_end_datex.val(),
+                        'leave_Reliever': leave_reliever_ids.val(),
+                        'description': description.val(),
+                        'memo_id': record_id,
+                    },
+                }).then(function (data) {
+                    if(data.status){
+                        console.log('return saved record data => ')
+                        $("#is_edit_mode").prop('checked', false);
+                        // lock all fields 
+                        lockFieldsFunction();
+                    }else{
+                        alert(data.message);
+                    }
+                    
+                }).guardedCatch(function (error) {
+                    let msg = error.message.message
+                    alert(`Unknown Error! ${msg}`)
+                });
+            },
+
+            'blur input[name=leave_start_datex]': function(ev){
+                if ($('#leave_type_id').val() == ""){
+                    let message = `Validation Error! Please ensure to select Leave type`
+                    $('#leave_start_datex').val('');
+                    $('#leave_end_datex').val('');
+                    alert(message);
+                    return false;
+                }
+                let leave_remaining = $('#leave_remaining').val(); 
+                let start_date = $(ev.target);
+                let remain_days = leave_remaining !== undefined ? parseInt($('#leave_remaining').val()) : 1
+                var selectStartLeaveDate = new Date(start_date.val());
+                var endDate = new Date($('#leave_start_datex').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
+                var maxDate = endDate + (21 * 24 * 60 * 60 * 1000)
+                var prefixendDate = new Date(endDate).getMonth() + 1 
+                var prefixmaxDate = new Date(maxDate).getMonth() + 1
+                var join1 = prefixendDate.length == 1 ? `0${prefixendDate}` : prefixendDate;
+                var join2 = prefixmaxDate.length == 1 ? `0${prefixmaxDate}` : prefixmaxDate;
+                var st = `${join1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
+                var end = `${join2}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
+                console.log(`what is start and end date ${st} ${end}`)
+                trigger_date_function($('#leave_end_datex'), st, end)
+            },
+            'blur input[name=leave_end_datex]': function(ev){
+                let leaveRemaining = $('#leave_remaining').val();
+                console.log(`leaveRemaining IS : ${leaveRemaining}`)
+                let start_date = $('#leave_start_datex');
+                let endDate = $(ev.target);
+                var date1 = new Date(start_date.val());
+                var date2 = new Date(endDate.val());
+                var Difference_In_Time = date2.getTime() - date1.getTime();
+                var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
+                if (parseInt(leaveRemaining) > 0 && Difference_In_Days > parseInt(leaveRemaining)){
+                    $('#leave_end_datex').val("");
+                    $('#leave_end_datex').attr('required', true);
+                    alert(`You only have ${leaveRemaining} number of leave remaining for this leave type. Please Ensure the date range is within the available day allocated for you.`)
+                    return true;
+                }
+                else{
+                    $('#leave_end_datex').attr('required', false);
+                    endDate.removeClass('is-invalid').addClass('is-valid');
+                    $('#leave_taken').text(Difference_In_Days + ` Day(s)`)
+
+                }
+                checkOverlappingLeaveDate(this)
+            }, 
+			'change #leave_reliever_ids': function(ev){
+            // 'blur input[name=leave_reliever]': function(ev){
+                let leave_reliever = $('#leave_reliever_ids');
+                let start_date = $('#leave_start_datex');
+                if (!start_date.val() && leave_reliever.val() !== ""){
+                    leave_reliever.val('').trigger('change');
+                    let message = `Validation Error! Please provide leave start date, reliever`
+                    alert(message);
+                    return false;
+                }
+                else{
+					if (leave_reliever.val() !== ""){
+						this._rpc({
+							route: `/check-employee-still-onleave`,
+							params: {
+								'employee_id': leave_reliever.val(),
+								'start_date': $('#leave_start_datex').val(),
+								'end_date': $('#leave_end_datex').val(),
+							},
+						}).then(function (data) { 
+							if (!data.status) {
+                                leave_reliever.val('').trigger('change');
+								leave_reliever.addClass('is-invalid', true);
+								let message = `Validation Error! ${data.message}`
+								alert(message);
+                                // return false;
+							}else{
+								console.log("---")
+							}
+						}).guardedCatch(function (error) {
+							let msg = error.message.message
+							console.log(msg)
+							leave_reliever.val('')
+							let message = `Unknown Error! ${msg}`
+							alert(message);
+							return false;
+						});
+					}
+                }
+            },
+
+            'change select[name=leave_type_id]': function(ev){
+                let leave_id = $(ev.target).val();
+                let staff_num = $('#staff_id').text();
+                if(staff_num !== '' && leave_id !== ''){  
+                    var self = this;
+                    this._rpc({
+                        route: `/get/leave-allocation`, ///${leave_id}/${staff_num}`,
+                        params: {
+                            'staff_num': staff_num.trim(),
+                            'leave_id': leave_id
+                        },
+                    }).then(function (data) {
+                        console.log('retrieved staff leave data => '+ JSON.stringify(data))
+                        if (!data.status) {
+                            $(ev.target).val('')
+                            $("#leave_start_datex").val('')//.trigger('change')
+                            $("#leave_end_datex").val('')//.trigger('change')
+                            $("#leave_remaining").val('')
+                            $("#leave_remain").text('0')
+                            $("#leave_reliever").val('')
+
+                            alert(`Validation Error! ${data.message}`)
+                        }else{
+                            var number_of_days_display = data.data.number_of_days_display; 
+                            console.log(number_of_days_display)
+                            $("#leave_remaining").val(number_of_days_display)
+                            $("#leave_remain").text(number_of_days_display)
+                        }
+                    }).guardedCatch(function (error) {
+                        let msg = error.message.message
+                        console.log(msg)
+                        alert(`Unknown Error! ${msg}`)
+                    });
+                }
+            }, 
+
             'click .supervisor_comment_button': function(ev){
                 let targetElement = $(ev.target).attr('id');
                 console.log(`supervisor comment clicked ${targetElement}`)
