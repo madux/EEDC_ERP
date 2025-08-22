@@ -14,9 +14,6 @@
                         <p class="text-muted">Download template with your request items, get vendor quotations, then upload to create purchase orders</p>
                     </div>
                     
-                    <!-- <div class="oe_button_box" name="button_box">
-                        <field name="state" widget="statusbar" statusbar_visible="draft,validating,validated,processing,done"/>
-                    </div> -->
                     
                     <group>
                         <group>
@@ -25,7 +22,7 @@
                                    widget="binary"
                                    filename="rfq_excel_filename"
                                    accept=".xlsx,.xls,.csv"
-                                   attrs="{'readonly': [('state', 'in', ['processing', 'done'])]}"/>
+                                   />
                             <field name="rfq_excel_filename" invisible="1"/>
                         </group>
                         <group>
@@ -37,7 +34,7 @@
                         </group>
                     </group>
 
-                    <group string="Processing Options" attrs="{'invisible': [('state', 'in', ['processing', 'done'])]}">
+                    <group string="Processing Options" attrs="{'invisible': [('rfq_excel_file', '=', False)]}">
                         <group>
                             <field name="validate_only" help="Check this to only validate the file without creating purchase orders"/>
                             <field name="create_missing_products" attrs="{'invisible': [('validate_only', '=', True)]}"/>
@@ -49,7 +46,7 @@
                     </group>
 
                     <!-- Instructions Section -->
-                    <div class="alert alert-info" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                    <div class="alert alert-info">
                         <h4><i class="fa fa-info-circle"/> Step-by-Step Instructions</h4>
                         <ol class="mb0">
                             <li><strong>Download Template:</strong> Click "Download Template" button below to get an Excel file pre-populated with your request items</li>
@@ -61,7 +58,7 @@
                         </ol>
                     </div>
                     
-                    <div class="row" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="alert alert-success">
                                 <h5><i class="fa fa-download"/> Template Features</h5>
@@ -88,7 +85,7 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-info" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                    <div class="alert alert-info">
                         <h5><i class="fa fa-lightbulb-o"/> Pro Tips</h5>
                         <ul class="mb0">
                             <li><strong>Multiple Vendors:</strong> You can quote the same item from different vendors - separate POs will be created</li>
@@ -100,10 +97,10 @@
 
                     <!-- Validation Results Section -->
                     <div attrs="{'invisible': [('validation_result', '=', '')]}" class="mt16">
-                        <div class="alert alert-info mb8" attrs="{'invisible': [('state', '!=', 'validated')]}">
+                        <div class="alert alert-info mb8" >
                             <i class="fa fa-check-circle"/> Validation completed successfully!
                         </div>
-                        <div class="alert alert-warning mb8" attrs="{'invisible': [('state', '=', 'validated')]}">
+                        <div class="alert alert-warning mb8">
                             <i class="fa fa-exclamation-triangle"/> Validation found issues that need to be fixed.
                         </div>
                         <group>
@@ -129,7 +126,6 @@
                         </group>
                     </div>
 
-                    <field name="state" invisible="1"/>
                 </sheet>
                 
                 <footer>
@@ -138,14 +134,14 @@
                             type="object" 
                             class="btn-primary"
                             icon="fa-download"
-                            attrs="{'invisible': [('state', 'in', ['processing'])]}"/>
+                            />
                     
                     <button name="action_validate_file" 
                             string="2. Validate File" 
                             type="object" 
                             class="btn-warning"
                             icon="fa-check-circle"
-                            attrs="{'invisible': ['|', ('state', 'in', ['processing', 'done']), ('rfq_excel_file', '=', False)]}"/>
+                            attrs="{'invisible': [('rfq_excel_file', '=', False)]}"/>
                     
                     <button name="action_upload_rfq" 
                             string="3. Upload &amp; Process" 
@@ -154,22 +150,18 @@
                             icon="fa-upload"
                             attrs="{'invisible': [('rfq_excel_file', '=', False)]}"/>
                     
-                    <button name="action_reset" 
-                            string="Reset" 
-                            type="object" 
-                            class="btn-secondary"
-                            icon="fa-refresh"
-                            attrs="{'invisible': [('state', 'in', ['draft', 'processing'])]}"/>
                     
                     <button string="Cancel" 
                             class="btn-secondary" 
                             special="cancel"
-                            attrs="{'invisible': [('state', 'in', ['processing'])]}"/>
+                            attrs="{'invisible': [('rfq_excel_file', '=', True)]}"
+                            />
                     
                     <button string="Close" 
                             class="btn-primary" 
                             special="cancel"
-                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                            attrs="{'invisible': [('rfq_excel_file', '=', False)]}"
+                            />
                 </footer>
             </form>
         </field>

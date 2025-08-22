@@ -15,14 +15,6 @@ class RFQUploadWizard(models.TransientModel):
     rfq_excel_file = fields.Binary(string="RFQ Excel File", required=False)
     rfq_excel_filename = fields.Char(string="Filename")
     
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('validating', 'Validating'),
-        ('validated', 'Validated'),
-        ('processing', 'Processing'),
-        ('done', 'Done')
-    ], default='draft', string="State")
-    
     validate_only = fields.Boolean(string="Validate Only", default=False, 
                                    help="Only validate the file without creating purchase orders")
     create_missing_products = fields.Boolean(string="Create Missing Products", default=True,
@@ -43,9 +35,7 @@ class RFQUploadWizard(models.TransientModel):
         """Validate uploaded Excel file"""
         if not self.rfq_excel_file:
             raise ValidationError(_("Please upload a file first."))
-        
-        self.state = 'validating'
-        
+                
         try:
             rfq_data = self._parse_excel_file()
             
@@ -53,7 +43,6 @@ class RFQUploadWizard(models.TransientModel):
             
             if validation_errors:
                 self.validation_result = "Validation Errors Found:\n\n" + "\n".join(validation_errors)
-                self.state = 'draft'
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
@@ -67,7 +56,6 @@ class RFQUploadWizard(models.TransientModel):
                 }
             else:
                 self.validation_result = f"✓ File validation successful!\n\nFound {len(rfq_data)} valid RFQ lines."
-                self.state = 'validated'
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
@@ -82,7 +70,6 @@ class RFQUploadWizard(models.TransientModel):
                 
         except Exception as e:
             self.validation_result = f"Error during validation: {str(e)}"
-            self.state = 'draft'
             raise ValidationError(_("Error validating file: %s") % str(e))
     
     def action_upload_rfq(self):
@@ -90,7 +77,6 @@ class RFQUploadWizard(models.TransientModel):
         if not self.rfq_excel_file:
             raise ValidationError(_("Please upload a file first."))
         
-        self.state = 'processing'
         
         try:
             rfq_data = self._parse_excel_file()
@@ -102,7 +88,6 @@ class RFQUploadWizard(models.TransientModel):
             
             if self.validate_only:
                 self.processing_result = f"Validation completed successfully.\nFound {len(rfq_data)} valid RFQ lines.\nNo purchase orders created (validation only mode)."
-                self.state = 'done'
                 return self._show_success_message("File validated successfully!")
             else:
                 options = {'create_vendors': self.create_missing_vendors, 'create_products' :self.create_missing_products}
@@ -125,35 +110,14 @@ class RFQUploadWizard(models.TransientModel):
                         result_message += f"• {po.name} - {po.partner_id.name} (Total: {po.currency_id.symbol}{po.amount_total:.2f})\n"
                 
                 self.processing_result = result_message
-                self.state = 'done'
                 
                 return self._show_success_message(f"Successfully created {len(created_pos)} Purchase Orders!")
                 
         except Exception as e:
             self.processing_result = f"Error during processing: {str(e)}"
-            self.state = 'draft'
             _logger.error("RFQ processing error: %s", str(e))
             raise ValidationError(_("Error processing RFQ file: %s") % str(e))
     
-    def action_reset(self):
-        """Reset wizard to initial state"""
-        self.write({
-            'state': 'draft',
-            'validation_result': '',
-            'processing_result': '',
-            'rfq_excel_file': False,
-            'rfq_excel_filename': '',
-        })
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Reset Complete'),
-                'message': _('Wizard has been reset. You can upload a new file.'),
-                'sticky': False,
-                'type': 'info'
-            }
-        }
     
     def _parse_excel_file(self):
         """Parse uploaded Excel/CSV file and return RFQ data"""

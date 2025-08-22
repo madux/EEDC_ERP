@@ -24,14 +24,8 @@
             <xpath expr="//page[@name='PurchaseOrder']" position="inside">
                 
                 <div attrs="{'invisible': [('memo_type_key', '!=', 'procurement_request')]}" class="mb16">
-                    <group string="RFQ Management" class="oe_border_info">
+                    <group string="RFQ UPLOAD" class="oe_border_info">
                         <div class="row">
-                            <div class="col-md-8">
-                                <div class="alert alert-info mb8">
-                                    <i class="fa fa-info-circle"/>
-                                    <strong>RFQ Upload:</strong> Use the wizard to download a template and upload vendor quotations to create Purchase Orders automatically.
-                                </div>
-                            </div>
                             <div class="col-md-4 text-right">
                                 <button name="action_upload_rfq_wizard"
                                         string="RFQ Upload Wizard"
@@ -47,7 +41,7 @@
                             <div class="col-md-12">
                                 <div class="alert alert-success" style="margin-bottom: 0;">
                                     <i class="fa fa-check-circle"/>
-                                    <strong>RFQ uploaded successfully on </strong>
+                                    <strong>RFQ last uploaded successfully on </strong>
                                     <field name="rfq_upload_date" readonly="1" widget="datetime" style="display: inline;"/>
                                     <br/>
                                     <small>File: <field name="rfq_excel_filename" readonly="1" style="display: inline;"/></small>
@@ -55,8 +49,6 @@
                             </div>
                         </div>
                     </group>
-                    
-                    <separator string="Purchase Orders" class="mt16 mb8"/>
                 </div>
             </xpath>
             
