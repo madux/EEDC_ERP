@@ -57,6 +57,7 @@ class RFQUploadWizard(models.TransientModel):
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
+                    # 'tag': 'rfq_upload.rfq_notify_and_refresh',
                     'params': {
                         'title': _('Validation Failed'),
                         'message': _('Please check validation results and correct the errors.'),
@@ -70,6 +71,7 @@ class RFQUploadWizard(models.TransientModel):
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
+                    # 'tag': 'rfq_upload.rfq_notify_and_refresh',
                     'params': {
                         'title': _('Validation Successful'),
                         'message': _('File is valid and ready for processing.'),
@@ -205,7 +207,7 @@ class RFQUploadWizard(models.TransientModel):
         for idx, row in enumerate(rfq_data, 1):
             row_errors = []
             
-            if not row.get('VENDOR CODE', '').strip():
+            if not row.get('VENDOR CODE', ' ').strip():
                 row_errors.append("Vendor code is required")
                 
             if not row.get('VENDOR NAME', '').strip():

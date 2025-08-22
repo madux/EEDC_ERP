@@ -14,9 +14,9 @@
                         <p class="text-muted">Download template with your request items, get vendor quotations, then upload to create purchase orders</p>
                     </div>
                     
-                    <div class="oe_button_box" name="button_box">
+                    <!-- <div class="oe_button_box" name="button_box">
                         <field name="state" widget="statusbar" statusbar_visible="draft,validating,validated,processing,done"/>
-                    </div>
+                    </div> -->
                     
                     <group>
                         <group>
@@ -29,11 +29,11 @@
                             <field name="rfq_excel_filename" invisible="1"/>
                         </group>
                         <group>
-                            <label for="memo_details" string="Memo Details"/>
+                            <!-- <label for="memo_details" string="Memo Details"/>
                             <div name="memo_details">
                                 <div><strong>Request Number:</strong> <field name="memo_id" readonly="1" nolabel="1" widget="char" attrs="{'invisible': [('memo_id', '=', False)]}"/></div>
                                 <div><strong>Items in Request:</strong> <span class="text-muted">Will be pre-populated in template</span></div>
-                            </div>
+                            </div> -->
                         </group>
                     </group>
 
@@ -47,88 +47,87 @@
                             <field name="group_by_vendor" attrs="{'invisible': [('validate_only', '=', True)]}"/>
                         </group>
                     </group>
+
+                    <!-- Instructions Section -->
+                    <div class="alert alert-info" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                        <h4><i class="fa fa-info-circle"/> Step-by-Step Instructions</h4>
+                        <ol class="mb0">
+                            <li><strong>Download Template:</strong> Click "Download Template" button below to get an Excel file pre-populated with your request items</li>
+                            <li><strong>Get Vendor Quotes:</strong> Send the template to vendors or fill in vendor quotations manually</li>
+                            <li><strong>Complete Vendor Info:</strong> Fill in vendor details (name, email, phone, address) for each quote</li>
+                            <li><strong>Set Prices:</strong> Enter the quoted prices from vendors (quantities are already filled from your request)</li>
+                            <li><strong>Upload File:</strong> Upload the completed Excel file using the file picker above</li>
+                            <li><strong>Process:</strong> Click "Upload &amp; Process" to create purchase orders automatically</li>
+                        </ol>
+                    </div>
                     
-                    <notebook>
-                        <page name="instructions" string="Instructions" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
-                            <div class="alert alert-info">
-                                <h4><i class="fa fa-info-circle"/> Step-by-Step Instructions</h4>
-                                <ol class="mb0">
-                                    <li><strong>Download Template:</strong> Click "Download Template" button below to get an Excel file pre-populated with your request items</li>
-                                    <li><strong>Get Vendor Quotes:</strong> Send the template to vendors or fill in vendor quotations manually</li>
-                                    <li><strong>Complete Vendor Info:</strong> Fill in vendor details (name, email, phone, address) for each quote</li>
-                                    <li><strong>Set Prices:</strong> Enter the quoted prices from vendors (quantities are already filled from your request)</li>
-                                    <li><strong>Upload File:</strong> Upload the completed Excel file using the file picker above</li>
-                                    <li><strong>Process:</strong> Click "Upload &amp; Process" to create purchase orders automatically</li>
-                                </ol>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="alert alert-success">
-                                        <h5><i class="fa fa-download"/> Template Features</h5>
-                                        <ul class="mb0">
-                                            <li>Pre-populated with your requested items</li>
-                                            <li>Product codes and names already filled</li>
-                                            <li>Quantities from your request included</li>
-                                            <li>Ready to send to vendors</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="alert alert-warning">
-                                        <h5><i class="fa fa-exclamation-triangle"/> Required Information</h5>
-                                        <strong>You must fill in:</strong>
-                                        <ul class="mb0">
-                                            <li>Vendor Name (required)</li>
-                                            <li>Vendor Email (recommended)</li>
-                                            <li>Price Per Quantity (required)</li>
-                                            <li>Vendor Phone &amp; Address (optional)</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-info">
-                                <h5><i class="fa fa-lightbulb-o"/> Pro Tips</h5>
+                    <div class="row" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <h5><i class="fa fa-download"/> Template Features</h5>
                                 <ul class="mb0">
-                                    <li><strong>Multiple Vendors:</strong> You can quote the same item from different vendors - separate POs will be created</li>
-                                    <li><strong>Vendor Emails:</strong> Include valid email addresses for automatic vendor communication</li>
-                                    <li><strong>Consistent Names:</strong> Use consistent vendor names to avoid creating duplicate vendors</li>
-                                    <li><strong>Validation:</strong> Use "Validate File" button to check for errors before processing</li>
+                                    <li>Pre-populated with your requested items</li>
+                                    <li>Product codes and names already filled</li>
+                                    <li>Quantities from your request included</li>
+                                    <li>Ready to send to vendors</li>
                                 </ul>
                             </div>
-                        </page>
-
-                        <page name="validation_results" 
-                              string="Validation Results" 
-                              attrs="{'invisible': [('validation_result', '=', '')]}">
-                            <div class="alert alert-info mb8">
-                                <i class="fa fa-info-circle"/> Validation checks your file for errors and missing information.
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-warning">
+                                <h5><i class="fa fa-exclamation-triangle"/> Required Information</h5>
+                                <strong>You must fill in:</strong>
+                                <ul class="mb0">
+                                    <li>Vendor Code (required)</li>
+                                    <li>Vendor Name (required)</li>
+                                    <li>Vendor Email (recommended)</li>
+                                    <li>Price Per Quantity (required)</li>
+                                    <li>Vendor Phone &amp; Address (optional)</li>
+                                </ul>
                             </div>
-                            <group>
-                                <field name="validation_result" 
-                                       widget="text" 
-                                       readonly="1"
-                                       nolabel="1"
-                                       class="o_field_text_validation_result"/>
-                            </group>
-                        </page>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" attrs="{'invisible': [('state', 'not in', ['draft'])]}">
+                        <h5><i class="fa fa-lightbulb-o"/> Pro Tips</h5>
+                        <ul class="mb0">
+                            <li><strong>Multiple Vendors:</strong> You can quote the same item from different vendors - separate POs will be created</li>
+                            <li><strong>Vendor Emails:</strong> Include valid email addresses for automatic vendor communication</li>
+                            <li><strong>Consistent Names:</strong> Use consistent vendor names to avoid creating duplicate vendors</li>
+                            <li><strong>Validation:</strong> Use "Validate File" button to check for errors before processing</li>
+                        </ul>
+                    </div>
 
-                        <page name="processing_results" 
-                              string="Processing Results" 
-                              attrs="{'invisible': [('processing_result', '=', '')]}">
-                            <div class="alert alert-success mb8">
-                                <i class="fa fa-check-circle"/> Processing complete! Review the results below.
-                            </div>
-                            <group>
-                                <field name="processing_result" 
-                                       widget="text" 
-                                       readonly="1"
-                                       nolabel="1"
-                                       class="o_field_text_processing_result"/>
-                            </group>
-                        </page>
-                    </notebook>
+                    <!-- Validation Results Section -->
+                    <div attrs="{'invisible': [('validation_result', '=', '')]}" class="mt16">
+                        <div class="alert alert-info mb8" attrs="{'invisible': [('state', '!=', 'validated')]}">
+                            <i class="fa fa-check-circle"/> Validation completed successfully!
+                        </div>
+                        <div class="alert alert-warning mb8" attrs="{'invisible': [('state', '=', 'validated')]}">
+                            <i class="fa fa-exclamation-triangle"/> Validation found issues that need to be fixed.
+                        </div>
+                        <group>
+                            <field name="validation_result" 
+                                   widget="text" 
+                                   readonly="1"
+                                   string="Validation Results"
+                                   class="o_field_text_validation_result"/>
+                        </group>
+                    </div>
+
+                    <!-- Processing Results Section -->
+                    <div attrs="{'invisible': [('processing_result', '=', '')]}" class="mt16">
+                        <div class="alert alert-success mb8">
+                            <i class="fa fa-check-circle"/> Processing completed successfully!
+                        </div>
+                        <group>
+                            <field name="processing_result" 
+                                   widget="text" 
+                                   readonly="1"
+                                   string="Processing Results"
+                                   class="o_field_text_processing_result"/>
+                        </group>
+                    </div>
 
                     <field name="state" invisible="1"/>
                 </sheet>
