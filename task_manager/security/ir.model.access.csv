@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tm_task_user,access_tm_task_user,model_tm_task,,1,1,1,0
+access_tm_task_manager,access_tm_task_manager,model_tm_task,task_manager.group_tm_manager,1,1,1,1
+access_tm_task_tag_user,access_tm_task_tag_user,model_tm_task_tag,,1,1,1,0

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Tree/List -->
+  <record id="view_tm_task_tree" model="ir.ui.view">
+    <field name="name">tm.task.tree</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="name"/>
+        <field name="assignee_staff_id"/>
+        <field name="employee_id"/>
+        <field name="stage"/>
+        <field name="priority"/>
+        <field name="due_date"/>
+        <field name="manager_id"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Form -->
+  <record id="view_tm_task_form" model="ir.ui.view">
+    <field name="name">tm.task.form</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <form string="Task">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="description" widget="text"/>
+          </group>
+          <group>
+            <field name="assignee_staff_id"/>
+            <field name="employee_id"/>
+            <field name="manager_id"/>
+          </group>
+          <group>
+            <field name="stage"/>
+            <field name="priority"/>
+            <field name="due_date"/>
+            <field name="tag_ids" widget="many2many_tags"/>
+          </group>
+          <group string="Review">
+            <field name="last_review_note"/>
+            <field name="last_reviewed_by"/>
+            <field name="last_reviewed_on"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_tm_tasks" model="ir.actions.act_window">
+    <field name="name">Tasks</field>
+    <field name="res_model">tm.task</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+    <!-- Menu -->
+  <menuitem id="tm_root_menu" name="Task Board" sequence="50"/>
+  <menuitem id="tm_task_menu" name="Tasks" parent="tm_root_menu" action="action_tm_tasks"/>
+
+</odoo>
