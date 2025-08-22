@@ -117,6 +117,7 @@ class MemoModel(models.Model):
                     'memo_type_key': self.memo_type_key,
                     'memo_type': self.memo_type.id if self.memo_type else False,
                     'order_line': order_lines,
+                    'company_id': self.company_id.id,
                     'rfq_source': 'excel_upload'
                 }
                 po = self.env['purchase.order'].with_context(rfq_excel_upload=True).create(po_vals)
