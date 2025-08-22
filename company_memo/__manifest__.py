@@ -42,6 +42,7 @@
         'data/memo_type.xml',
         'data/ir_cron.xml',
         'wizard/memo_config_duplication_wizard_views.xml',
+        'wizard/memo_assign_users.xml',
         'data/mail_templates_data.xml'
     ],
     'assets': {'web.assets_backend': [

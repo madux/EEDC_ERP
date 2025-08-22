@@ -632,6 +632,30 @@ odoo.define('portal_request.portal_request', function (require) {
     allowClear: true,
     });
 
+    $('#leave_reliever').select2({
+        ajax: {
+            url: '/portal-request-employee-reliever',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 3,
+        multiple: false,
+        placeholder: 'Search for a reliever',
+        allowClear: true,
+    });
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
@@ -681,6 +705,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#leave_section2').addClass('d-none');
         $('#leave_start_date').attr("required", false);
         $('#leave_end_datex').attr("required", false);
+        $('#leave_reliever').attr('required', false);
+        $('#leave_reliever').val('');
+        $('#leave_type_id').attr('required', false);
         $('#product_form_div').addClass('d-none');
         $('#product_ids').addClass('d-none');
         $('#product_ids').attr("required", false); 
@@ -921,10 +948,11 @@ odoo.define('portal_request.portal_request', function (require) {
                 if(staff_num !== '' && leave_id !== ''){  
                     var self = this;
                     this._rpc({
-                        route: `/get/leave-allocation/${leave_id}/${staff_num}`,
-                        // params: {
-                        //     'type': type
-                        // },
+                        route: `/get/leave-allocation`, ///${leave_id}/${staff_num}`,
+                        params: {
+                            'staff_num': staff_num.trim(),
+                            'leave_id': leave_id
+                        },
                     }).then(function (data) {
                         console.log('retrieved staff leave data => '+ JSON.stringify(data))
                         if (!data.status) {
@@ -937,6 +965,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             var number_of_days_display = data.data.number_of_days_display; 
                             console.log(number_of_days_display)
                             $("#leave_remaining").val(number_of_days_display)
+                            $("#leave_remain").text(number_of_days_display)
                         }
                     }).guardedCatch(function (error) {
                         let msg = error.message.message
@@ -944,7 +973,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         alert(`Unknown Error! ${msg}`)
                     });
                 }
-            }, 
+            },  
 
             'blur input[name=leave_start_datex]': function(ev){
                 if ($('#leave_type_id').val() == ""){
@@ -978,13 +1007,62 @@ odoo.define('portal_request.portal_request', function (require) {
                 if (Difference_In_Days > parseInt(leaveRemaining)){
                     $('#leave_end_datex').val("");
                     $('#leave_end_datex').attr('required', true);
-                    alert(`You only have ${leaveRemaining} number of leave remaining for this leave type. Please Ensure the date range is within the available day allocated for you.`)
+                    alert(`You only have ${leaveRemaining} number of leave remaining 
+                        for this leave type. Please Ensure the date range is within the available 
+                        day allocated for you.`)
                     return true
                 }
                 else{
                     $('#leave_end_datex').attr('required', false);
+                    $('#leave_end_datex').attr('required', false);
+                    endDate.removeClass('is-invalid').addClass('is-valid');
+                    $('#leave_taken').text(Difference_In_Days)
                 }
                 checkOverlappingLeaveDate(this)
+            }, 
+
+            'change #leave_reliever': function(ev){
+            // 'blur input[name=leave_reliever]': function(ev){
+                let leave_reliever = $('#leave_reliever');
+                let start_date = $('#leave_start_date');
+                if (!start_date.val() && leave_reliever.val() !== ""){
+                    $('#leave_reliever').val('').trigger('change');
+                    let message = `Validation Error! Please provide leave start date`
+                    modal_message.text(message)
+                    alert_modal.modal('show');
+                }
+                else{
+					console.log("THE TODLE POL")
+					if ($('#selectRequestOption').val() == "leave_request" && leave_reliever.val() !== ""){
+						this._rpc({
+							route: `/check-employee-still-onleave`,
+							params: {
+								'employee_id': leave_reliever.val(),
+								'start_date': $('#leave_start_date').val(),
+								'end_date': $('#leave_end_datex').val(),
+							},
+						}).then(function (data) { 
+							if (!data.status) {
+                                $('#leave_reliever').val('0').trigger('change');
+								leave_reliever.addClass('is-invalid', true);
+								let message = `Validation Error! ${data.message}`
+								console.log("Employee has leave already", message)
+								modal_message.text(message)
+								alert_modal.modal('show');
+							}else{
+								console.log("---")
+							}
+						}).guardedCatch(function (error) {
+							let msg = error.message.message
+							console.log(msg)
+							leave_reliever.val('')
+							let message = `Unknown Error! ${msg}`
+							modal_message.text(message)
+							alert_modal.modal('show');
+							return false;
+						});
+					}
+                }
             }, 
             
             'change select[name=selectRequestOption]': function(ev){
@@ -1022,9 +1100,13 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#leave_start_date').attr('required', true);
                             $('#leave_type_id').attr('required', true);
                             $('#leave_end_datex').attr('required', true);
+                            $('#leave_reliever').attr('required', true);
                             $('#product_form_div').addClass('d-none');
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
+                            let main = $('#leave_reliever').prop('required');
+				            console.log('WHAT IS LEAVE RELIEVER', main)
+
                         }
                         else if(selectedTarget == "server_access"){
                             $('#amount_section').addClass('d-none');
@@ -1445,6 +1527,13 @@ odoo.define('portal_request.portal_request', function (require) {
             'click .button_req_submit': function (ev) {
                 //// main event starts
                 var list_of_fields = [];
+
+                //ensure leave reliever is added 
+                if($('#selectRequestOption').val() == "leave_request" && $('#leave_reliever').val() == ''){
+                    modal_message.text("Please ensure to add a reliever")
+                    alert_modal.modal('show');
+                    return false;
+                }
                 $('input,textarea,select').filter('[required]:visible').each(function(ev){
                     var field = $(this); 
                     if (field.val() == ""){
@@ -1454,9 +1543,21 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 });
                 if (list_of_fields.length > 0){
-                    alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+                    // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+                    // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+                    let message = `Validation: Please ensure the following fields are filled.. ${list_of_fields}`
+                    modal_message.text(message)
+                    alert_modal.modal('show');
                     return false;
                 }else{
+                     let $btn = $('.button_req_submit');
+                    let $btnHtml = $btn.html()
+                    $btn.attr('disabled', 'disabled');
+                    $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                    $.blockUI({
+                        'message': '<h2 class="card-name">Please wait ...</h2>'
+                    });
+
                     var current_btn = $(ev.target);
                     var form = $('#msform')[0];
                     // FormData object 
@@ -1602,13 +1703,16 @@ odoo.define('portal_request.portal_request', function (require) {
                                 return false;
                             }else{
                                 // // clearing form content
-                                // $("#msform")[0].reset();
-                                // $("#tbody_product").empty()
-                                // $("#tbody_employee").empty()
-                                // console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                                $("#msform")[0].reset();
+                                $("#tbody_product").empty()
+                                $("#tbody_employee").empty()
+                                console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
                                 
                                 
                                 window.location.href = `/portal-success`;
+                                $btn.attr('disabled', false);
+                                $btn.html($btnHtml)
+                                $.unblockUI()
                                 console.log("XMLREQUEST Successful====", DataItems);
                             }
                         }).catch(function(err) {

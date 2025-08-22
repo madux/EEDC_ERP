@@ -42,6 +42,7 @@ class StockWarehouse(models.Model):
                     if state_id in w_states:
                         raise ValidationError('A state must be mapped to only one warehouse!')
 
+    
     # def _get_global_route_rules_values(self):
     #     rec = super(StockWarehouse, self)._get_global_route_rules_values()
     #     rec['mto_pull_id']['create_values'].update({'branch_id': self.branch_id.id})
@@ -201,9 +202,11 @@ class StockWarehouse(models.Model):
 
 class StockLocation(models.Model):
     _inherit = 'stock.location'
-    branch_id = fields.Many2one('multi.branch', 'Branch',)
-
     
+    branch_id = fields.Many2one(
+        'multi.branch', string='Branch', 
+        default=lambda self: self.env.user.branch_id.id)
+
     @api.constrains('branch_id')
     def _check_branch(self):
         for location in self:
@@ -339,7 +342,7 @@ class StockPicking(models.Model):
     branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id, required=False)
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', compute='_compute_warehouse')
     sign_signature = fields.Binary(string="Digital Signature", compute='_compute_warehouse', groups="base.group_system")
-
+                
     @api.depends('branch_id')
     def _compute_warehouse(self):
         for rec in self:
@@ -355,7 +358,28 @@ class StockPicking(models.Model):
             else:
                 rec.sign_signature = False
                 rec.warehouse_id = False
-
+                
+    # @api.constrains('location_id')
+    # def _check_location_id(self):
+    #     for location in self:
+    #         if not location.memo_id:
+    #             branches = [self.env.user.branch_id.id] + [r.id for r in self.env.user.branch_ids]
+    #             if location.picking_type_id.code == 'internal':
+    #                 if location.location_id.branch_id.id not in branches:
+    #                     raise UserError(_(f'The selected stock location branch { location.location_id.branch_id.id} is not in the list of branches {branches} assigned to you'))
+    #             if location.picking_type_id.code == 'incoming':
+    #                 if location.dest_location_id.branch_id.id not in branches:
+    #                     raise UserError(_(f'The selected stock location branch { location.dest_location_id.branch_id.id} is not in the list of branches {branches} assigned to you'))
+    #             if location.picking_type_id.code == 'outgoing':
+    #                 if location.location_id.branch_id.id not in branches:
+    #                     raise UserError(_(f'The selected stock location branch { location.location_id.branch_id.id} is not in the list of branches {branches} assigned to you'))
+    
+        # if any(line.reserved_qty or line.qty_done for line in self.move_ids.move_line_ids):
+        #     return {'warning': {
+        #             'title': 'Locations to update',
+        #             'message': _("You might want to update the locations of this transfer's operations")
+        #         }
+        #     }
 
 class StockRule(models.Model):
     _inherit = 'stock.rule'

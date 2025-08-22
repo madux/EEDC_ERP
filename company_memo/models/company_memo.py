@@ -316,6 +316,10 @@ class Memo_Model(models.Model):
     request_date = fields.Datetime('Request Start Date')
     request_end_date = fields.Datetime('Request End Date')
     leave_type_id = fields.Many2one('hr.leave.type', string="Leave type")
+    leave_Reliever = fields.Many2one(
+        'hr.employee', 
+        string="Leave Reliever",  
+        )
     memo_setting_id = fields.Many2one(
         'memo.config', 
         string="Request type",  

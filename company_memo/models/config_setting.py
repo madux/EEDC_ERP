@@ -493,7 +493,7 @@ class MemoConfig(models.Model):
                 for memotype in MEMOTYPES:
                     existing_memo_config = self.env['memo.config'].search([
                         ('memo_type.memo_key','=', memotype), 
-                        ('department_id', '=',department.id)
+                        ('department_id', '=', department.id)
                         ], limit=1
                         )
                     if not existing_memo_config:
@@ -501,7 +501,7 @@ class MemoConfig(models.Model):
                             ('memo_key','=', memotype.memo_key)]
                             , limit=1)
                         if not memo_type_id:
-                            raise ValidationError(f'Memo type with key {memotype} does not exist. Contact admin to configure')
+                            raise ValidationError(f'Memo type with key {memotype} on record does not exist. Contact admin to configure')
                         memo_config_vals = {
                             'active': True,
                             'memo_type': memo_type_id.id,
@@ -537,7 +537,105 @@ class MemoConfig(models.Model):
             },
         }
 
+    def button_assign_employee(self):
+        rec_ids = self.env.context.get('active_ids', [])
+        Config = self.env['memo.config']
+        return {
+            'name': 'Employee Assign to Config Stages',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'memo.assign.stage.wizard',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                # 'default_employee_ids': self.stage_ids.ids,
+                'default_dummy_config_ids': [(0, 0,
+                    {
+                        'memo_config_id': Config.browse([r]).id, 
+                        'dummy_memo_stage_ids': Config.browse([r]).stage_ids.ids, 
+                        'memo_stage_ids': Config.browse([r]).stage_ids.ids, 
+                    }) for r in rec_ids],
+                
+            },
+        }
+  
+  
+class DummyMemoConfig(models.Model):
+    _name = "dummy.memo.config"
+    _description = "Model to memo assign stage"
 
+    memo_config_wizard_id = fields.Many2one(
+        'memo.assign.stage.wizard',
+        string='Memo Assign Wizard ',
+        )
+    
+    memo_config_id = fields.Many2one(
+        'memo.config',
+        string='Memo config',
+        )
+    
+    memo_stage_ids = fields.Many2many(
+        'memo.stage',
+        string='Stage',
+        )
+    
+    dummy_memo_stage_ids = fields.Many2many(
+        'memo.stage',
+        'dummy_memo_stage_rels',
+        'memo_config_dummy_stage',
+        'dummy_memo_stage_id',
+        string='dummy stage ',
+        )
+    include_intial_done = fields.Boolean(
+        'Include Draft & Done?',
+        default=False
+        )
+
+
+class MemoAssignStages(models.Model):
+    _name = "memo.assign.stage.wizard"
+    _description = "Model to memo assign stage"
+
+    dummy_config_ids = fields.One2many(
+        'dummy.memo.config',
+        'memo_config_wizard_id',
+        string='Memo Config ids',
+        )
+    
+    employee_ids = fields.Many2many(
+        'hr.employee',
+        string='Employee',
+        )
+    
+    
+    def action_add(self):
+        dummy_config_ids = self.sudo().dummy_config_ids
+        for dmc in dummy_config_ids:
+            dmc_stages = dmc.memo_config_id.stage_ids
+            if dmc_stages:
+                initial_stage = dmc_stages[0]        
+                last_stage = dmc_stages[-1]
+                for stg in dmc.memo_stage_ids:
+                    if stg.id not in dmc_stages.ids:
+                        raise ValidationError(f"Selected stage {[stg.id] - stg.name } not in select Config : [{dmc.memo_config_id.name}] stages")
+                    
+                    if stg.id in [initial_stage.id, last_stage.id]:
+                        if dmc.include_intial_done:
+                            stg.approver_ids = [(4, emp.id) for emp in self.employee_ids]
+                    else:
+                        stg.approver_ids = [(4, emp.id) for emp in self.employee_ids]
+            
+    def action_remove(self):
+        dummy_config_ids = self.sudo().dummy_config_ids
+        for dmc in dummy_config_ids:
+            dmc_stages = dmc.memo_config_id.stage_ids
+            if dmc_stages:
+                for stg in dmc.memo_stage_ids:
+                    if stg.id not in dmc_stages.ids:
+                        raise ValidationError(f"Selected stage {[stg.id] - stg.name } not in select Config : [{dmc.memo_config_id.name}] stages")
+                    
+                    stg.approver_ids = [(3, emp.id) for emp in self.employee_ids]
+            
 class MemoCategory(models.Model):
     _name = "memo.category"
     _description = "Memo document Category"
@@ -557,3 +655,5 @@ class MemoDialog(models.TransientModel):
 
     name = fields.Text('Message', readonly=True)
     
+    
+

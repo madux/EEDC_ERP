@@ -13,6 +13,7 @@ class productProduct(models.Model):
         Possible parameters are shop, warehouse, location, compute_child
         '''
         Warehouse = self.env['stock.warehouse']
+        Location = self.env['stock.location']
 
         def _search_ids(model, values):
             ids = set()
@@ -33,8 +34,10 @@ class productProduct(models.Model):
         if location and not isinstance(location, list):
             location = [location]
         warehouse = self.env.context.get('warehouse')
+        branch_location_ids = Location.search([('branch_id', '=', self.env.user.branch_id.id), ('usage', '=', 'internal')])
         if warehouse and not isinstance(warehouse, list):
             warehouse = [warehouse]
+            
         # filter by location and/or warehouse
         if warehouse:
             w_ids = set(Warehouse.browse(_search_ids('stock.warehouse', warehouse)).mapped('view_location_id').ids)
@@ -52,7 +55,10 @@ class productProduct(models.Model):
                 location_ids = set(Warehouse.search([]).mapped('view_location_id').ids)
                 internal_location_ids = set(Warehouse.search([]).mapped('lot_stock_id').ids)
                 location_ids = location_ids | internal_location_ids
-
+                
+        ## Added current branch locations to also be displayed on the qty_available for product
+        if branch_location_ids:
+            location_ids = location_ids | set(branch_location_ids.ids)
         return self._get_domain_locations_new(location_ids)
     
     
