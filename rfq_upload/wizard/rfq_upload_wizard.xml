@@ -24,6 +24,10 @@
                                    accept=".xlsx,.xls,.csv"
                                    />
                             <field name="rfq_excel_filename" invisible="1"/>
+                            <field name="sheet_count" invisible="1"/>
+                            <field name="sheet_list" attrs="{'invisible': [('sheet_count', '&lt;=', 1)]}" readonly="1"/>
+                            <field name="sheet" attrs="{'invisible': [('sheet_count', '&lt;=', 1)], 'required': [('sheet_count', '>', 1)]}"/>
+                            <!-- <field name="sheet"/> -->
                         </group>
                         <group>
                             <!-- <label for="memo_details" string="Memo Details"/>
