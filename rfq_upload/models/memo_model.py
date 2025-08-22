@@ -11,7 +11,6 @@ _logger = logging.getLogger(__name__)
 class MemoModel(models.Model):
     _inherit = 'memo.model'
 
-    # --- Fields to store RFQ upload results ---
     rfq_excel_file = fields.Binary(string="RFQ Excel File", readonly=True, copy=False)
     rfq_excel_filename = fields.Char(string="RFQ Filename", readonly=True, copy=False)
     rfq_uploaded = fields.Boolean(string="RFQ Uploaded", default=False, readonly=True, copy=False)

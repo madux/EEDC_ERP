@@ -32,7 +32,7 @@
                                         type="object"
                                         class="btn-primary oe_highlight"
                                         icon="fa-upload"
-                                        attrs="{'invisible': [('state', 'not in', ['submit', 'Sent', 'To Approve'])]}"
+                                        attrs="{'invisible': [('state', 'in', ['submit'])]}"
                                         help="Open wizard to download template and upload quotations"/>
                             </div>
                         </div>
