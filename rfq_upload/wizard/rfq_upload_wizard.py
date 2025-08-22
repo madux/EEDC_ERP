@@ -3,6 +3,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import base64
 import io
+import math
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -81,10 +82,10 @@ class RFQUploadWizard(models.TransientModel):
         try:
             rfq_data = self._parse_excel_file()
             
-            if not self.validate_only:
-                validation_errors = self._validate_rfq_data(rfq_data)
-                if validation_errors:
-                    raise ValidationError(_("Validation failed:\n%s") % "\n".join(validation_errors))
+            validation_errors = self._validate_rfq_data(rfq_data)
+            if validation_errors:
+                self.validation_result = "Validation Errors Found:\n\n" + "\n".join(validation_errors)
+                raise ValidationError(_("Validation failed:\n%s") % "\n".join(validation_errors))
             
             if self.validate_only:
                 self.processing_result = f"Validation completed successfully.\nFound {len(rfq_data)} valid RFQ lines.\nNo purchase orders created (validation only mode)."
@@ -174,26 +175,46 @@ class RFQUploadWizard(models.TransientModel):
         for idx, row in enumerate(rfq_data, 1):
             row_errors = []
             
-            if not row.get('VENDOR CODE', ' ').strip():
+            def get_cleaned_string(row, key):
+                val = row.get(key)
+                if val is None or (isinstance(val, float) and math.isnan(val)):
+                    return ""
+                return str(val).strip()
+            
+            vendor_code = get_cleaned_string(row, 'VENDOR CODE')
+            vendor_name = get_cleaned_string(row, 'VENDOR NAME')
+            product_name = get_cleaned_string(row, 'PRODUCT NAME')
+            product_code = get_cleaned_string(row, 'PRODUCT CODE')
+            vendor_email = get_cleaned_string(row, 'VENDOR EMAIL')
+            
+            if not vendor_code:
                 row_errors.append("Vendor code is required")
                 
-            if not row.get('VENDOR NAME', '').strip():
+            if not vendor_name:
                 row_errors.append("Vendor name is required")
             
-            if not row.get('PRODUCT NAME', '').strip() and not row.get('PRODUCT CODE', '').strip():
+            if not product_name and not product_code.strip():
                 row_errors.append("Product name or product code is required")
             
             try:
-                qty = float(row.get('QTY TO SUPPLY', 0))
-                if qty <= 0:
-                    row_errors.append("Quantity must be greater than 0")
+                qty_val = row.get('QTY TO SUPPLY', 0)
+                if qty_val is None or (isinstance(qty_val, float) and math.isnan(qty_val)):
+                    row_errors.append("Quantity is required")
+                else:
+                    qty = float(qty_val)
+                    if qty <= 0:
+                        row_errors.append("Quantity must be greater than 0")
             except (ValueError, TypeError):
                 row_errors.append("Invalid quantity format")
             
             try:
-                price = float(row.get('PRICE PER QUANTITY', 0))
-                if price < 0:
-                    row_errors.append("Price cannot be negative")
+                price_val = row.get('PRICE PER QUANTITY')
+                if price_val is None or (isinstance(price_val, float) and math.isnan(price_val)):
+                    row_errors.append("Price is required and cannot be empty")
+                else:
+                    price = float(price_val)
+                    if price < 0:
+                        row_errors.append("Price cannot be negative")
             except (ValueError, TypeError):
                 row_errors.append("Invalid price format")
             

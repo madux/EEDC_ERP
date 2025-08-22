@@ -75,21 +75,32 @@ class MemoModel(models.Model):
         
         group_by_vendor = options.get('group_by_vendor', True)
         
-        vendor_groups = {}
-        for row in rfq_data:
-            vendor_code = row.get('VENDOR CODE', '').strip()
-            vendor_name = row.get('VENDOR NAME', '').strip()
-            key = vendor_code if vendor_code else vendor_name
-            if not key:
-                continue
-            if key not in vendor_groups:
-                vendor_groups[key] = {'lines': [], 'vendor_info': row}
-            vendor_groups[key]['lines'].append(row)
+        if group_by_vendor:
+            vendor_groups = {}
+            for row in rfq_data:
+                vendor_code = row.get('VENDOR CODE', '').strip()
+                vendor_name = row.get('VENDOR NAME', '').strip()
+                key = vendor_code if vendor_code else vendor_name
+                if not key:
+                    continue
+                if key not in vendor_groups:
+                    vendor_groups[key] = {'lines': [], 'vendor_info': row}
+                vendor_groups[key]['lines'].append(row)
+            groups = list(vendor_groups.values())
+        else:
+            groups = []
+            for row in rfq_data:
+                vendor_name = (row.get('VENDOR NAME') or '').strip()
+                vendor_code = (row.get('VENDOR CODE') or '').strip()
+                if not (vendor_name or vendor_code):
+                    continue
+                groups.append({'vendor_info': row, 'lines': [row]})
 
-        for key, data in vendor_groups.items():
+        # for key, data in vendor_groups.items():
+        for data in groups:
             partner = self._find_or_create_vendor(data['vendor_info'], options)
             if not partner:
-                _logger.warning(f"Skipping PO for vendor '{key}' as they could not be found or created.")
+                _logger.warning(f"Skipping PO for vendor '{data['vendor_info']}' as they could not be found or created.")
                 continue
 
             order_lines = []
@@ -113,7 +124,7 @@ class MemoModel(models.Model):
                 created_pos |= po
                 
                 if created_pos:
-                    self.write({
+                    self.update({
                         'po_ids': [(4, po.id) for po in created_pos]
                     })
         # if created_pos:
