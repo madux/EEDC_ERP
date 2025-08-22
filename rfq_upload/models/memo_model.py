@@ -73,19 +73,23 @@ class MemoModel(models.Model):
         self.ensure_one()
         created_pos = self.env['purchase.order']
         
+        group_by_vendor = options.get('group_by_vendor', True)
+        
         vendor_groups = {}
         for row in rfq_data:
             vendor_code = row.get('VENDOR CODE', '').strip()
-            if not vendor_code:
+            vendor_name = row.get('VENDOR NAME', '').strip()
+            key = vendor_code if vendor_code else vendor_name
+            if not key:
                 continue
-            if vendor_code not in vendor_groups:
-                vendor_groups[vendor_code] = {'lines': [], 'vendor_info': row}
-            vendor_groups[vendor_code]['lines'].append(row)
+            if key not in vendor_groups:
+                vendor_groups[key] = {'lines': [], 'vendor_info': row}
+            vendor_groups[key]['lines'].append(row)
 
-        for vendor_code, data in vendor_groups.items():
+        for key, data in vendor_groups.items():
             partner = self._find_or_create_vendor(data['vendor_info'], options)
             if not partner:
-                _logger.warning(f"Skipping PO for vendor '{vendor_code}' as they could not be found or created.")
+                _logger.warning(f"Skipping PO for vendor '{key}' as they could not be found or created.")
                 continue
 
             order_lines = []

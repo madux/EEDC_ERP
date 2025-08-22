@@ -90,7 +90,10 @@ class RFQUploadWizard(models.TransientModel):
                 self.processing_result = f"Validation completed successfully.\nFound {len(rfq_data)} valid RFQ lines.\nNo purchase orders created (validation only mode)."
                 return self._show_success_message("File validated successfully!")
             else:
-                options = {'create_vendors': self.create_missing_vendors, 'create_products' :self.create_missing_products}
+                options = {'create_vendors': self.create_missing_vendors, 
+                           'create_products' :self.create_missing_products,
+                           'group_by_vendor': self.group_by_vendor,
+                           }
                 created_pos = self.memo_id.create_or_update_po_from_rfq(rfq_data, options)
                 
                 self.memo_id.write({
