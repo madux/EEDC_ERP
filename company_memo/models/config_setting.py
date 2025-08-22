@@ -493,7 +493,7 @@ class MemoConfig(models.Model):
                 for memotype in MEMOTYPES:
                     existing_memo_config = self.env['memo.config'].search([
                         ('memo_type.memo_key','=', memotype), 
-                        ('department_id', '=',department.id)
+                        ('department_id', '=', department.id)
                         ], limit=1
                         )
                     if not existing_memo_config:
@@ -501,7 +501,7 @@ class MemoConfig(models.Model):
                             ('memo_key','=', memotype.memo_key)]
                             , limit=1)
                         if not memo_type_id:
-                            raise ValidationError(f'Memo type with key {memotype} does not exist. Contact admin to configure')
+                            raise ValidationError(f'Memo type with key {memotype} on record does not exist. Contact admin to configure')
                         memo_config_vals = {
                             'active': True,
                             'memo_type': memo_type_id.id,

@@ -6,11 +6,63 @@
             <field name="model">stock.location</field>
             <field name="inherit_id" ref="stock.view_location_form" />
             <field name="arch" type="xml">
+                
                 <field name="usage" position="after">
                     <field
                         name="wh_code" readonly="0" required="1"
                     />
-                </field>
+                </field>  
+            </field>
+        </record>
+
+
+
+        <record id="view_picking_form_eedc_extended" model="ir.ui.view">
+            <field name="name">stock.picking.form.extended</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//button[@name='action_cancel']" position="after">
+                    <button name="reset_to_draft" string="Set to draft" type="object" attrs="{'invisible': [('state', 'not in', ['cancel'])]}" data-hotkey="v"/>
+                </xpath>
+                <xpath expr="//button[@name='do_print_picking']" position="attributes">
+                    <attribute name="string">Print GRN</attribute>
+                    <attribute name="class">oe_highlight</attribute>
+                </xpath>
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="options">{'no_quick_create':True}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='picking_type_id']" position="attributes">
+                    <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_id']" position="attributes">
+                    <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
+                </xpath> 
+                <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_id']" position="attributes">
+                    <attribute name="context">{'no_create': True, 'no_open': True}</attribute>
+                </xpath> 
+                <xpath expr="//page[last()]" position="after">
+                    <page string="Setup &amp; Instruction">
+                        <div class='alert alert-info' role="alert">
+                            SETUP ==<br/>
+                            <p style="color: red;">* Ensure your user account is set to the current company logged in . </p>
+                            <p style="color: red;">* Ensure your user account is linked to branch / Allowed branches. </p>
+                            <p style="color: red;">* Ensure a locations is link to the current logged in branches. </p>
+                            <p style="color: red;">* Ensure a locations is link to the current logged in branches. </p>
+                            HOW TO USE ==<br/>
+                            <p style="color: green;">* Click New button  </p>
+                            <p style="color: green;">* Enter details such as contact, branch, Operation type, Source location and destination location  </p>
+                            <p style="color: green;">* Save  </p>
+                            <p style="color: green;">* On the detailed Operation tab, Add a line</p>
+                            <p style="color: green;">* On the line, Select product (You are only presented with product that is in your branches location)</p>
+                            <p style="color: green;">* Enter Quantity</p>
+                            <p style="color: green;">* Once done, Click Validate</p>
+                            <p style="color: green;">* Once done, if no product quantity in the selected source location.. system will raise a negative stock error</p>
+                            <!-- Click to Download:  <a href='/eedc_addons/static/TRAINING_FOR_HR_PMS.pdf' target="_blank"> <strong>USER MANUAL</strong> </a> <br/> -->
+                        </div>
+                    </page>
+                </xpath>
             </field>
         </record>
     </data>
