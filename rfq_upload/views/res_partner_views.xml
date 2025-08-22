@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_partner_form_vendor" model="ir.ui.view">
+        <field name="name">res.partner.form.vendor</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//sheet/group/group/span[@name='address_name']" position="before">
+                <field name="is_vendor"/>
+            </xpath>
+            
+            <xpath expr="//field[@name='is_vendor']" position="after">
+                <field name="vendor_code" 
+                       attrs="{'invisible': [('is_vendor', '=', False)], 
+                               'required': [('is_vendor', '=', True)]}"
+                       placeholder="Enter unique vendor code"/>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <record id="view_partner_tree_vendor" model="ir.ui.view">
+        <field name="name">res.partner.tree.vendor</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='display_name']" position="after">
+                <field name="vendor_code" string="Vendor Code" optional="hide"/>
+                <field name="is_vendor" string="Vendor" widget="boolean_toggle" optional="hide"/>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <record id="view_partner_kanban_vendor" model="ir.ui.view">
+        <field name="name">res.partner.kanban.vendor</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.res_partner_kanban_view"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='display_name']" position="after">
+                <field name="is_vendor"/>
+                <field name="vendor_code"/>
+            </xpath>
+            
+            <xpath expr="//div[hasclass('oe_kanban_partner_categories')]" position="after">
+                <div t-if="record.is_vendor and record.is_vendor.raw_value" class="oe_kanban_partner_vendor">
+                    <span class="badge badge-success">
+                        <i class="fa fa-truck"/> Vendor
+                        <t t-if="record.vendor_code and record.vendor_code.raw_value">
+                            (<t t-esc="record.vendor_code.value"/>)
+                        </t>
+                    </span>
+                </div>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <record id="view_partner_search_vendor" model="ir.ui.view">
+        <field name="name">res.partner.search.vendor</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="vendor_code" string="Vendor Code"/>
+            </xpath>
+            
+            <xpath expr="//filter[@name='supplier']" position="after">
+                <separator/>
+                <filter name="vendor" string="Vendors" domain="[('is_vendor', '=', True)]"/>
+                <filter name="vendor_with_code" string="Vendors with Code" 
+                        domain="[('is_vendor', '=', True), ('vendor_code', '!=', False)]"/>
+            </xpath>
+            
+            <xpath expr="//group[@name='group_by']" position="inside">
+                <filter name="group_by_vendor_status" string="Vendor Status" 
+                        context="{'group_by': 'is_vendor'}"/>
+            </xpath>
+            
+        </field>
+    </record>
+   
+
+</odoo>
