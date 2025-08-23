@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
-  <!-- Column template -->
+  <!-- Column template (themed via [data-stage] in SCSS) -->
   <t t-name="tm.Column">
     <div class="col-12 col-md-6 col-xl-3">
       <div class="tm-col card h-100" t-att-data-stage="stage.key">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="tm-stage-header card-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
-            <span class="tm-dot" t-att-class="'stage-'+stage.key"></span>
+            <span class="tm-dot" t-att-class="'stage-'+stage.key"/>
             <strong t-esc="stage.title"/>
-            <span class="badge bg-light text-dark" t-esc="stage.count"/>
           </div>
+          <span class="tm-count badge" t-esc="stage.count"/>
         </div>
+
         <div class="card-body tm-col-body" t-att-id="'tm_col_'+stage.key">
-          <t t-if="cards.length == 0">
-            <div class="text-muted small">Nothing here yet</div>
-          </t>
+          <!-- <div class="tm-empty text-muted">Nothing here yet</div> -->
+          <div class="tm-empty text-muted">
+            <div class="tm-empty-text">Nothing here yet</div>
+          </div>
           <t t-foreach="cards" t-as="c">
             <t t-call="tm.Card">
               <t t-set="card" t-value="c"/>
             </t>
           </t>
         </div>
+
       </div>
     </div>
   </t>
 
-  <!-- Card template (4 must-show fields) -->
+  <!-- Card template: title+priority (top), description+due (middle), tags (bottom) -->
   <t t-name="tm.Card">
     <div class="tm-card card mb-2" t-att-data-id="card.id" draggable="true">
       <div class="card-body p-3 d-flex flex-column gap-2">
-        <!-- Top: title + priority badge -->
-        <div class="d-flex align-items-start justify-content-between gap-2">
-          <div class="fw-semibold tm-card-title flex-grow-1" t-esc="card.name"/>
+       
+        <!-- Top: title + priority pill (no wrapping, ellipsis) -->
+        <div class="tm-card-top d-flex align-items-start gap-2">
+          <div class="tm-card-title flex-grow-1" t-att-title="card.name" t-esc="card.name"/>
           <span t-attf-class="badge rounded-pill tm-priority prio-#{card.priority}">
             <t t-if="card.priority=='2'">High</t>
             <t t-if="card.priority=='1'">Medium</t>
@@ -40,18 +44,18 @@
         </div>
 
         <!-- Middle: description + due date (stacked) -->
-        <div>
+        <div class="tm-card-middle">
           <div class="tm-card-desc tm-desc" t-if="card.description" t-esc="card.description"/>
-          <div class="small text-muted mt-1" t-if="card.due_date">
+          <div class="tm-due small mt-1 text-muted" t-if="card.due_date" t-att-data-due="card.due_date">
             <i class="fa fa-clock-o me-1"/>
             <t t-esc="card.due_date"/>
           </div>
         </div>
 
         <!-- Bottom: tags -->
-        <div class="small tm-tags" t-if="card.tags and card.tags.length">
+        <div class="tm-card-bottom small tm-tags" t-if="card.tags and card.tags.length">
           <t t-foreach="card.tags" t-as="tg">
-            <span class="badge rounded-pill bg-light text-dark me-1 mb-1" t-esc="tg"/>
+            <span class="tm-chip badge rounded-pill me-1 mb-1" t-esc="tg"/>
           </t>
         </div>
       </div>
