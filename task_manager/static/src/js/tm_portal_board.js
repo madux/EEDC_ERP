@@ -30,10 +30,10 @@ odoo.define('tm_taskboard.portal_board', function (require) {
         _renderBoard: function (grouped, counts) {
             const qweb = core.qweb;
             const stages = [
-                { key: 'todo',        title: 'To Do',      count: (counts && counts.todo) || 0 },
-                { key: 'in_progress', title: 'In Progress',count: (counts && counts.in_progress) || 0 },
-                { key: 'review',      title: 'Review',     count: (counts && counts.review) || 0 },
-                { key: 'done',        title: 'Done',       count: (counts && counts.done) || 0 },
+                { key: 'todo', title: 'To Do', count: (counts && counts.todo) || 0 },
+                { key: 'in_progress', title: 'In Progress', count: (counts && counts.in_progress) || 0 },
+                { key: 'review', title: 'Review', count: (counts && counts.review) || 0 },
+                { key: 'done', title: 'Done', count: (counts && counts.done) || 0 },
             ];
             const html = stages.map(st => qweb.render('tm.Column', {
                 stage: st,
@@ -45,6 +45,10 @@ odoo.define('tm_taskboard.portal_board', function (require) {
             this._wireSearchAndFilters();
             this._applyOverdueBadges();
             this._updateCounts(); // ensure empty-state aligned with visibility
+
+            //apply due/overdue visuals
+            this._applyOverdueBadges(this.$('#tm_board'));
+            this._refreshDoneDueLabels(this.$('#tm_board'));
         },
 
         // -------- search & filters --------
@@ -59,9 +63,9 @@ odoo.define('tm_taskboard.portal_board', function (require) {
                 this.$('.tm-card').each(function () {
                     const $c = $(this);
                     const title = ($c.find('.tm-card-title').text() || '').toLowerCase();
-                    const desc  = ($c.find('.tm-card-desc').text() || '').toLowerCase();
-                    const cls   = $c.find('.tm-priority').attr('class') || '';
-                    const prio  = cls.includes('prio-2') ? '2' : cls.includes('prio-1') ? '1' : '0';
+                    const desc = ($c.find('.tm-card-desc').text() || '').toLowerCase();
+                    const cls = $c.find('.tm-priority').attr('class') || '';
+                    const prio = cls.includes('prio-2') ? '2' : cls.includes('prio-1') ? '1' : '0';
 
                     const matchesText = !s || title.includes(s) || desc.includes(s);
                     const matchesPrio = !p || prio === p;
@@ -109,17 +113,17 @@ odoo.define('tm_taskboard.portal_board', function (require) {
 
             this.$('.tm-col-body')
                 .on('dragover', function (ev) { ev.preventDefault(); })
-                .on('dragenter', function ()  { $(this).closest('.tm-col').addClass('drag-over'); })
-                .on('dragleave', function ()  { $(this).closest('.tm-col').removeClass('drag-over'); });
+                .on('dragenter', function () { $(this).closest('.tm-col').addClass('drag-over'); })
+                .on('dragleave', function () { $(this).closest('.tm-col').removeClass('drag-over'); });
 
             this.$('.tm-col-body').on('drop', function (ev) {
                 ev.preventDefault();
-                const clientY    = ev.originalEvent.clientY;
-                const id         = ev.originalEvent.dataTransfer.getData('text/plain');
-                const $targetBody= $(this);
+                const clientY = ev.originalEvent.clientY;
+                const id = ev.originalEvent.dataTransfer.getData('text/plain');
+                const $targetBody = $(this);
                 const $targetCol = $targetBody.closest('.tm-col');
                 $targetCol.removeClass('drag-over');
-                const targetStage= $targetCol.data('stage');
+                const targetStage = $targetCol.data('stage');
 
                 // Same-stage reorder: DOM only, no RPC, no toast
                 if (self._dragInfo && String(self._dragInfo.id) === String(id) &&
@@ -150,6 +154,9 @@ odoo.define('tm_taskboard.portal_board', function (require) {
                         // insert at drop position
                         this._insertCard($card, $targetBody, clientY);
 
+                        this._applyOverdueBadges($targetBody.closest('.tm-col'));
+                        this._refreshDoneDueLabels($targetBody.closest('.tm-col'));
+
                         // strike-through when moved to Done
                         $card.toggleClass('tm-complete', stage === 'done');
 
@@ -178,7 +185,7 @@ odoo.define('tm_taskboard.portal_board', function (require) {
         _updateCounts: function (scopedCols) {
             const $cols = scopedCols ? $(scopedCols) : this.$('.tm-col');
             $cols.each(function () {
-                const $col  = $(this);
+                const $col = $(this);
                 const $body = $col.find('.tm-col-body');
                 const count = $body.find('.tm-card:visible').length;
 
@@ -188,20 +195,72 @@ odoo.define('tm_taskboard.portal_board', function (require) {
         },
 
         // -------- overdue visuals --------
+        // _applyOverdueBadges: function (scope) {
+        //     const today = new Date();
+        //     const $scope = scope ? $(scope) : this.$el;
+        //     $scope.find('.tm-card').each(function () {
+        //         const $c = $(this);
+        //         const $due = $c.find('.tm-due');
+        //         const iso = $due.data('due');
+        //         if (!iso) return;
+        //         const d = new Date(iso + 'T00:00:00');
+        //         const overdue = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        //         $c.toggleClass('tm-overdue', overdue);
+        //         $due.toggleClass('overdue', overdue);
+        //     });
+        // },
+
+        // Parse "YYYY-MM-DD" as LOCAL midnight (reliable across browsers)
+        _safeParseISODate: function (iso) {
+            if (!iso || typeof iso !== 'string') return null;
+            const parts = iso.split('-');
+            if (parts.length !== 3) return null;
+            const y = Number(parts[0]), m = Number(parts[1]) - 1, d = Number(parts[2]);
+            if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return null;
+            return new Date(y, m, d); // local midnight
+        },
+
+        // Paint overdue (red stripe + red due text), but never in Done column
         _applyOverdueBadges: function (scope) {
             const today = new Date();
+            const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const $scope = scope ? $(scope) : this.$el;
-            $scope.find('.tm-card').each(function () {
-                const $c = $(this);
+
+            $scope.find('.tm-card').each((_, el) => {
+                const $c = $(el);
                 const $due = $c.find('.tm-due');
-                const iso = $due.data('due');
+                const iso = $due.attr('data-due');   // use attr to avoid jQuery data cache
                 if (!iso) return;
-                const d = new Date(iso + 'T00:00:00');
-                const overdue = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                $c.toggleClass('tm-overdue', overdue);
-                $due.toggleClass('overdue', overdue);
+
+                const dueDate = this._safeParseISODate(iso);
+                if (!dueDate) return;
+
+                const inDone = $c.closest('.tm-col').is('[data-stage="done"]');
+                const isOverdue = !inDone && (dueDate < todayMid);
+
+                $c.toggleClass('tm-overdue', isOverdue);
+                $due.toggleClass('overdue', isOverdue);
             });
         },
+
+        // In the Done column show "Completed: <date>" and clear overdue visuals
+        _refreshDoneDueLabels: function (scope) {
+            const $scope = scope ? $(scope) : this.$el;
+            $scope.find('.tm-col[data-stage="done"] .tm-card').each((_, el) => {
+                const $c = $(el);
+                const $due = $c.find('.tm-due');
+                const iso = $due.attr('data-due');
+                if (!iso) return;
+
+                // Clear any overdue styling for completed tasks
+                $c.removeClass('tm-overdue');
+                $due.removeClass('overdue');
+
+                // Replace label text (keeps the clock icon)
+                $due.html('<i class="fa fa-clock-o me-1"></i>Completed: ' + iso);
+            });
+        },
+
     });
 
     return publicWidget.registry.TmPortalBoard;
