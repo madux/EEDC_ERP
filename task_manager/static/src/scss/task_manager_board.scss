@@ -2,12 +2,37 @@
 .tm-col .card-header { background: #fff; border-bottom: 0; }
 .tm-col-body { min-height: 200px; }
 .tm-card { cursor: grab; border: 1px solid rgba(0,0,0,.06); }
-.tm-card .tm-priority { align-self: flex-start; }
+.tm-card .tm-priority { align-self: flex-start; border-radius: 999px; font-weight: 600; padding: .25rem .5rem; border:1px solid transparent; }
 .tm-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+/* Column color dots */
 .stage-todo   { background:#e0e7ff; }
 .stage-in_progress { background:#fde68a; }
 .stage-review { background:#fbcfe8; }
 .stage-done   { background:#bbf7d0; }
-.prio-2 { background:#fee2e2; color:#b91c1c; }
-.prio-1 { background:#ffedd5; color:#c2410c; }
-.prio-0 { background:#e5e7eb; color:#374151; }
+
+/* Priority badge colors */
+.tm-card .tm-priority.prio-2 { background-color:#fee2e2; color:#991b1b; border-color:#fecaca; }
+.tm-card .tm-priority.prio-1 { background-color:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+.tm-card .tm-priority.prio-0 { background-color:#e5e7eb; color:#374151; border-color:#d1d5db; }
+
+/* Description clamp */
+.tm-card .tm-desc { margin-top: .15rem; font-size: .875rem; color:#4b5563; display:-webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow:hidden; white-space: pre-line; }
+.tm-card .tm-tags { display:flex; flex-wrap: wrap; }
+
+/* --- Toast (notification) styling, scoped to our page to avoid side effects --- */
+.tm-page .o_notification.tm-toast-success { 
+  border-left: 6px solid #16a34a !important; 
+  background: #f0fdf4 !important; 
+}
+.tm-page .o_notification.tm-toast-warning { 
+  border-left: 6px solid #f59e0b !important; 
+  background: #fffbeb !important; 
+}
+
+/* Completed card strike-through (applied by JS when stage === 'done') */
+.tm-card.tm-complete .tm-card-title,
+.tm-card.tm-complete .tm-card-desc {
+  text-decoration: line-through;
+  opacity: .75;
+}

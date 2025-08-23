@@ -46,7 +46,7 @@ odoo.define('tm_taskboard.login', function (require) {
 
         _onSwitch: function () {
             // clear session on server
-            this._rpc({route: '/tm/api/logout', params: {}}).always(() => {
+            this._rpc({ route: '/tm/api/logout', params: {} }).always(() => {
                 this.$('#tm_emp_name').text('Employee');
                 this.$('#tm_board').empty();
                 this.$('#tm_board_panel').hide();
@@ -59,7 +59,7 @@ odoo.define('tm_taskboard.login', function (require) {
             const boardPanel = this.$('#tm_board_panel');
             const $name = this.$('#tm_emp_name');
             const $board = this.$('#tm_board');
-            this._rpc({route: '/tm/api/board', params: {}}).then(res => {
+            this._rpc({ route: '/tm/api/board', params: {} }).then(res => {
                 if (!res || !res.ok) {
                     loginPanel.show();
                     boardPanel.hide();
@@ -102,9 +102,12 @@ odoo.define('tm_taskboard.login', function (require) {
                 this.$('.tm-card').each(function () {
                     const $c = $(this);
                     const title = ($c.find('.tm-card-title').text() || '').toLowerCase();
-                    const prio = $c.find('.tm-priority').attr('class').includes('prio-2') ? '2' : $c.find('.tm-priority').attr('class').includes('prio-1') ? '1' : '0';
-                    const visible = (!s || title.includes(s)) && (!p || prio === p);
-                    $c.toggle(visible);
+                    const desc = ($c.find('.tm-card-desc').text() || '').toLowerCase();
+                    const prioClass = $c.find('.tm-priority').attr('class') || '';
+                    const prio = prioClass.includes('prio-2') ? '2' : prioClass.includes('prio-1') ? '1' : '0';
+                    const matchesText = !s || title.includes(s) || desc.includes(s);
+                    const matchesPrio = !p || prio === p;
+                    $c.toggle(matchesText && matchesPrio);
                 });
             };
             $search.off('input').on('input', apply);
@@ -128,19 +131,60 @@ odoo.define('tm_taskboard.login', function (require) {
             });
         },
 
+        // _moveTask: function (id, stage, $targetCol) {
+        //     this._rpc({route: '/tm/api/move', params: {task_id: id, new_stage: stage}}).then(res => {
+        //         if (res && res.ok) {
+        //             // Optimistic: append card to target column
+        //             const $card = this.$('.tm-card[data-id="' + id + '"]');
+        //             $targetCol.append($card);
+        //         } else if (res && res.message) {
+        //             this.displayNotification({title: 'Move blocked', message: res.message, type: 'warning'});
+        //         }
+        //     }).guardedCatch(() => {
+        //         this.displayNotification({title: 'Network', message: 'Could not move task', type: 'danger'});
+        //     });
+        // },
+
         _moveTask: function (id, stage, $targetCol) {
-            this._rpc({route: '/tm/api/move', params: {task_id: id, new_stage: stage}}).then(res => {
+            const stageNames = { todo: 'To Do', in_progress: 'In Progress', review: 'Review', done: 'Done' };
+
+            this._rpc({ route: '/tm/api/move', params: { task_id: id, new_stage: stage } }).then(res => {
                 if (res && res.ok) {
-                    // Optimistic: append card to target column
+                    // Move the card in the DOM
                     const $card = this.$('.tm-card[data-id="' + id + '"]');
                     $targetCol.append($card);
+
+                    // strike/unstrike when moving in/out of "done"
+                    $card.toggleClass('tm-complete', stage === 'done');
+
+                    // refresh the little count badges in each column header
+                    this._updateCounts();
+
+                    // ✅ success toast
+                    this.displayNotification({
+                        title: 'Task updated',
+                        message: `Moved to ${stageNames[stage]} stage`,
+                        type: 'success',
+                        sticky: false,
+                        className: 'tm-toast-success'
+                    });
                 } else if (res && res.message) {
-                    this.displayNotification({title: 'Move blocked', message: res.message, type: 'warning'});
+                    this.displayNotification({ title: 'Move blocked', message: res.message, type: 'warning', className: 'tm-toast-warning' });
                 }
             }).guardedCatch(() => {
-                this.displayNotification({title: 'Network', message: 'Could not move task', type: 'danger'});
+                this.displayNotification({ title: 'Network', message: 'Could not move task', type: 'danger' });
             });
         },
+
+        _updateCounts: function () {
+            // For each column, count visible cards and update the header badge
+            this.$('.tm-col').each(function () {
+                const $col = $(this);
+                const count = $col.find('.tm-col-body .tm-card').length;
+                $col.find('.card-header .badge').text(count);
+            });
+        },
+
     });
 
     return publicWidget.registry.TmLogin;

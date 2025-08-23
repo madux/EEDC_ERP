@@ -51,15 +51,21 @@ class TaskboardController(http.Controller):
             return {"ok": False, "message": "Not authenticated"}
         Task = request.env["tm.task"].sudo()
         tasks = Task.search([("assignee_staff_id", "=", staff_id), ("active", "=", True)])
+
         def _card(t):
+            desc = (t.description or '').strip()
+            if desc and len(desc) > 300:
+                desc = desc[:297] + '...'
             return {
                 "id": t.id,
                 "name": t.name,
+                "description": desc,
                 "priority": t.priority,
                 "due_date": t.due_date and t.due_date.strftime('%Y-%m-%d') or None,
                 "tags": [tag.name for tag in t.tag_ids],
                 "stage": t.stage,
             }
+
         stages = ["todo", "in_progress", "review", "done"]
         grouped = {k: [] for k in stages}
         for t in tasks:
