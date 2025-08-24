@@ -195,21 +195,6 @@ odoo.define('tm_taskboard.portal_board', function (require) {
         },
 
         // -------- overdue visuals --------
-        // _applyOverdueBadges: function (scope) {
-        //     const today = new Date();
-        //     const $scope = scope ? $(scope) : this.$el;
-        //     $scope.find('.tm-card').each(function () {
-        //         const $c = $(this);
-        //         const $due = $c.find('.tm-due');
-        //         const iso = $due.data('due');
-        //         if (!iso) return;
-        //         const d = new Date(iso + 'T00:00:00');
-        //         const overdue = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        //         $c.toggleClass('tm-overdue', overdue);
-        //         $due.toggleClass('overdue', overdue);
-        //     });
-        // },
-
         // Parse "YYYY-MM-DD" as LOCAL midnight (reliable across browsers)
         _safeParseISODate: function (iso) {
             if (!iso || typeof iso !== 'string') return null;

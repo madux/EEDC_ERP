@@ -1,24 +1,56 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <!-- SEARCH: filters, group-bys -->
+  <record id="view_tm_task_search" model="ir.ui.view">
+    <field name="name">tm.task.search</field>
+    <field name="model">tm.task</field>
+    <field name="type">search</field>
+    <field name="arch" type="xml">
+      <search string="Search Tasks">
+        <field name="name"/>
 
-  <!-- Tree/List -->
+        <!-- Time filters based on stored helpers -->
+        <filter name="overdue" string="Overdue" domain="[('is_overdue','=',True)]"/>
+        <filter name="due_today" string="Due today" domain="[('days_left','=',0)]"/>
+        <filter name="due_week" string="Due this week" domain="[('days_left','&gt;=',0),('days_left','&lt;=',6)]"/>
+
+        <!-- Ownership -->
+        <filter name="mine" string="My tasks" domain="[('employee_id.user_id','=',uid)]"/>
+        <filter name="imanage" string="I manage" domain="[('manager_id','=',uid)]"/>
+
+        <!-- Group By: name attribute is REQUIRED by RNG -->
+        <group expand="0" string="Group By">
+          <filter name="grp_stage" string="Stage" context="{'group_by':'stage'}"/>
+          <filter name="grp_employee" string="Employee" context="{'group_by':'employee_id'}"/>
+          <filter name="grp_priority" string="Priority" context="{'group_by':'priority'}"/>
+          <filter name="grp_manager" string="Manager" context="{'group_by':'manager_id'}"/>
+          <filter name="grp_company" string="Company" context="{'group_by':'company_id'}" groups="base.group_multi_company"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- TREE: quick status signals -->
   <record id="view_tm_task_tree" model="ir.ui.view">
     <field name="name">tm.task.tree</field>
     <field name="model">tm.task</field>
     <field name="arch" type="xml">
-      <tree>
+      <tree decoration-danger="is_overdue" decoration-muted="stage=='done'">
+        <field name="is_overdue" invisible="1"/>
+        <!-- required for decoration -->
+        <field name="key"/>
         <field name="name"/>
-        <field name="assignee_staff_id"/>
         <field name="employee_id"/>
         <field name="stage"/>
-        <field name="priority"/>
+        <!-- <field name="priority" widget="selection"/> -->
+        <field name="priority_badge" widget="html" string="Priority"/>
         <field name="due_date"/>
+        <field name="days_left"/>
         <field name="manager_id"/>
       </tree>
     </field>
   </record>
 
-  <!-- Form -->
+  <!-- FORM: structured + chatter -->
   <record id="view_tm_task_form" model="ir.ui.view">
     <field name="name">tm.task.form</field>
     <field name="model">tm.task</field>
@@ -26,39 +58,124 @@
       <form string="Task">
         <sheet>
           <group>
-            <field name="name"/>
-            <field name="description" widget="text"/>
+            <group>
+              <field name="key" readonly="1"/>
+              <field name="name"/>
+              <field name="description" widget="text"/>
+              <field name="tag_ids" widget="many2many_tags"/>
+            </group>
+            <group>
+              <field name="employee_id"/>
+              <field name="assignee_staff_id"/>
+              <field name="manager_id"/>
+              <field name="company_id" groups="base.group_multi_company"/>
+            </group>
           </group>
-          <group>
-            <field name="assignee_staff_id"/>
-            <field name="employee_id"/>
-            <field name="manager_id"/>
-          </group>
-          <group>
+          <group string="Planning">
             <field name="stage"/>
             <field name="priority"/>
             <field name="due_date"/>
-            <field name="tag_ids" widget="many2many_tags"/>
+            <field name="days_left" readonly="1"/>
+            <field name="is_overdue" readonly="1"/>
           </group>
           <group string="Review">
+            <field name="is_blocked"/>
+            <field name="blocked_reason" attrs="{'invisible':[('is_blocked','=',False)]}"/>
             <field name="last_review_note"/>
-            <field name="last_reviewed_by"/>
-            <field name="last_reviewed_on"/>
+            <field name="last_reviewed_by" readonly="1"/>
+            <field name="last_reviewed_on" readonly="1"/>
           </group>
         </sheet>
+        <div class="oe_chatter">
+          <field name="message_follower_ids" widget="mail_followers"/>
+          <field name="activity_ids" widget="mail_activity"/>
+          <field name="message_ids" widget="mail_thread"/>
+        </div>
       </form>
     </field>
   </record>
 
-  <!-- Action -->
+  <!-- KANBAN (backend quick overview) -->
+  <record id="view_tm_task_kanban" model="ir.ui.view">
+    <field name="name">tm.task.kanban</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <kanban default_group_by="stage">
+        <field name="priority_badge" invisible="1"/>
+        <templates>
+          <t t-name="kanban-box">
+            <div class="oe_kanban_global_click">
+              <div class="o_kanban_record_title">
+                <strong><field name="key"/> – <field name="name"/></strong>
+              </div>
+              <div class="text-muted">
+                <field name="employee_id"/>
+              </div>
+              <div class="d-flex gap-2 align-items-center">
+                <!-- render the ready-made badge -->
+                <t t-raw="record.priority_badge.raw_value"/>
+                <!-- keep due date; show red text if overdue -->
+                <field name="is_overdue" invisible="1"/>
+                <span t-attf-class="#{record.is_overdue &amp;&amp; record.is_overdue.raw_value ? 'text-danger fw-600' : ''}">
+                  <field name="due_date"/>
+                </span>
+              </div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+
+  <!-- CALENDAR by due_date -->
+  <record id="view_tm_task_calendar" model="ir.ui.view">
+    <field name="name">tm.task.calendar</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <calendar date_start="due_date" color="employee_id">
+        <field name="name"/>
+        <field name="employee_id"/>
+      </calendar>
+    </field>
+  </record>
+
+  <!-- GRAPH & PIVOT -->
+  <record id="view_tm_task_graph" model="ir.ui.view">
+    <field name="name">tm.task.graph</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <graph string="Tasks" type="bar">
+        <field name="stage" type="row"/>
+        <field name="priority" type="col"/>
+        <field name="id" type="measure"/>
+      </graph>
+    </field>
+  </record>
+
+  <record id="view_tm_task_pivot" model="ir.ui.view">
+    <field name="name">tm.task.pivot</field>
+    <field name="model">tm.task</field>
+    <field name="arch" type="xml">
+      <pivot>
+        <field name="employee_id" type="row"/>
+        <field name="stage" type="col"/>
+        <!-- <field name="id" type="measure" operator="count" string="Tasks"/> -->
+        <!-- optional extra metric -->
+        <field name="days_left" type="measure" operator="avg" string="Avg Days Left"/>
+      </pivot>
+    </field>
+  </record>
+
+
+  <!-- Action & Menu (extend yours by adding more view modes) -->
   <record id="action_tm_tasks" model="ir.actions.act_window">
     <field name="name">Tasks</field>
     <field name="res_model">tm.task</field>
-    <field name="view_mode">tree,form</field>
+    <field name="view_mode">tree,kanban,form,calendar,graph,pivot</field>
+    <field name="search_view_id" ref="view_tm_task_search"/>
   </record>
 
-    <!-- Menu -->
   <menuitem id="tm_root_menu" name="Task Board" sequence="50"/>
   <menuitem id="tm_task_menu" name="Tasks" parent="tm_root_menu" action="action_tm_tasks"/>
-
 </odoo>

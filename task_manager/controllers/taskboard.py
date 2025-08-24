@@ -9,7 +9,7 @@ class TaskboardController(http.Controller):
     - Page + JSON routes require a logged-in website user (portal or internal).
     - Tasks are scoped to the current user's employee.
       Primary filter: task.employee_id == user.employee_id
-      Fallback:      task.assignee_staff_id == employee.employee_number (if provided)
+      Fallback: task.assignee_staff_id == employee.employee_number (if provided)
     - Managers (group task_manager.group_tm_manager) can move to any stage, others cannot move to 'done'.
     """
 

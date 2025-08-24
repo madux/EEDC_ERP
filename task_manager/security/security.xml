@@ -12,14 +12,23 @@
     <record id="rule_tm_task_portal_own" model="ir.rule">
       <field name="name">Task: portal own</field>
       <field name="model_id" ref="model_tm_task"/>
-      <!-- apply to portal users -->
       <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
-      <!-- scope: tasks whose employee is the current user -->
       <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
-      <!-- record rule perms -->
       <field name="perm_read" eval="1"/>
       <field name="perm_write" eval="1"/>
       <field name="perm_create" eval="0"/>
+      <field name="perm_unlink" eval="0"/>
+    </record>
+
+    <!-- INTERNAL users: see tasks they own (employee) OR manage -->
+    <record id="rule_tm_task_internal_own_or_managed" model="ir.rule">
+      <field name="name">Task: internal own or managed</field>
+      <field name="model_id" ref="model_tm_task"/>
+      <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+      <field name="domain_force">['|',('employee_id.user_id','=',user.id),('manager_id','=',user.id)]</field>
+      <field name="perm_read" eval="1"/>
+      <field name="perm_write" eval="1"/>
+      <field name="perm_create" eval="1"/>
       <field name="perm_unlink" eval="0"/>
     </record>
 
@@ -29,6 +38,18 @@
       <field name="model_id" ref="model_tm_task"/>
       <field name="groups" eval="[(4, ref('task_manager.group_tm_manager'))]"/>
       <field name="domain_force">[(1, '=', 1)]</field>
+      <field name="perm_read" eval="1"/>
+      <field name="perm_write" eval="1"/>
+      <field name="perm_create" eval="1"/>
+      <field name="perm_unlink" eval="1"/>
+    </record>
+
+    <!-- Administrator: unrestricted access on tm.task -->
+    <record id="rule_tm_task_admin_all" model="ir.rule">
+      <field name="name">Task: admins see all</field>
+      <field name="model_id" ref="model_tm_task"/>
+      <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+      <field name="domain_force">[(1,'=',1)]</field>
       <field name="perm_read" eval="1"/>
       <field name="perm_write" eval="1"/>
       <field name="perm_create" eval="1"/>

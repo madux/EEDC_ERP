@@ -11,20 +11,19 @@
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
-        # "data/ir_config_parameter.xml",
+        "data/ir_sequence.xml",
+        "data/cron.xml",
         "views/backend_views.xml",
         "views/website_pages.xml",
     ],
     "assets": {
         "web.assets_frontend": [
-            # QWeb templates (you prefer /static/templates/ so we include that path)
             "task_manager/static/templates/task_manager_board_templates.xml",
             # JS + CSS
-            # "task_manager/static/src/js/task_manager_login.js",
-            # "task_manager/static/src/js/task_manager_board.js",
             "task_manager/static/src/js/tm_portal_board.js",
             "task_manager/static/src/scss/task_manager_board.scss",
         ],
     },
     "application": True,
+    "installable": True,
 }
