@@ -1,6 +1,6 @@
 {
     "name": "Task Manager",
-    "summary": "Website task board for employees (Staff-ID login) + simple back-office",
+    "summary": "A task management system module to boost productivity in the office and keep everyone accountable.",
     "version": "16.0.1.0.2",
     "author": "Michael Ndunwa",
     "license": "LGPL-3",
