@@ -90,8 +90,8 @@ class TmTask(models.Model):
             for rec in self:
                 old, new = stage_before.get(rec.id), rec.stage
                 if old != new:
-                    if new == 'review' and not (vals.get('last_review_note') or rec.last_review_note):
-                        raise ValidationError(_("A review note is required to move to Review."))
+                    # if new == 'review' and not (vals.get('last_review_note') or rec.last_review_note):
+                        # raise ValidationError(_("A review note is required to move to Review."))
                     if new == 'done':
                         if rec.is_blocked and not self.env.user.has_group('task_manager.group_tm_manager'):
                             raise ValidationError(_("Blocked tasks can only be completed by a manager."))
