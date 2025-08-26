@@ -391,9 +391,9 @@ class MemoConfig(models.Model):
         'res_partner_memo_config_rel',
         'partner_id',
         'memo_setting_id',
-        string="Allowed companies",
+        string="Allowed Partners",
         help="""
-        If companies are selected, this will allow 
+        If partners are selected, this will allow 
         employees with external user option to select 
         the list from the portal
         """

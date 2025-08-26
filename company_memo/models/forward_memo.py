@@ -84,19 +84,19 @@ class Forward_Wizard(models.TransientModel):
         msg = "No Comment"
         if self.description_two:
             msg = self.description_two
-        if self.direct_employee_id:
+        if self.sudo().direct_employee_id:
             body = "{}: {}".format(self.env.user.name, self.description_two if self.description_two else "-")
             memo = self.env['memo.model'].sudo().search([('id', '=', self.memo_record.id)])
             comment_msg = " "
             if memo.comments:
                 comment_msg = memo.comments if memo.comments else "-"
-            if not self.direct_employee_id.work_email:
+            if not self.sudo().direct_employee_id.work_email:
                 raise ValidationError('Employee to direct to must have an email')
             memo.write({
                     'res_users': [(4, self.env.uid)],
                     'set_staff': self.direct_employee_id.id, 'direct_employee_id': self.direct_employee_id.id, 'state': 'Sent',
                     'users_followers': [(4, self.direct_employee_id.id)],
-                    'approver_id': self.direct_employee_id.id if self.is_approver == "yes" else False,
+                    'approver_id': self.sudo().direct_employee_id.id if self.is_approver == "yes" else False,
                     'comments': comment_msg +' '+body,
                     }) 
             memo.message_post(body=body)

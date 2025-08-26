@@ -141,11 +141,14 @@
 								<field name="has_sub_stage" invisible="1"/> 
 							</group> 
 							<group name="normal_memo_group2"> 
-								<field name="date" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
+								<field name="date" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}, "useCurrent": false}'/>
                                 <field name="date_deadline" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible':[('memo_type_key','not in',[['material_request','procurement_request']])]}"/>
 								<field name="leave_type_id"  options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
-								<field name="leave_start_date" widget="daterange" options='{"related_end_date": "leave_end_date", "datepicker": {"daysOfWeekDisabled": [5, 6]}}' attrs="{'required':[('memo_type_key','in',['leave_request'])],'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
-								<field name="leave_end_date" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])],'readonly':[('state','not in',['submit'])]}"/>
+								<!-- <field name="leave_start_date" widget="daterange" options='{"related_end_date": "leave_end_date", "datepicker": {"daysOfWeekDisabled": [5, 6]}}' attrs="{'required':[('memo_type_key','in',['leave_request'])],'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/> -->
+								<field name="leave_start_date" widget="no_weekend_date" attrs="{'required':[('memo_type_key','in',['leave_request'])],'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
+								<field name="leave_end_date" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])],'readonly':[('state','not in',['submit'])]}"
+								widget="no_weekend_date"/>
+								<field name="leave_Reliever" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])], 'readonly':[('state','not in',['submit'])]}"/>
 								<field name="leave_duration" attrs="{'required':[('memo_type_key','in',['leave_request'])], 'invisible':[('memo_type_key','not in',['leave_request'])],'readonly':[('state','not in',['submit'])]}"/>
 								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
 								<field name="amountfig" string="Amount" readonly="1" attrs="{'invisible':[('memo_type_key','not in',['Payment'])]}"/>

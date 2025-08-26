@@ -127,18 +127,22 @@
                                 <tr>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small></small><span class="ms-2" t-field="request.name"/></a></td>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small>#</small><span class="ms-2" t-field="request.code"/></a></td>
-                                    <td class="text-start"><span class="ms-2" t-field="request.approver_id.name"/></td>
+                                    <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><span class="ms-2" t-field="request.approver_id.name"/></a></td>
                                     <!-- <td class="text-end" t-if="groupby != 'create_date'"> -->
                                     <td class="text-start">
-                                        <span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        <a t-attf-href="/my/request/view/{{request.id}}"><span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/></a>
                                     </td>
                                     <td id="request_user">
-                                        <img t-if="request.employee_id.user_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(request.employee_id.user_id.sudo().avatar_1024)}" alt="Contact" style="width: 20px; height: 20px;"/>
-                                        <span t-field="request.employee_id.user_id"/>
+                                        <a t-attf-href="/my/request/view/{{request.id}}">
+                                            <img t-if="request.employee_id.user_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(request.employee_id.user_id.sudo().avatar_1024)}" alt="Contact" style="width: 20px; height: 20px;"/>
+                                            <span t-field="request.employee_id.user_id"/>
+                                        </a>
                                     </td>
-                                    <td id="request_stage" class="text-end">
-                                        <!-- <span t-attf-class="badge rounded-pill #{'text-bg-info' if request.state == 'submit' else 'text-bg-light'}" t-esc="request.state"/> -->
-                                        <span t-attf-class="badge rounded-pill text-bg-info" t-esc="request.stage_id.name"/>
+                                    <td id="request_stage" class="text-end p-2">
+                                        <a t-attf-href="/my/request/view/{{request.id}}">
+                                            <span t-attf-class="badge rounded-pill text-bg-info me-2"
+                                                t-esc="request.stage_id.name"/>
+                                        </a>
                                     </td>
                                 </tr>
                             </t>

@@ -1237,6 +1237,31 @@ class PortalRequest(http.Controller):
 		}
 		return request.render("portal_request.request_form_template", values) 
 	
+	@http.route('/user/approver', type='json', auth='user', website=True)
+	def check_user_is_approver(self, **post):
+		_logger.info(f"checking user is approver / refuser of the request ...{post.get('memo_id')}")
+		user = request.env.user	
+		# domain = [('id', '=', post.get('memo_id'))]
+		# request_id = request.env['memo.model'].sudo()
+		rec = request.env['memo.model'].sudo().browse([int(post.get('memo_id'))])
+		if rec:
+			if rec.stage_id and user.id not in [r.user_id.id for r in rec.sudo().stage_id.approver_ids]: 
+				return {
+					"status": False, 
+					"message": "You are not authorized to refuse this request", 
+					}
+			else:
+				return {
+					"status": True, 
+					"message": "", 
+					}
+		else:
+			return {
+					"status": False, 
+					"message": "No reference record couls be found to refuse this request", 
+					}
+
+
 	@http.route('/my/request/update', type='json', auth="user", website=True)
 	def update_my_request(self, **post):
 		_logger.info(f"updating the request ...{post.get('memo_id')}")
@@ -1250,6 +1275,7 @@ class PortalRequest(http.Controller):
 		request_record = request_id.search(domain, limit=1)
 		stage_id = False
 		status = post.get('status', '')
+  
 		if request_record:
 			if status == "cancel":
 				stage_id = request.env.ref('company_memo.memo_cancel_stage').id
@@ -1301,6 +1327,14 @@ class PortalRequest(http.Controller):
 					}
 			elif status in ["Approve"]:
 				"""First check if the server """
+				# ensure that current stage is not the main approval stage. Only internal users
+				# can go into office memo to approve
+				if request_record.sudo().stage_id.is_approved_stage:
+					return {
+							"status": False, 
+							"message": """Final Approval of this record requires Paid user license. \n \
+           Please go into office memo application to Approve this record""", 
+							}
 				# approver_ids, stage = request_record.get_next_stage_artifact()
 				current_stage_approvers = request_record.sudo().stage_id.approver_ids
 				# user_employeeid = request.env.user.employee_id.id

@@ -4,7 +4,7 @@
     'author': "Maduka Sopulu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize base modules',
-    'depends': ['hr_contract_salary'],
+    'depends': ['hr_contract_salary', 'company_memo'],
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
         'security/ir.model.access.csv',
