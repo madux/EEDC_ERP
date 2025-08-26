@@ -16,7 +16,7 @@
                     <field name="employee_number" required="1"/>
                 </field>
                 <field name="parent_id" position="after">
-                    <field name="administrative_supervisor_id" string="Administrative supervisor" options="{'no_create': True,'no_open': True}"/>
+                    <field name="administrative_supervisor_id" invisible="0" string="Administrative supervisor" options="{'no_create': True,'no_open': True}"/>
                     <field name="reviewer_id" string="Reviewer" attrs="{'required': [('administrative_supervisor_id', '!=', False)]}" options="{'no_create': True,'no_open': True}"/>
                     <!-- <button name="auto_update_employee_appraisers_role" type="object" string="Update Appraisers Role" required="0" groups="base.group_system,hr.group_hr_manager"/> -->
                 </field> 
