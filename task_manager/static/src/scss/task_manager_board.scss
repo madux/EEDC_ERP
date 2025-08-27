@@ -103,6 +103,10 @@
 .tm-page .tm-board .tm-card .tm-priority.prio-1 { background-color:#ffedd5; color:#9a3412; border-color:#fed7aa; }
 .tm-page .tm-board .tm-card .tm-priority.prio-0 { background-color:#e5e7eb; color:#374151; border-color:#d1d5db; }
 
+/* View more button */
+.tm-page .tm-board .tm-card .tm-more{ padding:.15rem .4rem; line-height:1; }
+
+
 /* Description & tags */
 .tm-page .tm-board .tm-card .tm-desc {
   margin-top:.1rem; font-size:.875rem; color:#4b5563;
@@ -234,7 +238,7 @@
   box-shadow: 0 10px 20px rgba(217,70,239,.22);
   margin: 0;
 }
-.tm-page .tm-topbar .btn-refresh:hover { filter: brightness(.98); }
+.tm-page .tm-topbar .btn-refresh:hover { filter: brightness(.98); transform: translateY(-1px);}
 
 /* Compact stacking on small screens */
 @media (max-width: 991.98px) {

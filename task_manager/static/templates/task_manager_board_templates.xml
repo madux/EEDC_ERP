@@ -33,7 +33,7 @@
     <div class="tm-card card mb-2" t-att-data-id="card.id" draggable="true">
       <div class="card-body p-3 d-flex flex-column gap-2">
        
-        <!-- Top: title + priority pill (no wrapping, ellipsis) -->
+        <!-- Top: title + priority pill (no wrapping, ellipsis) + view more(3-dot button) -->
         <div class="tm-card-top d-flex align-items-start gap-2">
           <div class="tm-card-title flex-grow-1" t-att-title="card.name" t-esc="card.name"/>
           <span t-attf-class="badge rounded-pill tm-priority prio-#{card.priority}">
@@ -41,6 +41,9 @@
             <t t-if="card.priority=='1'">Medium</t>
             <t t-if="card.priority=='0'">Low</t>
           </span>
+          <button class="btn btn-sm btn-light tm-more" title="View more">
+            <i class="fa fa-ellipsis-v"/>
+          </button>
         </div>
 
         <!-- Middle: description + due date (stacked) -->
@@ -57,6 +60,54 @@
           <t t-foreach="card.tags" t-as="tg">
             <span class="tm-chip badge rounded-pill me-1 mb-1" t-esc="tg"/>
           </t>
+        </div>
+      </div>
+    </div>
+  </t>
+
+  <!-- Modal template -->
+  <t t-name="tm.TaskModal">
+    <div class="modal fade" id="tmTaskModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><t t-esc="task.name"/></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"/>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2">
+              <span class="badge me-2" t-att-class="'rounded-pill tm-priority prio-'+task.priority">
+                <t t-esc="task.priority_label"/>
+              </span>
+              <t t-if="task.due_date">
+                <i class="fa fa-clock-o me-1"/><t t-esc="task.due_date"/>
+              </t>
+            </div>
+            <p class="tm-full-desc" t-esc="task.description or ''"/>
+            <div class="mt-3" t-if="task.tags and task.tags.length">
+              <t t-foreach="task.tags" t-as="tg">
+                <span class="badge rounded-pill bg-secondary me-1 mb-1" t-esc="tg"/>
+              </t>
+            </div>
+
+            <!-- Chat area -->
+            <hr class="my-3"/>
+            <h6 class="mb-2">Comments</h6>
+            <div id="tm_chat_list" class="tm-chat-list mb-3">
+              <t t-foreach="messages" t-as="m">
+                <div class="tm-chat-msg mb-2">
+                  <div class="small text-muted">
+                    <t t-esc="m.author"/> • <t t-esc="m.date"/>
+                  </div>
+                  <div t-raw="m.body"/>
+                </div>
+              </t>
+            </div>
+            <div class="input-group">
+              <textarea class="form-control" id="tm_chat_text" rows="2" placeholder="Write a comment..."></textarea>
+              <button class="btn btn-primary tm-chat-send" type="button">Send</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

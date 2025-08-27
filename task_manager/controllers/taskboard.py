@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import http
+from odoo import http, _
 from odoo.http import request
-
 
 class TaskboardController(http.Controller):
     """
@@ -97,3 +96,46 @@ class TaskboardController(http.Controller):
 
         task.write({"stage": new_stage})
         return {"ok": True}
+    
+    # -------- view more --------
+    @http.route('/tm/api/task', type='json', auth='user', website=True)
+    def api_task(self, task_id):
+        t = request.env['tm.task'].browse(int(task_id))
+        if not t.exists():
+            return {'ok': False}
+        prio_label = dict(t._fields['priority'].selection).get(t.priority, '')
+        msgs = t.sudo().message_ids.sorted('date', reverse=True)[:20]
+        def _m(mm):
+            return {
+                'author': mm.author_id.display_name or '—',
+                'date': mm.date and mm.date.strftime('%Y-%m-%d %H:%M'),
+                'body': mm.body or '',
+            }
+        return {
+            'ok': True,
+            'task': {
+                'id': t.id,
+                'name': t.name,
+                'description': t.description,
+                'priority': t.priority,
+                'priority_label': prio_label,
+                'due_date': t.due_date and t.due_date.strftime('%Y-%m-%d'),
+                'tags': [tag.name for tag in t.tag_ids],
+            },
+            'messages': [_m(m) for m in msgs[::-1]],  # oldest → newest
+        }
+
+    # -------- chat --------
+    @http.route('/tm/api/chat/post', type='json', auth='user', website=True, csrf=False)
+    def api_chat_post(self, task_id, body):
+        t = request.env['tm.task'].browse(int(task_id))
+        if not t.exists():
+            return {'ok': False}
+        # post as the current user
+        t.message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_comment')
+        m = t.sudo().message_ids.sorted('date', reverse=True)[0]
+        return {'ok': True, 'message': {
+            'author': m.author_id.display_name or '—',
+            'date': m.date and m.date.strftime('%Y-%m-%d %H:%M'),
+            'body': m.body or '',
+        }}

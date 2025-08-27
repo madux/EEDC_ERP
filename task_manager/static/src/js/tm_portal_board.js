@@ -12,6 +12,7 @@ odoo.define('tm_taskboard.portal_board', function (require) {
             // No custom login: just fetch data. Keep Refresh.
             this._fetchBoard();
             this.$('#tm_refresh').on('click', this._fetchBoard.bind(this));
+            this.modal = null;
             return this._super.apply(this, arguments);
         },
 
@@ -49,6 +50,59 @@ odoo.define('tm_taskboard.portal_board', function (require) {
             //apply due/overdue visuals
             this._applyOverdueBadges(this.$('#tm_board'));
             this._refreshDoneDueLabels(this.$('#tm_board'));
+
+            // view more
+            this.$('.tm-more').off('click').on('click', ev => {
+                const id = $(ev.currentTarget).closest('.tm-card').data('id');
+                this._openTaskModal(id);
+            });
+        },
+
+        _openTaskModal: function (id) {
+            const qweb = this.qweb || require('web.core').qweb;
+            this._rpc({ route: '/tm/api/task', params: { task_id: id } }).then(res => {
+                if (!res || !res.ok) return;
+                const html = qweb.render('tm.TaskModal', res);
+                // inject & show (replace if already present)
+                const $old = this.$('#tmTaskModal');
+                if ($old.length) $old.remove();
+                this.$el.append(html);
+
+                // Using jQuery Bootstrap modal instead of vanilla Bootstrap
+                const $modal = this.$('#tmTaskModal');
+                $modal.modal({
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                $modal.modal('show');
+
+                // Store reference for cleanup
+                this._modal = $modal;
+
+                // send handler
+                this.$('.tm-chat-send').off('click').on('click', () => this._sendChat(id));
+            });
+        },
+
+        _sendChat: function (id) {
+            const $ta = this.$('#tm_chat_text');
+            const body = ($ta.val() || '').trim();
+            if (!body) return;
+            this._rpc({ route: '/tm/api/chat/post', params: { task_id: id, body: body } })
+                .then(res => {
+                    if (res && res.ok) {
+                        // append last message
+                        const m = res.message;
+                        const $list = this.$('#tm_chat_list');
+                        $list.append(
+                            `<div class="tm-chat-msg mb-2">
+                       <div class="small text-muted">${_.escape(m.author)} • ${_.escape(m.date)}</div>
+                       ${m.body}
+                     </div>`
+                        );
+                        $ta.val('');
+                    }
+                });
         },
 
         // -------- search & filters --------
