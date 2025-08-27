@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Portal-auth page (auth='user' on the route enforces login) -->
+        <template id="tm_taskboard_page" name="Taskboard Page">
+            <t t-call="website.layout">
+                <div class="container my-5 tm-page tm-taskboard" data-tm-init="True">
+
+                    <!-- Top toolbar (no login/switch UI here) -->
+                    <div class="tm-topbar mb-4">
+                        <div class="tm-head">
+                            <h2 class="tm-title mb-0">My Tasks</h2>
+                            <small class="tm-sub">To Do • In Progress • Review • Done</small>
+                        </div>
+                        <div class="tm-actions d-flex gap-2">
+                            <input id="tm_search" class="form-control" placeholder="Search tasks"/>
+                            <select id="tm_filter_priority" class="form-select">
+                                <option value="">All priorities</option>
+                                <option value="2">High</option>
+                                <option value="1">Medium</option>
+                                <option value="0">Low</option>
+                            </select>
+                            <button id="tm_refresh" class="btn btn-refresh">Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Columns (rendered by QWeb via JS) -->
+                    <div id="tm_board" class="row g-3 tm-board">
+                        <!-- JS will render columns/cards here via QWeb templates -->
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

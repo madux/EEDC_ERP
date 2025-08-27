@@ -1,0 +1,243 @@
+/* ===========================
+   Task Manager – Board Styles
+   =========================== */
+
+/* ----- Page & Board ----- */
+.tm-page .tm-board { min-height: 50vh; }
+
+/* Stage palettes via CSS vars; each column sets its own values */
+.tm-page .tm-board .tm-col[data-stage="todo"]        { --col-bg:#f8fafc; --col-head:#eef2ff; --col-border:#c7d2fe; --accent:#4f46e5; --chip-bg:#eef2ff; }
+.tm-page .tm-board .tm-col[data-stage="in_progress"] { --col-bg:#fffbeb; --col-head:#fef3c7; --col-border:#fcd34d; --accent:#d97706; --chip-bg:#fff7ed; }
+.tm-page .tm-board .tm-col[data-stage="review"]      { --col-bg:#fdf4ff; --col-head:#fae8ff; --col-border:#f0abfc; --accent:#a21caf; --chip-bg:#fce7f3; }
+.tm-page .tm-board .tm-col[data-stage="done"]        { --col-bg:#f0fdf4; --col-head:#dcfce7; --col-border:#86efac; --accent:#16a34a; --chip-bg:#e9f9ef; }
+
+/* Column chrome (Bootstrap-proof) */
+.tm-page .tm-board .tm-col {
+  border: 1px solid var(--col-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--col-bg);
+}
+.tm-page .tm-board .tm-stage-header {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--col-head);
+  border-bottom: 1px solid var(--col-border);
+}
+.tm-page .tm-board .tm-col-body {
+  background: var(--col-bg);
+  min-height: 220px;
+  position: relative;
+}
+.tm-page .tm-board .tm-count {
+  background: var(--chip-bg);
+  color: var(--accent);
+  border: 1px solid var(--col-border);
+  border-radius: 999px;
+  font-weight: 600;
+  padding: .15rem .5rem;
+  white-space: nowrap;
+  line-height: 1;
+}
+.tm-page .tm-board .tm-dot {
+  width:10px; height:10px; border-radius:50%;
+  display:inline-block; background: var(--accent); opacity: .25;
+}
+
+/* Subtle cue under sticky headers when content scrolls */
+.tm-page .tm-board .tm-col-body::before {
+  content: "";
+  position: sticky;
+  top: -1px;
+  display: block;
+  height: 1px;
+  box-shadow: 0 6px 10px rgba(0,0,0,.06);
+}
+
+/* Drag-over affordance */
+.tm-page .tm-board .tm-col.drag-over .tm-col-body {
+  outline: 2px dashed var(--accent);
+  outline-offset: -6px;
+}
+
+/* ----- Cards ----- */
+.tm-page .tm-board .tm-card {
+  position: relative;
+  cursor: grab;
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.tm-page .tm-board .tm-card:hover {
+  box-shadow: 0 8px 22px rgba(0,0,0,.12);
+  transform: translateY(-1px);
+}
+
+/* Left accent stripe (stage color); overdue overrides below */
+.tm-page .tm-board .tm-card::before {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+  background: var(--accent);
+}
+
+/* Card top row: title + priority pill */
+.tm-page .tm-board .tm-card-top {
+  display: flex; align-items: flex-start; gap: .5rem;
+}
+.tm-page .tm-board .tm-card .tm-card-title {
+  flex: 1 1 auto; min-width: 0; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.25; font-weight: 600; color: #111827; /* darker to distinguish from desc */
+}
+.tm-page .tm-board .tm-card .tm-priority {
+  flex: 0 0 auto; /* never shrink the pill */
+  align-self: flex-start;
+  border-radius: 999px;
+  font-weight: 600;
+  padding: .25rem .5rem;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+/* Priority pill colors (Bootstrap-proof) */
+.tm-page .tm-board .tm-card .tm-priority.prio-2 { background-color:#fee2e2; color:#991b1b; border-color:#fecaca; }
+.tm-page .tm-board .tm-card .tm-priority.prio-1 { background-color:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+.tm-page .tm-board .tm-card .tm-priority.prio-0 { background-color:#e5e7eb; color:#374151; border-color:#d1d5db; }
+
+/* Description & tags */
+.tm-page .tm-board .tm-card .tm-desc {
+  margin-top:.1rem; font-size:.875rem; color:#4b5563;
+  display:-webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
+  overflow:hidden; white-space: pre-line;
+}
+.tm-page .tm-board .tm-tags { display:flex; flex-wrap:wrap; }
+.tm-page .tm-board .tm-chip { background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; }
+
+/* Done: strike-through title + description */
+.tm-page .tm-board .tm-col[data-stage="done"] .tm-card .tm-card-title,
+.tm-page .tm-board .tm-col[data-stage="done"] .tm-card .tm-card-desc {
+  text-decoration: line-through; opacity:.78;
+}
+
+/* Overdue state (JS toggles .tm-overdue and .tm-due.overdue) */
+.tm-page .tm-board .tm-card.tm-overdue::before { background:#ef4444; }
+.tm-page .tm-board .tm-card .tm-due.overdue { color:#b91c1c !important; font-weight:600; }
+
+/* ----- Column empty state ----- */
+.tm-page .tm-board .tm-col .tm-col-body .tm-empty {
+  /* Hidden by default; JS toggles display */
+  display: none;
+  border: 1px dashed var(--col-border);
+  border-radius: 12px;
+  padding: 2.25rem 1rem;
+  min-height: 120px;
+  color: #6b7280;
+  /* center nicely in tall columns */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.tm-page .tm-board .tm-col-body .tm-empty .tm-empty-text {
+  font-size: .9rem; color: #6b7280;
+}
+
+/* ----- Toast tweaks (Odoo notifications) ----- */
+.tm-page .o_notification.tm-toast-success { border-left:6px solid #16a34a; background:#f0fdf4; }
+.tm-page .o_notification.tm-toast-warning { border-left:6px solid #f59e0b; background:#fffbeb; }
+
+/* ----- Responsive: horizontal column scroll on mobile ----- */
+@media (max-width: 991.98px) {
+  .tm-page .tm-board.row {
+    // flex-wrap: nowrap;
+    // overflow-x: auto;
+    padding-bottom: .5rem;
+    // scroll-snap-type: x proximity;
+    // gap: 1rem;
+  }
+  .tm-page .tm-board .col-12.col-md-6.col-xl-3 {
+    // flex: 0 0 auto;
+    // min-width: 320px;
+    // scroll-snap-align: start;
+  }
+
+  /* Slightly denser cards on small screens */
+  .tm-page .tm-board .tm-card .card-body { padding: .75rem; }
+  .tm-page .tm-board .tm-card .tm-desc { -webkit-line-clamp: 2; line-clamp: 2; }
+}
+
+
+/* ===========================
+   Top bar ("My Tasks" header card)
+   =========================== */
+/* Global font just for the task page */
+.tm-page { 
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  letter-spacing: .01em;
+}
+
+/* Header container – add a subtle stroke that matches the overall vibe */
+.tm-page .tm-topbar {
+  background: #fff;
+  border: 1px solid #e5e7eb;        /* neutral stroke */
+  border-left: 6px solid #94a3b8;   /* accented left bar */
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 8px 20px rgba(2,6,23,.06);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Left stack: title + subtitle */
+.tm-page .tm-topbar .tm-head { 
+  margin-right: auto; 
+}
+.tm-page .tm-topbar .tm-title { 
+  margin: 0; 
+  font-weight: 700; 
+  font-size: 1.45rem; 
+  color: #334155;            /* slate-700 */
+}
+.tm-page .tm-topbar .tm-sub { 
+  margin-top: .125rem; 
+  color: #64748b;            /* slate-500 */
+  font-size: .875rem; 
+}
+
+/* Inputs & selects in the header */
+.tm-page .tm-topbar .form-control,
+.tm-page .tm-topbar .form-select {
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 10px;
+  height: 38px;
+  padding: .375rem .75rem;
+  box-shadow: none;
+}
+.tm-page .tm-topbar .form-control:focus,
+.tm-page .tm-topbar .form-select:focus {
+  border-color: #cbd5e1; /* slate-300 */
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(148,163,184,.15);
+}
+
+/* Refresh button – pill look to match design */
+.tm-page .tm-topbar .btn-refresh {
+  background: #d946ef;       /* magenta vibe */
+  border: none;
+  color: #fff;
+  border-radius: 12px;
+  padding: .5rem .9rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: 0 10px 20px rgba(217,70,239,.22);
+  margin: 0;
+}
+.tm-page .tm-topbar .btn-refresh:hover { filter: brightness(.98); }
+
+/* Compact stacking on small screens */
+@media (max-width: 991.98px) {
+  .tm-page .tm-topbar { flex-direction: column; align-items: stretch; }
+  .tm-page .tm-topbar .tm-actions { display:flex; gap:.5rem; align-items:center; }
+}
