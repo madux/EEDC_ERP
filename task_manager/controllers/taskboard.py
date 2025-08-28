@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
-from odoo import http, _
+import base64
+import datetime
+from odoo import http, _, fields
 from odoo.http import request
 
+def _att_to_dict(att):
+    return {
+        'id': att.id,
+        'name': att.name,
+        'mimetype': att.mimetype or '',
+    }
 class TaskboardController(http.Controller):
     """
     Portal-authenticated taskboard endpoints.
@@ -97,20 +105,60 @@ class TaskboardController(http.Controller):
         task.write({"stage": new_stage})
         return {"ok": True}
     
-    # -------- view more --------
+    ######### Modal ###########
+    
     @http.route('/tm/api/task', type='json', auth='user', website=True)
     def api_task(self, task_id):
         t = request.env['tm.task'].browse(int(task_id))
         if not t.exists():
             return {'ok': False}
+
         prio_label = dict(t._fields['priority'].selection).get(t.priority, '')
-        msgs = t.sudo().message_ids.sorted('date', reverse=True)[:20]
-        def _m(mm):
-            return {
+        # oldest -> newest for WhatsApp style
+        msgs = t.sudo().message_ids.sorted('date', reverse=False)[:200]
+
+        def _day_label(dt):
+            if not dt:
+                return ''
+            d = dt.date()
+            today = fields.Date.context_today(t)
+            if d == today:
+                return "Today"
+            if d == today - datetime.timedelta(days=1):
+                return "Yesterday"
+            return dt.strftime("%B %d, %Y")
+
+        def _stage_line(mm):
+            # Show "Review → In Progress (Stage)" if tracking changed 'stage'
+            for tv in mm.tracking_value_ids:
+                if (tv.field == 'stage') or (tv.field_desc or '').lower() == 'stage':
+                    oldv = tv.old_value_char or '—'
+                    newv = tv.new_value_char or '—'
+                    return f"{oldv} → {newv} (Stage)"
+            return None
+
+        def _att_to_dict(a):
+            return {'id': a.id, 'name': a.name, 'mimetype': a.mimetype}
+
+        out = []
+        for mm in msgs:
+            kind = 'comment'
+            body = mm.body or ''
+            sline = _stage_line(mm)
+            if sline:
+                kind = 'system'
+                body = sline  # plain text system line
+            initials = (mm.author_id.display_name or '—').strip()[:1].upper()
+            out.append({
                 'author': mm.author_id.display_name or '—',
                 'date': mm.date and mm.date.strftime('%Y-%m-%d %H:%M'),
-                'body': mm.body or '',
-            }
+                'day_label': _day_label(mm.date),
+                'body': body,
+                'kind': kind,                 # 'comment' | 'system'
+                'initials': initials,
+                'attachments': [_att_to_dict(a) for a in mm.attachment_ids],
+            })
+
         return {
             'ok': True,
             'task': {
@@ -122,20 +170,61 @@ class TaskboardController(http.Controller):
                 'due_date': t.due_date and t.due_date.strftime('%Y-%m-%d'),
                 'tags': [tag.name for tag in t.tag_ids],
             },
-            'messages': [_m(m) for m in msgs[::-1]],  # oldest → newest
+            'messages': out,  # oldest → newest
         }
 
-    # -------- chat --------
+    # -------- chat: text-only posts --------
     @http.route('/tm/api/chat/post', type='json', auth='user', website=True, csrf=False)
     def api_chat_post(self, task_id, body):
         t = request.env['tm.task'].browse(int(task_id))
         if not t.exists():
             return {'ok': False}
-        # post as the current user
         t.message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_comment')
         m = t.sudo().message_ids.sorted('date', reverse=True)[0]
         return {'ok': True, 'message': {
             'author': m.author_id.display_name or '—',
             'date': m.date and m.date.strftime('%Y-%m-%d %H:%M'),
+            'day_label': m.date and m.date.strftime('%B %d, %Y') or '',
             'body': m.body or '',
+            'kind': 'comment',
+            'initials': (m.author_id.display_name or '—')[:1].upper(),
+            'attachments': [],  # text-only
         }}
+    
+    # chat: multipart post for comment + files
+    @http.route('/tm/api/chat/post_http', type='http', auth='user', website=True, csrf=False, methods=['POST'])
+    def api_chat_post_http(self, **kwargs):
+        task_id = int(kwargs.get('task_id', '0') or 0)
+        body = (kwargs.get('body') or '').strip()
+        t = request.env['tm.task'].browse(task_id)
+        if not t.exists():
+            return request.make_json_response({'ok': False})
+
+        files = request.httprequest.files.getlist('files')
+        att_ids = []
+        for f in files:
+            content = f.read() or b''
+            if not content:
+                continue
+            att = request.env['ir.attachment'].sudo().create({
+                'name': f.filename,
+                'datas': base64.b64encode(content),
+                'res_model': 'tm.task',
+                'res_id': t.id,
+                'mimetype': f.mimetype,
+            })
+            att_ids.append(att.id)
+
+        t.message_post(body=body or False, message_type='comment',
+                    subtype_xmlid='mail.mt_comment',
+                    attachment_ids=[(6, 0, att_ids)] if att_ids else False)
+
+        m = t.sudo().message_ids.sorted('date', reverse=True)[0]
+        payload = {
+            'author': m.author_id.display_name or '—',
+            'date': m.date and m.date.strftime('%Y-%m-%d %H:%M'),
+            'body': m.body or '',
+            'initials': (m.author_id.display_name or '—')[:1].upper(),
+            'attachments': [_att_to_dict(a) for a in m.attachment_ids],
+        }
+        return request.make_json_response({'ok': True, 'message': payload})

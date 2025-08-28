@@ -58,53 +58,6 @@ odoo.define('tm_taskboard.portal_board', function (require) {
             });
         },
 
-        _openTaskModal: function (id) {
-            const qweb = this.qweb || require('web.core').qweb;
-            this._rpc({ route: '/tm/api/task', params: { task_id: id } }).then(res => {
-                if (!res || !res.ok) return;
-                const html = qweb.render('tm.TaskModal', res);
-                // inject & show (replace if already present)
-                const $old = this.$('#tmTaskModal');
-                if ($old.length) $old.remove();
-                this.$el.append(html);
-
-                // Using jQuery Bootstrap modal instead of vanilla Bootstrap
-                const $modal = this.$('#tmTaskModal');
-                $modal.modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                $modal.modal('show');
-
-                // Store reference for cleanup
-                this._modal = $modal;
-
-                // send handler
-                this.$('.tm-chat-send').off('click').on('click', () => this._sendChat(id));
-            });
-        },
-
-        _sendChat: function (id) {
-            const $ta = this.$('#tm_chat_text');
-            const body = ($ta.val() || '').trim();
-            if (!body) return;
-            this._rpc({ route: '/tm/api/chat/post', params: { task_id: id, body: body } })
-                .then(res => {
-                    if (res && res.ok) {
-                        // append last message
-                        const m = res.message;
-                        const $list = this.$('#tm_chat_list');
-                        $list.append(
-                            `<div class="tm-chat-msg mb-2">
-                       <div class="small text-muted">${_.escape(m.author)} • ${_.escape(m.date)}</div>
-                       ${m.body}
-                     </div>`
-                        );
-                        $ta.val('');
-                    }
-                });
-        },
-
         // -------- search & filters --------
         _wireSearchAndFilters: function () {
             const $search = this.$('#tm_search');
@@ -298,6 +251,208 @@ odoo.define('tm_taskboard.portal_board', function (require) {
                 // Replace label text (keeps the clock icon)
                 $due.html('<i class="fa fa-clock-o me-1"></i>Completed: ' + iso);
             });
+        },
+
+        ///////////// Modal /////////////
+        _openTaskModal: function (id) {
+            const qweb = this.qweb || require('web.core').qweb;
+            this._rpc({ route: '/tm/api/task', params: { task_id: id } }).then(res => {
+                if (!res || !res.ok) return;
+                const html = qweb.render('tm.TaskModal', res);
+
+                const $old = this.$('#tmTaskModal');
+                if ($old.length) $old.remove();
+                this.$el.append(html);
+
+                // jQuery Bootstrap modal
+                const $modal = this.$('#tmTaskModal');
+                $modal.modal({ backdrop: 'static', keyboard: false }).modal('show');
+
+                // bind modal events + state
+                this._pendingFiles = [];
+                this._bindModalEvents(id);
+
+                // scroll to bottom when shown
+                $modal.on('shown.bs.modal', () => this._scrollChatBottom());
+            });
+        },
+
+        _bindModalEvents: function (taskId) {
+            const $m = this.$('#tmTaskModal');
+            const $file = $m.find('#tm_chat_files');
+            const $attachBtn = $m.find('#tm_attach_btn');
+            const $drop = $m.find('#tm_dropzone');
+            const $list = $m.find('#tm_chat_list');
+
+            $attachBtn.on('click', () => $file.trigger('click'));
+            $file.on('change', () => {
+                this._pendingFiles = Array.from($file[0].files || []);
+                this._renderAttachPreview();
+            });
+
+            // drag & drop
+            $drop.on('dragover', (e) => { e.preventDefault(); $drop.addClass('drag'); });
+            $drop.on('dragleave', () => $drop.removeClass('drag'));
+            $drop.on('drop', (e) => {
+                e.preventDefault(); $drop.removeClass('drag');
+                const files = Array.from(e.originalEvent.dataTransfer.files || []);
+                this._pendingFiles = (this._pendingFiles || []).concat(files).slice(0, 10);
+                this._renderAttachPreview();
+            });
+
+            // image viewer
+            $list.on('click', 'img.tm-img-thumb', (e) => {
+                const full = $(e.currentTarget).data('full');
+                const $v = $m.find('#tm_img_viewer');
+                $v.removeClass('d-none');
+                $v.find('#tm_img_full').attr('src', full);
+            });
+            $m.find('.tm-img-close').on('click', () => $m.find('#tm_img_viewer').addClass('d-none'));
+
+            // send
+            $m.find('.tm-chat-send').off('click').on('click', () => this._sendChat(taskId));
+        },
+
+        _bindModalEvents: function (taskId) {
+            const $m = this.$('#tmTaskModal');
+            const $file = $m.find('#tm_chat_files');
+            const $attachBtn = $m.find('#tm_attach_btn');
+            const $drop = $m.find('#tm_dropzone');
+            const $list = $m.find('#tm_chat_list');
+
+            $attachBtn.on('click', () => $file.trigger('click'));
+            $file.on('change', () => {
+                this._pendingFiles = Array.from($file[0].files || []);
+                this._renderAttachPreview();
+            });
+
+            // drag & drop
+            $drop.on('dragover', (e) => { e.preventDefault(); $drop.addClass('drag'); });
+            $drop.on('dragleave', () => $drop.removeClass('drag'));
+            $drop.on('drop', (e) => {
+                e.preventDefault(); $drop.removeClass('drag');
+                const files = Array.from(e.originalEvent.dataTransfer.files || []);
+                this._pendingFiles = (this._pendingFiles || []).concat(files).slice(0, 10);
+                this._renderAttachPreview();
+            });
+
+            // image viewer
+            $list.on('click', 'img.tm-img-thumb', (e) => {
+                const full = $(e.currentTarget).data('full');
+                const $v = $m.find('#tm_img_viewer');
+                $v.removeClass('d-none');
+                $v.find('#tm_img_full').attr('src', full);
+            });
+            $m.find('.tm-img-close').on('click', () => $m.find('#tm_img_viewer').addClass('d-none'));
+
+            // send
+            $m.find('.tm-chat-send').off('click').on('click', () => this._sendChat(taskId));
+        },
+
+        _scrollChatBottom: function () {
+            const $list = this.$('#tmTaskModal #tm_chat_list');
+            if ($list.length) $list.scrollTop($list[0].scrollHeight);
+        },
+
+        _renderAttachPreview: function () {
+            const $wrap = this.$('#tmTaskModal #tm_attach_preview').empty();
+            (this._pendingFiles || []).forEach((f, idx) => {
+                const $chip = $(`
+                    <span class="tm-file-chip">
+                        <i class="fa fa-paperclip me-1"></i>${_.escape(f.name)}
+                        <button type="button" class="tm-file-x" title="Remove">&times;</button>
+                    </span>`);
+                $chip.find('.tm-file-x').on('click', () => { this._pendingFiles.splice(idx, 1); this._renderAttachPreview(); });
+                $wrap.append($chip);
+            });
+        },
+
+        // unified renderer for a message row (returns HTML)
+        _renderMessageHTML: function (m) {
+            const atts = (m.attachments || []).map(a => {
+                if ((a.mimetype || '').indexOf('image/') === 0) {
+                    return `<img class="tm-img-thumb" src="/web/image/ir.attachment/${a.id}/datas" data-full="/web/content/${a.id}" alt="${_.escape(a.name)}">`;
+                }
+                return `<a class="tm-attachment" href="/web/content/${a.id}?download=1" target="_blank"><i class="fa fa-paperclip me-1"></i>${_.escape(a.name)}</a>`;
+            }).join('');
+
+            const head = (m.kind === 'system') ? '' :
+                `<div class="tm-bubble-head"><span class="tm-author">${_.escape(m.author || '')}</span><span class="tm-date text-muted">${_.escape(m.date || '')}</span></div>`;
+
+            const avatar = (m.kind === 'system') ? '' :
+                `<div class="tm-avatar" title="${_.escape(m.author || '')}">${_.escape(m.initials || '?')}</div>`;
+
+            const body = (m.kind === 'system')
+                ? `<div class="tm-bubble-body tm-system-body">${_.escape(m.body || '')}</div>`
+                : `<div class="tm-bubble-body">${m.body || ''}</div>`;
+
+            return `
+                ${m.day_label ? `<div class="tm-day-sep"><span>${_.escape(m.day_label)}</span></div>` : ''}
+                <div class="tm-chat-item ${m.kind === 'system' ? 'tm-system' : ''}">
+                ${avatar}
+                <div class="tm-bubble">
+                    ${head}
+                    ${body}
+                    ${atts ? `<div class="tm-attachments mt-2">${atts}</div>` : ''}
+                </div>
+                </div>`;
+        },
+
+        _sendChat: function (id) {
+            const $m = this.$('#tmTaskModal');
+            const $btn = $m.find('.tm-chat-send');
+            const $ta = $m.find('#tm_chat_text');
+            const $list = $m.find('#tm_chat_list');
+
+            const body = ($ta.val() || '').trim();
+            const hasFiles = (this._pendingFiles && this._pendingFiles.length > 0);
+            if (!body && !hasFiles) return;
+
+            // optimistic bubble (shows immediately)
+            const optimistic = {
+                author: this.$('header .navbar .o_menu_systray .o_user_menu .dropdown-toggle').text() || 'You',
+                date: '',
+                day_label: '',
+                body: _.escape(body),
+                kind: 'comment',
+                initials: '…',
+                attachments: (this._pendingFiles || []).map(f => ({ id: 0, name: f.name, mimetype: f.type }))
+            };
+            const $pending = $(this._renderMessageHTML(optimistic)).addClass('o-opacity-50');
+            $list.append($pending);
+            this._scrollChatBottom();
+
+            // disable while sending
+            $btn.prop('disabled', true).text('Sending…');
+
+            const done = (m) => {
+                $pending.replaceWith(this._renderMessageHTML(m));
+                $ta.val('');
+                this._pendingFiles = [];
+                this._renderAttachPreview();
+                $m.find('#tm_chat_files').val('');
+                $btn.prop('disabled', false).text('Send');
+                this._scrollChatBottom();
+            };
+
+            if (hasFiles) {
+                const fd = new FormData();
+                fd.append('task_id', id);
+                fd.append('body', body);
+                this._pendingFiles.forEach(f => fd.append('files', f));
+                $.ajax({
+                    url: '/tm/api/chat/post_http',
+                    method: 'POST',
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    success: (res) => { if (res && res.ok) done(res.message); else $pending.remove(); }
+                });
+            } else {
+                this._rpc({ route: '/tm/api/chat/post', params: { task_id: id, body: body } })
+                    .then(res => { if (res && res.ok) done(res.message); else $pending.remove(); })
+                    .guardedCatch(() => { $pending.remove(); $btn.prop('disabled', false).text('Send'); });
+            }
         },
 
     });

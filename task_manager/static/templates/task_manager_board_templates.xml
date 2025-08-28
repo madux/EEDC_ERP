@@ -67,45 +67,114 @@
 
   <!-- Modal template -->
   <t t-name="tm.TaskModal">
-    <div class="modal fade" id="tmTaskModal" tabindex="-1">
+    <div class="modal fade tm-modal" id="tmTaskModal" tabindex="-1">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><t t-esc="task.name"/></h5>
+          <!-- Header -->
+          <div class="modal-header align-items-start">
+            <div class="d-flex flex-column">
+              <h5 class="modal-title mb-1"><t t-esc="task.name"/></h5>
+              <div class="tm-meta small d-flex flex-wrap gap-2 align-items-center">
+                <span t-attf-class="badge rounded-pill tm-priority prio-#{task.priority}">
+                  <t t-esc="task.priority_label"/>
+                </span>
+                <t t-if="task.due_date">
+                  <span class="text-muted"><i class="fa fa-clock-o me-1"/> <t t-esc="task.due_date"/></span>
+                </t>
+                <t t-if="task.tags and task.tags.length">
+                  <span class="text-muted">•</span>
+                  <t t-foreach="task.tags" t-as="tg">
+                    <span class="badge rounded-pill tm-chip" t-esc="tg"/>
+                  </t>
+                </t>
+              </div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal"/>
           </div>
+
+          <!-- Body -->
           <div class="modal-body">
-            <div class="mb-2">
-              <span class="badge me-2" t-att-class="'rounded-pill tm-priority prio-'+task.priority">
-                <t t-esc="task.priority_label"/>
-              </span>
-              <t t-if="task.due_date">
-                <i class="fa fa-clock-o me-1"/><t t-esc="task.due_date"/>
-              </t>
-            </div>
-            <p class="tm-full-desc" t-esc="task.description or ''"/>
-            <div class="mt-3" t-if="task.tags and task.tags.length">
-              <t t-foreach="task.tags" t-as="tg">
-                <span class="badge rounded-pill bg-secondary me-1 mb-1" t-esc="tg"/>
-              </t>
+            <!-- Description -->
+            <div class="tm-section">
+              <p class="tm-full-desc mb-0" t-esc="task.description or 'No description.'"/>
             </div>
 
-            <!-- Chat area -->
-            <hr class="my-3"/>
-            <h6 class="mb-2">Comments</h6>
-            <div id="tm_chat_list" class="tm-chat-list mb-3">
+          <!-- Comments -->
+          <div class="tm-section">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="mb-0">Comments</h6>
+              <small class="text-muted" id="tm_chat_hint">Newest at bottom</small>
+            </div>
+
+            <div id="tm_chat_list" class="tm-chat-list">
+              <t t-set="__last_day" t-value="''"/>
               <t t-foreach="messages" t-as="m">
-                <div class="tm-chat-msg mb-2">
-                  <div class="small text-muted">
-                    <t t-esc="m.author"/> • <t t-esc="m.date"/>
+                <!-- Day separator -->
+                <t t-if="m.day_label and m.day_label != __last_day">
+                  <div class="tm-day-sep"><span t-esc="m.day_label"/></div>
+                  <t t-set="__last_day" t-value="m.day_label"/>
+                </t>
+                <!-- Message bubble -->
+                <div t-attf-class="tm-chat-item #{m.kind == 'system' and 'tm-system' or ''}">
+                  <t t-if="m.kind != 'system'">
+                    <div class="tm-avatar" t-att-title="m.author"><t t-esc="m.initials"/></div>
+                  </t>
+                  <div class="tm-bubble">
+                    <div class="tm-bubble-head" t-if="m.kind != 'system'">
+                      <span class="tm-author"><t t-esc="m.author"/></span>
+                      <span class="tm-date text-muted"><t t-esc="m.date"/></span>
+                    </div>
+                    <div class="tm-bubble-body" t-if="m.kind == 'comment'" t-raw="m.body"/>
+                    <div class="tm-bubble-body tm-system-body" t-if="m.kind == 'system'"><t t-esc="m.body"/></div>
+
+                    <!-- Attachments -->
+                    <!-- attachments with image preview -->
+                    <t t-if="m.attachments &amp;&amp; m.attachments.length">
+                      <div class="tm-attachments mt-2">
+                        <t t-foreach="m.attachments" t-as="att">
+                          <t t-set="isImage" t-value="(att.mimetype || '').indexOf('image/') === 0"/>
+                          <t t-if="isImage">
+                            <a class="tm-thumb" t-attf-href="/web/content/#{att.id}" target="_blank">
+                              <img t-attf-src="/web/image/#{att.id}" t-att-alt="att.name"/>
+                            </a>
+                          </t>
+                          <t t-else="">
+                            <a class="tm-attachment" t-attf-href="/web/content/#{att.id}?download=1" target="_blank">
+                              <i class="fa fa-paperclip me-1"/>
+                              <t t-esc="att.name"/>
+                            </a>
+                          </t>
+                        </t>
+                      </div>
+                    </t>
                   </div>
-                  <div t-raw="m.body"/>
                 </div>
               </t>
             </div>
-            <div class="input-group">
-              <textarea class="form-control" id="tm_chat_text" rows="2" placeholder="Write a comment..."></textarea>
-              <button class="btn btn-primary tm-chat-send" type="button">Send</button>
+          </div>
+
+          <!-- Simple in-modal image viewer -->
+          <div class="tm-img-viewer d-none" id="tm_img_viewer">
+            <button type="button" class="tm-img-close" aria-label="Close">×</button>
+            <img id="tm_img_full" src="" alt="preview"/>
+          </div>
+
+            <!-- Composer -->
+            <div class="tm-section">
+              <div class="tm-composer">
+                <div class="tm-dropzone" id="tm_dropzone">
+                  <textarea id="tm_chat_text" class="form-control" rows="3" placeholder="Write a comment…"></textarea>
+                  <div id="tm_attach_preview" class="tm-attach-preview"></div>
+                </div>
+                <div class="tm-composer-actions">
+                  <input type="file" id="tm_chat_files" class="d-none" multiple/>
+                  <button class="btn btn-light tm-attach-btn" type="button" id="tm_attach_btn" title="Attach files">
+                    <i class="fa fa-paperclip"/>
+                  </button>
+                  <button class="btn btn-primary tm-chat-send" type="button">Send</button>
+                </div>
+              </div>
+              <small class="text-muted d-block mt-1">Tip: drag &amp; drop files into the box above.</small>
             </div>
           </div>
         </div>
