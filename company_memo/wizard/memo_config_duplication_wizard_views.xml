@@ -9,6 +9,7 @@
                     <group>
                         <field name="name"/>
                         <field name="dept_ids" widget="many2many_tags" />
+                        <field name="company_ids" widget="many2many_tags" />
                     </group>
                     <group>
                         <field name="employees_follow_up_ids" widget="many2many_tags" />
@@ -26,6 +27,23 @@
                             </tree>
                         </field>    
                     </page>
+
+                    <page name="OtherFields" string="Other fields">
+                        <group>
+                            <group>
+                                <field name="send_to_initiator_on_refusal"/>
+                                <field name="allow_multi_vending_on_po"/>
+                                <field name="receivable_account_id"/>
+                            </group>
+                            <group>
+                                <field name="payable_account_id"/>
+                                <field name="advance_account_id"/>
+                                <field name="expense_account_id"/>
+                            </group>
+                        </group>
+                    </page>
+
+                    
                 </notebook>
                 <footer>
                     <button name="duplicate_memo_config" string="Duplicate" type="object" class="btn-primary"/>

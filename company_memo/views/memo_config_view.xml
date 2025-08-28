@@ -66,10 +66,12 @@
 				<search string="Search">
                     <field name="name"/>
                     <field name="department_id"/>
+                    <field name="company_id"/>
                     <field name="memo_type"/>
                     <filter string="Active" name="memo_active_filter" domain="[('active','=', True)]"/>
                     <filter string="InActive" name="memo_inactive_filter" domain="[('active','=', False)]"/>
                     <group  expand='0' string='Group by...'>
+                        <filter name="group_memo_comp_id" string='Company' domain="[]" context="{'group_by' : 'company_id'}"/>
                         <filter name="group_memo_department_id" string='Department' domain="[]" context="{'group_by' : 'department_id'}"/>
                     </group>
 				</search>
@@ -80,7 +82,7 @@
             <field name="res_model">memo.config</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_mode">tree,form</field>
-            <field name="context">{'search_default_group_memo_department_id': 1}</field>
+            <field name="context">{'search_default_group_memo_comp_id': 1, 'search_default_group_memo_department_id': 1}</field>
         </record>
 
         <menuitem id="memo_configuration" name="Configuration"

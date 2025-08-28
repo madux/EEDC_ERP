@@ -319,6 +319,11 @@ class MemoConfig(models.Model):
         copy=False,
         domain=lambda self: self.get_publish_memo_types()
         )
+    company_id = fields.Many2one(
+        'res.company',
+        string="Company",
+        default=lambda self: self.env.user.company_id.id
+    )
     memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
     name = fields.Char(
         string='Name', 
@@ -411,6 +416,7 @@ class MemoConfig(models.Model):
         the list from the portal
         """
         )
+    
     allow_multi_vending_on_po = fields.Boolean(
         string="Allow Multi Vending", 
         default=True, 
@@ -534,9 +540,16 @@ class MemoConfig(models.Model):
             'context': {
                 'default_employees_follow_up_ids': self.approver_ids.ids,
                 'default_allowed_companies_ids': self.allowed_for_company_ids.ids,
+                'default_company_ids': self.company_ids.ids,
+                'default_allow_multi_vending_on_po': self.allow_multi_vending_on_po,
+                'default_receivable_account_id': self.receivable_account_id.id,
+                'default_payable_account_id': self.payable_account_id.id,
+                'default_advance_account_id': self.advance_account_id.id,
+                'default_expense_account_id': self.expense_account_id.id,
+                
             },
         }
-
+ 
     def button_assign_employee(self):
         rec_ids = self.env.context.get('active_ids', [])
         Config = self.env['memo.config']

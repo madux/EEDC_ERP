@@ -17,7 +17,44 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                                          'res_partner_wizard_rel'
                                          'allowed_companies_id',
                                          'res_partner_wizard_id', 
-                                         string='Allowed Companies')
+                                         string='Allowed Partners')
+    company_ids = fields.Many2many(
+        'res.company', 
+        'res_confi_duplication_config_rel',
+        'company_id',
+        'memo_config_setting_id',
+        string="For companies",
+        help="""When you select a company, the system will 
+        generate the configuration for each company set"""
+        )
+    send_to_initiator_on_refusal = fields.Boolean(string="Send to initiator",
+                                      default=False, 
+                                      help="Check if you want system to send straight to initiator upon refusal")
+    allow_multi_vending_on_po = fields.Boolean(
+        string="Allow Multi Vending", 
+        default=True, 
+        help="This only allow users to send PO request to multiple vendors")
+    branch_ids = fields.Many2many(
+        'multi.branch', 
+        string='Districts / Branch(s)', 
+        required=False)
+    
+    receivable_account_id = fields.Many2one(
+        "account.account", 
+        string="Account Receivable"
+        ) 
+    payable_account_id = fields.Many2one(
+        "account.account", 
+        string="Account Payable"
+        ) 
+    advance_account_id = fields.Many2one(
+        "account.account", 
+        string="Advance Account"
+        ) 
+    expense_account_id = fields.Many2one(
+        "account.account", 
+        string="Expense Account"
+        )
 
     @api.model
     def default_get(self, fields):
@@ -33,58 +70,89 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                     'active': stage.active,
                     'approver_ids': stage.approver_ids,
                     'is_approved_stage': stage.is_approved_stage,
-                    'main_stage_id': stage.id
+                    'main_stage_id': stage.id,
+                    # 'require_waybill_detail': stage.require_waybill_detail,
+                    # 'require_po_confirmation': stage.require_po_confirmation,
+                    # 'require_so_confirmation': stage.require_so_confirmation,
+                    # 'require_bill_payment': stage.require_bill_payment,
+                    # 'require_waybill_detail': stage.require_waybill_detail,
+                    # 'publish_on_dashboard': stage.publish_on_dashboard,
                 })
                 dummy_memo_stage_ids.append(dummy_memo_stage.id)
-            res.update({'dummy_memo_stage_ids': [(6, 0, dummy_memo_stage_ids)]})
+            res.update({
+                'dummy_memo_stage_ids': [(6, 0, dummy_memo_stage_ids)], 
+                'send_to_initiator_on_refusal': memo_config.send_to_initiator_on_refusal,
+                'allow_multi_vending_on_po': memo_config.allow_multi_vending_on_po,
+                'expense_account_id': memo_config.expense_account_id.id,
+                'advance_account_id': memo_config.advance_account_id.id,
+                'payable_account_id': memo_config.payable_account_id.id,
+                })
         return res
 
     def duplicate_memo_config(self):
         active_id = self.env.context.get('active_id')
         if active_id:
             memo_config = self.env['memo.config'].browse(active_id)
-            memo_type = self.env['memo.type'].search([('name', '=', self.name)], limit=1)
-            if memo_type:
-                raise ValidationError('Memo type with name already exist. Kindly change the name')
-            else:
-                memo_type = self.env['memo.type'].create({
-                    'name': self.name,
-                    'active': True,
-                    'memo_key': memo_config.memo_type.memo_key
-            })
-            for dept in self.dept_ids:
-                stage_ids = []
-                new_config = self.env['memo.config'].create({
-                'name': f"{memo_type.name} - {dept.name}",
-                'department_id': dept.id,
-                'memo_type': memo_type.id,
-                'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
-                'allowed_for_company_ids': self.allowed_companies_ids,
-                
-                })
-                if self.dummy_memo_stage_ids:
-                    for sequence, stage in enumerate(self.dummy_memo_stage_ids, 900): 
-                        # original_stage_obj = self.env['memo.stage'].browse(stage.main_stage_id)
-                        new_stage = self.env['memo.stage'].create({
-                            'name': stage.name,
-                            'sequence': sequence,
-                            'active': True,
-                            'loaded_from_data': True,
-                            'approver_ids': [(6, 0, stage.approver_ids.ids)],
-                            'is_approved_stage': stage.is_approved_stage,
-                            'memo_config_id': new_config.id,
-                            # new implementation for stage duplication
-                            'sub_stage_ids': [(4, stg.copy().id) for stg in stage.main_stage_id.sub_stage_ids],
-                            'required_invoice_line': [(4, rinv.copy().id) for rinv in stage.main_stage_id.required_invoice_line],
-                            'required_document_line': [(4, rdoc.copy().id) for rdoc in stage.main_stage_id.required_document_line],
-                            'no_conditional_stage_id': stage.main_stage_id.no_conditional_stage_id.id,
-                            'yes_conditional_stage_id': stage.main_stage_id.yes_conditional_stage_id.id,
-                            'memo_has_condition': stage.main_stage_id.memo_has_condition,
-                            'no_condition': stage.main_stage_id.no_condition,
-                            'yes_condition': stage.main_stage_id.yes_condition,
-                        })
-                        stage_ids.append(new_stage.id)
-                    new_config.update({'stage_ids': stage_ids})
+            # memo_type = self.env['memo.type'].search([('name', '=', self.name)], limit=1)
+            # if memo_type:
+            #     raise ValidationError('Memo type with name already exist. Kindly change the name')
+            # else:
+            #     memo_type = self.env['memo.type'].create({
+            #         'name': self.name,
+            #         'active': True,
+            #         'memo_key': memo_config.memo_type.memo_key,
+            #         'memo_type': memo_config.memo_type.id
+            #     })
+            for comp in self.company_ids:
+                for dept in self.dept_ids:
+                    config_exist = self.env['memo.config'].search([
+                        ('department_id', '=', dept.id), 
+                        ('company_id', '=', comp.id),
+                        ('memo_type', '=', memo_config.memo_type.id)], limit=1)
+                    if config_exist:
+                        raise ValidationError(f'Configuration for type {memo_config.memo_type.name} exist in company - {comp.name} and department {dept.name}')
+                    stage_ids = []
+                    new_config = self.env['memo.config'].create({
+                    'name': f"{memo_config.memo_type.name} - [{dept.name}]",
+                    'department_id': dept.id,
+                    'memo_type': memo_config.memo_type.id,
+                    'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
+                    'allowed_for_company_ids': self.allowed_companies_ids,
+                    'company_id': comp.id,
+                    'company_ids': [(4, comp.id)],
+                    'expense_account_id': self.expense_account_id.id,
+                    'advance_account_id': self.advance_account_id.id,
+                    'payable_account_id': self.payable_account_id.id,
+                    'allow_multi_vending_on_po': self.allow_multi_vending_on_po,
+                    'send_to_initiator_on_refusal': self.send_to_initiator_on_refusal,
+                    'receivable_account_id': self.receivable_account_id.id,
+                    })
+                    if self.dummy_memo_stage_ids:
+                        for sequence, stage in enumerate(self.dummy_memo_stage_ids, 2000): 
+                            # original_stage_obj = self.env['memo.stage'].browse(stage.main_stage_id)
+                            new_stage = self.env['memo.stage'].create({
+                                'name': stage.name,
+                                'sequence': sequence,
+                                'active': True,
+                                'loaded_from_data': True,
+                                'approver_ids': [(6, 0, stage.approver_ids.ids)],
+                                'is_approved_stage': stage.is_approved_stage,
+                                'memo_config_id': new_config.id,
+                                # new implementation for stage duplication
+                                'sub_stage_ids': [(4, stg.copy().id) for stg in stage.main_stage_id.sub_stage_ids],
+                                'required_invoice_line': [(4, rinv.copy().id) for rinv in stage.main_stage_id.required_invoice_line],
+                                'required_document_line': [(4, rdoc.copy().id) for rdoc in stage.main_stage_id.required_document_line],
+                                'no_conditional_stage_id': stage.main_stage_id.no_conditional_stage_id.id,
+                                'yes_conditional_stage_id': stage.main_stage_id.yes_conditional_stage_id.id,
+                                'memo_has_condition': stage.main_stage_id.memo_has_condition,
+                                'require_waybill_detail': stage.main_stage_id.require_waybill_detail,
+                                'require_po_confirmation': stage.main_stage_id.require_po_confirmation,
+                                'require_so_confirmation': stage.main_stage_id.require_so_confirmation,
+                                'require_bill_payment': stage.main_stage_id.require_bill_payment,
+                                'publish_on_dashboard': stage.main_stage_id.publish_on_dashboard,
+                            })
+                            stage_ids.append(new_stage.id)
+                        new_config.update({'stage_ids': stage_ids})
 
     # def duplicate_memo_config(self):
     #     active_id = self.env.context.get('active_id')
