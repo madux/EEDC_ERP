@@ -8,6 +8,7 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
     var core = require('web.core');
     var qweb = core.qweb;
     var _t = core._t; 
+    let localStorage = window.localStorage;
 
     let navigateTo = function(screenId) {
         $('.page-section').removeClass('active');   // remove active from all
@@ -39,11 +40,20 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
             'click #app-icon': function(ev){
                 console.log("App icoon clicked.....")
                 navigateTo('website-app-section')  
+                document.getElementById("website-app-section").classList.add("active");
+
             },
 
             'click #navigateBack': function(ev){
-                navigateBack('portal-dashboard-content')  
+                navigateBack('portal-dashboard-content') 
+                document.getElementById("website-app-section").classList.remove("active");
+				
             },
+
+            // 'click .app-item': function(ev){
+            //     let app_name = $(ev.target()).attr('name');
+            //     localStorage.setItem('appIcon_Name', JSON.stringify(app_name)) 
+            // },
 
          },
          

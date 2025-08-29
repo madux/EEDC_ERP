@@ -21,6 +21,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
     divRefuseCommentMessage.hide()
     modalfooter4cancel.hide()
     refuseCommentMessage.attr('required', false);
+    let localStorage = window.localStorage;
 
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""

@@ -37,6 +37,7 @@ class PortalDashboard(http.Controller):
             "open_request": len(self.closed_files(memo_ids)),
             "approved_request": len(self.approved_files(memo_ids)),
             "leave_remaining":  user.employee_id.allocation_remaining_display,
+            "template_name":  'portal_dashboard_template_id',
             "performance_y_data_chart": json.dumps(
                 {"performance_y_data_chart": ["KRA","Functional Competence","Leadership Competence"]}
                 ),

@@ -12,6 +12,7 @@
 				and set apps screen to active.
 				-->
                 <section class="s_website_form pt2 pb2" id="portal-dashboard-form" data-vcss="001" style="background-image: none;">
+					<!-- <section id="website-app-section" class="page-section">   -->
 					<section id="website-app-section" class="page-section">  
 						<t t-call="portal_request.website_app_page"/>
 					</section>
@@ -172,7 +173,7 @@
 										<div class="metric-item-emp">
 											<div class="metric-label-emp-left">
 												<span class="color-indicator color-green"></span>
-												<span>Implementation</span>
+												<span>Recommendations</span>
 											</div>
 											<div style="display: flex; align-items: center; gap: 8px;">
 												<div class="percentage-bar">
@@ -193,7 +194,7 @@
 										<div class="metric-item-emp">
 											<div class="metric-label-emp-left">
 												<span class="color-indicator color-red"></span>
-												<span>Overdue</span>
+												<span>Warnings</span>
 											</div>
 											<span>—</span>
 										</div>
@@ -204,6 +205,14 @@
 												<span>Backlog</span>
 											</div>
 											<span>29</span>
+										</div>
+
+										<div class="metric-item-emp">
+											<div class="metric-label-emp-left">
+												<span class="color-indicator color-orange"></span>
+												<span>Payslips</span>
+											</div>
+											<span>30</span>
 										</div>
 									</aside>
 								</div>
