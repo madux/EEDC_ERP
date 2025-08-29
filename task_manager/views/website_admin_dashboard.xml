@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="tm_admin_dashboard_page" name="Admin Dashboard (Website)">
+    <t t-call="website.layout">
+      <div class="container my-5 tm-admin-page" data-tm-admin-init="1">
+
+        <!-- Top toolbar -->
+        <div class="tm-ad-toolbar mb-3">
+          <div class="row g-2">
+            <div class="col-md-2">
+              <label class="form-label">Date From</label>
+              <input id="tm_ad_date_from" type="date" class="form-control"/>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Date To</label>
+              <input id="tm_ad_date_to" type="date" class="form-control"/>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Grain</label>
+              <select id="tm_ad_grain" class="form-select">
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Stage</label>
+              <!-- You can switch to multiple by adding multiple="multiple" -->
+              <select id="tm_ad_stage" class="form-select">
+                <option value="">All</option>
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="review">Review</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Priority</label>
+              <select id="tm_ad_priority" class="form-select">
+                <option value="">All</option>
+                <option value="2">High</option>
+                <option value="1">Medium</option>
+                <option value="0">Low</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2 d-flex gap-2">
+            <button id="tm_ad_apply" class="btn btn-primary">Apply</button>
+            <button id="tm_ad_reset" class="btn btn-light">Reset</button>
+          </div>
+        </div>
+
+        <!-- Control panel: Filters | Group By | View | List search -->
+        <div class="tm-cp d-flex align-items-center gap-2 flex-wrap mt-3">
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">Filters</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item tm-filter" data-key="overdue" href="#">Overdue</a></li>
+              <li><a class="dropdown-item tm-filter" data-key="due_today" href="#">Due today</a></li>
+              <li><a class="dropdown-item tm-filter" data-key="due_week" href="#">Due this week</a></li>
+              <li><hr class="dropdown-divider"/></li>
+              <li><a class="dropdown-item tm-filter" data-key="mine" href="#">My tasks</a></li>
+              <li><a class="dropdown-item tm-filter" data-key="imanage" href="#">I manage</a></li>
+            </ul>
+          </div>
+
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">Group By</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item tm-groupby" data-key="" href="#">None</a></li>
+              <li><a class="dropdown-item tm-groupby" data-key="stage" href="#">Stage</a></li>
+              <li><a class="dropdown-item tm-groupby" data-key="employee_id" href="#">Employee</a></li>
+              <li><a class="dropdown-item tm-groupby" data-key="priority" href="#">Priority</a></li>
+              <li><a class="dropdown-item tm-groupby" data-key="manager_id" href="#">Manager</a></li>
+              <li><a class="dropdown-item tm-groupby" data-key="company_id" href="#">Company</a></li>
+            </ul>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="View">
+            <button class="btn btn-outline-secondary active" data-view="charts">Charts</button>
+            <button class="btn btn-outline-secondary" data-view="list">List</button>
+          </div>
+
+          <div class="ms-auto">
+            <input id="tm_ad_text_q" class="form-control form-control-sm" placeholder="Search tasks (name or staff-id)"/>
+          </div>
+        </div>
+
+        <!-- KPI tiles -->
+        <div class="row g-3 tm-ad-kpis mt-2">
+          <div class="col-md-2">
+            <div class="tm-kpi">
+              <div class="tm-kpi-label">Total</div>
+              <div id="tm_ad_kpi_total" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="tm-kpi">
+              <div class="tm-kpi-label">Overdue</div>
+              <div id="tm_ad_kpi_overdue" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="tm-kpi">
+              <div class="tm-kpi-label">Due Today</div>
+              <div id="tm_ad_kpi_today" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="tm-kpi">
+              <div class="tm-kpi-label">Done (in period)</div>
+              <div id="tm_ad_kpi_done_period" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="tm-kpi">
+              <div class="tm-kpi-label">Blocked</div>
+              <div id="tm_ad_kpi_blocked" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- First row of charts -->
+        <div class="row g-3 mt-1">
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head">Stage Distribution</div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_stage"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head">Priority Mix</div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_priority"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Second row of charts -->
+        <div class="row g-3 mt-1">
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head">Overdue by Manager</div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_overdue_mgr"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head d-flex justify-content-between align-items-center">
+                <span>Tasks Over Time</span>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="tm_ad_stacked"/>
+                  <label class="form-check-label" for="tm_ad_stacked">Stack by Stage</label>
+                </div>
+              </div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_timeseries"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Third row of charts -->
+        <div class="row g-3 mt-1">
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head">Top Employees (Done)</div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_emp_done"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="tm-card">
+              <div class="tm-card-head">Top Overdue (Employees)</div>
+              <div class="tm-card-body"><canvas id="tm_ad_chart_emp_overdue"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div id="tm_ad_list_wrap" class="tm-card d-none mt-3">
+          <div class="tm-card-head d-flex justify-content-between align-items-center">
+            <span>Tasks</span>
+            <div class="small text-muted" id="tm_ad_results_info">—</div>
+          </div>
+          <div class="tm-card-body">
+            <div class="table-responsive">
+              <table id="tm_ad_table" class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th data-sort="key">Key</th>
+                    <th data-sort="name">Name</th>
+                    <th data-sort="employee_id">Employee</th>
+                    <th data-sort="stage">Stage</th>
+                    <th data-sort="priority">Priority</th>
+                    <th data-sort="due_date">Due Date</th>
+                    <th data-sort="manager_id">Manager</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <div class="small text-muted" id="tm_ad_pager_info"></div>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-light" id="tm_ad_prev">Prev</button>
+                <button class="btn btn-sm btn-light" id="tm_ad_next">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </t>
+  </template>
+</odoo>

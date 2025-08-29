@@ -186,6 +186,6 @@
     <field name="search_view_id" ref="view_tm_task_search"/>
   </record>
 
-  <menuitem id="tm_root_menu" name="Task Board" sequence="50"/>
+  <menuitem id="tm_root_menu" name="Task Board" web_icon="task_manager,static/description/icon.png" sequence="50"/>
   <menuitem id="tm_task_menu" name="Tasks" parent="tm_root_menu" action="action_tm_tasks"/>
 </odoo>
