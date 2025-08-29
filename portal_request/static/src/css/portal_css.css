@@ -207,3 +207,62 @@
     opacity: 0;
   }
 }
+
+
+.header-flex {
+    display: flex;
+    align-items: center;      /* vertically center everything */
+    justify-content: space-between; /* space between left (buttons) and right (search) */
+    gap: 1rem;                /* space between child groups */
+    flex-wrap: wrap;          /* wrap nicely on smaller screens */
+    margin-bottom: 1rem;      /* optional spacing below header */
+    margin-top: 2rem;      /* optional spacing below header */
+    background: #f4eaea;         /* white background */
+    border-radius: 8px;          /* smooth rounded edges */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* subtle shadow */
+    padding: 0.75rem 1rem;
+}
+
+.header-flex .btn {
+    margin-right: 0.5rem;     /* little spacing between buttons */
+}
+
+.header-flex form {
+    margin-left: auto;        /* push search box to the right */
+}
+
+.thumbnail-btn {
+    margin-right: 3rem;     /* little spacing between buttons */
+}
+
+/* #search_request_section {
+  height: 100%;              
+  width: 100;                  
+  position: fixed;         
+  top: 0;
+  left: 0;
+  background-color: rgba(0,0,0,0.8); 
+  overflow-x: hidden;
+  transition: 0.5s;    
+  z-index: 9999;
+} */
+
+#website-app-section {
+  position: fixed;
+  top: 0;
+  left: -100%;            /* hide it outside the viewport */
+  width: 100%;            /* take full width when active */
+  height: 100%;
+  background: #fff;        /* solid background (change to rgba if you want transparency) */
+  overflow-y: auto;
+  transition: left 0.4s ease;  /* smooth slide */
+  z-index: 9999;
+  padding: 20px;
+  box-shadow: 2px 0 8px rgba(158, 17, 17, 0.3);
+}
+
+#website-app-section.active {
+  left: 0;   /* slides into view */
+}
+
+

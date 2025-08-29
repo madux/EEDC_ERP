@@ -1,0 +1,83 @@
+<odoo>
+	<data>
+		<!-- <template id="website_homepage_id" inherit_id="website.homepage">
+			<xpath expr="//div[hasclass('o_footer_copyright')]" position="replace">
+			</xpath>
+		</template> -->
+		<template name="EEDC Homepage" t-name="website.homepage">
+			<t t-call="website.layout">
+				<t t-set="pageName" t-value="'homepage'"/>
+				<div id="wrap" class="oe_structure oe_empty">
+					<section class="s_carousel_wrapper" data-vxml="001" data-snippet="s_carousel" data-name="Carousel" style="">
+						<div class="s_carousel s_carousel_default carousel slide" data-bs-interval="10000" id="myCarousel1704269617532" style="background-image: none;">
+							<ol class="carousel-indicators o_we_no_overlay">
+								<li data-bs-slide-to="0" data-bs-target="#myCarousel1704269617532" class="active"/>
+								<li data-bs-slide-to="1" data-bs-target="#myCarousel1704269617532"/>
+								<li data-bs-slide-to="2" data-bs-target="#myCarousel1704269617532" aria-current="true"/>
+							</ol>
+							<div class="carousel-inner">
+								
+								<div class="carousel-item o_colored_level pt64 pb152 oe_img_bg o_bg_img_center active" style="background-image: url(&quot;/web/image/website.s_carousel_default_image_1&quot;);" data-name="Slide">
+									<div class="oe_unremovable container">
+										<div class="row content">
+											<div class="carousel-content col-lg-6 o_colored_level" style="">
+												<h2><font style="font-size: 62px;">EEDC SIMPLE REQUEST</font><br/></h2>
+												<p class="lead">This solution allows both&amp;nbsp;internal and external&amp;nbsp;staff of the organization to request and get approvals.</p><p class="lead">The application&amp;nbsp;comprises of the following:</p><ul class="lead"><li>&amp;nbsp;Server Access Request</li><li>Office Memo</li><li>Recruitment Request etc.</li></ul>
+												<p>
+													<a href="/my/requests" class="mb-2 btn btn-primary" data-bs-original-title="" title="">My Requests</a>
+												<br/></p>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="carousel-item pt96 pb96 o_colored_level oe_img_bg o_bg_img_center" style="background-image: url(&quot;/web/image/540-a2461996/job_page_img1.jpg&quot;);" data-name="Slide" data-original-id="539" data-original-src="/web/image/539-a0d120e4/job_page_img1.jpg" data-mimetype="image/jpeg" data-resize-width="1600">
+									<div class="oe_unremovable container">
+										<div class="row content">
+											<div class="carousel-content col-lg-8 offset-lg-2 bg-black-50 text-center pt48 pb40 o_colored_level">
+												<h2 style="font-size: 62px;">EEDC Applications</h2>
+												<div class="s_hr pt8 pb24" data-snippet="s_hr" data-name="Separator">
+													<hr class="w-25 mx-auto" style="border-top-width: 1px; border-top-style: solid;"/>
+												</div>
+												<p class="lead">For easy self service</p>
+												<p><a href="/my/requests" class="mb-2 btn btn-primary" data-bs-original-title="" title="" aria-describedby="popover991422">Start your journey</a></p>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="carousel-item pb128 o_colored_level pt136 oe_img_bg o_bg_img_center" style="background-image: url(&quot;/web/image/542-59a16e91/abobi.jpg&quot;); background-position: 0% 30.6609%;" data-name="Slide" data-original-id="541" data-original-src="/web/image/541-64b3fbf6/abobi.jpg" data-mimetype="image/jpeg" data-resize-width="1440">
+									<div class="oe_unremovable container">
+										<div class="row content">
+					
+
+					
+
+					
+
+											<div class="carousel-content o_colored_level col-lg-5">
+												<h2><font style="font-size: 62px; background-color: rgb(255, 255, 255);">User Friendly</font><br/></h2>
+												<h4><font style="background-color: rgb(255, 255, 255);">&amp;nbsp;Seamless Organizational&amp;nbsp;</font></h4><h4><font style="background-color: rgb(255, 255, 255);">&amp;nbsp;Workflow integration.</font></h4>
+												<p><br/></p>
+												<p>The EED<span style="font-size: 14px;">C request is highly customized</span></p><p><span style="font-size: 14px;">&amp;nbsp;to take all departmental processes.</span></p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<a class="carousel-control-prev o_not_editable o_we_no_overlay" data-bs-slide="prev" role="img" aria-label="Previous" title="Previous" href="#myCarousel1704269617532">
+								<span class="carousel-control-prev-icon"/>
+								<span class="visually-hidden o_default_snippet_text">Previous</span>
+							</a>
+							<a class="carousel-control-next o_not_editable o_we_no_overlay" data-bs-slide="next" role="img" aria-label="Next" title="Next" href="#myCarousel1704269617532">
+								<span class="carousel-control-next-icon"/>
+								<span class="visually-hidden o_default_snippet_text">Next</span>
+							</a>
+						</div>
+					</section>
+				</div>
+			</t>
+		</template>
+	</data>
+</odoo>

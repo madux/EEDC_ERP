@@ -30,6 +30,22 @@ class CustomerPortal(portal.CustomerPortal):
                 else 0
             )
         return values
+    
+    @http.route(["/get-menu-url/<string:type>"], type='http', auth='user', website=True, website_published=True)
+    def open_menu_url_view(self, type):
+        account_action_id = False 
+        model_ref = False
+        menu_id = False
+        if type in ['account']:
+            account_action_id = request.env.ref('account.open_account_journal_dashboard_kanban').id
+            model_ref = 'account.journal'
+            menu_id = request.env.ref('account.menu_board_journal_1').id
+            
+        if account_action_id and model_ref and menu_id:
+            url = f"/web#action={account_action_id}&model={model_ref}&view_type=kanban&cids=1&menu_id={menu_id}"
+            return request.redirect(url)
+        else:
+            return request.not_found() 
      
     # def _prepare_my_tickets_values(self, page=1, date_begin=None, date_end=None, sortby=None, filterby='all', search=None, groupby='none', search_in='content'):
     #     values = self._prepare_portal_layout_values()

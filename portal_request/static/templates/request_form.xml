@@ -11,6 +11,10 @@
                 </t>
                 <t t-if="req.id">
                     <section class="s_website_form pt16 pb16 o_colored_level portal-request-form" id="portal-request-form" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
+                        <section id="website-app-section" class="page-section">  
+                            <t t-call="portal_request.website_app_page"/>
+                        </section>
+                        
                         <div class="navbar-light  py-0 mb-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
                                 Back
