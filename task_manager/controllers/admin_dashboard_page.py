@@ -230,66 +230,54 @@ class TMAdminDashboardPage(http.Controller):
         points = sorted(buckets.values(), key=lambda x: x['period'])
         return {'ok': True, 'data': {'grain': grain, 'points': points}}
 
-    # ---------- JSON: leaderboards ----------
+    # ---------- JSON: leaderboard (top employees done, top overdue employees, top managers done) ----------
     @http.route('/tm/admin/api/leaderboard', type='json', auth='user', website=True, csrf=False)
     def api_leaderboard(self, **params):
         user = request.env.user
         if not _has_access(user):
             return {'ok': False, 'message': 'Forbidden'}
 
-        Task = request.env['tm.task']
+        Task = request.env['tm.task'].sudo()
         f = _parse_filters(params)
         dom = _domain_from_filters(f)
 
-        # Top employees by Done
-        emp_rows = Task.read_group(
-            dom + [('stage', '=', 'done')],
-            ['id:count', 'employee_id'],
-            ['employee_id'],
-            lazy=False,
-        )
-        # Sort in Python instead of orderby='id_count desc'
-        emp_rows = sorted(emp_rows, key=lambda r: r.get('id_count', 0) or 0, reverse=True)[:10]
+        # Top Employees by Done
+        emp_done_rg = Task.read_group(dom + [('stage', '=', 'done')], ['id:count'], ['employee_id'], lazy=False)
         employees_done = [{
-            'id': (r['employee_id'][0] if r.get('employee_id') else False),
-            'name': (r['employee_id'][1] if r.get('employee_id') else '—'),
-            'count': r.get('id_count', 0) or 0,
-        } for r in emp_rows]
-
-        # Top employees by Overdue (not Done, due_date < today)
+            'id':   r['employee_id'] and r['employee_id'][0],
+            'name': r['employee_id'] and r['employee_id'][1] or '—',
+            'count': _count_from_row(r, 'employee_id_count'),
+        } for r in emp_done_rg]
+        employees_done.sort(key=lambda x: x['count'], reverse=True)
+        employees_done = employees_done[:10]
+        
+        # Top Employees by Overdue (not Done, due_date < today)
         today = fields.Date.context_today(Task)
-        odom = dom + [('stage', '!=', 'done'), ('due_date', '!=', False), ('due_date', '<', today)]
-        emp_over_rows = Task.read_group(
-            odom,
-            ['id:count', 'employee_id'],
-            ['employee_id'],
-            lazy=False,
-        )
-        emp_over_rows = sorted(emp_over_rows, key=lambda r: r.get('id_count', 0) or 0, reverse=True)[:10]
+        overdue_dom = dom + [('due_date', '!=', False), ('stage', '!=', 'done'), ('due_date', '<', today)]
+        emp_over_rg = Task.read_group(overdue_dom, ['id:count'], ['employee_id'], lazy=False)
         employees_overdue = [{
-            'id': (r['employee_id'][0] if r.get('employee_id') else False),
-            'name': (r['employee_id'][1] if r.get('employee_id') else '—'),
-            'count': r.get('id_count', 0) or 0,
-        } for r in emp_over_rows]
+            'id':   r['employee_id'] and r['employee_id'][0],
+            'name': r['employee_id'] and r['employee_id'][1] or '—',
+            'count': _count_from_row(r, 'employee_id_count'),
+        } for r in emp_over_rg]
+        employees_overdue.sort(key=lambda x: x['count'], reverse=True)
+        employees_overdue = employees_overdue[:10]
 
-        # Overdue by manager
-        mgr_rows = Task.read_group(
-            odom + [('manager_id', '!=', False)],
-            ['id:count', 'manager_id'],
-            ['manager_id'],
-            lazy=False,
-        )
-        mgr_rows = sorted(mgr_rows, key=lambda r: r.get('id_count', 0) or 0, reverse=True)[:10]
-        overdue_by_manager = [{
-            'id': (r['manager_id'][0] if r.get('manager_id') else False),
-            'name': (r['manager_id'][1] if r.get('manager_id') else '—'),
-            'count': r.get('id_count', 0) or 0,
-        } for r in mgr_rows]
+        # Top Managers by Done
+        mgr_done_rg = Task.read_group(dom + [('stage', '=', 'done')], ['id:count'], ['manager_id'], lazy=False)
+        managers_done = [{
+            'id':   r['manager_id'] and r['manager_id'][0],
+            'name': r['manager_id'] and r['manager_id'][1] or '—',
+            'count': _count_from_row(r, 'manager_id_count'),
+        } for r in mgr_done_rg]
+        managers_done.sort(key=lambda x: x['count'], reverse=True)
+        managers_done = managers_done[:10]
+
 
         return {'ok': True, 'data': {
             'employees_done': employees_done,
             'employees_overdue': employees_overdue,
-            'overdue_by_manager': overdue_by_manager,
+            'managers_done': managers_done,
         }}
 
     # ---------- JSON: search (name or staff-id) ----------

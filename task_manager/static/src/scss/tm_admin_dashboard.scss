@@ -154,7 +154,6 @@
   width: 100% !important;
   min-height: 300px;
 }
-#tm_ad_chart_timeseries { min-height: 360px; }
 
 /* ---------- Helpers ---------- */
 .tm-admin-page .text-muted { color: var(--ad-text-muted) !important; }
@@ -164,7 +163,6 @@
 @media (max-width: 991.98px) {
   .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
   .tm-admin-page .tm-card .tm-card-body canvas { min-height: 260px; }
-  #tm_ad_chart_timeseries { min-height: 300px; }
 }
 @media (max-width: 575.98px) {
   .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value { font-size: 1.35rem; }

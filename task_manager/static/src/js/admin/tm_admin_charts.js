@@ -26,6 +26,13 @@ odoo.define('task_manager.tm_admin_charts', function (require) {
     };
   }
 
+  // Coerce any “count-like” property coming from read_group
+  function _valCount(r) {
+    return Number(
+      (r && (r.count ?? r.id_count ?? r.employee_id_count ?? r.manager_id_count)) || 0
+    );
+  }
+
   function initCharts(rootEl) {
     _ensureChart();
     if (!Chart) return;
@@ -36,119 +43,130 @@ odoo.define('task_manager.tm_admin_charts', function (require) {
     // Stage distribution (doughnut)
     charts.stage = new Chart(rootEl.querySelector('#tm_ad_chart_stage'), {
       type: 'doughnut',
-      data: { labels: [], datasets: [{ data: [], backgroundColor: [
-        COLORS.stage.todo, COLORS.stage.in_progress, COLORS.stage.review, COLORS.stage.done
-      ]}]},
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          backgroundColor: [
+            COLORS.stage.todo,
+            COLORS.stage.in_progress,
+            COLORS.stage.review,
+            COLORS.stage.done,
+          ],
+        }],
+      },
       options: { plugins: { legend: { position: 'bottom' } } },
     });
 
     // Priority mix (bar)
     charts.priority = new Chart(rootEl.querySelector('#tm_ad_chart_priority'), {
       type: 'bar',
-      data: { labels: ['High','Medium','Low'], datasets: [{ label: 'Tasks', data: [], backgroundColor: COLORS.priority }] },
-      options: { plugins: { legend: { display: false }}, scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } } },
+      data: {
+        labels: ['High', 'Medium', 'Low'],
+        datasets: [{ label: 'Tasks', data: [], backgroundColor: COLORS.priority }],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } },
+      },
     });
 
     // Overdue by Manager (horizontal bar)
     charts.overdueMgr = new Chart(rootEl.querySelector('#tm_ad_chart_overdue_mgr'), {
       type: 'bar',
       data: { labels: [], datasets: [{ label: 'Overdue', data: [], backgroundColor: COLORS.bars }] },
-      options: {
-        indexAxis: 'y',
-        plugins: { legend: { display: false }},
+      options: { indexAxis: 'y', plugins: { legend: { display: false } },
         scales: { x: { ..._axis(), beginAtZero: true }, y: _axis() },
       },
     });
 
-    // Timeseries (line with time scale)
-    charts.timeseries = new Chart(rootEl.querySelector('#tm_ad_chart_timeseries'), {
-      type: 'line',
-      data: { datasets: [] },
-      options: {
-        parsing: false,
-        plugins: { legend: { position: 'bottom' } },
-        elements: { line: { tension: 0.25 } },
-        scales: { x: { type: 'time', ..._axis() }, y: { ..._axis(), beginAtZero: true } },
-      },
-    });
-
-    // Leaderboards
+    // Top Employees (Done)
     charts.empDone = new Chart(rootEl.querySelector('#tm_ad_chart_emp_done'), {
       type: 'bar',
       data: { labels: [], datasets: [{ label: 'Done', data: [], backgroundColor: COLORS.stage.done }] },
-      options: { plugins: { legend: { display: false } }, scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } } },
+      options: { plugins: { legend: { display: false } },
+        scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } },
+      },
     });
 
+    // Top Overdue (Employees)
     charts.empOverdue = new Chart(rootEl.querySelector('#tm_ad_chart_emp_overdue'), {
       type: 'bar',
       data: { labels: [], datasets: [{ label: 'Overdue', data: [], backgroundColor: COLORS.stage.review }] },
-      options: { plugins: { legend: { display: false } }, scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } } },
+      options: { plugins: { legend: { display: false } },
+        scales: { x: _axis(), y: { ..._axis(), beginAtZero: true } },
+      },
+    });
+
+    // Top Managers (Done)
+    charts.mgrDone = new Chart(rootEl.querySelector('#tm_ad_chart_mgr_done'), {
+      type: 'bar',
+      data: { labels: [], datasets: [{ label: 'Done', data: [], backgroundColor: COLORS.stage.done }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } },
+        scales: { x: { ..._axis(), beginAtZero: true }, y: _axis() },
+      },
     });
   }
 
+  // -------- Updaters --------
   function updateStage(rows) {
-    const ORDER = ['todo','in_progress','review','done'];
-    const LABELS = { todo:'To Do', in_progress:'In Progress', review:'Review', done:'Done' };
+    const ORDER = ['todo', 'in_progress', 'review', 'done'];
+    const LABELS = { todo: 'To Do', in_progress: 'In Progress', review: 'Review', done: 'Done' };
+
     const counts = ORDER.map(k => {
       const r = rows.find(x => (x.key ?? x.stage) === k) || {};
-      return (r.count ?? r.id_count ?? 0);
+      return Number(r.count ?? r.id_count ?? 0);
     });
+
     charts.stage.data.labels = ORDER.map(k => (rows.find(x => x.key === k)?.label || LABELS[k]));
     charts.stage.data.datasets[0].data = counts;
     charts.stage.update();
   }
 
   function updatePriority(rows) {
-    const ORDER = ['2','1','0']; // High, Medium, Low
-    const LABELS = { '2':'High', '1':'Medium', '0':'Low' };
+    const ORDER = ['2', '1', '0']; // High, Medium, Low
+    const LABELS = { '2': 'High', '1': 'Medium', '0': 'Low' };
+
     charts.priority.data.labels = ORDER.map(k => (rows.find(x => x.key === k)?.label || LABELS[k]));
     charts.priority.data.datasets[0].data = ORDER.map(k => {
       const r = rows.find(x => (String(x.key ?? x.priority) === k)) || {};
-      return (r.count ?? r.id_count ?? 0);
+      return Number(r.count ?? r.id_count ?? 0);
     });
     charts.priority.update();
   }
 
   function updateOverdueMgr(rows) {
     charts.overdueMgr.data.labels = rows.map(r => r.name || '—');
-    charts.overdueMgr.data.datasets[0].data = rows.map(r => r.count || 0);
+    charts.overdueMgr.data.datasets[0].data = rows.map(_valCount);
     charts.overdueMgr.update();
-  }
-
-  function _toXY(points, key) {
-    return points.map(p => ({ x: p.period, y: p[key] || 0 }));
-  }
-
-  function updateTimeseries(grain, points, stacked) {
-    if (!stacked) {
-      charts.timeseries.data.datasets = [{
-        label: 'Total',
-        data: _toXY(points, 'total'),
-        borderColor: COLORS.stage.in_progress,
-        backgroundColor: 'transparent',
-      }];
-    } else {
-      charts.timeseries.data.datasets = [
-        { label: 'To Do',       data: _toXY(points, 'todo'),        borderColor: COLORS.stage.todo,        backgroundColor: 'transparent' },
-        { label: 'In Progress', data: _toXY(points, 'in_progress'), borderColor: COLORS.stage.in_progress, backgroundColor: 'transparent' },
-        { label: 'Review',      data: _toXY(points, 'review'),      borderColor: COLORS.stage.review,      backgroundColor: 'transparent' },
-        { label: 'Done',        data: _toXY(points, 'done'),        borderColor: COLORS.stage.done,        backgroundColor: 'transparent' },
-      ];
-    }
-    charts.timeseries.update();
   }
 
   function updateEmpDone(rows) {
     charts.empDone.data.labels = rows.map(r => r.name || '—');
-    charts.empDone.data.datasets[0].data = rows.map(r => r.count || 0);
+    charts.empDone.data.datasets[0].data = rows.map(_valCount);
     charts.empDone.update();
   }
 
   function updateEmpOverdue(rows) {
     charts.empOverdue.data.labels = rows.map(r => r.name || '—');
-    charts.empOverdue.data.datasets[0].data = rows.map(r => r.count || 0);
+    charts.empOverdue.data.datasets[0].data = rows.map(_valCount);
     charts.empOverdue.update();
   }
 
-  return { initCharts, updateStage, updatePriority, updateOverdueMgr, updateTimeseries, updateEmpDone, updateEmpOverdue };
+  function updateMgrDone(rows) {
+    charts.mgrDone.data.labels = rows.map(r => r.name || '—');
+    charts.mgrDone.data.datasets[0].data = rows.map(_valCount);
+    charts.mgrDone.update();
+  }
+
+  // Export 
+  return {
+    initCharts,
+    updateStage,
+    updatePriority,
+    updateOverdueMgr,
+    updateEmpDone,
+    updateEmpOverdue,
+    updateMgrDone,
+  };
 });

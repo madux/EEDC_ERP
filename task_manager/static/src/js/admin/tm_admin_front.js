@@ -28,7 +28,6 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         this.$root.find('#tm_ad_stage option,#tm_ad_priority option').prop('selected', false);
         this._refreshAll();
       });
-      this.$root.on('change', '#tm_ad_stacked', () => this._refreshTimeseriesOnly());
 
       // Optional: submit on Enter in search (if you add #tm_ad_q)
       this.$root.on('keydown', '#tm_ad_q', (e) => { if (e.key === 'Enter') this._refreshAll(); });
@@ -109,10 +108,9 @@ odoo.define('task_manager.tm_admin_front', function (require) {
       const f = this._filters();
 
       // Run all calls in parallel but don't fail-fast
-      const [pSummary, pDist, pTs, pLb] = await Promise.allSettled([
+      const [pSummary, pDist, pLb] = await Promise.allSettled([
         API.summary(f),
         API.distribution(f),
-        API.timeseries(f),
         API.leaderboard(f),
       ]);
 
@@ -137,43 +135,17 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         const d = dist.data || {};
         Charts.updateStage(d.by_stage || []);
         Charts.updatePriority(d.by_priority || []);
-        // accept either key name
         Charts.updateOverdueMgr(d.overdue_by_manager || d.by_manager_overdue || []);
-        // if your distribution endpoint also returns top employees (optional)
-        if (d.by_employee_done) Charts.updateEmpDone(d.by_employee_done || []);
       } else { logRej('distribution', pDist); }
 
       // Leaderboards
       const lb = okVal(pLb);
       if (lb) {
         const L = lb.data || {};
-        Charts.updateEmpDone(L.employees_done || L.by_employee_done || []);
-        Charts.updateEmpOverdue(L.employees_overdue || L.by_employee_overdue || []);
-        // if leaderboard also carries manager overdue
-        if (L.overdue_by_manager || L.by_manager_overdue) {
-          Charts.updateOverdueMgr(L.overdue_by_manager || L.by_manager_overdue || []);
-        }
+        Charts.updateEmpDone(L.employees_done || []);
+        Charts.updateEmpOverdue(L.employees_overdue || []);
+        Charts.updateMgrDone(L.managers_done || []);
       } else { logRej('leaderboard', pLb); }
-
-      // Time series (respect the stacked toggle)
-      const ts = okVal(pTs);
-      if (ts) {
-        const stacked = this.$('#tm_ad_stacked').is(':checked');
-        Charts.updateTimeseries(ts.data.grain, ts.data.points || [], stacked);
-      } else { logRej('timeseries', pTs); }
-    },
-
-    _refreshTimeseriesOnly: async function () {
-      try {
-        const f = this._filters();
-        const ts = await API.timeseries(f);
-        if (ts && ts.ok) {
-          const stacked = this.$('#tm_ad_stacked').is(':checked');
-          Charts.updateTimeseries(ts.data.grain, ts.data.points || [], stacked);
-        }
-      } catch (err) {
-        console.error('Timeseries refresh failed:', err);
-      }
     },
 
     _refreshList: async function () {
