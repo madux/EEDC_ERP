@@ -30,6 +30,29 @@ def _parse_filters(params):
         'q': (params.get('q') or '').strip(),
     }
 
+def _any_of(clauses):
+    """Builds (A OR B OR C) in Odoo domain syntax."""
+    clauses = [c for c in clauses if c] or []
+    if not clauses:
+        return []
+    dom = clauses[0]
+    for c in clauses[1:]:
+        dom = ['|', dom, c]
+    return dom
+
+def _attach_text_query(dom, q):
+    """Make q match task name/key/staff-id/employee/manager."""
+    q = (q or '').strip()
+    if not q:
+        return dom
+    return dom + _any_of([
+        ('name', 'ilike', q),
+        ('key', 'ilike', q),
+        ('assignee_staff_id', 'ilike', q),
+        ('employee_id.name', 'ilike', q),
+        ('manager_id.name', 'ilike', q),
+    ])
+
 def _domain_from_filters(f):
     """Translate filters into an Odoo domain (v1 uses due_date as the date axis)."""
     dom = [('active', '=', True)]
@@ -52,7 +75,8 @@ def _domain_from_filters(f):
         dom.append(('company_id', '=', f['company_id']))
     # search: name or staff-id
     if f['q']:
-        dom = ['|', ('assignee_staff_id', 'ilike', f['q']), ('name', 'ilike', f['q'])] + dom
+        # dom = ['|', ('assignee_staff_id', 'ilike', f['q']), ('name', 'ilike', f['q'])] + dom
+        dom = _attach_text_query(dom, f.get('q'))
     return dom
 
 def _count_from_row(r, *extra_keys):
@@ -332,7 +356,9 @@ class TMAdminDashboardPage(http.Controller):
         # free-text for list
         text_q = (params.get('text_q') or '').strip()
         if text_q:
-            dom = ['|', ('assignee_staff_id', 'ilike', text_q), ('name', 'ilike', text_q)] + dom
+            # dom = ['|', ('assignee_staff_id', 'ilike', text_q), ('name', 'ilike', text_q)] + dom
+            # dom = [...]
+            dom = _attach_text_query(dom, params.get('text_q'))
 
         # paging & sort
         page = max(int(params.get('page') or 1), 1)

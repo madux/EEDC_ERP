@@ -21,69 +21,39 @@ odoo.define('task_manager.tm_admin_front', function (require) {
     },
 
     _bindToolbar: function () {
-      this.$root.on('click', '#tm_ad_apply', () => this._refreshAll());
+      // Apply / Reset dates
+      this.$root.on('click', '#tm_ad_apply', () => { this._refreshAll(); this._refreshList(); });
       this.$root.on('click', '#tm_ad_reset', () => {
         this.$root.find('#tm_ad_date_from,#tm_ad_date_to').val('');
-        this.$root.find('#tm_ad_grain').val('week');
-        this.$root.find('#tm_ad_stage option,#tm_ad_priority option').prop('selected', false);
-        this._refreshAll();
-      });
-
-      // Optional: submit on Enter in search (if you add #tm_ad_q)
-      this.$root.on('keydown', '#tm_ad_q', (e) => { if (e.key === 'Enter') this._refreshAll(); });
-
-      // quick filters
-      this.$root.on('click', '.tm-filter', (e) => {
-        e.preventDefault();
-        const k = $(e.currentTarget).data('key');
-        const arr = this.$root.data('tm-quick') || [];
-        const i = arr.indexOf(k);
-        if (i === -1) arr.push(k); else arr.splice(i, 1);
-        this.$root.data('tm-quick', arr);
+        this.$root.find('#tm_ad_groupby').val('');
+        this.$root.find('#tm_ad_q').val('');
+        this.$root.data('tm-page', 1).data('tm-sort', '');
         this._refreshAll(); this._refreshList();
       });
 
-      // group by
-      this.$root.on('click', '.tm-groupby', (e) => {
-        e.preventDefault();
-        const k = $(e.currentTarget).data('key') || '';
-        this.$root.data('tm-group', k);
+      // Group By (affects only the table)
+      this.$root.on('change', '#tm_ad_groupby', () => {
         this.$root.data('tm-page', 1);
         this._refreshList();
       });
 
-      // view toggle
-      this.$root.on('click', '[data-view]', (e) => {
-        const v = $(e.currentTarget).data('view');
-        this.$root.find('[data-view]').removeClass('active');
-        $(e.currentTarget).addClass('active');
-        if (v === 'list') {
-          this.$('#tm_ad_list_wrap').removeClass('d-none');
-          this._refreshList();
-        } else {
-          this.$('#tm_ad_list_wrap').addClass('d-none');
-        }
-      });
+      // Unified search (affects charts + table)
+      const deb = (fn, ms) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms||220); }; };
+      const onSearch = deb(() => { this.$root.data('tm-page', 1); this._refreshAll(); this._refreshList(); }, 250);
+      this.$root.on('input', '#tm_ad_q', onSearch);
 
-      // list search
-      this.$root.on('input', '#tm_ad_text_q', () => {
-        this.$root.data('tm-page', 1);
-        this._refreshListDebounced();
-      });
-
-      // table sort
+      // Table sort
       this.$root.on('click', '#tm_ad_table thead th', (e) => {
         const key = $(e.currentTarget).data('sort');
         if (!key) return;
-        // toggle asc/desc for simple keys; keep default for composite
         const cur = this.$root.data('tm-sort') || '';
         const asc = (cur === key + ' asc');
-        const next = asc ? (key + ' desc') : (key + ' asc');
+        const next = asc ? key + ' desc' : key + ' asc';
         this.$root.data('tm-sort', next);
         this._refreshList();
       });
 
-      // pager
+      // Pager
       this.$root.on('click', '#tm_ad_prev', () => {
         const p = this.$root.data('tm-page') || 1;
         if (p > 1) { this.$root.data('tm-page', p - 1); this._refreshList(); }
@@ -93,16 +63,19 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         const pages = this.$root.data('tm-pages') || 1;
         if (p < pages) { this.$root.data('tm-page', p + 1); this._refreshList(); }
       });
-
-      // debounce
-      this._refreshListDebounced = (function (fn, ms) {
-        let t; return () => { clearTimeout(t); t = setTimeout(() => this._refreshList(), ms || 220); };
-      }).call(this);
     },
 
     _filters: function () {
-      return API.pickFilters(this.$root);
+      const df = this.$root.find('#tm_ad_date_from').val() || '';
+      const dt = this.$root.find('#tm_ad_date_to').val() || '';
+      const q  = this.$root.find('#tm_ad_q').val() || '';
+      const group = this.$root.find('#tm_ad_groupby').val() || '';
+      const page = Number(this.$root.data('tm-page') || 1);
+      const sort = this.$root.data('tm-sort') || '';
+      // one search feeds both “q” (charts) and “text_q” (list)
+      return { date_from: df, date_to: dt, q, text_q: q, group_by: group, page, sort, limit: 20 };
     },
+
 
     _refreshAll: async function () {
       const f = this._filters();

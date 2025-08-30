@@ -3,85 +3,40 @@
   <template id="tm_admin_dashboard_page" name="Admin Dashboard (Website)">
     <t t-call="website.layout">
       <div class="container my-5 tm-admin-page" data-tm-admin-init="1">
-
         <!-- Top toolbar -->
         <div class="tm-ad-toolbar mb-3">
-          <div class="row g-2">
-            <div class="col-md-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
               <label class="form-label">Date From</label>
               <input id="tm_ad_date_from" type="date" class="form-control"/>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
               <label class="form-label">Date To</label>
               <input id="tm_ad_date_to" type="date" class="form-control"/>
             </div>
+
             <div class="col-md-2">
-              <label class="form-label">Grain</label>
-              <select id="tm_ad_grain" class="form-select">
-                <option value="week">Week</option>
-                <option value="month">Month</option>
+              <label class="form-label">Group By</label>
+              <select id="tm_ad_groupby" class="form-select">
+                <option value="">None</option>
+                <option value="stage">Stage</option>
+                <option value="employee_id">Employee</option>
+                <option value="priority">Priority</option>
+                <option value="manager_id">Manager</option>
               </select>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Stage</label>
-              <!-- You can switch to multiple by adding multiple="multiple" -->
-              <select id="tm_ad_stage" class="form-select">
-                <option value="">All</option>
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="done">Done</option>
-              </select>
+
+            <div class="col-md-3 ms-md-auto">
+              <label class="form-label">Search</label>
+              <!-- one search feeds both charts (q) and list (text_q) -->
+              <input id="tm_ad_q" type="search" class="form-control"
+                    placeholder="Search by task, staff-id, employee or manager"/>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Priority</label>
-              <select id="tm_ad_priority" class="form-select">
-                <option value="">All</option>
-                <option value="2">High</option>
-                <option value="1">Medium</option>
-                <option value="0">Low</option>
-              </select>
+
+            <div class="col-md-1 d-flex gap-2">
+              <button id="tm_ad_apply" class="btn btn-primary w-100">Apply</button>
+              <button id="tm_ad_reset" class="btn btn-light w-100">Reset</button>
             </div>
-          </div>
-          <div class="mt-2 d-flex gap-2">
-            <button id="tm_ad_apply" class="btn btn-primary">Apply</button>
-            <button id="tm_ad_reset" class="btn btn-light">Reset</button>
-          </div>
-        </div>
-
-        <!-- Control panel: Filters | Group By | View | List search -->
-        <div class="tm-cp d-flex align-items-center gap-2 flex-wrap mt-3">
-          <div class="dropdown">
-            <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">Filters</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item tm-filter" data-key="overdue" href="#">Overdue</a></li>
-              <li><a class="dropdown-item tm-filter" data-key="due_today" href="#">Due today</a></li>
-              <li><a class="dropdown-item tm-filter" data-key="due_week" href="#">Due this week</a></li>
-              <li><hr class="dropdown-divider"/></li>
-              <li><a class="dropdown-item tm-filter" data-key="mine" href="#">My tasks</a></li>
-              <li><a class="dropdown-item tm-filter" data-key="imanage" href="#">I manage</a></li>
-            </ul>
-          </div>
-
-          <div class="dropdown">
-            <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">Group By</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item tm-groupby" data-key="" href="#">None</a></li>
-              <li><a class="dropdown-item tm-groupby" data-key="stage" href="#">Stage</a></li>
-              <li><a class="dropdown-item tm-groupby" data-key="employee_id" href="#">Employee</a></li>
-              <li><a class="dropdown-item tm-groupby" data-key="priority" href="#">Priority</a></li>
-              <li><a class="dropdown-item tm-groupby" data-key="manager_id" href="#">Manager</a></li>
-              <li><a class="dropdown-item tm-groupby" data-key="company_id" href="#">Company</a></li>
-            </ul>
-          </div>
-
-          <div class="btn-group" role="group" aria-label="View">
-            <button class="btn btn-outline-secondary active" data-view="charts">Charts</button>
-            <button class="btn btn-outline-secondary" data-view="list">List</button>
-          </div>
-
-          <div class="ms-auto">
-            <input id="tm_ad_text_q" class="form-control form-control-sm" placeholder="Search tasks (name or staff-id)"/>
           </div>
         </div>
 
@@ -168,7 +123,7 @@
         </div>
 
         <!-- LIST VIEW -->
-        <div id="tm_ad_list_wrap" class="tm-card d-none mt-3">
+        <div id="tm_ad_list_wrap" class="tm-card mt-3">
           <div class="tm-card-head d-flex justify-content-between align-items-center">
             <span>Tasks</span>
             <div class="small text-muted" id="tm_ad_results_info">—</div>

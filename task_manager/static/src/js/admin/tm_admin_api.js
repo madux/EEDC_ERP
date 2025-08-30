@@ -11,27 +11,18 @@ odoo.define('task_manager.tm_admin_api', function (require) {
   }
 
   function pickFilters($root) {
-    const toIntOrNull = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
     return {
-      date_from: $root.find('#tm_ad_date_from').val() || null,
-      date_to: $root.find('#tm_ad_date_to').val() || null,
-      date_grain: $root.find('#tm_ad_grain').val() || 'week',
-      stages: _getMulti($root, '#tm_ad_stage'),
-      priorities: _getMulti($root, '#tm_ad_priority'),
-      q: ($root.find('#tm_ad_q').val() || '').trim(),          // reserved for future person search
-      employee_id: toIntOrNull($root.find('#tm_ad_employee_id').val()),
-      manager_id: toIntOrNull($root.find('#tm_ad_manager_id').val()),
-      company_id: null,
-
-      // List controls (widget sets these data attrs)
-      quick_filters: ($root.data('tm-quick') || []),
-      group_by: ($root.data('tm-group') || ''),
-      sort_by: ($root.data('tm-sort') || 'priority desc, due_date asc, id desc'),
-      page: ($root.data('tm-page') || 1),
-      limit: ($root.data('tm-limit') || 20),
-      text_q: ($root.find('#tm_ad_text_q').val() || '').trim(),
+      date_from: ($root.find('#tm_ad_date_from').val() || ''),
+      date_to:   ($root.find('#tm_ad_date_to').val() || ''),
+      q:         ($root.find('#tm_ad_q').val() || ''),
+      text_q:    ($root.find('#tm_ad_q').val() || ''),
+      group_by:  ($root.find('#tm_ad_groupby').val() || ''),
+      page:      Number($root.data('tm-page') || 1),
+      sort:      ($root.data('tm-sort') || ''),
+      limit:     20,
     };
   }
+
 
   function _post(route, params) {
     return ajax.jsonRpc(route, 'call', params || {}).catch((err) => {
