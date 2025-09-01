@@ -128,16 +128,27 @@
 .tm-admin-page .tm-ad-kpis .tm-kpi.kpi-bad  { border-left: 6px solid var(--ad-bad);  }
 
 /* ---------- Cards (Charts/Sections) ---------- */
+.tm-admin-page .tm-ad-charts {
+  column-count: 2;
+  column-gap: 1.5rem;
+}
+
 .tm-admin-page .tm-card {
   background: var(--ad-card-bg);
   border: 1px solid var(--ad-border);
   border-radius: var(--ad-radius);
   box-shadow: var(--ad-soft-shadow);
   overflow: hidden;
-  display: flex;
+  // display: flex;
   flex-direction: column;
   min-height: 100%;
+
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 1.5rem;
+  break-inside: avoid;
 }
+
 .tm-admin-page .tm-card .tm-card-head {
   padding: .75rem 1rem;
   font-weight: 700;
@@ -155,6 +166,12 @@
   min-height: 300px;
 }
 
+/* Hover effects */
+.tm-admin-page .tm-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(2, 6, 23, .12);
+}
+
 /* ---------- Helpers ---------- */
 .tm-admin-page .text-muted { color: var(--ad-text-muted) !important; }
 .tm-admin-page .small { font-size: .875rem; }
@@ -162,6 +179,7 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 991.98px) {
   .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
+  .tm-admin-page .tm-ad-charts { column-count: 1; }
   .tm-admin-page .tm-card .tm-card-body canvas { min-height: 260px; }
 }
 @media (max-width: 575.98px) {

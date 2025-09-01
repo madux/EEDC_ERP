@@ -17,18 +17,14 @@ def _has_access(user):
     return user.has_group('base.group_system') or user.has_group('task_manager.group_tm_manager')
 
 def _parse_filters(params):
-    """Normalize all incoming filter params from the website widget."""
-    return {
-        'date_from': (params.get('date_from') or None),
-        'date_to': (params.get('date_to') or None),
-        'date_grain': (params.get('date_grain') or 'week'),
-        'stages': params.get('stages') or [],
-        'priorities': params.get('priorities') or [],
-        'manager_id': int(params['manager_id']) if params.get('manager_id') else None,
-        'employee_id': int(params['employee_id']) if params.get('employee_id') else None,
-        'company_id': int(params['company_id']) if params.get('company_id') else None,
-        'q': (params.get('q') or '').strip(),
+    f = {
+        'date_from': params.get('date_from') or None,
+        'date_to': params.get('date_to') or None,
+        'group_by': params.get('group_by') or '',    # optional
+        'text_q': (params.get('text_q') or '').strip(),
     }
+    return f
+
 
 def _any_of(clauses):
     """Builds (A OR B OR C) in Odoo domain syntax."""
@@ -39,6 +35,53 @@ def _any_of(clauses):
     for c in clauses[1:]:
         dom = ['|', dom, c]
     return dom
+
+def _text_domain(text):
+    """
+    Free-text across multiple fields.
+    AND across words, OR across fields.
+    Produces a valid Odoo domain in prefix form.
+    """
+    text = (text or '').strip()
+    if not text:
+        return []
+
+    terms = [t for t in text.split() if t]
+    if not terms:
+        return []
+
+    fields = [
+        'name',
+        'key',
+        'assignee_staff_id',
+        'employee_id.name',
+        'manager_id.name',
+    ]
+
+    # OR-reduce: A OR B OR C  =>  ['|', ['|', A, B], C]
+    def _or_reduce(conds):
+        it = iter(conds)
+        expr = next(it)
+        for c in it:
+            expr = ['|', expr, c]
+        return expr
+
+    # AND-reduce: X AND Y AND Z  =>  ['&', ['&', X, Y], Z]
+    def _and_reduce(parts):
+        it = iter(parts)
+        expr = next(it)
+        for p in it:
+            expr = ['&', expr, p]
+        return expr
+
+    per_term_exprs = []
+    for term in terms:
+        field_conds = [(f, 'ilike', term) for f in fields]
+        per_term_exprs.append(_or_reduce(field_conds))
+
+    # AND across all term expressions (every word must match somewhere)
+    return _and_reduce(per_term_exprs)
+
 
 def _attach_text_query(dom, q):
     """Make q match task name/key/staff-id/employee/manager."""
@@ -54,30 +97,28 @@ def _attach_text_query(dom, q):
     ])
 
 def _domain_from_filters(f):
-    """Translate filters into an Odoo domain (v1 uses due_date as the date axis)."""
     dom = [('active', '=', True)]
-    # date window (v1) -> due_date
-    if f['date_from']:
-        dom.append(('due_date', '>=', f['date_from']))
-    if f['date_to']:
-        dom.append(('due_date', '<=', f['date_to']))
-    # stage/priority
-    if f['stages']:
-        dom.append(('stage', 'in', f['stages']))
-    if f['priorities']:
-        dom.append(('priority', 'in', f['priorities']))
-    # ownership/company
-    if f['manager_id']:
-        dom.append(('manager_id', '=', f['manager_id']))
-    if f['employee_id']:
-        dom.append(('employee_id', '=', f['employee_id']))
-    if f['company_id']:
-        dom.append(('company_id', '=', f['company_id']))
-    # search: name or staff-id
-    if f['q']:
-        # dom = ['|', ('assignee_staff_id', 'ilike', f['q']), ('name', 'ilike', f['q'])] + dom
-        dom = _attach_text_query(dom, f.get('q'))
+
+    df = f.get('date_from')
+    dt = f.get('date_to')
+    if df: dom.append(('due_date', '>=', df))
+    if dt: dom.append(('due_date', '<=', dt))
+
+    for key, field in (('stages','stage'), ('priorities','priority')):
+        vals = f.get(key) or []
+        if vals: dom.append((field, 'in', vals))
+
+    if f.get('manager_id'):  dom.append(('manager_id', '=', f['manager_id']))
+    if f.get('employee_id'): dom.append(('employee_id', '=', f['employee_id']))
+    if f.get('company_id'):  dom.append(('company_id', '=', f['company_id']))
+
+    q = (f.get('q') or '').strip()
+    if q:
+        dom = _attach_text_query(dom, q)
     return dom
+
+
+
 
 def _count_from_row(r, *extra_keys):
     # Prefer id_count, then __count, then any extra alias we hint
@@ -93,9 +134,7 @@ class TMAdminDashboardPage(http.Controller):
     def admin_dashboard_page(self, **kw):
         user = request.env.user
         if not _has_access(user):
-            # Logged-in but not allowed
             raise Forbidden("You don't have access to the Admin Dashboard.")
-        # Render website QWeb template (make sure you created views/website_admin_dashboard.xml with this template id)
         return request.render('task_manager.tm_admin_dashboard_page', {})
 
     # ---------- JSON: KPIs ----------
@@ -105,9 +144,14 @@ class TMAdminDashboardPage(http.Controller):
         if not _has_access(user):
             return {'ok': False, 'message': 'Forbidden'}
 
-        Task = request.env['tm.task']   # no sudo → record rules apply
+        Task = request.env['tm.task']   
         f = _parse_filters(params)
         dom = _domain_from_filters(f)
+
+        # free-text domain
+        text_q = f.get('text_q') or ''
+        if text_q:
+            dom += _text_domain(text_q)
 
         total = Task.search_count(dom)
 
@@ -143,9 +187,14 @@ class TMAdminDashboardPage(http.Controller):
         if not _has_access(user):
             return {'ok': False, 'message': 'Forbidden'}
 
-        Task = request.env['tm.task'].sudo()   # <- use sudo for unbiased metrics (optional)
+        Task = request.env['tm.task'].sudo()   
         f = _parse_filters(params)
         dom = _domain_from_filters(f)
+
+        # free-text domain
+        text_q = f.get('text_q') or ''
+        if text_q:
+            dom += _text_domain(text_q)
 
         # label maps from selections
         stage_labels = dict(Task._fields['stage'].selection)
@@ -173,7 +222,7 @@ class TMAdminDashboardPage(http.Controller):
             k = str(r.get('priority') or '0')
             counts_by_prio[k] = _count_from_row(r, 'priority_count')
 
-        prio_order = ['2', '1', '0']  # 2=High, 1=Medium, 0=Low
+        prio_order = ['2', '1', '0']  
         by_priority = [{
             'key': k,
             'label': prio_labels.get(k, k),
@@ -207,52 +256,10 @@ class TMAdminDashboardPage(http.Controller):
         return {'ok': True, 'data': {
             'by_stage': by_stage,
             'by_priority': by_priority,
-            # keep both keys to be compatible with any frontend you already wrote
             'overdue_by_manager': overdue_by_manager,
             'by_manager_overdue': overdue_by_manager,
             'by_employee_done': by_employee_done,
         }}
-
-    # ---------- JSON: time series ----------
-    @http.route('/tm/admin/api/timeseries', type='json', auth='user', website=True, csrf=False)
-    def api_timeseries(self, **params):
-        user = request.env.user
-        if not _has_access(user):
-            return {'ok': False, 'message': 'Forbidden'}
-
-        Task = request.env['tm.task']
-        f = _parse_filters(params)
-        dom = _domain_from_filters(f)
-
-        grain = (f.get('date_grain') or 'week').lower()
-        gb_map = {'week': 'due_date:week', 'month': 'due_date:month'}
-        gb = gb_map.get(grain, 'due_date:week')
-
-        rows = Task.read_group(
-            dom,
-            ['id:count', 'stage'],
-            [gb, 'stage'],
-            lazy=False,
-        )
-
-        # Accumulate into period buckets
-        buckets = {}  # period -> dict
-        for r in rows:
-            period = r.get(gb)
-            if not period:
-                continue
-            stage = r.get('stage') or 'unknown'
-            cnt = r.get('id_count', 0) or 0
-            d = buckets.setdefault(period, {
-                'period': period, 'total': 0,
-                'todo': 0, 'in_progress': 0, 'review': 0, 'done': 0,
-            })
-            d['total'] += cnt
-            if stage in d:
-                d[stage] += cnt  # ignore 'unknown' stages
-
-        points = sorted(buckets.values(), key=lambda x: x['period'])
-        return {'ok': True, 'data': {'grain': grain, 'points': points}}
 
     # ---------- JSON: leaderboard (top employees done, top overdue employees, top managers done) ----------
     @http.route('/tm/admin/api/leaderboard', type='json', auth='user', website=True, csrf=False)
@@ -264,6 +271,11 @@ class TMAdminDashboardPage(http.Controller):
         Task = request.env['tm.task'].sudo()
         f = _parse_filters(params)
         dom = _domain_from_filters(f)
+
+        # free-text domain
+        text_q = f.get('text_q') or ''
+        if text_q:
+            dom += _text_domain(text_q)
 
         # Top Employees by Done
         emp_done_rg = Task.read_group(dom + [('stage', '=', 'done')], ['id:count'], ['employee_id'], lazy=False)
@@ -339,6 +351,11 @@ class TMAdminDashboardPage(http.Controller):
         f = _parse_filters(params)
         dom = _domain_from_filters(f)
 
+        # free-text domain
+        text_q = f.get('text_q') or ''
+        if text_q:
+            dom += _text_domain(text_q)
+
         # quick backend-like filters
         quick = params.get('quick_filters') or []
         today = fields.Date.context_today(Task)
@@ -353,12 +370,6 @@ class TMAdminDashboardPage(http.Controller):
         if 'imanage' in quick:
             dom += [('manager_id', '=', user.id)]
 
-        # free-text for list
-        text_q = (params.get('text_q') or '').strip()
-        if text_q:
-            # dom = ['|', ('assignee_staff_id', 'ilike', text_q), ('name', 'ilike', text_q)] + dom
-            # dom = [...]
-            dom = _attach_text_query(dom, params.get('text_q'))
 
         # paging & sort
         page = max(int(params.get('page') or 1), 1)

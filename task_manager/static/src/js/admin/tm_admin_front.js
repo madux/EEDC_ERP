@@ -5,50 +5,92 @@ odoo.define('task_manager.tm_admin_front', function (require) {
   const API = require('task_manager.tm_admin_api');
   const Charts = require('task_manager.tm_admin_charts');
 
+  function debounce(fn, ms, ctx) {
+    let t;
+    return function () {
+      const args = arguments;
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(ctx || this, args), ms || 220);
+    };
+  }
+
   publicWidget.registry.TMAdminFront = publicWidget.Widget.extend({
     selector: '.tm-admin-page[data-tm-admin-init]',
 
-    // IMPORTANT: classic function syntax so this._super is available
     start: function () {
       const superDef = this._super.apply(this, arguments);
-
       this.$root = this.$el;
+
       this._bindToolbar();
       Charts.initCharts(this.$root[0]);
 
-      const initDef = this._refreshAll(); // returns a Promise
+      const initDef = Promise.all([
+        this._refreshAll(),
+        this._refreshList(),
+      ]);
+
       return Promise.all([superDef, initDef]);
     },
 
-    _bindToolbar: function () {
-      // Apply / Reset dates
-      this.$root.on('click', '#tm_ad_apply', () => { this._refreshAll(); this._refreshList(); });
+     _bindToolbar: function () {
+      // Apply/Reset now refresh BOTH charts and list
+      this.$root.on('click', '#tm_ad_apply', () => {
+        this._refreshAll();
+        this._refreshList();
+      });
       this.$root.on('click', '#tm_ad_reset', () => {
         this.$root.find('#tm_ad_date_from,#tm_ad_date_to').val('');
         this.$root.find('#tm_ad_groupby').val('');
-        this.$root.find('#tm_ad_q').val('');
-        this.$root.data('tm-page', 1).data('tm-sort', '');
-        this._refreshAll(); this._refreshList();
+        this.$root.data('tm-group', '');
+        this.$root.data('tm-page', 1);
+        this._refreshAll();
+        this._refreshList();
       });
 
-      // Group By (affects only the table)
+      // Debounced list refresh
+      this._refreshListDebounced = (() => {
+        let t;
+        return () => { clearTimeout(t); t = setTimeout(() => this._refreshList(), 220); };
+      })();
+
+      // Search box: live list refresh
+      this.$root.on('input', '#tm_ad_text_q', () => {
+        // keep charts/KPIs unchanged while typing; they refresh only on 'Apply'
+        this._refreshListDebounced();
+      });
+
+      // Group by: immediately refresh the list
       this.$root.on('change', '#tm_ad_groupby', () => {
         this.$root.data('tm-page', 1);
         this._refreshList();
       });
 
-      // Unified search (affects charts + table)
-      const deb = (fn, ms) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms||220); }; };
-      const onSearch = deb(() => { this.$root.data('tm-page', 1); this._refreshAll(); this._refreshList(); }, 250);
-      this.$root.on('input', '#tm_ad_q', onSearch);
+      // Date changes only apply on 'Apply' (same as before)
+      this.$root.on('click', '#tm_ad_apply', () => this._refreshAll());
+      this.$root.on('click', '#tm_ad_reset', () => {
+        this.$root.find('#tm_ad_date_from,#tm_ad_date_to').val('');
+        this.$root.find('#tm_ad_text_q').val('');
+        this.$root.find('#tm_ad_groupby').val('');
+        this._refreshAll();            // refresh KPIs+charts
+        this._refreshList();           // and list
+      });
 
-      // Table sort
+
+      // LIVE search: refresh both (debounced)
+      this._refreshBothDebounced = debounce(() => {
+        this.$root.data('tm-page', 1);
+        this._refreshAll();
+        this._refreshList();
+      }, 280, this);
+      this.$root.on('input', '#tm_ad_q', () => this._refreshBothDebounced());
+
+      // Sorting
       this.$root.on('click', '#tm_ad_table thead th', (e) => {
         const key = $(e.currentTarget).data('sort');
         if (!key) return;
         const cur = this.$root.data('tm-sort') || '';
         const asc = (cur === key + ' asc');
-        const next = asc ? key + ' desc' : key + ' asc';
+        const next = asc ? (key + ' desc') : (key + ' asc');
         this.$root.data('tm-sort', next);
         this._refreshList();
       });
@@ -66,32 +108,19 @@ odoo.define('task_manager.tm_admin_front', function (require) {
     },
 
     _filters: function () {
-      const df = this.$root.find('#tm_ad_date_from').val() || '';
-      const dt = this.$root.find('#tm_ad_date_to').val() || '';
-      const q  = this.$root.find('#tm_ad_q').val() || '';
-      const group = this.$root.find('#tm_ad_groupby').val() || '';
-      const page = Number(this.$root.data('tm-page') || 1);
-      const sort = this.$root.data('tm-sort') || '';
-      // one search feeds both “q” (charts) and “text_q” (list)
-      return { date_from: df, date_to: dt, q, text_q: q, group_by: group, page, sort, limit: 20 };
+      // Single source of truth for text search
+      return API.pickFilters(this.$root); 
     },
-
 
     _refreshAll: async function () {
       const f = this._filters();
-
-      // Run all calls in parallel but don't fail-fast
       const [pSummary, pDist, pLb] = await Promise.allSettled([
         API.summary(f),
         API.distribution(f),
         API.leaderboard(f),
       ]);
 
-      // Small helper
       const okVal = (p) => (p && p.status === 'fulfilled' && p.value && p.value.ok) ? p.value : null;
-      const logRej = (label, p) => { if (p && p.status === 'rejected') console.error(`${label} failed:`, p.reason); };
-
-      // KPIs
       const summary = okVal(pSummary);
       if (summary) {
         const s = summary.data || {};
@@ -100,25 +129,24 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         this.$('#tm_ad_kpi_today').text(s.due_today ?? 0);
         this.$('#tm_ad_kpi_done_period').text(s.done_period ?? 0);
         this.$('#tm_ad_kpi_blocked').text(s.blocked ?? 0);
-      } else { logRej('summary', pSummary); }
+      }
 
-      // Distribution charts
       const dist = okVal(pDist);
       if (dist) {
         const d = dist.data || {};
         Charts.updateStage(d.by_stage || []);
         Charts.updatePriority(d.by_priority || []);
         Charts.updateOverdueMgr(d.overdue_by_manager || d.by_manager_overdue || []);
-      } else { logRej('distribution', pDist); }
+        if (d.by_employee_done) Charts.updateEmpDone(d.by_employee_done || []);
+      }
 
-      // Leaderboards
       const lb = okVal(pLb);
       if (lb) {
         const L = lb.data || {};
         Charts.updateEmpDone(L.employees_done || []);
         Charts.updateEmpOverdue(L.employees_overdue || []);
         Charts.updateMgrDone(L.managers_done || []);
-      } else { logRej('leaderboard', pLb); }
+      }
     },
 
     _refreshList: async function () {
@@ -127,11 +155,9 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         const res = await API.tasks(f);
         if (!(res && res.ok)) return;
         const d = res.data;
-
         this.$root.data('tm-pages', d.pages || 1);
         this.$('#tm_ad_pager_info').text(`Page ${d.page} of ${d.pages}`);
         this.$('#tm_ad_results_info').text(`${d.total} result${d.total === 1 ? '' : 's'}`);
-
         this._renderTable(d.rows || [], this.$root.data('tm-group') || '');
       } catch (err) {
         console.error('List refresh failed:', err);
