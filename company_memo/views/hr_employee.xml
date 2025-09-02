@@ -19,7 +19,7 @@
             </field>
         </record>
 
-        <record model="ir.ui.view" id="hr_kanban_view_employees_memo_inherited2">
+        <!-- <record model="ir.ui.view" id="hr_kanban_view_employees_memo_inherited2">
             <field name="name">hr.employee.memo.kanban</field>
             <field name="model">hr.employee</field>
             <field name="inherit_id" ref="hr.hr_kanban_view_employees" />
@@ -31,6 +31,6 @@
                 </xpath>
  
             </field>
-        </record>
+        </record> -->
     </data>
 </odoo>
