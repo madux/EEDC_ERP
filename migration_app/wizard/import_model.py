@@ -1,4 +1,3 @@
-
 from odoo import fields, models ,api, _
 from tempfile import TemporaryFile
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
@@ -24,10 +23,12 @@ class ImportRecords(models.TransientModel):
             ('employee', 'Employee'),
             ('update', 'Update'),
             ('email', 'Email Update'),
+            ('appraisal', 'Appraisal Setup'),
         ],
         string='Import Type', required=True, index=True,
         copy=True, default='', 
     )
+    batch_size = fields.Integer("Batch Size", default=500, help="Number of records to process in each batch")
  
     # def excel_reader(self, index=0):
     #     if self.data_file:
@@ -149,18 +150,20 @@ class ImportRecords(models.TransientModel):
             depart_rec = department_obj.search(domain, limit=1)
             
             if depart_rec:
+                if hasattr(depart_rec, 'active') and not depart_rec.active:
+                    depart_rec.sudo().write({'active': True})
                 return depart_rec.id
             else:
                 try:
-                    # Switch to the target company context before creating
                     dept_vals = {'name': name, 'company_id': company_id}
                     department_id = department_obj.with_company(company_id).sudo().create(dept_vals).id
                     return department_id
                 except Exception as e:
                     _logger.error(f"Failed to create department {name}: {str(e)}")
-                    # Try to find existing department without company constraint as fallback
                     fallback_dept = department_obj.search([('name', '=', name)], limit=1)
                     if fallback_dept:
+                        if hasattr(fallback_dept, 'active') and not fallback_dept.active:
+                            fallback_dept.sudo().write({'active': True})
                         _logger.info(f"Using existing department {name} from different company")
                         return fallback_dept.id
                     return None
@@ -172,7 +175,12 @@ class ImportRecords(models.TransientModel):
         if not name:
             return False
         levelId = self.env['hr.level'].search([('name', '=', name)], limit=1)
-        return levelId.id if levelId else self.env['hr.level'].create({'name': name}).id
+        if levelId:
+            if hasattr(levelId, 'active') and not levelId.active:
+                levelId.sudo().write({'active': True})
+            return levelId.id
+        else:
+            return self.env['hr.level'].create({'name': name}).id
     
     def get_district_id(self, name):
         """Searches for a district by name and creates it if not found."""
@@ -182,6 +190,8 @@ class ImportRecords(models.TransientModel):
         District = self.env['multi.branch']
         district_rec = District.search([('name', '=', name.strip())], limit=1)
         if district_rec:
+            if hasattr(district_rec, 'active') and not district_rec.active:
+                district_rec.sudo().write({'active': True})
             return district_rec.id
         else:
             new_district = District.create({'name': name.strip()})
@@ -192,13 +202,23 @@ class ImportRecords(models.TransientModel):
         if not name:
             return False 
         rec = self.env['hr.region'].search([('name', '=', name)], limit=1)
-        return rec.id if rec else self.env['hr.region'].create({'name': name}).id
+        if rec:
+            if hasattr(rec, 'active') and not rec.active:
+                rec.sudo().write({'active': True})
+            return rec.id
+        else:
+            return self.env['hr.region'].create({'name': name}).id
 
     def get_grade_id(self, name):
         if not name:
             return False
         gradeId = self.env['hr.grade'].search([('name', '=', name)], limit=1)
-        return gradeId.id if gradeId else self.env['hr.grade'].create({'name': name}).id
+        if gradeId:
+            if hasattr(gradeId, 'active') and not gradeId.active:
+                gradeId.sudo().write({'active': True})
+            return gradeId.id
+        else:
+            return self.env['hr.grade'].create({'name': name}).id
     
     def get_designation_id(self, name, departmentid, company_id=None):
         """Get job/designation with company context - Fixed multi-company access"""
@@ -216,6 +236,8 @@ class ImportRecords(models.TransientModel):
         designationId = self.env['hr.job'].search(domain, limit=1)
         
         if designationId:
+            if hasattr(designationId, 'active') and not designationId.active:
+                designationId.sudo().write({'active': True})
             return designationId.id
         else:
             try:
@@ -227,6 +249,8 @@ class ImportRecords(models.TransientModel):
                 _logger.error(f"Failed to create job {name}: {str(e)}")
                 fallback_job = self.env['hr.job'].search([('name', '=', name)], limit=1)
                 if fallback_job:
+                    if hasattr(fallback_job, 'active') and not fallback_job.active:
+                        fallback_job.sudo().write({'active': True})
                     _logger.info(f"Using existing job {name} from different company")
                     return fallback_job.id
                 return None
@@ -235,13 +259,23 @@ class ImportRecords(models.TransientModel):
         if not name:
             return False
         rec = self.env['hr.unit'].search([('name', '=', name)], limit=1)
-        return rec.id if rec else self.env['hr.unit'].create({'name': name}).id
+        if rec:
+            if hasattr(rec, 'active') and not rec.active:
+                rec.sudo().write({'active': True})
+            return rec.id
+        else:
+            return self.env['hr.unit'].create({'name': name}).id
 
     def get_sub_unit_id(self, name):
         if not name:
             return False
         rec = self.env['hr.work.unit'].search([('name', '=', name)], limit=1)
-        return rec.id if rec else self.env['hr.work.unit'].create({'name': name}).id
+        if rec:
+            if hasattr(rec, 'active') and not rec.active:
+                rec.sudo().write({'active': True})
+            return rec.id
+        else:
+            return self.env['hr.work.unit'].create({'name': name}).id
     
     def get_company_id(self, name):
         if not name:
@@ -262,6 +296,23 @@ class ImportRecords(models.TransientModel):
         except Exception as e:
             _logger.error(f"Failed to ensure company {company_id} on user {user.id}: {e}")
 
+    def unarchive_employee_if_needed(self, employee):
+        """Unarchive employee if it's archived"""
+        if employee and not employee.active:
+            employee.sudo().write({'active': True})
+            _logger.info(f"Unarchived employee: {employee.name}")
+
+    def unarchive_user_if_needed(self, user):
+        """Unarchive user if it's archived"""
+        if user and not user.active:
+            user.sudo().write({'active': True})
+            _logger.info(f"Unarchived user: {user.login}")
+
+    def process_data_in_batches(self, file_data, batch_size=500):
+        """Process data in batches to handle memory efficiently"""
+        for i in range(0, len(file_data), batch_size):
+            yield file_data[i:i + batch_size]
+
     def import_records_action(self):
         if self.data_file:
             file_datas = base64.b64decode(self.data_file)
@@ -275,6 +326,7 @@ class ImportRecords(models.TransientModel):
             self.validate_excel_structure(file_data)
         else:
             raise ValidationError('Please select file and type of file')
+        
         errors = ['The Following messages occurred']
         employee_obj = self.env['hr.employee']
         unimport_count, count = 0, 0
@@ -291,6 +343,8 @@ class ImportRecords(models.TransientModel):
                     ('barcode', '=', code)], limit = 1)
                 if employee:
                     employee_id = employee.id
+                    # Unarchive if needed
+                    self.unarchive_employee_if_needed(employee)
                 else:
                     employee_id = False 
             return employee_id
@@ -308,19 +362,25 @@ class ImportRecords(models.TransientModel):
             reviewer_group = self.env.ref("hr_pms.group_pms_reviewer")
             supervisor_group = self.env.ref("hr_pms.group_pms_supervisor")
             if appraiser and employee:
+                self.unarchive_employee_if_needed(appraiser)
+                
                 if type == "ar":
                     employee.sudo().write({
                         'administrative_supervisor_id': appraiser.id
                         })
                     # raise ValidationError("this is the AR ======>{} and {} with".format(appraiser.name, employee.name, employee.administrative_supervisor_id.name))
                     group_list = [(6, 0, [emp_group.id, supervisor_group.id])]
-                    appraiser.user_id.sudo().write({'groups_id':group_list})
+                    if appraiser.user_id:
+                        self.unarchive_user_if_needed(appraiser.user_id)
+                        appraiser.user_id.sudo().write({'groups_id':group_list})
                 if type == "fr":
                     group_list = [(6, 0, [emp_group.id, supervisor_group.id])]
                     employee.sudo().write({
                         'parent_id': appraiser.id
                     })
-                    appraiser.user_id.sudo().write({'groups_id':group_list})
+                    if appraiser.user_id:
+                        self.unarchive_user_if_needed(appraiser.user_id)
+                        appraiser.user_id.sudo().write({'groups_id':group_list})
 
                 if type == "rr":
                     group_list = [(6, 0, [emp_group.id, supervisor_group.id, reviewer_group.id])]
@@ -328,7 +388,9 @@ class ImportRecords(models.TransientModel):
                     employee.sudo().update({
                         'reviewer_id': appraiser.id
                     })
-                    appraiser.user_id.sudo().write({'groups_id':group_list})
+                    if appraiser.user_id:
+                        self.unarchive_user_if_needed(appraiser.user_id)
+                        appraiser.user_id.sudo().write({'groups_id':group_list})
 
         def reset_employee_user_password(employee_id, user_id):
             if user_id:
@@ -393,15 +455,18 @@ class ImportRecords(models.TransientModel):
             if emp_group:
                 group_list.append((4, emp_group.id))
 
-            groups_to_remove = Group.search(
-                ['|','|',
-                 ('name', '=', 'Contact Creation'),
-                 ('name','=','Portal'),
-                 ('id', 'in', [
-                    self.env.ref('hr.group_hr_manager').id,
-                    self.env.ref('hr.group_hr_user').id,
-                 ])]
-            )
+            groups_to_remove = Group.search([
+                '|', '|',
+                ('name', '=', 'Contact Creation'),
+                ('name','=','Portal'),
+                ('id', 'in', [
+                    self.env.ref('hr.group_hr_manager', raise_if_not_found=False).id,
+                    self.env.ref('hr.group_hr_user', raise_if_not_found=False).id,
+                ] if all([
+                    self.env.ref('hr.group_hr_manager', raise_if_not_found=False),
+                    self.env.ref('hr.group_hr_user', raise_if_not_found=False)
+                ]) else [])
+            ])
             for group in groups_to_remove:
                 tup = (3, group.id)
                 group_list.append(tup)
@@ -418,7 +483,6 @@ class ImportRecords(models.TransientModel):
                 user_vals = {
                     'name': fullname,
                     'login': login,
-                    # do NOT force company_id here until company_ids is set (below we handle correctly)
                     'branch_id': branch_id,
                 }
                 _logger.info(f"Creating/Getting employee Portal User..with password {password}.")
@@ -427,6 +491,7 @@ class ImportRecords(models.TransientModel):
                 user = User.search([('login', '=', login)], limit=1)
                 if user:
                     _logger.info("User already exists... keeping existing user type")
+                    self.unarchive_user_if_needed(user)
                     if company_id:
                         try:
                             self.ensure_user_has_company(user, company_id)
@@ -446,90 +511,96 @@ class ImportRecords(models.TransientModel):
                 return user, password
             return user, password
         
+        # Process data in batches
+        batch_size = self.batch_size or 500
+        total_batches = len(file_data) // batch_size + (1 if len(file_data) % batch_size else 0)
+        
         if self.import_type == "employee":
-            for row in file_data:
-                try:
-                    with self.env.cr.savepoint():
-                        if find_existing_employee(row[1]):
-                            unsuccess_records.append(f'Employee with {str(row[1])} Already exists')
-                            continue
-                        
-                        static_emp_date = '01/01/2014'
-                        emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
-                        appt_date = None
-
-                        if row[14]:
-                            if type(row[14]) in [int, float]:
-                                appt_date = datetime(*xlrd.xldate_as_tuple(row[14], 0)) 
-                            elif type(row[14]) in [str]:
-                                if '-' in row[14]:
-                                    datesplit = row[14].split('-') 
-                                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
-                                    if len(y) == 2:
-                                        y = f"20{y}" if int(y) <= 50 else f"19{y}"
-                                    appt_date = f"{d}-{m}-{y}"
-                                    appt_date = datetime.strptime(appt_date, '%d-%b-%Y') 
-                                elif '/' in row[14]:
-                                    datesplit = row[14].split('/') 
-                                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
-                                    if len(y) == 2:
-                                        y = f"20{y}" if int(y) <= 50 else f"19{y}"
-                                    appt_date = f"{d}/{m}/{y}"
-                                    appt_date = datetime.strptime(appt_date, '%d/%m/%Y') 
-                                else:
-                                    appt_date = datetime(*xlrd.xldate_as_tuple(float(row[14]), 0))
-
-                        dt = appt_date or emp_date
-                        
-                        company_id, branch_id = self.get_company_and_district_id(
-                            row[9] if len(row) > 9 else None,
-                            row[26] if len(row) > 26 else None
-                        )
-                        
-                        hr_district_name = row[9] if len(row) > 9 else None
-                        hr_district_id = self.get_hr_district_id(hr_district_name)
-                        
-                        departmentid = self.create_department(row[11], company_id) if row[11] else None
-                        
-                        vals = dict(
-                            serial = row[0],
-                            staff_number = str(int(row[1])) if type(row[1]) in [int, float] else row[1],
-                            fullname = row[2].capitalize(),
-                            level_id = self.get_level_id(row[3].strip()) if row[3] else None,
-                            district = hr_district_id,
-                            branch_id = branch_id,
-                            gender = 'male' if row[10] in ['m', 'M'] else 'female' if row[10] in ['f', 'F'] else 'other',
-                            department_id = departmentid,
-                            unit_id = self.get_unit_id(row[12].strip()) if row[12] else None,
-                            sub_unit_id = self.get_sub_unit_id(row[13].strip()) if row[13] else None,
-                            employment_date = dt,
-                            grade_id = self.get_grade_id(row[15].strip()) if row[15] else None,
-                            job_id = self.get_designation_id(row[16], departmentid, company_id) if row[16] else None,
-                            functional_appraiser_id = find_existing_employee(row[18]) if len(row) > 18 and row[18] else None,
-                            administrative_supervisor_name = row[19] if len(row) > 19 and row[19] else None,
-                            administrative_supervisor_id = find_existing_employee(str(row[20])) if len(row) > 20 and row[20] else None,
-                            functional_reviewer_id = find_existing_employee(str(row[22])) if len(row) > 22 and row[22] else None,
-                            email = row[24].strip() if len(row) > 24 and row[24] else None,
-                            private_email = row[24].strip() if len(row) > 24 and row[24] else None, 
-                            work_phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
-                            phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
-                            company_id = company_id,
-                            # hr_region_id = self.get_region_id(row[XX]) if len(row) > XX and row[XX] else None,
-                        )
-                        create_employee(vals)
-                        count += 1
-                        success_records.append(vals.get('fullname'))
+            batch_num = 0
+            for batch_data in self.process_data_in_batches(file_data, batch_size):
+                batch_num += 1
+                _logger.info(f"Processing batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
-                # This outer 'except' will catch any error from inside the savepoint
-                # or the find_existing_employee check before it. The transaction
-                # for the next iteration of the loop will be clean.
-                except Exception as e:
-                    error_msg = f"Row {row[0]}: Error importing {row[2] if len(row) > 2 else 'Unknown'} - {str(e)}"
-                    _logger.error(error_msg)
-                    unsuccess_records.append(error_msg)
-                    continue
-                # except Exception as e:
-                #     raise ValidationError(f"Issue at Line {row[0]}: Error message {e}")
+                for row in batch_data:
+                    try:
+                        with self.env.cr.savepoint():
+                            if find_existing_employee(row[1]):
+                                unsuccess_records.append(f'Employee with {str(row[1])} Already exists')
+                                continue
+                            
+                            static_emp_date = '01/01/2014'
+                            emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
+                            appt_date = None
+
+                            if row[14]:
+                                if type(row[14]) in [int, float]:
+                                    appt_date = datetime(*xlrd.xldate_as_tuple(row[14], 0)) 
+                                elif type(row[14]) in [str]:
+                                    if '-' in row[14]:
+                                        datesplit = row[14].split('-') 
+                                        d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                                        if len(y) == 2:
+                                            y = f"20{y}" if int(y) <= 50 else f"19{y}"
+                                        appt_date = f"{d}-{m}-{y}"
+                                        appt_date = datetime.strptime(appt_date, '%d-%b-%Y') 
+                                    elif '/' in row[14]:
+                                        datesplit = row[14].split('/') 
+                                        d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                                        if len(y) == 2:
+                                            y = f"20{y}" if int(y) <= 50 else f"19{y}"
+                                        appt_date = f"{d}/{m}/{y}"
+                                        appt_date = datetime.strptime(appt_date, '%d/%m/%Y') 
+                                    else:
+                                        appt_date = datetime(*xlrd.xldate_as_tuple(float(row[14]), 0))
+
+                            dt = appt_date or emp_date
+                            
+                            company_id, branch_id = self.get_company_and_district_id(
+                                row[9] if len(row) > 9 else None,
+                                row[26] if len(row) > 26 else None
+                            )
+                            
+                            hr_district_name = row[9] if len(row) > 9 else None
+                            hr_district_id = self.get_hr_district_id(hr_district_name)
+                            
+                            departmentid = self.create_department(row[11], company_id) if row[11] else None
+                            
+                            vals = dict(
+                                serial = row[0],
+                                staff_number = str(int(row[1])) if type(row[1]) in [int, float] else row[1],
+                                fullname = row[2].capitalize(),
+                                level_id = self.get_level_id(row[3].strip()) if row[3] else None,
+                                district = hr_district_id,
+                                branch_id = branch_id,
+                                gender = 'male' if row[10] in ['m', 'M'] else 'female' if row[10] in ['f', 'F'] else 'other',
+                                department_id = departmentid,
+                                unit_id = self.get_unit_id(row[12].strip()) if row[12] else None,
+                                sub_unit_id = self.get_sub_unit_id(row[13].strip()) if row[13] else None,
+                                employment_date = dt,
+                                grade_id = self.get_grade_id(row[15].strip()) if row[15] else None,
+                                job_id = self.get_designation_id(row[16], departmentid, company_id) if row[16] else None,
+                                functional_appraiser_id = find_existing_employee(row[18]) if len(row) > 18 and row[18] else None,
+                                administrative_supervisor_name = row[19] if len(row) > 19 and row[19] else None,
+                                administrative_supervisor_id = find_existing_employee(str(row[20])) if len(row) > 20 and row[20] else None,
+                                functional_reviewer_id = find_existing_employee(str(row[22])) if len(row) > 22 and row[22] else None,
+                                email = row[24].strip() if len(row) > 24 and row[24] else None,
+                                private_email = row[24].strip() if len(row) > 24 and row[24] else None, 
+                                work_phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
+                                phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
+                                company_id = company_id,
+                                # hr_region_id = self.get_region_id(row[XX]) if len(row) > XX and row[XX] else None,
+                            )
+                            create_employee(vals)
+                            count += 1
+                            success_records.append(vals.get('fullname'))
+                    
+                    except Exception as e:
+                        error_msg = f"Row {row[0]}: Error importing {row[2] if len(row) > 2 else 'Unknown'} - {str(e)}"
+                        _logger.error(error_msg)
+                        unsuccess_records.append(error_msg)
+                        continue
+                        
+                _logger.info(f"Completed batch {batch_num} of {total_batches}")
                 
             errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
             errors.append('Unsuccessful Import(s): '+str(len(unsuccess_records))+' Record(s)')
@@ -538,166 +609,278 @@ class ImportRecords(models.TransientModel):
                 return self.confirm_notification(message) 
 
         elif self.import_type == "update":
-            for row in file_data:
-                ########################### This is for update purposes:
-                employee_code = str(int(row[1])) if type(row[1]) == float else row[1]
-                static_emp_date = '01/01/2014'
-                emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
-                appt_date = None
+            batch_num = 0
+            for batch_data in self.process_data_in_batches(file_data, batch_size):
+                batch_num += 1
+                _logger.info(f"Processing update batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
-                if row[14]:
-                    if type(row[14]) in [int, float]:
-                        appt_date = datetime(*xlrd.xldate_as_tuple(row[14], 0)) 
-                    elif type(row[14]) in [str]:
-                        if '-' in row[14]:
-                            datesplit = row[14].split('-')
-                            d, m, y = datesplit[0], datesplit[1], datesplit[2]
-                            if len(y) == 2:
-                                y = f"20{y}" if int(y) <= 50 else f"19{y}"
-                            appt_date = f"{d}-{m}-{y}"
-                            appt_date = datetime.strptime(appt_date, '%d-%b-%Y') 
-                        elif '/' in row[14]:
-                            datesplit = row[14].split('/')
-                            d, m, y = datesplit[0], datesplit[1], datesplit[2]
-                            if len(y) == 2:
-                                y = f"20{y}" if int(y) <= 50 else f"19{y}"
-                            appt_date = f"{d}/{m}/{y}"
-                            appt_date = datetime.strptime(appt_date, '%d/%m/%Y') 
-                        else:
-                            appt_date = datetime(*xlrd.xldate_as_tuple(float(row[14]), 0)) #eg 4554545
-                
-                dt = appt_date or emp_date
-                
-                # Get company and district
-                company_id, district_id = self.get_company_and_district_id(
-                    row[9] if len(row) > 9 else None,  # district name
-                    row[26] if len(row) > 26 else None  # company name
-                )
-                
-                departmentid = self.create_department(row[11], company_id) if row[11] else None
-                
-                employee_vals = dict(
-                    employee_number = str(int(row[1])),
-                    # employee_identification_code = employee_code,
-                    name = row[2].capitalize(),
-                    level_id = self.get_level_id(row[3].strip()) if row[3] else None,
-                    ps_district_id = district_id,
-                    gender = 'male' if row[10] in ['m', 'M'] else 'female' if row[10] in ['f', 'F'] else 'other',
-                    department_id = departmentid,
-                    unit_id = self.get_unit_id(row[12].strip()) if row[12] else None,
-                    work_unit_id = self.get_sub_unit_id(row[13].strip()) if row[13] else None,
-                    employment_date = dt,
-                    grade_id = self.get_grade_id(row[15].strip()) if row[15] else None,
-                    job_id = self.get_designation_id(row[16], departmentid, company_id) if row[16] else None, 
-                    work_email = row[24].strip() if len(row) > 24 and row[24] else None,
-                    private_email = row[24].strip() if len(row) > 24 and row[24] else None,
-                    work_phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
-                    phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
-                    company_id = company_id,
-                    # hr_region_id = self.get_region_id(row[XX]) if len(row) > XX and row[XX] else None,
-                )
-                
-                aa = row[20] if len(row) > 20 else None
-                fa = row[18] if len(row) > 18 else None 
-                rr = row[22] if len(row) > 22 else None
-                
-                vals = dict(
-                    staff_number = employee_code,
-                    functional_appraiser_id = fa,
-                    administrative_supervisor_id = aa,
-                    functional_reviewer_id = rr, 
-                    private_email = employee_vals.get('private_email'),
-                    email = employee_vals.get('work_email'),
-                    fullname = employee_vals.get('name'),
-                    company_id = employee_vals.get('company_id'),
-                )
-                
-                ## if fa, add, fr get the employee id, add the 
-                ## attributes to employee, also update the f employee user
-                ## group with the groups
-                employee_id = self.env['hr.employee'].search([
-                '|', ('employee_number', '=', employee_code), 
-                ('barcode', '=', employee_code)], limit = 1)
-                
-                if employee_id:
-                    # employee_id.job_id.sudo().write({
-                    #     'department_id': employee_id.department_id.id
-                    # })
-                    if aa:
-                        administrative_supervisor_id = str(int(vals.get('administrative_supervisor_id'))) \
-                        if type(aa) == float else aa
-                        generate_emp_appraiser(
-                            employee_id, 
-                            administrative_supervisor_id, 
-                            'ar', 
+                for row in batch_data:
+                    try:
+                        with self.env.cr.savepoint():
+                            employee_code = str(int(row[1])) if type(row[1]) == float else row[1]
+                            static_emp_date = '01/01/2014'
+                            emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
+                            appt_date = None
+                            
+                            if row[14]:
+                                if type(row[14]) in [int, float]:
+                                    appt_date = datetime(*xlrd.xldate_as_tuple(row[14], 0)) 
+                                elif type(row[14]) in [str]:
+                                    if '-' in row[14]:
+                                        datesplit = row[14].split('-')
+                                        d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                                        if len(y) == 2:
+                                            y = f"20{y}" if int(y) <= 50 else f"19{y}"
+                                        appt_date = f"{d}-{m}-{y}"
+                                        appt_date = datetime.strptime(appt_date, '%d-%b-%Y') 
+                                    elif '/' in row[14]:
+                                        datesplit = row[14].split('/')
+                                        d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                                        if len(y) == 2:
+                                            y = f"20{y}" if int(y) <= 50 else f"19{y}"
+                                        appt_date = f"{d}/{m}/{y}"
+                                        appt_date = datetime.strptime(appt_date, '%d/%m/%Y') 
+                                    else:
+                                        appt_date = datetime(*xlrd.xldate_as_tuple(float(row[14]), 0))
+                            
+                            dt = appt_date or emp_date
+                            
+                            company_id, district_id = self.get_company_and_district_id(
+                                row[9] if len(row) > 9 else None,
+                                row[26] if len(row) > 26 else None
                             )
-                    if fa:
-                        functional_appraiser_id = str(int(vals.get('functional_appraiser_id'))) \
-                        if type(fa) == float else fa
-                        generate_emp_appraiser(
-                            employee_id, 
-                            functional_appraiser_id, 
-                            'fr', 
+                            
+                            departmentid = self.create_department(row[11], company_id) if row[11] else None
+                            
+                            employee_vals = dict(
+                                employee_number = str(int(row[1])),
+                                # employee_identification_code = employee_code,
+                                name = row[2].capitalize(),
+                                level_id = self.get_level_id(row[3].strip()) if row[3] else None,
+                                ps_district_id = district_id,
+                                gender = 'male' if row[10] in ['m', 'M'] else 'female' if row[10] in ['f', 'F'] else 'other',
+                                department_id = departmentid,
+                                unit_id = self.get_unit_id(row[12].strip()) if row[12] else None,
+                                work_unit_id = self.get_sub_unit_id(row[13].strip()) if row[13] else None,
+                                employment_date = dt,
+                                grade_id = self.get_grade_id(row[15].strip()) if row[15] else None,
+                                job_id = self.get_designation_id(row[16], departmentid, company_id) if row[16] else None, 
+                                work_email = row[24].strip() if len(row) > 24 and row[24] else None,
+                                private_email = row[24].strip() if len(row) > 24 and row[24] else None,
+                                work_phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
+                                phone = self.format_phone(row[25]) if len(row) > 25 and row[25] else None,
+                                company_id = company_id,
+                                # hr_region_id = self.get_region_id(row[XX]) if len(row) > XX and row[XX] else None,
                             )
-                    if rr:
-                        functional_reviewer_id = str(int(vals.get('functional_reviewer_id'))) \
-                        if type(rr) == float else rr
-                        generate_emp_appraiser(
-                            employee_id, 
-                            functional_reviewer_id,
-                            'rr', 
+                            
+                            vals = dict(
+                                staff_number = employee_code,
+                                private_email = employee_vals.get('private_email'),
+                                email = employee_vals.get('work_email'),
+                                fullname = employee_vals.get('name'),
+                                company_id = employee_vals.get('company_id'),
+                                branch_id = district_id,
                             )
-                    employee_id.sudo().update(employee_vals)
-                    
-                    if not employee_id.user_id:
-                        # employee_vals['fullname'] = employee_vals.get('name')
-                        user, password = generate_user(vals)
-                        employee_id.sudo().write({
-                            'user_id': user.id if user else False,
-                        })
-                        if password:
-                            employee_id.sudo().write({
-                                'migrated_password': password
-                            })
-                    else:
-                        if vals.get('company_id') and employee_id.user_id:
-                            try:
-                                self.ensure_user_has_company(employee_id.user_id, vals.get('company_id'))
-                            except Exception:
-                                _logger.exception("Failed to ensure company for existing user during update")
+                            
+                            ## if fa, add, fr get the employee id, add the 
+                            ## attributes to employee, also update the f employee user
+                            ## group with the groups
+                            employee_id = self.env['hr.employee'].search([
+                            '|', ('employee_number', '=', employee_code), 
+                            ('barcode', '=', employee_code)], limit = 1)
+                            
+                            if employee_id:
+                                # Unarchive employee if needed
+                                self.unarchive_employee_if_needed(employee_id)
                                 
-                    _logger.info(f'Updating records for {employee_id.employee_number} at line {row[0]}')
-                    count += 1
-                else:
-                    unsuccess_records.append(employee_code)
+                                employee_id.sudo().update(employee_vals)
+                                
+                                if not employee_id.user_id:
+                                    # employee_vals['fullname'] = employee_vals.get('name')
+                                    user, password = generate_user(vals)
+                                    employee_id.sudo().write({
+                                        'user_id': user.id if user else False,
+                                    })
+                                    if password:
+                                        employee_id.sudo().write({
+                                            'migrated_password': password
+                                        })
+                                else:
+                                    if vals.get('company_id') and employee_id.user_id:
+                                        try:
+                                            self.unarchive_user_if_needed(employee_id.user_id)
+                                            self.ensure_user_has_company(employee_id.user_id, vals.get('company_id'))
+                                        except Exception:
+                                            _logger.exception("Failed to ensure company for existing user during update")
+                                            
+                                _logger.info(f'Updating records for {employee_id.employee_number} at line {row[0]}')
+                                count += 1
+                                success_records.append(employee_vals.get('name'))
+                            else:
+                                unsuccess_records.append(f"Employee {employee_code} not found")
+                                
+                    except Exception as e:
+                        error_msg = f"Row {row[0]}: Error updating {row[2] if len(row) > 2 else 'Unknown'} - {str(e)}"
+                        _logger.error(error_msg)
+                        unsuccess_records.append(error_msg)
+                        continue
+                        
+                _logger.info(f"Completed update batch {batch_num} of {total_batches}")
             
             errors.append('Successful Update(s): ' +str(count))
-            errors.append('Unsuccessful Update(s): '+str(unsuccess_records)+' Record(s)')
+            errors.append('Unsuccessful Update(s): '+str(len(unsuccess_records))+' Record(s)')
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message)
-        elif self.import_type == "email":
-            for row in file_data:
-                if row[0] and len(row) > 3 and row[3]:
-                    staff_number = str(row[0]).strip()
-                    email = str(row[3]).strip()
-                    employee_id = self.env['hr.employee'].search([
-                    '|', ('employee_number', '=', staff_number), 
-                    ('barcode', '=', staff_number)], limit = 1)
-                    if employee_id:
-                        employee_id.sudo().write({
-                            'work_email': email
-                        })
-                        if employee_id.user_id and email.endswith('@enugudisco.com'):
-                            employee_id.user_id.sudo().write({'login': email})
-                        count += 1
-                    else:
-                        unsuccess_records.append(staff_number)
-                else:
-                    unsuccess_records.append(row[0] if row else 'Empty Row')
+                
+        elif self.import_type == "appraisal":
+            batch_num = 0
+            for batch_data in self.process_data_in_batches(file_data, batch_size):
+                batch_num += 1
+                _logger.info(f"Processing appraisal batch {batch_num} of {total_batches} ({len(batch_data)} records)")
+                
+                for row in batch_data:
+                    try:
+                        with self.env.cr.savepoint():
+                            employee_code = str(int(row[1])) if type(row[1]) == float else row[1]
+                            
+                            company_id, district_id = self.get_company_and_district_id(
+                                row[9] if len(row) > 9 else None,
+                                row[26] if len(row) > 26 else None
+                            )
+                            
+                            vals = dict(
+                                staff_number = employee_code,
+                                functional_appraiser_id = row[18] if len(row) > 18 else None,
+                                administrative_supervisor_id = row[20] if len(row) > 20 else None,
+                                functional_reviewer_id = row[22] if len(row) > 22 else None, 
+                                private_email = row[24].strip() if len(row) > 24 and row[24] else None,
+                                email = row[24].strip() if len(row) > 24 and row[24] else None,
+                                fullname = row[2].capitalize() if len(row) > 2 else None,
+                                company_id = company_id,
+                            )
+                            
+                            ## if fa, add, fr get the employee id, add the 
+                            ## attributes to employee, also update the f employee user
+                            ## group with the groups
+                            employee_id = self.env['hr.employee'].search([
+                            '|', ('employee_number', '=', employee_code), 
+                            ('barcode', '=', employee_code)], limit = 1)
+                            
+                            if employee_id:
+                                self.unarchive_employee_if_needed(employee_id)
+                                
+                                # employee_id.job_id.sudo().write({
+                                #     'department_id': employee_id.department_id.id
+                                # })
+                                aa = row[20] if len(row) > 20 else None
+                                fa = row[18] if len(row) > 18 else None 
+                                rr = row[22] if len(row) > 22 else None
+                                
+                                if aa:
+                                    administrative_supervisor_id = str(int(vals.get('administrative_supervisor_id'))) \
+                                    if type(aa) == float else aa
+                                    generate_emp_appraiser(
+                                        employee_id, 
+                                        administrative_supervisor_id, 
+                                        'ar', 
+                                        )
+                                if fa:
+                                    functional_appraiser_id = str(int(vals.get('functional_appraiser_id'))) \
+                                    if type(fa) == float else fa
+                                    generate_emp_appraiser(
+                                        employee_id, 
+                                        functional_appraiser_id, 
+                                        'fr', 
+                                        )
+                                if rr:
+                                    functional_reviewer_id = str(int(vals.get('functional_reviewer_id'))) \
+                                    if type(rr) == float else rr
+                                    generate_emp_appraiser(
+                                        employee_id, 
+                                        functional_reviewer_id,
+                                        'rr', 
+                                        )
+                                
+                                if not employee_id.user_id:
+                                    # employee_vals['fullname'] = employee_vals.get('name')
+                                    user, password = generate_user(vals)
+                                    employee_id.sudo().write({
+                                        'user_id': user.id if user else False,
+                                    })
+                                    if password:
+                                        employee_id.sudo().write({
+                                            'migrated_password': password
+                                        })
+                                else:
+                                    if vals.get('company_id') and employee_id.user_id:
+                                        try:
+                                            self.unarchive_user_if_needed(employee_id.user_id)
+                                            self.ensure_user_has_company(employee_id.user_id, vals.get('company_id'))
+                                        except Exception:
+                                            _logger.exception("Failed to ensure company for existing user during appraisal")
+                                            
+                                _logger.info(f'Setting up appraisal for {employee_id.employee_number} at line {row[0]}')
+                                count += 1
+                                success_records.append(employee_id.name)
+                            else:
+                                unsuccess_records.append(f"Employee {employee_code} not found")
+                                
+                    except Exception as e:
+                        error_msg = f"Row {row[0]}: Error setting up appraisal for {row[2] if len(row) > 2 else 'Unknown'} - {str(e)}"
+                        _logger.error(error_msg)
+                        unsuccess_records.append(error_msg)
+                        continue
+                        
+                _logger.info(f"Completed appraisal batch {batch_num} of {total_batches}")
             
-            errors.append('Successful Update(s): ' +str(count))
-            errors.append('Unsuccessful Update(s): '+str(unsuccess_records)+' Record(s)')
+            errors.append('Successful Appraisal Setup(s): ' +str(count))
+            errors.append('Unsuccessful Appraisal Setup(s): '+str(len(unsuccess_records))+' Record(s)')
+            if len(errors) > 1:
+                message = '\n'.join(errors)
+                return self.confirm_notification(message)
+                
+        elif self.import_type == "email":
+            batch_num = 0
+            for batch_data in self.process_data_in_batches(file_data, batch_size):
+                batch_num += 1
+                _logger.info(f"Processing email batch {batch_num} of {total_batches} ({len(batch_data)} records)")
+                
+                for row in batch_data:
+                    try:
+                        with self.env.cr.savepoint():
+                            if row[0] and len(row) > 3 and row[3]:
+                                staff_number = str(row[0]).strip()
+                                email = str(row[3]).strip()
+                                employee_id = self.env['hr.employee'].search([
+                                '|', ('employee_number', '=', staff_number), 
+                                ('barcode', '=', staff_number)], limit = 1)
+                                if employee_id:
+                                    self.unarchive_employee_if_needed(employee_id)
+                                    
+                                    employee_id.sudo().write({
+                                        'work_email': email
+                                    })
+                                    if employee_id.user_id and email.endswith('@enugudisco.com'):
+                                        self.unarchive_user_if_needed(employee_id.user_id)
+                                        employee_id.user_id.sudo().write({'login': email})
+                                    count += 1
+                                    success_records.append(employee_id.name)
+                                else:
+                                    unsuccess_records.append(f"Employee {staff_number} not found")
+                            else:
+                                unsuccess_records.append(f"Invalid row data: {row[0] if row else 'Empty Row'}")
+                                
+                    except Exception as e:
+                        error_msg = f"Row {row[0] if row else 'Unknown'}: Error updating email - {str(e)}"
+                        _logger.error(error_msg)
+                        unsuccess_records.append(error_msg)
+                        continue
+                        
+                _logger.info(f"Completed email batch {batch_num} of {total_batches}")
+            
+            errors.append('Successful Email Update(s): ' +str(count))
+            errors.append('Unsuccessful Email Update(s): '+str(len(unsuccess_records))+' Record(s)')
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
@@ -729,5 +912,3 @@ class MigrationDialogModel(models.TransientModel):
         return False 
 
     name = fields.Text(string="Message",readonly=True,default=get_default)
-
- 
