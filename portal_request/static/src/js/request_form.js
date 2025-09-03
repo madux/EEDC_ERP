@@ -12,14 +12,16 @@ odoo.define('portal_request.portal_request_form', function (require) {
     let alert_modal = $('#portal_request_alert_modal');
     let successful_alert = $('#successful_alert');
     let modal_message = $('#display_modal_message');
-    let divRefuseCommentMessage = $('.div_refuse_comment_message');
+    let divRefuseCommentMessage = $('#div_refuse_comment_message');
     let modalfooter4cancel = $('#modalfooter4cancel');
     let refuseCommentMessage = $('#refuse_comment_message');
+    $('input[name=is_edit_mode]').prop('checked', false);
 
     // hiding the components until options is indicated
     divRefuseCommentMessage.hide()
     modalfooter4cancel.hide()
     refuseCommentMessage.attr('required', false);
+    let localStorage = window.localStorage;
 
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
@@ -60,7 +62,26 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 return false;
             });
         } 
-    } 
+    }
+
+    let trigger_date_function = function(dateElement, minDate=new Date(), maxDate=null){
+        dateElement.datepicker('destroy').datepicker({
+            onSelect: function (ev) {
+                dateElement.trigger('blur')
+            },
+            dateFormat: 'mm/dd/yy',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '2023:2050',
+            maxDate: maxDate,
+            minDate: minDate,
+            // Disable Saturday (6) & Sunday (0)
+            beforeShowDay: function (date) {
+                var day = date.getDay();
+                return [(day != 0 && day != 6), ''];
+            }
+        });
+    }
 
     let saveChangedFieldsValues = function(thiss){
         let leave_type_id = $("#leave_type_id")
@@ -70,7 +91,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
         let leave_reliever_ids = $("#leave_reliever_ids")
         let description = $("#description")
         let record_id = $(".record_id").attr('id')
-
+        checkEditableRequiredFields()
         // call a save route 
         thiss._rpc({
             route: '/save/data/',
@@ -97,6 +118,15 @@ odoo.define('portal_request.portal_request_form', function (require) {
         });
     }
 
+    let storeOldFieldsValue = function(){
+        let storeFieldItem = {};
+        $('input,textarea,select,select2').each(function(ev){
+            var field_id = $(this);
+            storeFieldItem[`${field_id.attr('id')}`] = field_id.val()
+        });
+        localStorage.setItem('oldValueStore', JSON.stringify(storeFieldItem))
+    }
+
     let makeWritableFieldsEditable = function(){
         console.log('All writable fields are now readable to edit');
         // store values of old records in localstorage ==> oldValueStore
@@ -108,10 +138,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
         // $('input,textarea,select,select2').filter('[readonly]:visible').each(function(ev){
         $('input,textarea,select,select2').each(function(ev){
             var field = $(this); 
-            var field = $(this); 
             field.prop('readonly', false);
             field.prop('disabled', false);
-
+            field.prop('required', true);
             $('input[name=is_edit_mode]').prop('checked', true);
             trigger_date_function($('#leave_start_datex'))
             trigger_date_function($('#leave_end_datex'))
@@ -122,6 +151,61 @@ odoo.define('portal_request.portal_request_form', function (require) {
         });
 
     }
+
+    let checkEditableRequiredFields = function () {
+        let lf = [];
+        const excluded = ['message'];
+        $('input[required], textarea[required], select[required]')
+            .filter(':visible:not([disabled]):not([readonly])')
+        // $('input,textarea,select,select2').filter('[required]:visible')
+            .each(function () {
+                let field = $(this);
+                console.log('show me fields to edit', field);
+                
+                if (!field.val() || field.val().trim() === "") {
+                    field.addClass('is-invalid');
+
+                    // Prefer labelfor, fallback to name or id
+                    let label =  field.attr('labelfor') || field.attr('name') || field.attr('id') 
+                   
+                    console.log(`All edited fields in forms ${label}`);
+                    lf.push(label);
+                } else {
+                    field.removeClass('is-invalid'); // cleanup if corrected
+                }
+            });
+        // let arr = arr.filter(item => item !== 'message');
+        // if (arr.length > 0) {
+        if (lf.filter(item => item !== 'message').length > 0) {
+            let lf_no_message = lf.filter(item => item !== 'message')
+            console.log(`length of fields not filled  ${lf_no_message}`);
+            let message = `Validation: Please ensure the following fields are filled:\n - ${lf_no_message.join("\n - ")}`;
+            return lf_no_message;
+        }
+        else{
+            return false;
+        }
+    };
+
+    // let checkEditableRequiredFields = function(){
+    //     var list_of_fields = [];
+    //     $('input,textarea,select,select2').filter('[required]:visible').each(function(ev){
+    //         var field = $(this); 
+    //         if (field.val() == ""){
+    //             field.addClass('is-invalid');
+    //             console.log(`All edited fields in forms ${$(this).attr('labelfor')}`);
+    //             list_of_fields.push(field.attr('labelfor'));
+    //         }
+    //     });
+    //     if (list_of_fields.length > 0){
+    //         // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+    //         // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
+    //         let message = `Validation: Please ensure the following fields are filled.. ${list_of_fields}`
+    //         modal_message.text(message)
+    //         alert_modal.modal('show');
+    //         return false;
+    //     }
+    // }
 
     let lockFieldsFunction = function(){
         $('input, select, textarea, select2').each(function(ev){
@@ -155,8 +239,10 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let save = $('#save');
                 let back = $('#previous')
                 let discard = $('#discard')
+                let resend_request = $('.resend_request')
 
                 edit.addClass('d-none');
+                resend_request.addClass('d-none');
                 back.addClass('d-none');
                 save.removeClass('d-none');
                 discard.removeClass('d-none');
@@ -167,13 +253,20 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 // hide save btn 
                 // hide discard button
                 // disable all fields to be readonly 
+                let cef = checkEditableRequiredFields()
+                if (cef){
+                    alert(cef);
+                    return false;
+                }
                 let save = $(ev.target);
                 let edit = $('#editbtn');
                 let back = $('#previous')
                 let discard = $('#discard')
+                let resend_request = $('.resend_request')
 
                 edit.removeClass('d-none');
                 back.removeClass('d-none');
+                resend_request.removeClass('d-none');
                 save.addClass('d-none');
                 discard.addClass('d-none');
                 // saveChangedFieldsValues();
@@ -187,6 +280,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let record_id = $(".record_id").attr('id')
                 console.log('saving record data => 1')
                 // call a save route 
+                
                 this._rpc({
                     route: `/save/data`,
                     params: {
@@ -392,11 +486,27 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 });
             },
             'click .refuse_request_btn': function(ev){
-                divRefuseCommentMessage.show();
-                modalfooter4cancel.hide();
-                refuseCommentMessage.attr('required', true);
-            },
-            
+                let targetElement = $(ev.target).attr('id');
+                this._rpc({
+                    route: `/user/approver`,
+                    params: {
+                        'memo_id': $('.record_id').attr('id'),
+                    },
+                }).then(function (data) {
+                    console.log('updating manager comment record data => '+ JSON.stringify(data))
+                    if(!data.status){
+                        modal_message.text(data.message)
+                        alert_modal.modal('show');
+                    }else{
+                        divRefuseCommentMessage.show();
+                        modalfooter4cancel.hide();
+                        refuseCommentMessage.attr('required', true);
+                    }
+                }).guardedCatch(function (error) {
+                    let msg = error.message.message
+                    alert(`Unknown Error! ${msg}`)
+                });
+            }, 
             'click .btn-close-success': function(ev){
                 $('#successful_alert').hide()
 

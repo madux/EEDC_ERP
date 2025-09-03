@@ -1,0 +1,165 @@
+<odoo>
+	<data>
+		<template id="theme_frontend_footer" inherit_id="web.frontend_layout">
+            <xpath expr="//div[@id='footer']" position="replace">
+            </xpath>
+        </template>
+		<template name="EEDC Homepage" t-name="website.homepage">
+			<t t-call="website.layout">
+				<t t-set="pageName" t-value="'homepage'"/>
+				<div class="dashboard">
+					<!-- Switch Mode Button -->
+					<div class="switch-mode">
+						<svg viewBox="0 0 24 24">
+							<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+						</svg>
+						<span>Switch mode</span>
+					</div>
+
+					<!-- ERP Applications Section -->
+					<div class="section">
+					<div class="section-header">
+						<h2 class="section-title">ERP Applications</h2>
+					</div>
+					<div class="apps-grid">
+						<div class="app-item">
+							<div class="app-icon leave-icon">📅</div>
+							<div class="app-label">Leave</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon material-icon">📦</div>
+						<div class="app-label">Material Request</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon procurement-icon">🛒</div>
+						<div class="app-label">Procurement Request</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon payment-icon">💳</div>
+						<div class="app-label">Payment</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon cash-advance-icon">💰</div>
+						<div class="app-label">Cash Advance</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon employee-dir-icon">👥</div>
+						<div class="app-label">Employee Directory</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon vehicle-icon">🚗</div>
+						<div class="app-label">Vehicle Request</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon accounting-icon">📊</div>
+						<div class="app-label">Accounting</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon expense-icon">📝</div>
+						<div class="app-label">Expense Retirement</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon payroll-icon">💼</div>
+						<div class="app-label">Payroll</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon portal-icon">🌐</div>
+						<div class="app-label">Portal Request</div>
+						</div>
+					</div>
+					</div>
+
+					<!-- Performance System Section -->
+					<div class="section">
+					<div class="section-header">
+						<h2 class="section-title">Performance System</h2>
+					</div>
+					<div class="performance-grid">
+						<div class="app-item">
+						<div class="app-icon employee-dir-icon">👥</div>
+						<div class="app-label">Employee Directory</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon hr-pms-icon">🎯</div>
+						<div class="app-label">HR PMS</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon feedback-icon">📋</div>
+						<div class="app-label">360 Feedback</div>
+						</div>
+					</div>
+					</div>
+
+					<!-- Other Applications Section -->
+					<div class="section">
+					<div class="section-header">
+						<h2 class="section-title">Other Applications</h2>
+					</div>
+					<div class="apps-grid">
+						<div class="app-item">
+						<div class="app-icon ict-icon">🖥️</div>
+						<div class="app-label">ICT Support</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon attendance-icon">⏰</div>
+						<div class="app-label">Attendance</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon helpdesk-icon">❓</div>
+						<div class="app-label">Help Desk</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon meter-seal-icon">🔒</div>
+						<div class="app-label">Meter Seal</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon enye-icon">🤖</div>
+						<div class="app-label">Enye'm aka</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon cms-icon">📄</div>
+						<div class="app-label">CMS</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon lor-icon">📈</div>
+						<div class="app-label">LOR</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon metering-icon">📱</div>
+						<div class="app-label">Metering App</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon super-edge-icon">⭐</div>
+						<div class="app-label">Super Edge</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon map-icon">🗺️</div>
+						<div class="app-label">MAP</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon eedc-family-icon">👨‍👩‍👧‍👦</div>
+						<div class="app-label">EEDC Family</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon eedc-connect-icon">🔗</div>
+						<div class="app-label">EEDC Connect</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon cash-collection-icon">💵</div>
+						<div class="app-label">Cash Collection</div>
+						</div>
+						<div class="app-item">
+						<div class="app-icon kyc-icon">🎭</div>
+						<div class="app-label">KYC</div>
+						</div>
+						<div class="app-item">
+							<div class="app-icon settings-icon">⚙️</div>
+							<div class="app-label">Settings</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</t>
+		</template>
+	</data>
+</odoo>

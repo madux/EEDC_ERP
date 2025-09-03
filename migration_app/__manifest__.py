@@ -6,11 +6,11 @@
 {
     'name': 'EEDC Migration Module',
     'version': '14.0.0',
-    'author': "Maach media",
+    'author': "Sopulu/Paul",
     'category': 'HR',
     'summary': '',
     'description': "",
-    'depends': ['base', 'hr', 'stock'],
+    'depends': ['base', 'hr', 'stock', 'ik_multi_branch', 'multi_company'],
     "data": [
         'security/ir.model.access.csv',
         'wizard/import_employee_view.xml',

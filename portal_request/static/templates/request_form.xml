@@ -11,15 +11,22 @@
                 </t>
                 <t t-if="req.id">
                     <section class="s_website_form pt16 pb16 o_colored_level portal-request-form" id="portal-request-form" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
+                        <section id="website-app-section" class="page-section">  
+                            <t t-call="portal_request.website_app_page"/>
+                        </section>
+                        
                         <div class="navbar-light  py-0 mb-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
                                 Back
                             </a>
-                            <a id="editbtn" href="/portal-request" class="btn btn-secondary btn-sm editbtn">
+                            <a t-if="req.state in ['submit', 'refuse', 'Refuse']" id="editbtn" class="btn btn-secondary btn-sm editbtn">
                                 Edit
                             </a>
-                            <a id="save" href="#" class="btn btn-secondary btn-sm d-none">
-                                save
+                            <a id="save" class="btn btn-success btn-sm d-none">
+                                Save
+                            </a>
+                            <a id="discard" class="btn btn-danger btn-sm d-none">
+                                Discard
                             </a>
                             <t t-if="req.move_id or req.state in ['Done'] and req.memo_type_key in ['Payment', 'cash_advance', 'soe', 'procurement_request']" id="printInvoiceBtn" class="btn btn-secondary btn-sm print_invoice_request">
                                 <a t-att-href="'/print/memo/invoice/%s' % req.id" target="_blank" class="btn-sm o_website_form_send">
@@ -34,6 +41,36 @@
                                 <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
 
                                 <t t-set="entries">
+                                    <div class="modal" tabindex="-1" role="dialog" id="portal_request_cancel_modal">
+                                        <div class="modal-dialog mt-5" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <input type="hidden" class="form-control s_website_form_input" id="cancel_refuse_input" name="cancel_refuse_input" value="" labelfor="Cancel"/>
+                                                    <h5 class="modal-title">Request</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you wish to proceed? </p>
+                                                    <div id="div_refuse_comment_message" class="div_refuse_comment_message o_portal_chatter_composer_body mb32 mt32">
+                                                        <div class="o_portal_messages_container mt32" data-anchor="true">
+                                                        <h4><strong>Comments</strong></h4>
+                                                            <input type="text" name="refuse_comment_message" id="refuse_comment_message" class="form-control" placeholder="Write a message..." labelfor="Refuse comment"></input>
+                                                        </div>
+                                                        <div class="mt8">
+                                                            <button id="refuse_comment_button" class="o_portal_chatter_composer_btn refuse_comment_button btn btn-primary" type="button">Refuse With Comment</button>
+                                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="modal-footer" id="modalfooter4cancel">
+                                                    <!-- <a role="button" class="o_portal_chatter_composer_btn btn btn-primary" id="cancel_modal_btn" t-att-href="'/update/data/%s/%s' % (req.id, 'cancel')">Cancel the request</a> -->
+                                                    <a role="button" class="o_portal_chatter_composer_btn btn btn-primary cancel_modal_btn" id="cancel_modal_btn">Cancel the request</a>
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
                                         <li t-if="req.state in ['submit', 'Sent']" class="list-group-item flex-grow-1">
                                             <div class="d-grid flex-sm-nowrap">
@@ -46,36 +83,7 @@
                                                     Cancel Request
                                                 </button>
                                             </div> 
-                                            <div class="modal" tabindex="-1" role="dialog" id="portal_request_cancel_modal">
-                                                <div class="modal-dialog mt-5" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <input type="hidden" class="form-control s_website_form_input" id="cancel_refuse_input" name="cancel_refuse_input" value=""/>
-                                                            <h5 class="modal-title">Request</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>Are you sure you wish to proceed? </p>
-                                                            <div id="div_refuse_comment_message" class="div_refuse_comment_message o_portal_chatter_composer_body mb32 mt32">
-                                                                <div class="o_portal_messages_container mt32" data-anchor="true">
-                                                                <h4><strong>Comments</strong></h4>
-                                                                    <input type="text" name="refuse_comment_message" id="refuse_comment_message" class="form-control" placeholder="Write a message..."></input>
-                                                                </div>
-                                                                <div class="mt8">
-                                                                    <button id="refuse_comment_button" class="o_portal_chatter_composer_btn refuse_comment_button btn btn-primary" type="button">Refuse With Comment</button>
-                                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="modal-footer" id="modalfooter4cancel">
-                                                            <!-- <a role="button" class="o_portal_chatter_composer_btn btn btn-primary" id="cancel_modal_btn" t-att-href="'/update/data/%s/%s' % (req.id, 'cancel')">Cancel the request</a> -->
-                                                            <a role="button" class="o_portal_chatter_composer_btn btn btn-primary cancel_modal_btn" id="cancel_modal_btn">Cancel the request</a>
-                                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            
                                         </li>
                                         <li id="ticket-nav" class="list-group-item ps-0 flex-grow-1" t-ignore="true" role="complementary">
                                             <ul class="nav flex-column">
@@ -135,49 +143,44 @@
                             <div id="request_content" class="col-12 col-lg justify-content-end">
                                 <div id="card" class="card">
                                     <div id="card_header" class="card-header container" data-anchor="true">
-                                        
-                                        <div class="row gs-0">
-                                            <div class="col-md">
-                                                <h5 class="row mx-1 mb-1 mb-md-0">
-
-                                                    <div class="col-8">
-                                                        <span t-field="req.name"/>
-                                                        <a t-att-id="req.id" class="record_id"/>
-                                                        <small class="text-muted "> (#<span t-field="req.code"/>) </small>
-                                                    </div>
-                                                    <div class="col-4 text-truncate">
-                                                        <t t-if="req.state == 'Sent' and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]" >
-                                                            <a id="approve_request" class="approve_request portal_button">
-                                                                <!-- t-att-href="'/my/request/update/%s/%s' % (req.id, 'Approve')"> -->
-                                                                Approve
-                                                            </a>
-                                                            <a id="refuse_request_btn" class="refuse_request_btn portal_button" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
-                                                                Refuse
-                                                            </a>
-                                                        </t>
-                                                        <t t-else="">
-                                                            -
-                                                        </t>
-                                                        <t t-if="req.state in ['Refuse', 'submit']">
-                                                            <a id="req.id" class="resend_request portal_button">
-                                                                Resend
-                                                            </a>
-                                                        </t>
-                                                        <t t-else="">
-                                                        
-                                                        </t> 
-                                                    </div>
-                                                    <!-- <div class="btn-group">
-                                                        <span class="col-6 offset-3 text-end"><span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/></span>
-                                                    </div> -->
-                                                    <div class="col-4 p-3 text-end pr-3">
-                                                        <small class="text-end">Status:</small><br/>
-                                                        <span t-field="req.stage_id.name" class=" badge rounded-pill text-bg-info" title="Current stage of this request"/>
-                                                    </div>
+                                        <div class="row">
+                                            <!-- Column 1 -->
+                                            <div class="col-md-4">
+                                                <h5>
+                                                    <strong><span t-field="req.name"/></strong>
+                                                    <a t-att-id="req.id" class="record_id"/>
+                                                    <small class="text-muted"> (#<span t-field="req.code"/>) </small>
+                                                    <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
+                                                    <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
+                                            </div>
+
+                                            <!-- Column 2 -->
+                                            <div class="col-md-4 text-truncate">
+                                                <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]">
+                                                    <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
+                                                    <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm"
+                                                    data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
+                                                        Refuse
+                                                    </a>
+                                                </t>
+                                                <t t-else="">-</t>
+
+                                                <t t-if="req.state in ['Refuse', 'submit']">
+                                                    <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>
+                                                </t>
+                                            </div>
+
+                                            <!-- Column 3 -->
+                                            <div class="col-md-4 p-3">
+                                                <small class="text-end">Status:</small><br/>
+                                                <span t-field="req.stage_id.name"
+                                                    class="badge rounded-pill text-bg-info"
+                                                    title="Current stage of this request"/>
                                             </div>
                                         </div>
                                     </div>
+
                                     <div id="card_body" class="card-body">
                                         <div class="row mb-4">
                                             <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
@@ -208,7 +211,7 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave type</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true">
+                                                    <select id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true" required="required">
                                                         <option selected="selected" t-attf-value="{{req.leave_type_id.id}}"><span t-esc="req.leave_type_id.name"/></option>
                                                         <t t-foreach="leave_type_ids" t-as="lv">
                                                             <option t-att-value="lv.id">
@@ -232,7 +235,7 @@
                                                 <strong class="col-md-4">Leave Start date</strong>: 
                                                 <span class="col-md-6">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_datex" 
-                                                    name="leave_start_datex" required="false" readonly="true" disabled="true" labelfor="Leave start date"
+                                                    name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date"
                                                     t-attf-value="{{req.leave_start_date}}"
                                                     />
                                                     <!-- <span class="col-md-6" contenteditable="false" t-field="req.leave_start_date" t-options='{"widget": "datetime", "hide_seconds": True}'/> -->
@@ -244,7 +247,7 @@
                                                 <!-- <span class="col-md-6" contenteditable="false" t-field="req.leave_end_date" t-options='{"widget": "datetime", "hide_seconds": True}'/> -->
                                                 <span class="col-md-6">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" 
-                                                    name="leave_end_datex" required="false" readonly="true" disabled="true" labelfor="Leave End date" 
+                                                    name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" 
                                                     t-attf-value="{{req.leave_end_date}}"
                                                     />
                                                 </span>
@@ -262,7 +265,7 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Reliever</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_reliever_ids" name="leave_reliever_id" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" disabled="true">
+                                                    <select id="leave_reliever_ids" name="leave_reliever_id" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" required="required" disabled="true">
                                                         <option selected="selected" t-attf-value="{{req.leave_Reliever.id}}"><span t-esc="req.leave_Reliever.name"/></option>
                                                         <t t-foreach="employee_ids" t-as="emp">
                                                             <option t-att-value="emp.id">

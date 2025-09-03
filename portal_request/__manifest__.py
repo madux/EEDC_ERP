@@ -9,10 +9,14 @@
     "data": [
         # 'security/ir.model.access.csv',
         'static/templates/menu.xml',
+        'static/templates/website_apps_page.xml',
+        'static/templates/website_homepage.xml',
         'static/templates/request.xml',
         'static/templates/request_tree.xml',
         'static/templates/request_form.xml',
         'static/templates/portal_request_inherit.xml',
+        'static/templates/employee_dashboard.xml',
+        
         'views/menu_view.xml',
         'views/product_inherit_view.xml',
         'views/hr_employee.xml',
@@ -26,6 +30,9 @@
         '/portal_request/static/src/js/request.js',
         '/portal_request/static/src/js/search_request.js',
         '/portal_request/static/src/js/request_form.js',
+        '/portal_request/static/src/js/employee_dashboard.js',
         '/portal_request/static/src/css/portal_css.css',
+        '/portal_request/static/src/css/employee_dashboard.css',
+        '/portal_request/static/src/css/apps_page.css',
     ]},
 }

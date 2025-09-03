@@ -1,28 +1,27 @@
 <odoo>
     <data>
         <template id="my_portal_request" name="My Requests">
-            <t t-call="portal.portal_layout">
-                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_layout" id="search_request_section">
+                <!-- <t t-set="breadcrumbs_searchbar" t-value="True"/>
                 <t t-call="portal.portal_searchbar">
                     <t t-set="title">Requests</t>
-                </t>
+                </t> -->
+                
                 <section id="search_request_section">
-                    <nav t-attf-class="navbar navbar-light navbar-expand-lg border py-0 mb-2 o_portal_navbar {{classes if classes else ''}} {{'mt-3 rounded' if breadcrumbs_searchbar else 'border-top-0' }}">
-                        <!-- <t t-if="breadcrumbs_searchbar">
-                            <t t-call="portal.portal_breadcrumbs"/>
-                        </t> -->
-                        <!-- <span class="navbar-brand mb-0 h1 me-auto" t-esc="title or 'No title'"/>
-                        -->
+                    <section id="website-app-section">  
+                        <t t-call="portal_request.website_app_page"/>
+                    </section>
+                    <!-- <section id="website-app-section" class="page-section">   -->
+                    
+                    <!-- <nav t-attf-class="navbar navbar-light navbar-expand-lg border py-0 mb-2 o_portal_navbar {{classes if classes else ''}} {{'mt-3 rounded' if breadcrumbs_searchbar else 'border-top-0' }}">
                         <t t-set="title">Requests</t>
-                        <!--  Collapse button -->
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#o_portal_navbar_content" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle filters">
                             <span class="navbar-toggler-icon small"/>
                         </button>
-
-                        <!--  Collapsable content  -->
+ 
                         <div class="collapse navbar-collapse" id="o_portal_navbar_content">
                             <div class="nav flex-column flex-lg-row ms-auto p-0 mb-3 mb-lg-0 mt-1 mt-lg-0">
-                                <!-- <div>
+                                '''<div>
                                     <span class="small me-1 navbar-text">Sort By:</span>
                                     <div class="btn-group">
                                         <button id="portal_searchbar_sortby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
@@ -53,8 +52,8 @@
                                             </t>
                                         </div>
                                     </div>
-                                </div> -->
-                                <!-- <div class="ms-lg-2">
+                                </div>  
+                                <div class="ms-lg-2">
                                     <span class="small me-1 navbar-text">Group By:</span>
                                     <div class="btn-group">
                                         <button id="portal_searchbar_groupby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
@@ -70,43 +69,50 @@
                                             </t>
                                         </div>
                                     </div>
-                                </div> -->
-                                <div class="ms-lg-2">
-                                    <a id="previous" href="/portal-request" class="btn btn-secondary btn-sm">
-                                        Create
-                                    </a>
-                                    <div class="btn-group">
-                                        <a id="previous" href="/my/requests/page/prev" class="btn btn-secondary btn-sm">
-                                            Prev
-                                        </a>
-                                    </div>
-                                    <div class="btn-group">
-                                        <a id="previous" href="/my/requests/page/next" class="btn btn-secondary btn-sm">
-                                            Next
-                                        </a>
-                                    </div>
-                                </div>
-                                <t t-out="0"/>
+                                </div> '''' -->
+                    <div class="header-flex">
+                        <div class="ms-lg-2">
+                            <svg id="app-icon" xmlns="http://www.w3.org/2000/svg" width="30" height="30" class="bi bi-grid-fill thumbnail-btn custom-icon" viewBox="0 0 16 16">
+                                <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z"></path>
+                            </svg>
+                            <a id="previous" href="/" class="btn btn-secondary btn-sm p3">
+                                Back
+                            </a>
+                            <a id="previous" href="/portal-request" class="btn btn-secondary btn-sm p3">
+                                Create New
+                            </a>
+                            <div class="btn-group">
+                                <a id="previous" href="/my/requests/page/prev" class="btn btn-secondary btn-sm p3">
+                                    Prev
+                                </a>
                             </div>
-                            <form class="o_portal_search_panel ms-lg-4 col-xl-4 col-md-5">
-                                <div class="input-group input-group-sm w-100">
-                                    <!-- <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/> -->
-                                    <!-- <div class="dropdown-menu" role="menu">
-                                        <t t-foreach='searchbar_inputs' t-as='input'>
-                                            <a t-att-href="'#' + input_value['input']"
-                                                t-attf-class="dropdown-item#{search_in == input_value['input'] and ' active' or ''}">
-                                                <span t-out="input_value['label']"/>
-                                            </a>
-                                        </t>
-                                    </div> -->
-                                    <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/>
-                                    <a class="btn btn-secondary o_wait_lazy_js search_panel_btn" id="search_panel">
-                                        <span class="fa fa-search"/> 
-                                    </a>
-                                </div>
-                            </form>
+                            <div class="btn-group">
+                                <a id="previous" href="/my/requests/page/next" class="btn btn-secondary btn-sm p3">
+                                    Next
+                                </a>
+                            </div>
                         </div>
-                    </nav>
+                        <t t-out="0"/>
+                        <form class="o_portal_search_panel ms-lg-4 col-xl-4 col-md-5">
+                            <div class="input-group input-group-sm w-100">
+                                <!-- <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/> -->
+                                <!-- <div class="dropdown-menu" role="menu">
+                                    <t t-foreach='searchbar_inputs' t-as='input'>
+                                        <a t-att-href="'#' + input_value['input']"
+                                            t-attf-class="dropdown-item#{search_in == input_value['input'] and ' active' or ''}">
+                                            <span t-out="input_value['label']"/>
+                                        </a>
+                                    </t>
+                                </div> -->
+                                <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/>
+                                <a class="btn btn-secondary o_wait_lazy_js search_panel_btn" id="search_panel">
+                                    <span class="fa fa-search"/> 
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                        <!-- </div>
+                    </nav> -->
                     <div t-if="not requests" class="alert alert-info">
                         There are currently no Request for your account.
                     </div>
@@ -127,18 +133,22 @@
                                 <tr>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small></small><span class="ms-2" t-field="request.name"/></a></td>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small>#</small><span class="ms-2" t-field="request.code"/></a></td>
-                                    <td class="text-start"><span class="ms-2" t-field="request.approver_id.name"/></td>
+                                    <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><span class="ms-2" t-field="request.approver_id.name"/></a></td>
                                     <!-- <td class="text-end" t-if="groupby != 'create_date'"> -->
                                     <td class="text-start">
-                                        <span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/>
+                                        <a t-attf-href="/my/request/view/{{request.id}}"><span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/></a>
                                     </td>
                                     <td id="request_user">
-                                        <img t-if="request.employee_id.user_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(request.employee_id.user_id.sudo().avatar_1024)}" alt="Contact" style="width: 20px; height: 20px;"/>
-                                        <span t-field="request.employee_id.user_id"/>
+                                        <a t-attf-href="/my/request/view/{{request.id}}">
+                                            <img t-if="request.employee_id.user_id" class="rounded-circle o_portal_contact_img" t-attf-src="#{image_data_uri(request.employee_id.user_id.sudo().avatar_1024)}" alt="Contact" style="width: 20px; height: 20px;"/>
+                                            <span t-field="request.employee_id.user_id"/>
+                                        </a>
                                     </td>
-                                    <td id="request_stage" class="text-end">
-                                        <!-- <span t-attf-class="badge rounded-pill #{'text-bg-info' if request.state == 'submit' else 'text-bg-light'}" t-esc="request.state"/> -->
-                                        <span t-attf-class="badge rounded-pill text-bg-info" t-esc="request.stage_id.name"/>
+                                    <td id="request_stage" class="text-end p-2">
+                                        <a t-attf-href="/my/request/view/{{request.id}}">
+                                            <span t-attf-class="badge rounded-pill text-bg-info me-2"
+                                                t-esc="request.stage_id.name"/>
+                                        </a>
                                     </td>
                                 </tr>
                             </t>

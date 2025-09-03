@@ -737,7 +737,12 @@ odoo.define('portal_request.portal_request', function (require) {
         changeYear: true,
         yearRange: '2023:2050',
         maxDate: null,
-        minDate: new Date()
+        minDate: new Date(),
+        // Disable Saturday (6) & Sunday (0)
+        beforeShowDay: function (date) {
+            var day = date.getDay();
+            return [(day != 0 && day != 6), ''];
+        }
     });
     
     var triggerEndDate = function(minDate, maxDate){
@@ -751,6 +756,11 @@ odoo.define('portal_request.portal_request', function (require) {
             yearRange: '2023:2050',
             maxDate: maxDate,
             minDate: minDate, //new Date()
+            // Disable Saturday (6) & Sunday (0)
+            beforeShowDay: function (date) {
+                var day = date.getDay();
+                return [(day != 0 && day != 6), ''];
+            }
         });
     }
     
