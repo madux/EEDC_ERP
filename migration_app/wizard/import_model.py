@@ -42,6 +42,21 @@ class ImportRecords(models.TransientModel):
     #     else:
     #         raise ValidationError('Please select file and type of file')
     
+    def stream_excel_rows(self, sheet, batch_size=500):
+        """Generator to yield Excel rows in batches without loading all data into memory"""
+        current_batch = []
+        
+        for row_idx in range(1, sheet.nrows):
+            row_data = [sheet.cell_value(row_idx, col) for col in range(sheet.ncols)]
+            current_batch.append(row_data)
+            
+            if len(current_batch) >= batch_size:
+                yield current_batch
+                current_batch = []
+                
+        if current_batch:
+            yield current_batch
+    
     def format_phone(self, phone_value):
         """Format phone number properly"""
         if not phone_value:
@@ -57,16 +72,16 @@ class ImportRecords(models.TransientModel):
         except (IndexError, TypeError):
             return default
 
-    def validate_excel_structure(self, file_data):
+    def validate_excel_structure(self, sheet):
         """Validate that the Excel has the expected structure"""
-        if not file_data:
+        if not sheet or sheet.nrows == 0:
             raise ValidationError("Excel file is empty")
         
-        expected_columns = 27
-        first_row = file_data[0] if file_data else []
+        if sheet.nrows < 2:
+            raise ValidationError("Excel file should have at least a header and one data row")
         
-        if len(first_row) < 26:
-            raise ValidationError(f"Excel file should have at least 26 columns, found {len(first_row)}")
+        if sheet.ncols < 26:
+            raise ValidationError(f"Excel file should have at least 26 columns, found {sheet.ncols}")
         
         return True
 
@@ -137,47 +152,45 @@ class ImportRecords(models.TransientModel):
             return new_district.id
     
     def create_department(self, name, company_id=None):
-        """Create department with company context - Fixed multi-company access"""
-        department_obj = self.env['hr.department']
-        if name:
-            name = str(name).strip()
-            
-            if not company_id:
-                default_company = self.env.ref('multi_company.company_enugu_edp', raise_if_not_found=False)
-                company_id = default_company.id if default_company else self.env.company.id
-            
-            domain = [('name', '=', name), ('company_id', '=', company_id)]
-            depart_rec = department_obj.search(domain, limit=1)
-            
-            if depart_rec:
-                if hasattr(depart_rec, 'active') and not depart_rec.active:
-                    depart_rec.sudo().write({'active': True})
-                return depart_rec.id
-            else:
-                try:
-                    dept_vals = {'name': name, 'company_id': company_id}
-                    department_id = department_obj.with_company(company_id).sudo().create(dept_vals).id
-                    return department_id
-                except Exception as e:
-                    _logger.error(f"Failed to create department {name}: {str(e)}")
-                    fallback_dept = department_obj.search([('name', '=', name)], limit=1)
-                    if fallback_dept:
-                        if hasattr(fallback_dept, 'active') and not fallback_dept.active:
-                            fallback_dept.sudo().write({'active': True})
-                        _logger.info(f"Using existing department {name} from different company")
-                        return fallback_dept.id
-                    return None
-        else:
+        """Create department with company context - Search first, create only if not found for the company"""
+        if not name:
             return None
+            
+        department_obj = self.env['hr.department']
+        name = str(name).strip()
         
+        if not company_id:
+            default_company = self.env.ref('multi_company.company_enugu_edp', raise_if_not_found=False)
+            company_id = default_company.id if default_company else self.env.company.id
+        
+        domain = [('name', '=', name), ('company_id', '=', company_id)]
+        depart_rec = department_obj.search(domain, limit=1)
+        
+        if depart_rec:
+            if hasattr(depart_rec, 'active') and not depart_rec.active:
+                depart_rec.sudo().write({'active': True})
+            return depart_rec.id
+        else:
+            try:
+                dept_vals = {'name': name, 'company_id': company_id}
+                department_id = department_obj.with_company(company_id).sudo().create(dept_vals).id
+                _logger.info(f"Created new department '{name}' for company {company_id}")
+                return department_id
+            except Exception as e:
+                _logger.error(f"Failed to create department {name}: {str(e)}")
+                fallback_dept = department_obj.search([('name', '=', name)], limit=1)
+                if fallback_dept:
+                    if hasattr(fallback_dept, 'active') and not fallback_dept.active:
+                        fallback_dept.sudo().write({'active': True})
+                    _logger.info(f"Using existing department {name} from different company as fallback")
+                    return fallback_dept.id
+                return None
 
     def get_level_id(self, name):
         if not name:
             return False
         levelId = self.env['hr.level'].search([('name', '=', name)], limit=1)
         if levelId:
-            if hasattr(levelId, 'active') and not levelId.active:
-                levelId.sudo().write({'active': True})
             return levelId.id
         else:
             return self.env['hr.level'].create({'name': name}).id
@@ -190,8 +203,6 @@ class ImportRecords(models.TransientModel):
         District = self.env['multi.branch']
         district_rec = District.search([('name', '=', name.strip())], limit=1)
         if district_rec:
-            if hasattr(district_rec, 'active') and not district_rec.active:
-                district_rec.sudo().write({'active': True})
             return district_rec.id
         else:
             new_district = District.create({'name': name.strip()})
@@ -203,8 +214,6 @@ class ImportRecords(models.TransientModel):
             return False 
         rec = self.env['hr.region'].search([('name', '=', name)], limit=1)
         if rec:
-            if hasattr(rec, 'active') and not rec.active:
-                rec.sudo().write({'active': True})
             return rec.id
         else:
             return self.env['hr.region'].create({'name': name}).id
@@ -214,14 +223,12 @@ class ImportRecords(models.TransientModel):
             return False
         gradeId = self.env['hr.grade'].search([('name', '=', name)], limit=1)
         if gradeId:
-            if hasattr(gradeId, 'active') and not gradeId.active:
-                gradeId.sudo().write({'active': True})
             return gradeId.id
         else:
             return self.env['hr.grade'].create({'name': name}).id
     
     def get_designation_id(self, name, departmentid, company_id=None):
-        """Get job/designation with company context - Fixed multi-company access"""
+        """Get job/designation with company context - Search first, create only if not found for the company"""
         if not name:
             return False
             
@@ -244,14 +251,16 @@ class ImportRecords(models.TransientModel):
                 job_vals = {'name': name, 'company_id': company_id}
                 if departmentid:
                     job_vals['department_id'] = departmentid
-                return self.env['hr.job'].with_company(company_id).sudo().create(job_vals).id
+                job_id = self.env['hr.job'].with_company(company_id).sudo().create(job_vals).id
+                _logger.info(f"Created new job '{name}' for company {company_id}")
+                return job_id
             except Exception as e:
                 _logger.error(f"Failed to create job {name}: {str(e)}")
                 fallback_job = self.env['hr.job'].search([('name', '=', name)], limit=1)
                 if fallback_job:
                     if hasattr(fallback_job, 'active') and not fallback_job.active:
                         fallback_job.sudo().write({'active': True})
-                    _logger.info(f"Using existing job {name} from different company")
+                    _logger.info(f"Using existing job {name} from different company as fallback")
                     return fallback_job.id
                 return None
 
@@ -260,8 +269,6 @@ class ImportRecords(models.TransientModel):
             return False
         rec = self.env['hr.unit'].search([('name', '=', name)], limit=1)
         if rec:
-            if hasattr(rec, 'active') and not rec.active:
-                rec.sudo().write({'active': True})
             return rec.id
         else:
             return self.env['hr.unit'].create({'name': name}).id
@@ -271,8 +278,6 @@ class ImportRecords(models.TransientModel):
             return False
         rec = self.env['hr.work.unit'].search([('name', '=', name)], limit=1)
         if rec:
-            if hasattr(rec, 'active') and not rec.active:
-                rec.sudo().write({'active': True})
             return rec.id
         else:
             return self.env['hr.work.unit'].create({'name': name}).id
@@ -308,24 +313,19 @@ class ImportRecords(models.TransientModel):
             user.sudo().write({'active': True})
             _logger.info(f"Unarchived user: {user.login}")
 
-    def process_data_in_batches(self, file_data, batch_size=500):
-        """Process data in batches to handle memory efficiently"""
-        for i in range(0, len(file_data), batch_size):
-            yield file_data[i:i + batch_size]
-
     def import_records_action(self):
-        if self.data_file:
-            file_datas = base64.b64decode(self.data_file)
-            workbook = xlrd.open_workbook(file_contents=file_datas)
-            sheet_index = int(self.index) if self.index else 0
-            sheet = workbook.sheet_by_index(sheet_index)
-            data = [[sheet.cell_value(r, c) for c in range(sheet.ncols)] for r in range(sheet.nrows)]
-            data.pop(0)
-            file_data = data
-            
-            self.validate_excel_structure(file_data)
-        else:
+        if not self.data_file:
             raise ValidationError('Please select file and type of file')
+        
+        file_datas = base64.b64decode(self.data_file)
+        workbook = xlrd.open_workbook(file_contents=file_datas)
+        sheet_index = int(self.index) if self.index else 0
+        
+        if sheet_index >= workbook.nsheets:
+            raise ValidationError(f'Sheet index {sheet_index} does not exist. Workbook has {workbook.nsheets} sheets.')
+        
+        sheet = workbook.sheet_by_index(sheet_index)
+        self.validate_excel_structure(sheet)
         
         errors = ['The Following messages occurred']
         employee_obj = self.env['hr.employee']
@@ -336,14 +336,12 @@ class ImportRecords(models.TransientModel):
         def find_existing_employee(code):
             employee_id = False 
             if code:
-                # Ensure code is a string for the search
                 code = str(int(code)) if isinstance(code, float) else str(code)
                 employee = self.env['hr.employee'].search([
                     '|', ('employee_number', '=', code), 
                     ('barcode', '=', code)], limit = 1)
                 if employee:
                     employee_id = employee.id
-                    # Unarchive if needed
                     self.unarchive_employee_if_needed(employee)
                 else:
                     employee_id = False 
@@ -407,11 +405,13 @@ class ImportRecords(models.TransientModel):
                 change_password_wiz_id.user_ids[0].change_password_button()
                 employee_id.migrated_password = new_password
 
+       
         def create_employee(vals):
-            employee_id = self.env['hr.employee'].sudo().create({
+            """Create employee and link user with proper error handling and verification"""
+            try:
+                employee_vals = {
                     'name': vals.get('fullname'),
                     'employee_number': vals.get('staff_number'),
-                    # 'employee_identification_code': vals.get('staff_number'),
                     'ps_district_id': vals.get('district'),
                     'branch_id': vals.get('branch_id'),
                     'gender': vals.get('gender'),
@@ -422,9 +422,6 @@ class ImportRecords(models.TransientModel):
                     'grade_id': vals.get('grade_id'),
                     'level_id': vals.get('level_id'),
                     'hr_region_id': vals.get('hr_region_id'),
-                    # 'administrative_supervisor_id': vals.get('administrative_supervisor_id'),
-                    # 'parent_id': vals.get('functional_appraiser_id'),
-                    # 'reviewer_id': vals.get('functional_reviewer_id'),
                     'work_email': vals.get('email'),
                     'private_email': vals.get('private_email'),
                     'work_phone': vals.get('work_phone'),
@@ -432,98 +429,136 @@ class ImportRecords(models.TransientModel):
                     'phone': vals.get('phone'),
                     'job_id': vals.get('job_id'),
                     'company_id': vals.get('company_id'),
-                    # 'emergency_phone': vals.get('emergency_phone'),
-                })
-            vals.update({'employment_date': employee_id.employment_date})
-            user, password = generate_user(vals)
-            employee_id.sudo().update({
-                    'user_id': user.id if user else False,
-                    'work_email': employee_id.work_email,
-                    # 'migrated_password': password,
-            }) 
-            reset_employee_user_password(employee_id, user)
+                }
+                
+                employee_id = self.env['hr.employee'].sudo().create(employee_vals)
+                _logger.info(f"Created employee: {employee_id.name} with ID: {employee_id.id}")
+                
+                if not employee_id.exists():
+                    _logger.error(f"Employee creation failed - employee does not exist after creation")
+                    return False
+                
+                user_vals = {
+                    'fullname': vals.get('fullname'),
+                    'staff_number': vals.get('staff_number'),
+                    'email': vals.get('email'),
+                    'private_email': vals.get('private_email'),
+                    'company_id': vals.get('company_id'),
+                    'branch_id': vals.get('branch_id'),
+                }
+                
+                user, password = generate_user(user_vals)
+                
+                if user:
+                    try:
+                        employee_id.sudo().write({'user_id': user.id})
+                        
+                        employee_id.refresh()
+                        if employee_id.user_id and employee_id.user_id.id == user.id:
+                            _logger.info(f"Successfully linked user {user.login} (ID: {user.id}) to employee {employee_id.name} (ID: {employee_id.id})")
+                            
+                            if password:
+                                try:
+                                    reset_employee_user_password(employee_id, user)
+                                    _logger.info(f"Password set for new user {user.login}")
+                                except Exception as e:
+                                    _logger.warning(f"Failed to set password for user {user.login}: {e}")
+                        else:
+                            _logger.error(f"Failed to link user {user.id} to employee {employee_id.id}")
+                            
+                    except Exception as e:
+                        _logger.error(f"Error linking user to employee: {e}")
+                else:
+                    _logger.warning(f"Failed to create/find user for employee {employee_id.name}")
+                
+                return employee_id
+                
+            except Exception as e:
+                _logger.error(f"Error in create_employee: {e}")
+                return False
 
         def generate_user(vals):
-            """Generate portal user by default, don't downgrade existing users.
-               Ensures allowed companies are updated so writing company_id won't fail.
             """
-            portal_group = self.env.ref("base.group_portal", raise_if_not_found=False)
-            emp_group = self.env.ref("hr_pms.group_pms_user_id", raise_if_not_found=False)
-            Group = self.env['res.groups'].sudo()
+            Create user is user does not exist
+            Input: dict with keys like fullname, email, staff_number, company_id, branch_id
+            returns: (user_record or False, password or False)
+            """
+            emp_portal_group = self.env.ref("base.group_portal", raise_if_not_found=False)
 
-            group_list = [(4, portal_group.id)] if portal_group else []
-            if emp_group:
-                group_list.append((4, emp_group.id))
-
-            groups_to_remove = Group.search([
-                '|', '|',
-                ('name', '=', 'Contact Creation'),
-                ('name','=','Portal'),
-                ('id', 'in', [
-                    self.env.ref('hr.group_hr_manager', raise_if_not_found=False).id,
-                    self.env.ref('hr.group_hr_user', raise_if_not_found=False).id,
-                ] if all([
-                    self.env.ref('hr.group_hr_manager', raise_if_not_found=False),
-                    self.env.ref('hr.group_hr_user', raise_if_not_found=False)
-                ]) else [])
-            ])
-            for group in groups_to_remove:
-                tup = (3, group.id)
-                group_list.append(tup)
-
-            email = vals.get('email') or vals.get('private_email')
-            fullname = vals.get('fullname')
+            email = (vals.get('email') or vals.get('private_email') or '') if vals else ''
+            fullname = vals.get('fullname') or vals.get('name') or 'Unknown'
             branch_id = vals.get('branch_id')
             company_id = vals.get('company_id')
-            user, password = False, False
-            login = email if email and email.endswith('@enugudisco.com') else vals.get('staff_number')
+            staff_number = vals.get('staff_number') or ''
 
-            if login:
-                password = ''.join(random.choice('EdcpasHwodfo!xyzus$rs1234567') for _ in range(10))
-                user_vals = {
-                    'name': fullname,
-                    'login': login,
-                    'branch_id': branch_id,
-                }
-                _logger.info(f"Creating/Getting employee Portal User..with password {password}.")
-
-                User = self.env['res.users'].sudo()
-                user = User.search([('login', '=', login)], limit=1)
-                if user:
-                    _logger.info("User already exists... keeping existing user type")
-                    self.unarchive_user_if_needed(user)
-                    if company_id:
-                        try:
-                            self.ensure_user_has_company(user, company_id)
-                        except Exception:
-                            _logger.exception("Failed to add company to existing user")
-                    password = False
+            login = ''
+            try:
+                if isinstance(email, str) and email.strip() and email.strip().endswith('@enugudisco.com'):
+                    login = email.strip()
                 else:
+                    login = str(staff_number).strip()
+            except Exception:
+                return False, False
+
+            login = str(login).strip()
+
+            User = self.env['res.users'].sudo()
+            existing = User.search([('login', '=', login)], limit=1)
+            if existing:
+                _logger.info("Existing user found for login %s (id=%s). Reusing.", login, existing.id)
+                try:
+                    self.unarchive_user_if_needed(existing)
                     if company_id:
-                        user_vals['company_ids'] = [(6, 0, [company_id])]
-                        user_vals['company_id'] = company_id
-                    user = User.create(user_vals)
-                    _logger.info("Created Portal User record...")
-                    try:
-                        user.sudo().write({'groups_id': group_list})
-                    except Exception:
-                        _logger.exception("Failed to assign groups to new user")
+                        self.ensure_user_has_company(existing, company_id)
+                except Exception:
+                    _logger.exception("Failed to adjust existing user %s", login)
+                return existing, False
+
+            emp_conflict = self.env['hr.employee'].sudo().search([('user_id.login','=',login)], limit=1)
+            if emp_conflict:
+                _logger.warning("Login %s is already assigned to employee %s. Skipping user creation.", login, emp_conflict.name)
+                return False, False
+
+            password = ''.join(random.choice('EdcpasHwodfo!xyzus$rs1234567') for _ in range(10))
+            base_user_vals = {
+                'name': fullname,
+                'login': login,
+                'password': password,
+                'branch_id': branch_id,
+            }
+            if company_id:
+                base_user_vals['company_ids'] = [(6, 0, [company_id])]
+                base_user_vals['company_id'] = company_id
+
+            if emp_portal_group:
+                base_user_vals['groups_id'] = [(6, 0, [emp_portal_group.id])]
+
+            user = False
+            try:
+                _logger.info("Attempting to create user with login %s", base_user_vals['login'])
+                user = User.create(base_user_vals)
+                _logger.info("Created user %s (id=%s)", user.login, user.id)
                 return user, password
-            return user, password
+            except Exception as e:
+                _logger.exception("Failed to create user with login %s: %s", base_user_vals['login'], e)
+
+            _logger.error("Unable to create user for %s (tried login(s) around %s).", fullname, login)
+            return False, False
         
-        # Process data in batches
+        
         batch_size = self.batch_size or 500
-        total_batches = len(file_data) // batch_size + (1 if len(file_data) % batch_size else 0)
+        total_rows = sheet.nrows - 1
+        total_batches = (total_rows // batch_size) + (1 if total_rows % batch_size else 0)
         
         if self.import_type == "employee":
             batch_num = 0
-            for batch_data in self.process_data_in_batches(file_data, batch_size):
+            for batch_data in self.stream_excel_rows(sheet, batch_size):
                 batch_num += 1
                 _logger.info(f"Processing batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
                 for row in batch_data:
                     try:
-                        with self.env.cr.savepoint():
+                        # with self.env.cr.savepoint():
                             if find_existing_employee(row[1]):
                                 unsuccess_records.append(f'Employee with {str(row[1])} Already exists')
                                 continue
@@ -610,7 +645,7 @@ class ImportRecords(models.TransientModel):
 
         elif self.import_type == "update":
             batch_num = 0
-            for batch_data in self.process_data_in_batches(file_data, batch_size):
+            for batch_data in self.stream_excel_rows(sheet, batch_size):
                 batch_num += 1
                 _logger.info(f"Processing update batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
@@ -690,7 +725,6 @@ class ImportRecords(models.TransientModel):
                             ('barcode', '=', employee_code)], limit = 1)
                             
                             if employee_id:
-                                # Unarchive employee if needed
                                 self.unarchive_employee_if_needed(employee_id)
                                 
                                 employee_id.sudo().update(employee_vals)
@@ -735,7 +769,7 @@ class ImportRecords(models.TransientModel):
                 
         elif self.import_type == "appraisal":
             batch_num = 0
-            for batch_data in self.process_data_in_batches(file_data, batch_size):
+            for batch_data in self.stream_excel_rows(sheet, batch_size):
                 batch_num += 1
                 _logger.info(f"Processing appraisal batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
@@ -842,7 +876,7 @@ class ImportRecords(models.TransientModel):
                 
         elif self.import_type == "email":
             batch_num = 0
-            for batch_data in self.process_data_in_batches(file_data, batch_size):
+            for batch_data in self.stream_excel_rows(sheet, batch_size):
                 batch_num += 1
                 _logger.info(f"Processing email batch {batch_num} of {total_batches} ({len(batch_data)} records)")
                 
