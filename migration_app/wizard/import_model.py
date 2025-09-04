@@ -321,7 +321,8 @@ class ImportRecords(models.TransientModel):
                 return {'name': '', 'first_name': '', 'middle_name': '', 'last_name': ''}
 
             parts = [p for p in s.split() if p]
-            parts = [p.title() for p in parts]
+            # parts = [p.title() for p in parts]
+            parts = [p.upper() for p in parts]
 
             if len(parts) == 1:
                 surname = parts[0]
