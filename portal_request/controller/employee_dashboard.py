@@ -22,30 +22,33 @@ _logger = logging.getLogger(__name__)
 class PortalDashboard(http.Controller):
     @http.route(["/my/portal/dashboard/<int:user_id>"], type='http', auth='user', website=True, website_published=True)
     def dashboardPortal(self, user_id): 
-        user = request.env['res.users'].browse([user_id])
-        # user_id
-        current_time = datetime.now() 
-        memo = request.env['memo.model'].sudo()
-        memo_ids = memo.search([
-            ('employee_id', '=', user.employee_id.id),
-        ], order="id desc")
-        vals = {  
-            "user": user,
-            "image": user.employee_id.image_512 or user.image_1920,
-            "memo_ids": memo_ids,
-            "closed_request": len(self.closed_files(memo_ids)),
-            "open_request": len(self.closed_files(memo_ids)),
-            "approved_request": len(self.approved_files(memo_ids)),
-            "leave_remaining":  user.employee_id.allocation_remaining_display,
-            "template_name":  'portal_dashboard_template_id',
-            "performance_y_data_chart": json.dumps(
-                {"performance_y_data_chart": ["KRA","Functional Competence","Leadership Competence"]}
-                ),
-            "performance_x_data_chart": self.get_pms_performance(user),
-        }
-        # _logger.info(f"{vals.get('performance_y_data_chart')} and the x is {vals.performance_x_data_chart}")
-        return request.render("portal_request.portal_dashboard_template_id", vals)
-    
+        try:
+            user = request.env['res.users'].sudo().browse([user_id])
+            # user_id
+            current_time = datetime.now() 
+            memo = request.env['memo.model'].sudo()
+            memo_ids = memo.search([
+                ('employee_id', '=', user.employee_id.id),
+            ], order="id desc")
+            vals = {  
+                "user": user,
+                "image": user.employee_id.image_512 or user.image_1920,
+                "memo_ids": memo_ids,
+                "closed_request": len(self.closed_files(memo_ids)),
+                "open_request": len(self.closed_files(memo_ids)),
+                "approved_request": len(self.approved_files(memo_ids)),
+                "leave_remaining":  user.employee_id.allocation_remaining_display,
+                "template_name":  'portal_dashboard_template_id',
+                "performance_y_data_chart": json.dumps(
+                    {"performance_y_data_chart": ["KRA","Functional Competence","Leadership Competence"]}
+                    ),
+                "performance_x_data_chart": self.get_pms_performance(user),
+            }
+            # _logger.info(f"{vals.get('performance_y_data_chart')} and the x is {vals.performance_x_data_chart}")
+            return request.render("portal_request.portal_dashboard_template_id", vals)
+        except Exception as e:
+            return request.not_found() 
+
     def closed_files(self, memo):
         closed_memo_ids = memo.filtered(lambda se: se.state in ['Done'])
         return closed_memo_ids
@@ -60,7 +63,7 @@ class PortalDashboard(http.Controller):
     
     def get_pms_performance(self, user):
         try:
-            appraisee = request.env['pms.appraisee']
+            appraisee = request.env['pms.appraisee'].sudo()
             employee_appraisee = appraisee.search([(
                 'employee_id', '=', user.employee_id.id,
             )])
