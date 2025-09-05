@@ -55,8 +55,9 @@ class AccountAnalyticLine(models.Model):
 
 class AccountInvoice(models.Model):
     _inherit = 'account.move'
-    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env.user.branch_id.id, states={
-                                'draft': [('readonly', False)]})
+    # branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env.user.branch_id.id, states={
+    #                             'draft': [('readonly', False)]})
+    branch_id = fields.Many2one('multi.branch', 'Branch', default=lambda self: self.env.user.branch_id.id)
     
     @api.depends('company_id', 'invoice_filter_type_domain')
     def _compute_suitable_journal_ids(self):

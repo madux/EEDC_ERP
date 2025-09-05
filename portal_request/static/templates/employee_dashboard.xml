@@ -82,9 +82,9 @@
 												</t>
 												<div class="profile-info">
 													<h3>Name: <t t-esc="user.employee_id.name"/></h3>
-													<p>Department: <t t-esc="user.employee_id.department_id.name or ''"/></p>
-													<p>Role: <t t-esc="user.employee_id.job_id.name or ''"/></p>
-													<p>Manager: <t t-esc="user.employee_id.parent_id.name or ''"/></p>
+													<p><strong>Department: </strong><t t-esc="user.employee_id.department_id.name or ''"/></p>
+													<p><strong>Role: </strong> <t t-esc="user.employee_id.job_id.name or ''"/></p>
+													<p><strong>Manager: </strong>: <t t-esc="user.employee_id.parent_id.name or ''"/></p>
 												</div>
 											</div>
 										</div>

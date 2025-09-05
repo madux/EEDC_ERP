@@ -485,7 +485,7 @@ class PortalRequest(http.Controller):
 				('employee_id.employee_number', '=', staff_num),
 				('active', '=', True),
 				('employee_id.user_id', '=', user.id),
-				('code', '=', existing_order) 
+				('code', '=ilike', existing_order) 
 			]
 			if request_type == "soe":
 				'''this should only return the request cash advance that has
@@ -532,8 +532,8 @@ class PortalRequest(http.Controller):
 							'qty': q.quantity_available,
 							# building lines for cash advance and soe
 							'used_qty': q.quantity_available, # q.used_qty,
-							'amount_total': q.amount_total,
-							'used_amount': q.amount_total, # q.used_amount,
+							'amount_total': q.amount_total, # FIXME PLEASE DONT CHANGE RATHER ADD THE SUB TOTAL AMOUNT ON THE DYNAMIC RENDERING
+							'used_amount': q.amount_total, # q.used_amount, 
 							'sub_total_amount': q.sub_total_amount, # q.used_amount,
 							'description': q.description or "",
 							'request_line_id': q.id,
@@ -578,19 +578,34 @@ class PortalRequest(http.Controller):
 		productItems = json.loads(post.get('productItems'))
 		request_type_option = post.get('request_type')
 		_logger.info(f'productitemmms {productItems}')
+		query = request.params.get('q', '') 
 		domain = [
-			('detailed_type', 'in', ['consu', 'product']), ('id', 'not in', [int(i) for i in productItems])
+			('detailed_type', 'in', ['consu', 'product']), 
+   			('id', 'not in', [int(i) for i in productItems]),
+			('company_id', '=', request.env.user.company_id.id), 
+   			('active', '=', True), 
+      		('name', 'ilike', query)
 			]
+		_logger.info(f'CQUERY {query}')
+
 		if request_type_option and request_type_option == "vehicle_request":
-			domain = [('is_vehicle_product', '=', True), ('detailed_type', 'in', ['service']), ('id', 'not in', [int(i) for i in productItems])]
+			domain = [
+       					('is_vehicle_product', '=', True), 
+            			('detailed_type', 'in', ['service']), 
+               			('id', 'not in', [int(i) for i in productItems]),
+						('company_id', '=', request.env.user.company_id.id), 
+						('active', '=', True), 
+						('name', 'ilike', query)
+                  	]
+		# domain = [('id', 'in', [403, 222, 1000, 5000])]
 		products = request.env["product.product"].sudo().search(domain)
 		return json.dumps({
-			"results": [{"id": item.id,"text": f'{item.name} {item.id}', 'qty': item.qty_available} for item in products],
+			"results": [{"id": item.id,"text": f'{item.name} {item.default_code}', 'qty': item.qty_available} for item in products],
 			"pagination": {
 				"more": True,
 			}
 		})
-  
+        
 	@http.route(['/portal-request-employee-reliever'], type='http', website=True, auth="user", csrf=False)
 	def get_employee_reliever(self, **post):
 		available_employees = []

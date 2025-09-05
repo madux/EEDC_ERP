@@ -104,7 +104,8 @@ class MemoConfigDuplicationWizard(models.TransientModel):
             #         'memo_type': memo_config.memo_type.id
             #     })
             for comp in self.company_ids:
-                for dept in self.dept_ids:
+                company_depts = self.mapped('dept_ids').filtered(lambda co: co.company_id.id == comp.id)
+                for dept in company_depts:
                     config_exist = self.env['memo.config'].search([
                         ('department_id', '=', dept.id), 
                         ('company_id', '=', comp.id),
