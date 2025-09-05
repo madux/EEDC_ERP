@@ -5,7 +5,7 @@
         <record model="multi.branch" id="branch001">
             <field name="name">HOLDCO CHQ</field>
             <field name="code">BR0001</field>
-            <field name="company_id" ref="multi_company.company_enugu_edp"/>
+            <field name="company_id" ref="base.main_company"/>
         </record>
         <record model="multi.branch" id="branch0002">
             <field name="name">MAINPOWER HQ</field>
