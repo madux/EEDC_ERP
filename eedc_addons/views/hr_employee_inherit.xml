@@ -102,12 +102,7 @@
                     <filter string="First Name" name="first_name" />
                     <filter string="Middle Name" name="middle_name" />
                     <filter string="Last Name" name="last_name" />
-                </field>
-                <field name="parent_id" position="after">
                     <field name="external_company_id"/>
-                    <filter string="First Name" name="first_name" />
-                    <filter string="Middle Name" name="middle_name" />
-                    <filter string="Last Name" name="last_name" />
                 </field>
                 <xpath expr="//filter[@name='my_department']" position="after">
                     <filter name="group_external_company_id" string='External Company' domain="[('is_external_staff','=', True)]"/>

@@ -26,7 +26,7 @@ class ResUsers(models.Model):
                 # if self.has_group('base.group_portal'):
                 #     pass
                 # else:
-                    raise ValidationError(_('The user cannot have more than one user types.'))
+                raise ValidationError(_('The user cannot have more than one user types.'))
                 
     
     def _has_multiple_groups(self, group_ids):

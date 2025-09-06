@@ -698,7 +698,7 @@ class ImportRecords(models.TransientModel):
                 }
 
                 try:
-                    user, password = self.generate_user(user_vals)
+                    user, password = generate_user(user_vals)
                 except Exception as e:
                     _logger.exception("generate_user raised an exception for %s: %s", user_vals.get('fullname'), e)
                     user, password = False, False
@@ -826,7 +826,6 @@ class ImportRecords(models.TransientModel):
             for batch_data in self.stream_excel_rows(sheet, batch_size):
                 batch_num += 1
                 _logger.info("Processing batch %s of %s (%s records)", batch_num, total_batches, len(batch_data))
-
                 for row in batch_data:
                     row_label = row[0] if row and len(row) > 0 else 'Unknown'
                     try:
@@ -834,6 +833,7 @@ class ImportRecords(models.TransientModel):
                             with self.env.cr.savepoint():
                                 if len(row) > 1 and find_existing_employee(row[1]):
                                     unsuccess_records.append(f'Employee with {str(row[1])} already exists')
+                                    
                                     continue
 
                                 static_emp_date = '01/01/2014'
@@ -920,7 +920,7 @@ class ImportRecords(models.TransientModel):
                 _logger.info("Completed batch %s of %s", batch_num, total_batches)
                 
             errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
-            errors.append('Unsuccessful Import(s): '+str(len(unsuccess_records))+' Record(s)')
+            errors.append("Unsuccessful Import(s):" +str(len(unsuccess_records)) + "Record(s): see more \n" +'\n'.join(unsuccess_records))
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
@@ -1076,7 +1076,9 @@ class ImportRecords(models.TransientModel):
                 _logger.info(f"Completed update batch {batch_num} of {total_batches}")
             
             errors.append('Successful Update(s): ' +str(count))
-            errors.append('Unsuccessful Update(s): '+str(len(unsuccess_records))+' Record(s)')
+            # errors.append('Unsuccessful Update(s): '+str(len(unsuccess_records))+' Record(s)')
+            errors.append("Unsuccessful Import(s):" +str(len(unsuccess_records)) + "Record(s): see more \n" +'\n'.join(unsuccess_records))
+            
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message)
