@@ -340,6 +340,7 @@
                                 <t t-if="req.memo_type.memo_key not in ['server_access','leave_request', 'loan', 'Internal','employee_update', 'employee_update','recruitment_request']">
                                     <div class="form-row" id="product_item_form_div">
                                         <h3 class="fs-title">Request Items</h3>
+                                        <t t-set="total_amount" t-value="0"/>
                                         <div class="tableclass table-responsive" id="product_table_div">
                                             <table width="100%" border="1" bordercolor="#FFFFFF"
                                             bgcolor="#F7F7EF" border-collapse="collapse" align="center"

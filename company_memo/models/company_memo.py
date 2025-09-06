@@ -1355,18 +1355,19 @@ class Memo_Model(models.Model):
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
-        
+        approver_ids = self.sudo().stage_id.approver_ids
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
                 'view_id': view_id.id,
-                "view_mode": 'form',
+                'view_mode': 'form',
                 'res_model': 'memo.foward',
                 'type': 'ir.actions.act_window',
                 'target': 'new',
                 'context': {
                     'default_memo_record': self.id,
                     'default_resp': self.env.uid,
+                    'default_direct_employee_id': approver_ids and approver_ids[0].id if approver_ids else False,
                     'default_dummy_conditional_stage_ids': [(6, 0, condition_stages)],
                     'default_has_conditional_stage': True if self.stage_id.memo_has_condition else False,
                     'default_stage_id': self.stage_id.id,
@@ -2249,12 +2250,16 @@ class Memo_Model(models.Model):
             if approver is an account officer, system generates move and open the exact record"""
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].sudo().search(
-             [('company_id', '=', self.env.user.company_id.id),
+             [('company_id', '=', self.company_id.id),
             '|',('type', '=', 'purchase'),
              ('code', '=', 'BILL'),
              ], limit=1)
             if not journal_id:
-                raise UserError(f"You do have any journal set to the current company {self.env.user.company_id.name} with type in 'purchase' and journal code set as 'BILL'")
+                raise UserError(f"""
+                                You do have any journal set to the current company {self.company_id.name} 
+                                with type in 'purchase' and journal code set as 'BILL'
+                                """
+                                )
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
@@ -2265,8 +2270,8 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
-                    'company_id': self.env.user.company_id.id,
-                    'currency_id': self.env.user.company_id.currency_id.id,
+                    'company_id': self.company_id.id,
+                    'currency_id': self.company_id.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/ {self.code}",
@@ -2274,7 +2279,7 @@ class Memo_Model(models.Model):
                     'invoice_date': fields.Date.today(),
                     'date': fields.Date.today(),
                     'journal_id': journal_id.id,
-				    'company_id': self.env.user.company_id.id,
+				    'company_id': self.company_id.id,
                     'invoice_line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
@@ -2285,7 +2290,8 @@ class Memo_Model(models.Model):
                             'quantity': pr.quantity_available,
                             'discount': 0.0,
                             'code': pr.code,
-                            'company_id': self.env.user.company_id.id,
+                            'company_id': self.company_id.id,
+				            'branch_id': self.employee_id.user_id.branch_id.id,
                             'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
                             'product_id': pr.product_id.id if pr.product_id else None,
                     }) for pr in self.product_ids],
@@ -2361,25 +2367,26 @@ class Memo_Model(models.Model):
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
             view_id = self.env.ref('account.view_move_form').id
-            journal_id = self.env['account.journal'].search(
+            journal_id = self.env['account.journal'].sudo().search(
             [
-                ('company_id', '=', self.env.user.company_id.id),
-                ('type', '=', 'general'),
+                ('company_id', '=', self.company_id.id),
+                ('type', '=', 'bank'),
+                # ('type', '=', 'general'),
             #  ('code', '=', 'INV')
              ], limit=1)
             if not journal_id:
-                raise UserError("No General / Miscellaneous journal configured for the current user company: Contact admin to setup before proceeding")
+                raise UserError(f"No General / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
-                partner_id = self.employee_id.user_id.partner_id
+                partner_id = self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
-                    'company_id': self.env.user.company_id.id,
-                    'currency_id': self.env.user.company_id.currency_id.id,
+                    'company_id': self.sudo().company_id.id,
+                    'currency_id': self.sudo().company_id.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/{self.code}",

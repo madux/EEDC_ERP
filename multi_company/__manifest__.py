@@ -18,6 +18,7 @@
         'data/res_company_data.xml',
         'data/multi_branch.xml',
         'data/stock_location.xml',
+        'views/report_filters.xml',
         
     ],
     # 'assets': {'web.assets_backend': [
