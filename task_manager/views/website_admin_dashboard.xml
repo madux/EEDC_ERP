@@ -78,29 +78,100 @@
         </div>
 
         <!-- CHARTS WRAPPER -->
-        <div class="tm-ad-charts mt-3">
-          <div class="tm-card">
-            <div class="tm-card-head">Stage Distribution</div>
+        <div class="tm-ad-charts tm-mt-3">
+          <!-- Stage -->
+          <div class="tm-card" data-chart-key="stage">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Stage Distribution</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"        title="Bar"        aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"      title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"       title="Line"       aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"        title="Pie"        aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut"   title="Doughnut"   aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_stage"></canvas></div>
           </div>
-          <div class="tm-card">
-            <div class="tm-card-head">Priority Mix</div>
+
+          <!-- Priority -->
+          <div class="tm-card" data-chart-key="priority">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Priority Mix</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_priority"></canvas></div>
           </div>
-          <div class="tm-card">
-            <div class="tm-card-head">Overdue by Manager</div>
+
+          <!-- Overdue by Manager -->
+          <div class="tm-card" data-chart-key="overdueMgr">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Overdue by Manager</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_overdue_mgr"></canvas></div>
           </div>
-          <div class="tm-card">
-            <div class="tm-card-head">Top Managers (Done)</div>
+
+          <!-- Top Managers (Done) -->
+          <div class="tm-card" data-chart-key="mgrDone">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Top Managers (Done)</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_mgr_done"></canvas></div>
           </div>
-          <div class="tm-card">
-            <div class="tm-card-head">Top Employees (Done)</div>
+
+          <!-- Top Employees (Done) -->
+          <div class="tm-card" data-chart-key="empDone">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Top Employees (Done)</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_emp_done"></canvas></div>
           </div>
-          <div class="tm-card">
-            <div class="tm-card-head">Top Overdue (Employees)</div>
+
+          <!-- Top Overdue (Employees) -->
+          <div class="tm-card" data-chart-key="empOverdue">
+            <div class="tm-card-head d-flex align-items-center justify-content-between">
+              <span class="tm-card-title">Top Overdue (Employees)</span>
+              <div class="tm-card-tools" role="toolbar" aria-label="Chart tools">
+                <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                <button class="tm-ct tm-ct-expand" data-action="expand" title="Expand" aria-label="Expand"><svg viewBox="0 0 24 24"><path d="M3 10V3h7M21 14v7h-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+              </div>
+            </div>
             <div class="tm-card-body"><canvas id="tm_ad_chart_emp_overdue"></canvas></div>
           </div>
         </div>
@@ -133,6 +204,31 @@
               <div class="btn-group">
                 <button class="btn btn-sm btn-light" id="tm_ad_prev">Prev</button>
                 <button class="btn btn-sm btn-light" id="tm_ad_next">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SHARED MODAL for expanded chart -->
+        <div class="modal fade" id="tm_ad_modal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">—</h5>
+                <div class="tm-card-tools ms-3" role="toolbar" aria-label="Chart tools (modal)">
+                  <button class="tm-ct" data-type="bar"      title="Bar" aria-label="Bar chart"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg></button>
+                  <button class="tm-ct" data-type="bar-h"    title="Horizontal" aria-label="Horizontal bar chart"><svg viewBox="0 0 24 24"><rect y="4" x="3" width="18" height="3"/><rect y="10.5" x="3" width="12" height="3"/><rect y="17" x="3" width="8" height="3"/></svg></button>
+                  <button class="tm-ct" data-type="line"     title="Line" aria-label="Line chart"><svg viewBox="0 0 24 24"><path d="M3 18l6-7 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                  <button class="tm-ct" data-type="pie"      title="Pie" aria-label="Pie chart"><svg viewBox="0 0 24 24"><path d="M12 12V3a9 9 0 019 9z"/><path d="M12 12L3 12a9 9 0 009 9z"/><path d="M12 12L12 3A9 9 0 003 12z"/></svg></button>
+                  <button class="tm-ct" data-type="doughnut" title="Doughnut" aria-label="Doughnut chart"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg></button>
+                  <!-- <button class="tm-ct tm-ct-collapse" data-action="collapse" title="Close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M10 3H3v7M14 21h7v-7M21 10V3h-7M3 14v7h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button> -->
+                  <button class="tm-ct tm-ct-collapse" data-action="collapse" title="Collapse" aria-label="Collapse"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                </div>
+              </div>
+              <div class="modal-body">
+                <div class="tm-modal-canvas-wrap">
+                  <canvas id="tm_ad_modal_canvas"></canvas>
+                </div>
               </div>
             </div>
           </div>

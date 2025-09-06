@@ -131,7 +131,17 @@
 .tm-admin-page .tm-ad-charts {
   column-count: 2;
   column-gap: 1.5rem;
+
+  .tm-card {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 1.5rem;
+    break-inside: avoid;
+  }
 }
+
+.tm-admin-page .tm-mt-3 { margin-top: 1rem; }
+
 
 .tm-admin-page .tm-card {
   background: var(--ad-card-bg);
@@ -166,17 +176,78 @@
   min-height: 300px;
 }
 
-/* Hover effects */
-.tm-admin-page .tm-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(2, 6, 23, .12);
+
+/* Card tools (icon buttons) */
+.tm-admin-page .tm-card-tools {
+  display: inline-flex;
+  gap: .25rem;
+
+  .tm-ct {
+    --size: 28px;
+    width: var(--size);
+    height: var(--size);
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #334155;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+
+    &:hover { background: rgba(2,6,23,.06); }
+    &:focus-visible { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+    &.is-active { background: rgba(2,6,23,.12); color: #111827; }
+
+    svg { width: 18px; height: 18px; display: block; }
+  }
 }
+/* Hover effects */
+// .tm-admin-page .tm-card:hover {
+//   transform: translateY(-4px);
+//   box-shadow: 0 12px 32px rgba(2, 6, 23, .12);
+// }
+
+/* --- Modal-only styles for the chart tool buttons --- */
+#tm_ad_modal .tm-card-tools {
+  display: inline-flex;
+  gap: .25rem;
+}
+#tm_ad_modal .tm-card-tools .tm-ct {
+  --size: 28px;
+  width: var(--size);
+  height: var(--size);
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: #334155;            /* SVGs using currentColor become visible */
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+#tm_ad_modal .tm-card-tools .tm-ct:hover { background: rgba(2,6,23,.06); }
+#tm_ad_modal .tm-card-tools .tm-ct:focus-visible { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+#tm_ad_modal .tm-card-tools .tm-ct.is-active { background: rgba(2,6,23,.12); color: #111827; }
+
+/* ensure inline SVGs have a visible size */
+#tm_ad_modal .tm-card-tools .tm-ct svg { width: 18px; height: 18px; display: block; }
+
+/* keep the modal above everything even after reparenting to <body> */
+#tm_ad_modal { z-index: 2002 !important; }
+#tm_ad_modal + .modal-backdrop,
+.modal-backdrop.show { z-index: 2001 !important; }
 
 /* ---------- Helpers ---------- */
 .tm-admin-page .text-muted { color: var(--ad-text-muted) !important; }
 .tm-admin-page .small { font-size: .875rem; }
-
 /* ---------- Responsive ---------- */
+  @media (min-width: 1400px) { 
+    .tm-admin-page .tm-ad-charts{ column-count: 3; }
+  }
+
 @media (max-width: 991.98px) {
   .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
   .tm-admin-page .tm-ad-charts { column-count: 1; }
