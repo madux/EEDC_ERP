@@ -286,25 +286,6 @@ odoo.define('task_manager.tm_admin_front', function (require) {
       dbg('_refreshAll() end');
     },
 
-    // _refreshList: async function () {
-    //   dbg('_refreshList() begin');
-    //   try {
-    //     const f = this._filters();
-    //     const res = await API.tasks(f);
-    //     if (!(res && res.ok)) { warn('Tasks API not ok', res); return; }
-    //     const d = res.data;
-    //     dbg('Tasks data', d);
-    //     this.$root.data('tm-pages', d.pages || 1);
-    //     this.$('#tm_ad_pager_info').text(`Page ${d.page} of ${d.pages}`);
-    //     this.$('#tm_ad_results_info').text(`${d.total} result${d.total === 1 ? '' : 's'}`);
-    //     this._renderTable(d.rows || [], this.$root.data('tm-group') || '');
-    //   } catch (e) {
-    //     err('List refresh failed:', e);
-    //   } finally {
-    //     dbg('_refreshList() end');
-    //   }
-    // },
-
     _refreshList: async function () {
       dbg('_refreshList() begin');
       try {

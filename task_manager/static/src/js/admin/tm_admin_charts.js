@@ -21,10 +21,10 @@ odoo.define('task_manager.tm_admin_charts', function (require) {
 
   const COLORS = {
     stage: {
-      todo: '#6366f1', // indigo
+    todo: '#6366f1',          // indigo
       in_progress: '#f59e0b', // amber
-      review: '#a855f7', // purple
-      done: '#16a34a', // green
+      review: '#a855f7',      // purple
+      done: '#16a34a',        // green
     },
     priority: ['#ef4444', '#f59e0b', '#9ca3af'], // high, med, low
     bars: '#4f46e5',

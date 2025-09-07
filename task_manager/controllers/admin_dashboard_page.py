@@ -7,7 +7,7 @@ from math import ceil
 # =========================
 # Admin Dashboard (Website)
 # =========================
-# - Page:      GET  /tm/admin        -> renders QWeb page (website)
+# - Page:      GET  /admin-taskboard        -> renders QWeb page (website)
 # - Endpoints: POST /tm/admin/api/*  -> JSON for charts/tiles (frontend only)
 #
 # Keep everything in this one controller file for neatness (no backend client action).
@@ -24,63 +24,6 @@ def _parse_filters(params):
         'text_q': (params.get('text_q') or '').strip(),
     }
     return f
-
-
-# def _any_of(clauses):
-#     """Builds (A OR B OR C) in Odoo domain syntax."""
-#     clauses = [c for c in clauses if c] or []
-#     if not clauses:
-#         return []
-#     dom = clauses[0]
-#     for c in clauses[1:]:
-#         dom = ['|', dom, c]
-#     return dom
-
-# def _text_domain(text):
-#     """
-#     Free-text across multiple fields.
-#     AND across words, OR across fields.
-#     Produces a valid Odoo domain in prefix form.
-#     """
-#     text = (text or '').strip()
-#     if not text:
-#         return []
-
-#     terms = [t for t in text.split() if t]
-#     if not terms:
-#         return []
-
-#     fields = [
-#         'name',
-#         'key',
-#         'assignee_staff_id',
-#         'employee_id.name',
-#         'manager_id.name',
-#     ]
-
-#     # OR-reduce: A OR B OR C  =>  ['|', ['|', A, B], C]
-#     def _or_reduce(conds):
-#         it = iter(conds)
-#         expr = next(it)
-#         for c in it:
-#             expr = ['|', expr, c]
-#         return expr
-
-#     # AND-reduce: X AND Y AND Z  =>  ['&', ['&', X, Y], Z]
-#     def _and_reduce(parts):
-#         it = iter(parts)
-#         expr = next(it)
-#         for p in it:
-#             expr = ['&', expr, p]
-#         return expr
-
-#     per_term_exprs = []
-#     for term in terms:
-#         field_conds = [(f, 'ilike', term) for f in fields]
-#         per_term_exprs.append(_or_reduce(field_conds))
-
-#     # AND across all term expressions (every word must match somewhere)
-#     return _and_reduce(per_term_exprs)
 
 def _any_of(clauses):
     """Return a flat OR chain in prefix form: ['|','|', A, B, C]."""
@@ -163,8 +106,6 @@ def _domain_from_filters(f):
     return dom
 
 
-
-
 def _count_from_row(r, *extra_keys):
     # Prefer id_count, then __count, then any extra alias we hint
     for k in ('id_count', '__count', *extra_keys):
@@ -175,7 +116,7 @@ def _count_from_row(r, *extra_keys):
 class TMAdminDashboardPage(http.Controller):
 
     # ---------- Page ----------
-    @http.route('/tm/admin', type='http', auth='user', website=True)
+    @http.route('/admin-taskboard', type='http', auth='user', website=True)
     def admin_dashboard_page(self, **kw):
         user = request.env.user
         if not _has_access(user):

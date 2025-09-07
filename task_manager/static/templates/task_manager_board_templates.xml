@@ -89,7 +89,10 @@
                 </t>
               </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"/>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal"/> -->
+            <button type="button" class="close tm-close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">X</span>
+            </button>
           </div>
 
           <!-- Body -->

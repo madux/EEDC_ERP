@@ -248,9 +248,18 @@
 
 /* ===== Modal & Chatter ===== */
 .tm-page .tm-modal .modal-content { border-radius: 16px; }
-.tm-page .tm-modal .modal-header { border-bottom: 1px solid #e5e7eb; }
+.tm-page .tm-modal .modal-header { border-bottom: 1px solid #e5e7eb; position: relative;}
 .tm-page .tm-modal .tm-meta .tm-chip {
   background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+}
+.tm-page .tm-modal .tm-close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    opacity: .7;
+    &:hover { opacity: 1; }
 }
 
 /* Priority pill inside modal header (reuse colors) */
