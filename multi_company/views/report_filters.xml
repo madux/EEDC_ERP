@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE xml>
+<odoo>
+    <data noupdate="0">
+        <!-- department -->
+        <record id="view_multi_company_hr_department_search" model="ir.ui.view">
+            <field name="name">multi_company.hr_department.search</field>
+            <field name="model">hr.department</field>
+            <field name="inherit_id" ref="hr.view_department_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                    <field name="company_id" />
+                    
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <group expand="0" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group>
+                </xpath>
+
+                <!-- <xpath expr="//group[@name='group_by']" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+        <!-- employee -->
+        <record id="view_multi_company_hr_employee_search" model="ir.ui.view">
+            <field name="name">multi_company.hr.employee.search</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='parent_id']" position="before">
+                <separator/>
+                    <field name="company_id" />
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_multi_company_memo_model_search" model="ir.ui.view">
+            <field name="name">multi_company.memo.model.search</field>
+            <field name="model">memo.model</field>
+            <field name="inherit_id" ref="company_memo.main_memo_model_search_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='Date']" position="after">
+                     
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_multi_company_memo_config_search" model="ir.ui.view">
+            <field name="name">multi_company.memo.config.search</field>
+            <field name="model">memo.config</field>
+            <field name="inherit_id" ref="company_memo.view_memo_config_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='memo_inactive_filter']" position="after">
+                     
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+        <record id="view_multi_company_account_journal_search" model="ir.ui.view">
+            <field name="name">multi_company.account.journal.search</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                     
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group>
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+        <record id="view_multi_company_res_partner_search" model="ir.ui.view">
+            <field name="name">multi_company.res_partner.search</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_res_partner_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                     
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+         <record id="view_multi_company_account_move_search" model="ir.ui.view">
+            <field name="name">multi_company.account.move.search</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_account_move_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='date']" position="after">
+                     <separator/>
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+        <record id="view_multi_company_account_move_bill_search" model="ir.ui.view">
+            <field name="name">multi_company.account.move.search</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='due_date']" position="after">
+                     <separator/>
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+        <record id="view_multi_company_account_payment_search" model="ir.ui.view">
+            <field name="name">multi_company.account.payment.search</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='company']" position="after">
+                     <separator/>
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <!-- <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath> -->
+            </field>
+        </record>
+        <record id="view_multi_company_product_template_search" model="ir.ui.view">
+            <field name="name">multi_company.product.template.search</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_search_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                     <separator/>
+                    <filter 
+                    name="holdco_filter" 
+                    domain="[('company_id.name','ilike', 'ENUGU')]" 
+                    string="HOLD Co"/>
+
+                    <filter 
+                    name="mainpower_filter" 
+                    domain="[('company_id.name','ilike', 'MAIN')]" 
+                    string="MAINPOWER"/>
+
+                    <filter 
+                    name="firstpower_filter" 
+                    domain="[('company_id.name','ilike', 'FIRST')]" 
+                    string="FIRST POWER"/>
+
+                    <filter
+                        name="transpower_filter"
+                        domain="[('company_id.name','ilike', 'TRANSPOWER')]"
+                        string="TRANSPOWER Co"
+                    />
+
+                    <filter 
+                    name="new_era_filter" 
+                    domain="[('company_id.name','ilike', 'NEW')]" 
+                    string="NEW ERA"/>
+
+                    <filter 
+                    name="eastland_filter" 
+                    domain="[('company_id.name','ilike', 'EAST')]" 
+                    string="EASTLAND"/>
+
+                    <!-- <group expand="0" name="grp_by" string="Group By...">
+                        <filter
+                            name="group_by_company_id"
+                            string="Company"
+                            domain="[]"
+                            context="{'group_by':'company_id'}"
+                        />
+                    </group> -->
+                </xpath>
+
+                <xpath expr="//group[1]" position="inside">
+                    <filter name="group_by_company_id" string="Company" 
+                            context="{'group_by': 'company_id'}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

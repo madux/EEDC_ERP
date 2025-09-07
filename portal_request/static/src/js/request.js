@@ -236,7 +236,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
                         </th>
                         <th width="10%">
-                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Price"/> 
+                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Amount"/> 
                         </th>
                         <th width="10%">
                             <input type="text" name="usedqty" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" class="productUsedQty form-control ${hidden}" labelfor="Used Quantity"/> 
@@ -583,7 +583,7 @@ odoo.define('portal_request.portal_request', function (require) {
             ajax: {
               url: '/portal-request-product',
               dataType: 'json',
-              delay: 250,
+              delay: 30,
               data: function (term, page) {
                 return {
                   q: term, //search term
@@ -601,12 +601,13 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               cache: true
             },
-            minimumInputLength: 1,
+            minimumInputLength: 2,
             multiple: false,
             placeholder: 'Search for a Products',
-            allowClear: false,
+            allowClear: true,
           });
     }
+
 
     $('#product_ids').select2({
     ajax: {
