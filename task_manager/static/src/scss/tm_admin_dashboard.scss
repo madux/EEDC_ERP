@@ -32,6 +32,10 @@
   color: var(--ad-text);
 }
 
+
+/* ---------- Optional: force light regardless of OS dark mode ---------- */
+.tm-admin-page { color-scheme: light; }
+
 /* ---------- Toolbar ---------- */
 .tm-admin-page .tm-ad-toolbar {
   background: var(--ad-card-bg);
@@ -243,23 +247,6 @@
 /* ---------- Helpers ---------- */
 .tm-admin-page .text-muted { color: var(--ad-text-muted) !important; }
 .tm-admin-page .small { font-size: .875rem; }
-/* ---------- Responsive ---------- */
-  @media (min-width: 1400px) { 
-    .tm-admin-page .tm-ad-charts{ column-count: 3; }
-  }
-
-@media (max-width: 991.98px) {
-  .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
-  .tm-admin-page .tm-ad-charts { column-count: 1; }
-  .tm-admin-page .tm-card .tm-card-body canvas { min-height: 260px; }
-}
-@media (max-width: 575.98px) {
-  .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value { font-size: 1.35rem; }
-}
-
-/* ---------- Optional: force light regardless of OS dark mode ---------- */
-.tm-admin-page { color-scheme: light; }
-
 
 /* Control panel look */
 .tm-admin-page .tm-cp .btn-light { border: 1px solid var(--ad-border); }
@@ -271,3 +258,55 @@
 /* Table tweaks */
 #tm_ad_table thead th { cursor: pointer; white-space: nowrap; }
 #tm_ad_table tbody tr.table-light td { background: #f8fafc; }
+
+/* === Table sort UX === */
+#tm_ad_table {
+  thead th {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    padding-right: 1.75rem; // room for arrow
+    transition: background-color .15s ease, color .15s ease;
+
+    &.is-sorted {
+      color: #0a58ca; // accent (Bootstrap primary-ish)
+      background-color: rgba(13, 110, 253, .06);
+    }
+
+    /* one arrow that flips by direction */
+    &.is-sorted::after {
+      content: "";
+      position: absolute;
+      right: .55rem;
+      top: 50%;
+      margin-top: -4px;
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+    }
+
+    &.is-sorted-asc::after {
+      border-bottom: 8px solid currentColor; /* ▲ */
+    }
+
+    &.is-sorted-desc::after {
+      border-top: 8px solid currentColor;    /* ▼ */
+    }
+
+    /* subtle hover */
+    &:hover { background-color: rgba(2, 6, 23, .03); }
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 1400px) { 
+  .tm-admin-page .tm-ad-charts{ column-count: 3; }
+}
+@media (max-width: 991.98px) {
+  .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
+  .tm-admin-page .tm-ad-charts { column-count: 1; }
+  .tm-admin-page .tm-card .tm-card-body canvas { min-height: 260px; }
+}
+@media (max-width: 575.98px) {
+  .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value { font-size: 1.35rem; }
+}

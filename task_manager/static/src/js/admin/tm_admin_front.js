@@ -190,6 +190,7 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         const next = asc ? (key + ' desc') : (key + ' asc');
         dbg('Sort click', { key, next });
         this.$root.data('tm-sort', next);
+        this._syncSortIndicators();
         this._refreshList();
       });
 
@@ -205,7 +206,38 @@ odoo.define('task_manager.tm_admin_front', function (require) {
         dbg('Pager next', { p, pages });
         if (p < pages) { this.$root.data('tm-page', p + 1); this._refreshList(); }
       });
+
+      this.$root.on('change', '#tm_ad_page_input', (e) => {
+        let val = parseInt($(e.currentTarget).val(), 10);
+        const pages = this.$root.data('tm-pages') || 1;
+        if (val >= 1 && val <= pages) {
+          this.$root.data('tm-page', val);
+          this._refreshList();
+        } else {
+          $(e.currentTarget).val(this.$root.data('tm-page') || 1);
+        }
+      });
+
     },
+
+    /**
+     * Highlight sorted column and show arrow.
+     */
+    _syncSortIndicators: function () {
+      const sort = this.$root.data('tm-sort') || ''; // e.g. "due_date asc"
+      const parts = sort.trim().split(/\s+/);
+      const field = parts[0] || '';
+      const dir   = (parts[1] || 'asc').toLowerCase();
+
+      const $ths = this.$('#tm_ad_table thead th');
+      $ths.removeClass('is-sorted is-sorted-asc is-sorted-desc');
+
+      if (field) {
+        const $th = this.$(`#tm_ad_table thead th[data-sort="${field}"]`);
+        $th.addClass('is-sorted').addClass(dir === 'desc' ? 'is-sorted-desc' : 'is-sorted-asc');
+      }
+    },
+
 
     _filters: function () {
       const f = API.pickFilters(this.$root);
@@ -254,24 +286,74 @@ odoo.define('task_manager.tm_admin_front', function (require) {
       dbg('_refreshAll() end');
     },
 
+    // _refreshList: async function () {
+    //   dbg('_refreshList() begin');
+    //   try {
+    //     const f = this._filters();
+    //     const res = await API.tasks(f);
+    //     if (!(res && res.ok)) { warn('Tasks API not ok', res); return; }
+    //     const d = res.data;
+    //     dbg('Tasks data', d);
+    //     this.$root.data('tm-pages', d.pages || 1);
+    //     this.$('#tm_ad_pager_info').text(`Page ${d.page} of ${d.pages}`);
+    //     this.$('#tm_ad_results_info').text(`${d.total} result${d.total === 1 ? '' : 's'}`);
+    //     this._renderTable(d.rows || [], this.$root.data('tm-group') || '');
+    //   } catch (e) {
+    //     err('List refresh failed:', e);
+    //   } finally {
+    //     dbg('_refreshList() end');
+    //   }
+    // },
+
     _refreshList: async function () {
       dbg('_refreshList() begin');
       try {
         const f = this._filters();
+
+        // include paging + sort from widget state
+        f.page     = this.$root.data('tm-page')  || 1;
+        f.sort_by  = this.$root.data('tm-sort')  || '';
+        // (server already defaults limit=20; keep as-is unless you add a selector)
+        // f.limit = ...
+
         const res = await API.tasks(f);
         if (!(res && res.ok)) { warn('Tasks API not ok', res); return; }
-        const d = res.data;
+
+        const d = res.data || {};
         dbg('Tasks data', d);
+
+        // keep page state for PREV/NEXT and page input
+        this.$root.data('tm-page',  d.page || 1);
         this.$root.data('tm-pages', d.pages || 1);
+
+        // pager text + input sync
         this.$('#tm_ad_pager_info').text(`Page ${d.page} of ${d.pages}`);
-        this.$('#tm_ad_results_info').text(`${d.total} result${d.total === 1 ? '' : 's'}`);
+        this.$('#tm_ad_page_input').val(d.page); // (safe even if the input isn't present)
+
+        // “1–20 of 26 results” (handle empty set nicely)
+        let start = 0, end = 0;
+        if ((d.total || 0) > 0) {
+          start = (d.page - 1) * d.limit + 1;
+          end   = start + (d.rows?.length || 0) - 1;
+        }
+        this.$('#tm_ad_results_info').text(
+          `${start}-${end} of ${d.total || 0} results`
+        );
+
+        // enable/disable edge buttons
+        this.$('#tm_ad_prev').prop('disabled', (d.page <= 1));
+        this.$('#tm_ad_next').prop('disabled', (d.page >= d.pages));
+
+        // render table rows
         this._renderTable(d.rows || [], this.$root.data('tm-group') || '');
+
       } catch (e) {
         err('List refresh failed:', e);
       } finally {
         dbg('_refreshList() end');
       }
     },
+
 
     _renderTable: function (rows, groupBy) {
       const $tb = this.$('#tm_ad_table tbody').empty();
