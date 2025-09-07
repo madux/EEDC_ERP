@@ -105,31 +105,91 @@
 }
 
 /* ---------- KPI Tiles ---------- */
-.tm-admin-page .tm-ad-kpis .tm-kpi {
-  background: var(--ad-card-bg);
-  border: 1px solid var(--ad-border);
-  border-radius: var(--ad-radius);
-  padding: .9rem 1rem;
-  box-shadow: var(--ad-soft-shadow);
+// .tm-admin-page .tm-ad-kpis .tm-kpi {
+//   background: var(--ad-card-bg);
+//   border: 1px solid var(--ad-border);
+//   border-radius: var(--ad-radius);
+//   padding: .9rem 1rem;
+//   box-shadow: var(--ad-soft-shadow);
+//   position: relative;
+//   overflow: hidden;
+// }
+// .tm-admin-page .tm-ad-kpis .tm-kpi::before {
+//   content: "";
+//   position: absolute;
+//   inset: 0;
+//   background: linear-gradient(135deg, rgba(79,70,229,.06), rgba(217,70,239,.05));
+//   pointer-events: none;
+// }
+// .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-label {
+//   font-size: .85rem; color: var(--ad-text-muted); margin-bottom: .15rem;
+// }
+// .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value {
+//   font-size: 1.6rem; font-weight: 800; color: var(--ad-text); line-height: 1.1;
+// }
+// .tm-admin-page .tm-ad-kpis .tm-kpi.kpi-good { border-left: 6px solid var(--ad-good); }
+// .tm-admin-page .tm-ad-kpis .tm-kpi.kpi-warn { border-left: 6px solid var(--ad-warn); }
+// .tm-admin-page .tm-ad-kpis .tm-kpi.kpi-bad  { border-left: 6px solid var(--ad-bad);  }
+
+/* === KPI cards === */
+.tm-kpi {
+  --kpi-accent: #4f46e5;      /* default accent (indigo) */
+  --kpi-ink: #0b1324;         /* text */
+  --kpi-bg-tint: color-mix(in srgb, var(--kpi-accent) 8%, #ffffff);
+  --kpi-border: color-mix(in srgb, var(--kpi-accent) 22%, #ffffff);
+
   position: relative;
-  overflow: hidden;
+  border-radius: 14px;
+  padding: 14px 16px 16px 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--kpi-accent) 6%, #ffffff), #fff)
+    padding-box;
+  border: 1px solid var(--kpi-border);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, .06);
+  min-height: 74px;
+
+  .tm-kpi-label {
+    font-size: .78rem;
+    letter-spacing: .02em;
+    color: color-mix(in srgb, var(--kpi-ink) 62%, #0000);
+    margin-bottom: .15rem;
+  }
+  .tm-kpi-value {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--kpi-ink);
+  }
+
+  .tm-kpi-icon {
+    position: absolute;
+    right: 10px; top: 10px;
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--kpi-accent) 14%, #ffffff);
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--kpi-accent) 28%, #ffffff);
+    box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--kpi-accent) 6%, #ffffff);
+    svg {
+      width: 18px; height: 18px;
+      fill: none;
+      stroke: color-mix(in srgb, var(--kpi-accent) 82%, #000);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  /* Hover lift */
+  // &:hover { transform: translateY(-1px); transition: transform .15s ease; }
 }
-.tm-admin-page .tm-ad-kpis .tm-kpi::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(79,70,229,.06), rgba(217,70,239,.05));
-  pointer-events: none;
-}
-.tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-label {
-  font-size: .85rem; color: var(--ad-text-muted); margin-bottom: .15rem;
-}
-.tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value {
-  font-size: 1.6rem; font-weight: 800; color: var(--ad-text); line-height: 1.1;
-}
-.tm-admin-page .tm-ad-kpis .tm-kpi.kpi-good { border-left: 6px solid var(--ad-good); }
-.tm-admin-page .tm-ad-kpis .tm-kpi.kpi-warn { border-left: 6px solid var(--ad-warn); }
-.tm-admin-page .tm-ad-kpis .tm-kpi.kpi-bad  { border-left: 6px solid var(--ad-bad);  }
+
+/* Variants */
+.tm-kpi.-total   { --kpi-accent: #4F46E5; }  /* indigo */
+.tm-kpi.-overdue { --kpi-accent: #EF4444; }  /* rose/red */
+.tm-kpi.-today   { --kpi-accent: #0EA5E9; }  /* sky */
+.tm-kpi.-done    { --kpi-accent: #10B981; }  /* emerald */
+.tm-kpi.-blocked { --kpi-accent: #F59E0B; }  /* amber */
+
 
 /* ---------- Cards (Charts/Sections) ---------- */
 .tm-admin-page .tm-ad-charts {

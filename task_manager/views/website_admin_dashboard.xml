@@ -44,7 +44,7 @@
 
 
         <!-- KPI tiles -->
-        <div class="row g-3 tm-ad-kpis mt-2">
+        <!-- <div class="row g-3 tm-ad-kpis mt-2">
           <div class="col-md-2">
             <div class="tm-kpi">
               <div class="tm-kpi-label">Total</div>
@@ -75,7 +75,65 @@
               <div id="tm_ad_kpi_blocked" class="tm-kpi-value">—</div>
             </div>
           </div>
+        </div> -->
+
+        <div class="row g-3 tm-ad-kpis mt-2">
+          <div class="col-md-2">
+            <div class="tm-kpi -total">
+              <span class="tm-kpi-icon" aria-hidden="true">
+                <!-- Bar chart -->
+                <svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="10"/><rect x="10" y="5" width="4" height="15"/><rect x="17" y="2" width="4" height="18"/></svg>
+              </span>
+              <div class="tm-kpi-label">Total</div>
+              <div id="tm_ad_kpi_total" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-2">
+            <div class="tm-kpi -overdue">
+              <span class="tm-kpi-icon" aria-hidden="true">
+                <!-- Alert triangle -->
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="1.1"/></svg>
+              </span>
+              <div class="tm-kpi-label">Overdue</div>
+              <div id="tm_ad_kpi_overdue" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-2">
+            <div class="tm-kpi -today">
+              <span class="tm-kpi-icon" aria-hidden="true">
+                <!-- Calendar -->
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </span>
+              <div class="tm-kpi-label">Due Today</div>
+              <div id="tm_ad_kpi_today" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="tm-kpi -done">
+              <span class="tm-kpi-icon" aria-hidden="true">
+                <!-- Check circle -->
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+              </span>
+              <div class="tm-kpi-label">Done (in period)</div>
+              <div id="tm_ad_kpi_done_period" class="tm-kpi-value">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="tm-kpi -blocked">
+              <span class="tm-kpi-icon" aria-hidden="true">
+                <!-- Lock -->
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
+              </span>
+              <div class="tm-kpi-label">Blocked</div>
+              <div id="tm_ad_kpi_blocked" class="tm-kpi-value">—</div>
+            </div>
+          </div>
         </div>
+
 
         <!-- CHARTS WRAPPER -->
         <div class="tm-ad-charts tm-mt-3">
