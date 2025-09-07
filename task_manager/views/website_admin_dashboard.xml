@@ -15,7 +15,7 @@
               <input id="tm_ad_date_to" type="date" class="form-control"/>
             </div>
 
-            <div class="col-md-3 col-lg-2">
+            <!-- <div class="col-md-3 col-lg-2">
               <label class="form-label">Group By</label>
               <select id="tm_ad_groupby" class="form-select">
                 <option value="">None</option>
@@ -24,7 +24,7 @@
                 <option value="priority">Priority</option>
                 <option value="manager_id">Manager</option>
               </select>
-            </div>
+            </div> -->
 
             <div class="col-md-3 col-lg-2 ms-auto d-flex gap-2">
               <button id="tm_ad_apply" class="btn btn-primary flex-grow-1">Apply</button>

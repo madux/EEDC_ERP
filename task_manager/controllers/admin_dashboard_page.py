@@ -26,21 +26,87 @@ def _parse_filters(params):
     return f
 
 
+# def _any_of(clauses):
+#     """Builds (A OR B OR C) in Odoo domain syntax."""
+#     clauses = [c for c in clauses if c] or []
+#     if not clauses:
+#         return []
+#     dom = clauses[0]
+#     for c in clauses[1:]:
+#         dom = ['|', dom, c]
+#     return dom
+
+# def _text_domain(text):
+#     """
+#     Free-text across multiple fields.
+#     AND across words, OR across fields.
+#     Produces a valid Odoo domain in prefix form.
+#     """
+#     text = (text or '').strip()
+#     if not text:
+#         return []
+
+#     terms = [t for t in text.split() if t]
+#     if not terms:
+#         return []
+
+#     fields = [
+#         'name',
+#         'key',
+#         'assignee_staff_id',
+#         'employee_id.name',
+#         'manager_id.name',
+#     ]
+
+#     # OR-reduce: A OR B OR C  =>  ['|', ['|', A, B], C]
+#     def _or_reduce(conds):
+#         it = iter(conds)
+#         expr = next(it)
+#         for c in it:
+#             expr = ['|', expr, c]
+#         return expr
+
+#     # AND-reduce: X AND Y AND Z  =>  ['&', ['&', X, Y], Z]
+#     def _and_reduce(parts):
+#         it = iter(parts)
+#         expr = next(it)
+#         for p in it:
+#             expr = ['&', expr, p]
+#         return expr
+
+#     per_term_exprs = []
+#     for term in terms:
+#         field_conds = [(f, 'ilike', term) for f in fields]
+#         per_term_exprs.append(_or_reduce(field_conds))
+
+#     # AND across all term expressions (every word must match somewhere)
+#     return _and_reduce(per_term_exprs)
+
 def _any_of(clauses):
-    """Builds (A OR B OR C) in Odoo domain syntax."""
-    clauses = [c for c in clauses if c] or []
+    """Return a flat OR chain in prefix form: ['|','|', A, B, C]."""
+    clauses = [c for c in clauses if c]
     if not clauses:
         return []
-    dom = clauses[0]
-    for c in clauses[1:]:
-        dom = ['|', dom, c]
-    return dom
+    if len(clauses) == 1:
+        return [clauses[0]]
+    return (['|'] * (len(clauses) - 1)) + clauses
+
+def _all_of(group_tokens):
+    """AND a list of domain token lists: ['&','&', <g1...>, <g2...>, <g3...>]"""
+    groups = [g if isinstance(g, list) else [g] for g in group_tokens if g]
+    if not groups:
+        return []
+    if len(groups) == 1:
+        return groups[0]
+    flat = []
+    for g in groups:
+        flat.extend(g)
+    return (['&'] * (len(groups) - 1)) + flat
 
 def _text_domain(text):
     """
-    Free-text across multiple fields.
-    AND across words, OR across fields.
-    Produces a valid Odoo domain in prefix form.
+    Free-text across multiple fields, AND across words, OR across fields,
+    using *flat* prefix tokens compatible with search().
     """
     text = (text or '').strip()
     if not text:
@@ -50,37 +116,16 @@ def _text_domain(text):
     if not terms:
         return []
 
-    fields = [
-        'name',
-        'key',
-        'assignee_staff_id',
-        'employee_id.name',
-        'manager_id.name',
-    ]
+    fields = ['name', 'key', 'assignee_staff_id', 'employee_id.name', 'manager_id.name']
 
-    # OR-reduce: A OR B OR C  =>  ['|', ['|', A, B], C]
-    def _or_reduce(conds):
-        it = iter(conds)
-        expr = next(it)
-        for c in it:
-            expr = ['|', expr, c]
-        return expr
-
-    # AND-reduce: X AND Y AND Z  =>  ['&', ['&', X, Y], Z]
-    def _and_reduce(parts):
-        it = iter(parts)
-        expr = next(it)
-        for p in it:
-            expr = ['&', expr, p]
-        return expr
-
-    per_term_exprs = []
+    per_term = []
     for term in terms:
-        field_conds = [(f, 'ilike', term) for f in fields]
-        per_term_exprs.append(_or_reduce(field_conds))
+        conds = [(f, 'ilike', term) for f in fields]   # A,B,C,D,E
+        per_term.append(_any_of(conds))                # -> ['|','|','|','|', A,B,C,D,E]
 
-    # AND across all term expressions (every word must match somewhere)
-    return _and_reduce(per_term_exprs)
+    # AND all the per-term OR groups together
+    return _all_of(per_term)
+
 
 
 def _attach_text_query(dom, q):
