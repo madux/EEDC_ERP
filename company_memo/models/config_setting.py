@@ -309,6 +309,12 @@ class MemoConfig(models.Model):
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
     #     ], string="Memo Type",default="", required=True)
+    
+    @api.constrains('branch_id', 'department_id', 'company_id')
+    def constrain_company_branch_department(self):
+        if self.branch_id.company_id.id != self.company_id.id:
+            raise ValidationError(f"District - {self.branch_id.name} must match the company selected: {self.company_id.name}") 
+
     def get_publish_memo_types(self):
         return [('allow_for_publish', '=', True)]
 
@@ -322,7 +328,6 @@ class MemoConfig(models.Model):
     company_id = fields.Many2one(
         'res.company',
         string="Company",
-        default=lambda self: self.env.user.company_id.id
     )
     memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
     name = fields.Char(
@@ -330,25 +335,6 @@ class MemoConfig(models.Model):
         copy=False, 
         )
     memo_category_id = fields.Many2one('memo.category', string="Category") 
-    
-    @api.onchange('active')
-    def onchange_active(self):
-        fleet_group = self.env.ref(
-                        'company_memo.group_memo_fleet'
-                    )
-        approvers = []
-        for app in self.stage_ids:
-            if app.approver_ids:
-                approvers += [r.user_id.id for r in app.approver_ids]
-        if self.active:
-            if self.memo_type:
-                if self.memo_type.memo_key == "vehicle_request":
-                    fleet_group.users = [(4, usr) for usr in approvers]
-                # raise ValidationError("Please select memo type!")
-            self.active = True
-        else:
-            fleet_group.users = [(3, usr) for usr in approvers]
-            self.active = False
 
     approver_ids = fields.Many2many(
         'hr.employee',
@@ -371,6 +357,12 @@ class MemoConfig(models.Model):
         )
     
     department_id = fields.Many2one(
+        'hr.department',
+        string='Department',
+        required=False,
+        copy=False
+        )
+    department_ids = fields.Many2one(
         'hr.department',
         string='Department',
         required=False,
@@ -425,6 +417,7 @@ class MemoConfig(models.Model):
         'multi.branch', 
         string='Districts / Branch(s)', 
         required=False)
+    branch_id = fields.Many2one('multi.branch', string='District')
     
     receivable_account_id = fields.Many2one(
         "account.account", 
@@ -463,7 +456,7 @@ class MemoConfig(models.Model):
         for rec in self:
             duplicate = memo.search([('memo_type', '=', rec.memo_type.id),
                                       ('memo_key', '!=', 'helpdesk'), 
-                                      ('department_id', '=', rec.department_id.id),
+                                      ('branch_id', '=', rec.branch_id.id),
                                       ('id', '!=', rec.id),
                                       ], limit=1)
             if duplicate:
@@ -480,6 +473,25 @@ class MemoConfig(models.Model):
                     {','.join([self.env['res.company'].sudo().browse([r]).name for r in company_found])}, 
                     kindly discard locate it and select the approvers""")
 
+    @api.onchange('active')
+    def onchange_active(self):
+        fleet_group = self.env.ref(
+                        'company_memo.group_memo_fleet'
+                    )
+        approvers = []
+        for app in self.stage_ids:
+            if app.approver_ids:
+                approvers += [r.user_id.id for r in app.approver_ids]
+        if self.active:
+            if self.memo_type:
+                if self.memo_type.memo_key == "vehicle_request":
+                    fleet_group.users = [(4, usr) for usr in approvers]
+                # raise ValidationError("Please select memo type!")
+            self.active = True
+        else:
+            fleet_group.users = [(3, usr) for usr in approvers]
+            self.active = False
+            
     def auto_configuration(self):
         # TODO: To be used to dynamically generate configurations 
         # for all departments using default stages such as 
@@ -542,6 +554,7 @@ class MemoConfig(models.Model):
                 'default_allowed_companies_ids': self.allowed_for_company_ids.ids,
                 'default_company_ids': self.company_ids.ids,
                 'default_allow_multi_vending_on_po': self.allow_multi_vending_on_po,
+                'default_branch_ids': [(4, self.branch_id.id)],
                 'default_receivable_account_id': self.receivable_account_id.id,
                 'default_payable_account_id': self.payable_account_id.id,
                 'default_advance_account_id': self.advance_account_id.id,
