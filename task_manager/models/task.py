@@ -200,3 +200,30 @@ class TmTask(models.Model):
                 f"<span class='badge rounded-pill {bg} text-white' "
                 f"title='{label}' aria-label='{label}'>{label}</span>"
             )
+
+    
+    # ------- Clickable statusbar + 1-click action buttons ---------
+    def _allowed_targets(self):
+        self.ensure_one()
+        mngr = self.env.user.has_group('task_manager.group_tm_manager')
+        if mngr:
+            return {'todo', 'in_progress', 'review', 'done'}
+        return {
+            'todo': {'todo', 'in_progress', 'review'},
+            'in_progress': {'todo', 'in_progress', 'review'},
+            'review': {'todo', 'in_progress', 'review'},
+            'done': set(),
+        }.get(self.stage, set())
+    
+    def _apply_stage(self, target):
+        self.ensure_one()
+        if target not in self._allowed_targets():
+            return False
+        self.stage = target
+        return True
+    
+    # object methods for buttons
+    def action_to_todo(self): self._apply_stage('todo')
+    def action_to_in_progress(self): self._apply_stage('in_progress')
+    def action_to_review(self): self._apply_stage('review')
+    def action_to_done(self): self._apply_stage('done')
