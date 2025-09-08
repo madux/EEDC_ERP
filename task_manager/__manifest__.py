@@ -15,6 +15,7 @@
         "data/cron.xml",
         "views/backend_views.xml",
         "views/website_pages.xml",
+        "views/website_admin_dashboard.xml",
     ],
     "assets": {
         "web.assets_frontend": [
@@ -22,6 +23,15 @@
             # JS + CSS
             "task_manager/static/src/js/tm_portal_board.js",
             "task_manager/static/src/scss/task_manager_board.scss",
+
+
+            "task_manager/static/lib/chartjs/chart.umd.js",
+            "task_manager/static/lib/chartjs/chartjs-adapter-date-fns.bundle.js",
+            "task_manager/static/src/js/admin/tm_admin_api.js",
+            "task_manager/static/src/js/admin/tm_admin_charts.js",
+            "task_manager/static/src/js/admin/tm_admin_front.js",
+            "task_manager/static/src/scss/tm_admin_dashboard.scss",
+
         ],
     },
     "application": True,

@@ -1,0 +1,346 @@
+/* ================================
+   Task Manager – Admin Dashboard (Website, Light Theme)
+   ================================ */
+.tm-admin-page {
+  /* Typography to match /taskboard */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  letter-spacing: .01em;
+
+  /* Design tokens (light only) */
+  --ad-radius: 16px;
+  --ad-card-bg: #ffffff;
+  --ad-page-bg: #f8fafc;           /* slate-50 */
+  --ad-border: #e5e7eb;            /* slate-200 */
+  --ad-border-strong: #cbd5e1;     /* slate-300 */
+  --ad-shadow: 0 8px 20px rgba(2, 6, 23, .06);
+  --ad-soft-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  --ad-text: #0f172a;              /* slate-900 */
+  --ad-text-muted: #64748b;        /* slate-500 */
+  --ad-accent: #d946ef;            /* magenta (same vibe as Refresh) */
+  --ad-accent-2: #4f46e5;          /* indigo */
+  --ad-good: #16a34a;              /* green-600 */
+  --ad-warn: #f59e0b;              /* amber-500 */
+  --ad-bad: #dc2626;               /* red-600 */
+
+  /* For Chart.js grids/ticks */
+  --ad-grid: rgba(15,23,42,.08);   /* soft grid */
+  --ad-tick: #64748b;
+
+  background: var(--ad-page-bg);
+  color: var(--ad-text);
+}
+
+
+/* ---------- Optional: force light regardless of OS dark mode ---------- */
+.tm-admin-page { color-scheme: light; }
+
+/* ---------- Toolbar ---------- */
+.tm-admin-page .tm-ad-toolbar {
+  background: var(--ad-card-bg);
+  border: 1px solid var(--ad-border);
+  border-left: 6px solid #94a3b8; /* slate-400 like /taskboard */
+  border-radius: var(--ad-radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--ad-shadow);
+}
+
+.tm-admin-page .tm-ad-toolbar .form-label {
+  font-size: .82rem;
+  color: var(--ad-text-muted);
+  margin-bottom: .25rem;
+}
+
+.tm-admin-page .tm-ad-toolbar .form-control,
+.tm-admin-page .tm-ad-toolbar .form-select {
+  background: #fff;
+  color: var(--ad-text);
+  border: 1px solid #e2e8f0;       /* slate-200 */
+  border-radius: 10px;
+  height: 38px;
+  padding: .375rem .75rem;
+  box-shadow: none;
+}
+.tm-admin-page .tm-ad-toolbar .form-control:focus,
+.tm-admin-page .tm-ad-toolbar .form-select:focus {
+  border-color: #cbd5e1;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(148,163,184,.18);
+}
+
+/* prettier multiple selects */
+.tm-admin-page .tm-ad-toolbar .form-select[multiple] {
+  height: auto;
+  min-height: 38px;
+  padding-top: .35rem;
+  padding-bottom: .35rem;
+}
+.tm-admin-page .tm-ad-toolbar .form-select[multiple] option {
+  padding: .35rem .5rem;
+  border-radius: 8px;
+  margin: .1rem 0;
+}
+.tm-admin-page .tm-ad-toolbar .form-select[multiple] option:checked {
+  background: #eef2ff; /* indigo-50 */
+  color: #4338ca;      /* indigo-700 */
+}
+
+.tm-admin-page .tm-ad-toolbar .btn-primary {
+  background: var(--ad-accent);
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: 0 10px 20px rgba(217, 70, 239, .22);
+  padding: .5rem .9rem;
+}
+.tm-admin-page .tm-ad-toolbar .btn-primary:hover { filter: brightness(.98); transform: translateY(-1px); }
+.tm-admin-page .tm-ad-toolbar .btn-light {
+  border-radius: 12px;
+  border: 1px solid var(--ad-border);
+  padding: .5rem .9rem;
+  color: var(--ad-text);
+  background: #fff;
+}
+
+/* ---------- KPI Tiles ---------- */
+/* === KPI cards === */
+.tm-kpi {
+  --kpi-accent: #4f46e5;      /* default accent (indigo) */
+  --kpi-ink: #0b1324;         /* text */
+  --kpi-bg-tint: color-mix(in srgb, var(--kpi-accent) 8%, #ffffff);
+  --kpi-border: color-mix(in srgb, var(--kpi-accent) 22%, #ffffff);
+
+  position: relative;
+  border-radius: 14px;
+  padding: 14px 16px 16px 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--kpi-accent) 6%, #ffffff), #fff)
+    padding-box;
+  border: 1px solid var(--kpi-border);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, .06);
+  min-height: 74px;
+
+  .tm-kpi-label {
+    font-size: .78rem;
+    letter-spacing: .02em;
+    color: color-mix(in srgb, var(--kpi-ink) 62%, #0000);
+    margin-bottom: .15rem;
+  }
+  .tm-kpi-value {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--kpi-ink);
+  }
+
+  .tm-kpi-icon {
+    position: absolute;
+    right: 10px; top: 10px;
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--kpi-accent) 14%, #ffffff);
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--kpi-accent) 28%, #ffffff);
+    box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--kpi-accent) 6%, #ffffff);
+    svg {
+      width: 18px; height: 18px;
+      fill: none;
+      stroke: color-mix(in srgb, var(--kpi-accent) 82%, #000);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  /* Hover lift */
+  // &:hover { transform: translateY(-1px); transition: transform .15s ease; }
+}
+
+/* Variants */
+.tm-kpi.-total   { --kpi-accent: #4F46E5; }  /* indigo */
+.tm-kpi.-overdue { --kpi-accent: #EF4444; }  /* rose/red */
+.tm-kpi.-today   { --kpi-accent: #0EA5E9; }  /* sky */
+.tm-kpi.-done    { --kpi-accent: #10B981; }  /* emerald */
+.tm-kpi.-blocked { --kpi-accent: #F59E0B; }  /* amber */
+
+
+/* ---------- Cards (Charts/Sections) ---------- */
+.tm-admin-page .tm-ad-charts {
+  column-count: 2;
+  column-gap: 1.5rem;
+
+  .tm-card {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 1.5rem;
+    break-inside: avoid;
+  }
+}
+
+.tm-admin-page .tm-mt-3 { margin-top: 1rem; }
+
+
+.tm-admin-page .tm-card {
+  background: var(--ad-card-bg);
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius);
+  box-shadow: var(--ad-soft-shadow);
+  overflow: hidden;
+  // display: flex;
+  flex-direction: column;
+  min-height: 100%;
+
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 1.5rem;
+  break-inside: avoid;
+}
+
+.tm-admin-page .tm-card .tm-card-head {
+  padding: .75rem 1rem;
+  font-weight: 700;
+  color: var(--ad-text);
+  border-bottom: 1px solid var(--ad-border);
+  background: #f8fafc; /* slate-50 */
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.tm-admin-page .tm-card .tm-card-body { padding: .75rem 1rem 1rem 1rem; }
+.tm-admin-page .tm-card .tm-card-body canvas {
+  display: block;
+  width: 100% !important;
+  min-height: 300px;
+}
+
+
+/* Card tools (icon buttons) */
+.tm-admin-page .tm-card-tools {
+  display: inline-flex;
+  gap: .25rem;
+
+  .tm-ct {
+    --size: 28px;
+    width: var(--size);
+    height: var(--size);
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #334155;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+
+    &:hover { background: rgba(2,6,23,.06); }
+    &:focus-visible { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+    &.is-active { background: rgba(2,6,23,.12); color: #111827; }
+
+    svg { width: 18px; height: 18px; display: block; }
+  }
+}
+/* Hover effects */
+// .tm-admin-page .tm-card:hover {
+//   transform: translateY(-4px);
+//   box-shadow: 0 12px 32px rgba(2, 6, 23, .12);
+// }
+
+/* --- Modal-only styles for the chart tool buttons --- */
+#tm_ad_modal .tm-card-tools {
+  display: inline-flex;
+  gap: .25rem;
+}
+#tm_ad_modal .tm-card-tools .tm-ct {
+  --size: 28px;
+  width: var(--size);
+  height: var(--size);
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: #334155;            /* SVGs using currentColor become visible */
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+#tm_ad_modal .tm-card-tools .tm-ct:hover { background: rgba(2,6,23,.06); }
+#tm_ad_modal .tm-card-tools .tm-ct:focus-visible { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+#tm_ad_modal .tm-card-tools .tm-ct.is-active { background: rgba(2,6,23,.12); color: #111827; }
+
+/* ensure inline SVGs have a visible size */
+#tm_ad_modal .tm-card-tools .tm-ct svg { width: 18px; height: 18px; display: block; }
+
+/* keep the modal above everything even after reparenting to <body> */
+#tm_ad_modal { z-index: 2002 !important; }
+#tm_ad_modal + .modal-backdrop,
+.modal-backdrop.show { z-index: 2001 !important; }
+
+/* ---------- Helpers ---------- */
+.tm-admin-page .text-muted { color: var(--ad-text-muted) !important; }
+.tm-admin-page .small { font-size: .875rem; }
+
+/* Control panel look */
+.tm-admin-page .tm-cp .btn-light { border: 1px solid var(--ad-border); }
+.tm-admin-page .tm-cp .btn-outline-secondary { border-radius: 10px; }
+.tm-admin-page .tm-cp .btn-outline-secondary.active {
+  background: #eef2ff; color: #4338ca; border-color: #c7d2fe;
+}
+
+/* Table tweaks */
+#tm_ad_table thead th { cursor: pointer; white-space: nowrap; }
+#tm_ad_table tbody tr.table-light td { background: #f8fafc; }
+
+/* === Table sort UX === */
+#tm_ad_table {
+  thead th {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    padding-right: 1.75rem; // room for arrow
+    transition: background-color .15s ease, color .15s ease;
+
+    &.is-sorted {
+      color: #0a58ca; // accent (Bootstrap primary-ish)
+      background-color: rgba(13, 110, 253, .06);
+    }
+
+    /* one arrow that flips by direction */
+    &.is-sorted::after {
+      content: "";
+      position: absolute;
+      right: .55rem;
+      top: 50%;
+      margin-top: -4px;
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+    }
+
+    &.is-sorted-asc::after {
+      border-bottom: 8px solid currentColor; /* ▲ */
+    }
+
+    &.is-sorted-desc::after {
+      border-top: 8px solid currentColor;    /* ▼ */
+    }
+
+    /* subtle hover */
+    &:hover { background-color: rgba(2, 6, 23, .03); }
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 1400px) { 
+  .tm-admin-page .tm-ad-charts{ column-count: 3; }
+}
+@media (max-width: 991.98px) {
+  .tm-admin-page .tm-ad-toolbar { padding: .85rem 1rem; }
+  .tm-admin-page .tm-ad-charts { column-count: 1; }
+  .tm-admin-page .tm-card .tm-card-body canvas { min-height: 260px; }
+}
+@media (max-width: 575.98px) {
+  .tm-admin-page .tm-ad-kpis .tm-kpi .tm-kpi-value { font-size: 1.35rem; }
+}
