@@ -1,0 +1,606 @@
+<odoo>
+
+    <!-- <record id="paperformat_report_monthly_expenditure" model="report.paperformat">
+      <field name="name">Monthly Expenditure Report Format</field>
+      <field name="default" eval="True"/>
+      <field name="format">A4</field>
+      <field name="page_height">0</field>
+      <field name="page_width">0</field>
+      <field name="orientation">Portrait</field>
+      <field name="margin_top">15</field>
+      <field name="margin_bottom">15</field>
+      <field name="margin_left">10</field>
+      <field name="margin_right">10</field>
+      <field name="header_line" eval="False"/>
+      <field name="header_spacing">0</field>
+      <field name="dpi">96</field>
+    </record> -->
+    
+
+    <template id="report_overhead_monthly_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="data" t-as="report">
+                    <div class="page">
+                        <div class="text-left mb-4">
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">
+                                <t t-esc="report.get('title')"/>
+                            </h3>
+                            <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;">
+                                <t t-esc="subtitle"/>
+                            </h4>
+                        </div>
+                        
+                        <style>
+                            .report-table { border-collapse: collapse; width: 100%; font-size: 10px; }
+                            .report-table th, .report-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: middle; }
+                            .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; }
+                            .text-right { text-align: right !important; }
+                            .text-center { text-align: center !important; }
+                            .text-left { text-align: left !important; }
+                            /* The .bold-row class is no longer needed for this logic */
+                            .parent-level { background-color: #f8f8f8; }
+                            .account-row { font-style: italic; }
+                        </style>
+
+                        <table class="report-table mt-3">
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%; text-align: center;">Sub-Head</th>
+                                    <th style="width: 25%; text-align: left;">Description</th>
+                                    <th style="width: 12%; text-align: right;">
+                                        <t t-esc="fiscal_year"/> Approved<br/>Budget
+                                    </th>
+                                    <th style="width: 12%; text-align: right;">Previous<br/>Actual</th>
+                                    <t t-if="len(month_headers) == 1">
+                                        <th style="width: 12%; text-align: right;">
+                                            Exp. for the<br/>Month of <t t-esc="month_headers[0].capitalize()"/>
+                                        </th>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="month_headers" t-as="month">
+                                            <th style="width: 8%; text-align: right;"><t t-esc="month"/></th>
+                                        </t>
+                                    </t>
+                                    <th style="width: 12%; text-align: right;">Total Actual<br/>Exp. to Date</th>
+                                    <th style="width: 11%; text-align: right;">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="report.get('report_lines')" t-as="line">
+                                    <t t-set="is_account" t-value="line.get('is_acc') == 'yes'"/>
+                                    <t t-set="is_parent" t-value="line.get('level', 0) == 0"/>
+                                    
+                                    <tr t-att-class="'parent-level' if is_parent else ''" t-att-style="'font-weight: bold;' if is_account else ''">
+                                        
+                                        <td class="text-center">
+                                            <span t-esc="line.get('code', '')"/>
+                                        </td>
+                                        <td class="text-left">
+                                            <span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/>
+                                        </td>
+                                        <t t-foreach="month_headers" t-as="month">
+                                            <td class="text-right">
+                                                <span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/>
+                                            </td>
+                                        </t>
+                                        <td class="text-right">
+                                            <span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        
+                        <div class="mt-4 text-right" style="font-size: 10px; color: #666;">
+                            <p>Report generated on: <span t-esc="datetime.datetime.now().strftime('%B %d, %Y')"/></p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    
+
+    <template id="report_overhead_quarterly_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="data" t-as="report">
+                    <div class="page">
+                        <div class="text-left mb-4">
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">
+                                <t t-esc="report.get('title')"/>
+                            </h3>
+                            <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;">
+                                <t t-esc="subtitle"/>
+                            </h4>
+                        </div>
+                        
+                        <style>
+                            .report-table { border-collapse: collapse; width: 100%; font-size: 9px; }
+                            .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+                            .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; }
+                            .text-right { text-align: right !important; }
+                            .text-center { text-align: center !important; }
+                            .text-left { text-align: left !important; }
+                            .account-row { font-style: italic; }
+                        </style>
+
+                        <table class="report-table mt-3">
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%;">Sub-Head</th>
+                                    <th style="width: 22%;">Description</th>
+                                    <th style="width: 11%;" class="text-right">
+                                        <t t-esc="fiscal_year"/> Approved Budget
+                                    </th>
+                                    <t t-foreach="month_headers" t-as="month">
+                                        <th style="width: 9%;" class="text-right"><t t-esc="month"/></th>
+                                    </t>
+                                    <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
+                                    <th style="width: 7%;">% Perf to Date</th>
+                                    <th style="width: 11%;" class="text-right">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="report.get('report_lines')" t-as="line">
+                                    <t t-set="is_account" t-value="line.get('is_acc') == 'yes'"/>
+                                    <tr t-att-style="'font-weight: bold;' if is_account else ''">
+                                        <td class="text-center"><span t-esc="line.get('code', '')"/></td>
+                                        
+                                        <td class="text-left">
+                                            <span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/>
+                                        </td>
+                                        
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                        <t t-foreach="month_headers" t-as="month">
+                                            <td class="text-right">
+                                                <span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/>
+                                            </td>
+                                        </t>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
+                                        <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_capital_monthly_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="data" t-as="report">
+                    <div class="page">
+                        <div class="text-left mb-4">
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                            <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                        </div>
+                        <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                        <table class="report-table mt-3">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">DESCRIPTION</th>
+                                    <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                    <th style="width: 13%;" class="text-right"><t t-esc="fiscal_year"/> APPROVED BUDGET</th>
+                                    <th style="width: 13%;" class="text-right">PREVIOUS ACTUAL</th>
+                                    <t t-foreach="month_headers" t-as="month"><th style="width: 13%;" class="text-right">EXP. FOR THE MONTH OF <t t-esc="month"/></th></t>
+                                    <th style="width: 13%;" class="text-right">TOTAL ACTUAL EXP. TO DATE</th>
+                                    <th style="width: 13%;" class="text-right">BALANCE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="report.get('report_lines')" t-as="line">
+                                    <tr>
+                                        <td><span t-esc="line.get('description', '')"/></td>
+                                        <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/></td>
+                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_capital_quarterly_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="data" t-as="report">
+                    <div class="page">
+                        <div class="text-left mb-4">
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                            <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                        </div>
+                        <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .text-center { text-align: center !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                        <table class="report-table mt-3">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">DESCRIPTION</th>
+                                    <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                    <th style="width: 11%;" class="text-right">APPROVED BUDGET</th>
+                                    <t t-foreach="month_headers" t-as="month"><th style="width: 9%;" class="text-right"><t t-esc="month"/></th></t>
+                                    <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
+                                    <th style="width: 7%;">% PERF TO DATE</th>
+                                    <th style="width: 11%;" class="text-right">BALANCE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="report.get('report_lines')" t-as="line">
+                                    <tr>
+                                        <td><span t-esc="line.get('description', '')"/></td>
+                                        <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
+                                        <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
+                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+        <template id="report_revenue_monthly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 10px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .text-center { text-align: center !important; } .text-left { text-align: left !important; } .account-row { font-style: italic; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 10%;">CODE</th>
+                                        <th style="width: 30%;">ECONOMIC</th>
+                                        <th style="width: 15%;" class="text-right"><t t-esc="fiscal_year"/> Approved Budget</th>
+                                        <th style="width: 15%;" class="text-right">Previous Actual</th>
+                                        <t t-foreach="month_headers" t-as="month"><th class="text-right">REVENUE FOR THE MONTH OF <t t-esc="month"/> <t t-esc="fiscal_year"/></th></t>
+                                        <th style="width: 15%;" class="text-right">Total Actual Revenue to Date</th>
+                                        <th style="width: 15%;" class="text-right">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <t t-set="is_account" t-value="line.get('is_acc') == 'yes'"/>
+                                        <tr t-att-style="'font-weight: bold;' if is_account else ''">
+                                            <td class="text-center"><span t-esc="line.get('code', '')"/></td>
+                                            <td class="text-left"><span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_revenue_quarterly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .text-center { text-align: center !important; } .text-left { text-align: left !important; } .account-row { font-style: italic; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 8%;">CODE</th>
+                                        <th style="width: 22%;">ECONOMIC</th>
+                                        <th style="width: 11%;" class="text-right"><t t-esc="fiscal_year"/> Approved Budget</th>
+                                        <t t-foreach="month_headers" t-as="month"><th style="width: 9%;" class="text-right"><t t-esc="month"/></th></t>
+                                        <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
+                                        <th style="width: 7%;">% Perf to Date</th>
+                                        <th style="width: 11%;" class="text-right">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <t t-set="is_account" t-value="line.get('is_acc') == 'yes'"/>
+                                        <tr t-att-style="'font-weight: bold;' if is_account else ''">
+                                            <td class="text-center"><span t-esc="line.get('code', '')"/></td>
+                                            <td class="text-left"><span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
+                                            <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_expenditure_monthly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">DESCRIPTION</th>
+                                        <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                        <th style="width: 13%;" class="text-right"><t t-esc="fiscal_year"/> APPROVED BUDGET</th>
+                                        <th style="width: 13%;" class="text-right">PREVIOUS ACTUAL</th>
+                                        <t t-foreach="month_headers" t-as="month"><th style="width: 13%;" class="text-right">EXP. FOR THE MONTH OF <t t-esc="month"/></th></t>
+                                        <th style="width: 13%;" class="text-right">TOTAL ACTUAL EXP. TO DATE</th>
+                                        <th style="width: 13%;" class="text-right">BALANCE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <tr>
+                                            <td><span t-esc="line.get('description', '')"/></td>
+                                            <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_expenditure_quarterly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .text-center { text-align: center !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">DESCRIPTION</th>
+                                        <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                        <th style="width: 11%;" class="text-right">APPROVED BUDGET</th>
+                                        <t t-foreach="month_headers" t-as="month"><th style="width: 9%;" class="text-right"><t t-esc="month"/></th></t>
+                                        <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
+                                        <th style="width: 7%;">% PERF TO DATE</th>
+                                        <th style="width: 11%;" class="text-right">BALANCE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <tr>
+                                            <td><span t-esc="line.get('description', '')"/></td>
+                                            <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
+                                            <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_personnel_monthly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">DESCRIPTION</th>
+                                        <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                        <th style="width: 13%;" class="text-right"><t t-esc="fiscal_year"/> APPROVED BUDGET</th>
+                                        <th style="width: 13%;" class="text-right">PREVIOUS ACTUAL</th>
+                                        <t t-foreach="month_headers" t-as="month"><th style="width: 13%;" class="text-right">EXP. FOR THE MONTH OF <t t-esc="month"/></th></t>
+                                        <th style="width: 13%;" class="text-right">TOTAL ACTUAL EXP. TO DATE</th>
+                                        <th style="width: 13%;" class="text-right">BALANCE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <tr>
+                                            <td><span t-esc="line.get('description', '')"/></td>
+                                            <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_personnel_quarterly_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="data" t-as="report">
+                        <div class="page">
+                            <div class="text-left mb-4">
+                                <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;"><t t-esc="report.get('title')"/></h3>
+                                <h4 style="font-size: 14px; font-weight: bold; margin-top: 0;"><t t-esc="subtitle"/></h4>
+                            </div>
+                            <style>.report-table { border-collapse: collapse; width: 100%; font-size: 9px; } .report-table th, .report-table td { border: 1px solid #000; padding: 4px; vertical-align: middle; } .report-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; } .text-right { text-align: right !important; } .text-center { text-align: center !important; } .capital-header { background-color: #f2f2f2; font-weight: bold; text-align:center; }</style>
+                            <table class="report-table mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">DESCRIPTION</th>
+                                        <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
+                                        <th style="width: 11%;" class="text-right">APPROVED BUDGET</th>
+                                        <t t-foreach="month_headers" t-as="month"><th style="width: 9%;" class="text-right"><t t-esc="month"/></th></t>
+                                        <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
+                                        <th style="width: 7%;">% PERF TO DATE</th>
+                                        <th style="width: 11%;" class="text-right">BALANCE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report.get('report_lines')" t-as="line">
+                                        <tr>
+                                            <td><span t-esc="line.get('description', '')"/></td>
+                                            <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
+                                            <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
+                                            <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
+                                            <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <record id="action_report_overhead_monthly" model="ir.actions.report">
+            <field name="name">Monthly Expenditure Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_overhead_monthly_template</field>
+            <field name="report_file">plateau_addons.report_overhead_monthly_template</field>
+        <!-- <field name="paperformat_id" ref="plateau_addons.paperformat_report_monthly_expenditure"/> -->
+        </record>
+        
+        <record id="action_report_overhead_quarterly" model="ir.actions.report">
+            <field name="name">Quarterly Expenditure Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_overhead_quarterly_template</field>
+            <field name="report_file">plateau_addons.report_overhead_quarterly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+
+        <record id="action_report_capital_monthly" model="ir.actions.report">
+            <field name="name">Monthly Capital Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_capital_monthly_template</field>
+            <field name="report_file">plateau_addons.report_capital_monthly_template</field>
+        </record>
+
+        <record id="action_report_capital_quarterly" model="ir.actions.report">
+            <field name="name">Quarterly Capital Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_capital_quarterly_template</field>
+            <field name="report_file">plateau_addons.report_capital_quarterly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+
+        <record id="action_report_revenue_monthly" model="ir.actions.report">
+            <field name="name">Monthly Revenue Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_revenue_monthly_template</field>
+            <field name="report_file">plateau_addons.report_revenue_monthly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+
+        <record id="action_report_revenue_quarterly" model="ir.actions.report">
+            <field name="name">Quarterly Revenue Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_revenue_quarterly_template</field>
+            <field name="report_file">plateau_addons.report_revenue_quarterly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+        <record id="action_report_expenditure_monthly" model="ir.actions.report">
+            <field name="name">Monthly Expenditure Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_expenditure_monthly_template</field>
+            <field name="report_file">plateau_addons.report_expenditure_monthly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+        <record id="action_report_expenditure_quarterly" model="ir.actions.report">
+            <field name="name">Quarterly Revenue Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_expenditure_quarterly_template</field>
+            <field name="report_file">plateau_addons.report_expenditure_quarterly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+
+        <record id="action_report_personnel_monthly" model="ir.actions.report">
+            <field name="name">Monthly Personnel Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_personnel_monthly_template</field>
+            <field name="report_file">plateau_addons.report_personnel_monthly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+        <record id="action_report_personnel_quarterly" model="ir.actions.report">
+            <field name="name">Quarterly Revenue Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">plateau_addons.report_personnel_quarterly_template</field>
+            <field name="report_file">plateau_addons.report_personnel_quarterly_template</field>
+            <field name="binding_model_id" eval="False"/>
+        </record>
+</odoo>
