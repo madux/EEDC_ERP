@@ -701,23 +701,25 @@ class Memo_Model(models.Model):
     def get_user_configs(self):
         # employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
         #     [('user_id', '=', self.env.uid)], limit=1)
+        user = self.env.user
         employee = self.env['hr.employee'].sudo().search(
             [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
-            ('department_id', '=', employee.department_id.id)
+            # ('department_id', '=', employee.department_id.id),
+            ('branch_id', '=', employee.user_id.branch_id.id),
+            ('company_id', '=', employee.user_id.company_id.id),
             ])
-        user = self.env.user
-        user_company = user.company_id.id
-        cds = []
-        for rec in memo_configs:
-            _logger.info(f"Userxxx companies and memo companies {user.company_ids.ids}, {rec.company_ids.ids}")
-            """Show memo config where user companies is in memo configs"""
-            if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
-                cds.append(rec.id)
+        # user_company = user.company_id.id
+        # cds = []
+        # for rec in memo_configs:
+        #     _logger.info(f"Userxxx companies and memo companies {user.company_ids.ids}, {rec.company_ids.ids}")
+        #     """Show memo config where user companies is in memo configs"""
+        #     if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
+        #         cds.append(rec.id)
         
-        config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
-        return config_ids
+        # config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
+        return memo_configs
     
     @api.model
     def default_get(self, fields):
@@ -758,12 +760,13 @@ class Memo_Model(models.Model):
     @api.onchange('memo_setting_id')
     def onchange_memo_setting_id(self):
         if self.memo_setting_id:
-            ms = self.memo_setting_id
+            ms = self.memo_setting_id.sudo()
+            # raise UserError(f" poor Configuration:{ms.id} {ms} No  {ms.stage_ids}")
             if ms and ms.stage_ids:
                 memo_setting_stage = ms.stage_ids[0]
                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                 self.memo_type_key = ms.memo_type.memo_key
-                self.memo_type = ms.memo_type
+                self.memo_type = ms.memo_type.id
                 self.has_sub_stage = True if memo_setting_stage.sub_stage_ids else False
                 self.users_followers = [
                     (4, self.sudo().employee_id.administrative_supervisor_id.id),
@@ -1005,7 +1008,9 @@ class Memo_Model(models.Model):
                 department_id = employee.department_id
                 ms = self.env['memo.config'].sudo().search([
                     ('memo_type', '=', self.memo_type.id),
-                    ('department_id', '=', department_id.id)
+                    # ('department_id', '=', department_id.id)
+                   ('branch_id', '=', employee.user_id.branch_id.id),
+                    ('company_id', '=', employee.user_id.company_id.id),
                     ], limit=1)
                 if ms:
                     has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
@@ -1347,7 +1352,7 @@ class Memo_Model(models.Model):
             raise ValidationError("All invoice line must have a price amount greater than 0") 
         if self.sudo().stage_id.approver_ids and self.env.user.id not in [r.user_id.id for r in self.sudo().stage_id.approver_ids]:
             raise ValidationError(
-                """You are not allowed to Forward / Approve this record !!!"""
+                """You are not allowed to Forward / Approve this record !!! \n Contact sys admin to add you as approver"""
                 )
         if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")

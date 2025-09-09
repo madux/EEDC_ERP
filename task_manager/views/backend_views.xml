@@ -56,6 +56,16 @@
     <field name="model">tm.task</field>
     <field name="arch" type="xml">
       <form string="Task">
+        <header>
+          <!-- big, tappable status bar -->
+          <field name="stage" widget="statusbar" statusbar_visible="todo,in_progress,review,done" statusbar_colors="todo:secondary;in_progress:info;review:warning;done:success"/>
+
+          <!-- 1-click stage actions -->
+          <button name="action_to_in_progress" type="object" string="Start" class="btn-primary" attrs="{'invisible':[('stage', '!=', 'todo')]}"/>
+          <button name="action_to_review" type="object" string="Send to Review" class="btn-warning" attrs="{'invisible':[('stage', '!=', 'in_progress')]}"/>
+          <button name="action_to_done" type="object" string="Mark Done" class="btn-success" groups="task_manager.group_tm_manager" attrs="{'invisible':[('stage', '!=', 'review')]}"/>
+          <button name="action_to_todo" type="object" string="Re-open" class="btn-secondary" attrs="{'invisible':[('stage', '!=', 'todo')]}"/>
+        </header>
         <sheet>
           <group>
             <group>
@@ -176,6 +186,6 @@
     <field name="search_view_id" ref="view_tm_task_search"/>
   </record>
 
-  <menuitem id="tm_root_menu" name="Task Board" sequence="50"/>
+  <menuitem id="tm_root_menu" name="Task Board" web_icon="task_manager,static/description/icon.png" sequence="50"/>
   <menuitem id="tm_task_menu" name="Tasks" parent="tm_root_menu" action="action_tm_tasks"/>
 </odoo>

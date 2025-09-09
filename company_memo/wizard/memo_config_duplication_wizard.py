@@ -18,6 +18,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                                          'allowed_companies_id',
                                          'res_partner_wizard_id', 
                                          string='Allowed Partners')
+    
     company_ids = fields.Many2many(
         'res.company', 
         'res_confi_duplication_config_rel',
@@ -93,29 +94,19 @@ class MemoConfigDuplicationWizard(models.TransientModel):
         active_id = self.env.context.get('active_id')
         if active_id:
             memo_config = self.env['memo.config'].browse(active_id)
-            # memo_type = self.env['memo.type'].search([('name', '=', self.name)], limit=1)
-            # if memo_type:
-            #     raise ValidationError('Memo type with name already exist. Kindly change the name')
-            # else:
-            #     memo_type = self.env['memo.type'].create({
-            #         'name': self.name,
-            #         'active': True,
-            #         'memo_key': memo_config.memo_type.memo_key,
-            #         'memo_type': memo_config.memo_type.id
-            #     })
             for comp in self.company_ids:
-                company_depts = self.mapped('dept_ids').filtered(lambda co: co.company_id.id == comp.id)
-                for dept in company_depts:
+                company_districts = self.mapped('branch_ids').filtered(lambda co: co.company_id.id == comp.id)
+                for cob in company_districts:
                     config_exist = self.env['memo.config'].search([
-                        ('department_id', '=', dept.id), 
+                        ('branch_id', '=', cob.id), 
                         ('company_id', '=', comp.id),
                         ('memo_type', '=', memo_config.memo_type.id)], limit=1)
                     if config_exist:
-                        raise ValidationError(f'Configuration for type {memo_config.memo_type.name} exist in company - {comp.name} and department {dept.name}')
+                        raise ValidationError(f'Configuration for type {memo_config.memo_type.name} exist in company - {comp.name} and department {cob.name}')
                     stage_ids = []
                     new_config = self.env['memo.config'].create({
-                    'name': f"{memo_config.memo_type.name} - [{dept.name}]",
-                    'department_id': dept.id,
+                    'name': f"{memo_config.memo_type.name} - [{cob.name}]",
+                    'branch_id': cob.id,
                     'memo_type': memo_config.memo_type.id,
                     'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
                     'allowed_for_company_ids': self.allowed_companies_ids,
@@ -151,44 +142,10 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                                 'require_so_confirmation': stage.main_stage_id.require_so_confirmation,
                                 'require_bill_payment': stage.main_stage_id.require_bill_payment,
                                 'publish_on_dashboard': stage.main_stage_id.publish_on_dashboard,
+                                'company_id': comp.id,
                             })
                             stage_ids.append(new_stage.id)
                         new_config.update({'stage_ids': stage_ids})
-
-    # def duplicate_memo_config(self):
-    #     active_id = self.env.context.get('active_id')
-    #     if active_id:
-    #         memo_config = self.env['memo.config'].browse(active_id)
-    #         for dept in self.dept_ids:
-    #             stage_ids = []
-    #             new_config = self.env['memo.config'].create({
-    #             'department_id': dept.id,
-    #             'memo_type': memo_config.memo_type.id,
-    #             'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
-    #             'allowed_for_company_ids': self.allowed_companies_ids
-    #             })
-    #             if self.dummy_memo_stage_ids:
-    #                 for sequence, stage in enumerate(self.dummy_memo_stage_ids, 900): 
-    #                     new_stage = self.env['memo.stage'].create({
-    #                         'name': stage.name,
-    #                         'sequence': sequence,
-    #                         'active': True,
-    #                         'loaded_from_data': True,
-    #                         'approver_ids': [(6, 0, stage.approver_ids.ids)],
-    #                         'is_approved_stage': stage.is_approved_stage,
-    #                         'memo_config_id': new_config.id,
-    #                     })
-    #                     stage_ids.append(new_stage.id)
-    #                 new_config.update({'stage_ids': stage_ids})
-            # return {
-            #     'name': 'New Memo Config',
-            #     'view_mode': 'form',
-            #     'res_id': new_config.id, 
-            #     'res_model': 'memo.config',
-            #     'view_type': 'form',
-            #     'type': 'ir.actions.act_window',
-            #     'target': 'current',
-            # }
 
 class DummyMemoStage(models.TransientModel):
     _name = 'dummy.memo.stage'
@@ -200,5 +157,4 @@ class DummyMemoStage(models.TransientModel):
     approver_ids = fields.Many2many('hr.employee', 'employee_wizard_rel', 'employee_id', 'employee_wizard_id', string="Approvers")
     is_approved_stage = fields.Boolean(string="Is Approved Stage")
     main_stage_id = fields.Many2one('memo.stage', string="Main Stage")
-
 

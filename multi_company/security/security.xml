@@ -105,22 +105,22 @@
             </record>
 
             
-<record id="user_see_memo_stage_company_related_record_6" model="ir.rule">
+<!-- <record id="user_see_memo_stage_company_related_record_6" model="ir.rule">
                 <field name="name">memo.stage: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
                 <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
-            </record>
+            </record> -->
 
 
-            <record id="user_see_memo_stage_company_related_record_7" model="ir.rule">
+            <!-- <record id="user_see_memo_stage_company_related_record_7" model="ir.rule">
                 <field name="name">memo.stage: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_hr_academic_company_related_record_7" model="ir.rule">
@@ -1336,7 +1336,7 @@
             </record>
 
             
-<record id="user_see_memo_type_company_related_record_74" model="ir.rule">
+<!-- <record id="user_see_memo_type_company_related_record_74" model="ir.rule">
                 <field name="name">memo.type: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_type"/>
                 <field name="global" eval="True"/>
@@ -1351,7 +1351,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_goal_setting_section_line_company_related_record_75" model="ir.rule">
