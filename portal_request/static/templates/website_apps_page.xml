@@ -169,6 +169,16 @@
 						</a>
 
 					</div>
+					<div class="app-item">
+						<a t-att-href="
+							'/admin-taskboard' 
+							if (request.env.user.has_group('base.group_system') 
+								or request.env.user.has_group('task_manager.group_tm_manager')) 
+							else '/taskboard'">
+							<div class="app-icon taskboard-icon">📝</div>
+							<div class="app-label">Taskboard</div>
+						</a>
+					</div>
 				</div>
 				</div>
 
