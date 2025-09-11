@@ -1354,7 +1354,7 @@ class Memo_Model(models.Model):
             raise ValidationError(
                 """You are not allowed to Forward / Approve this record !!! \n Contact sys admin to add you as approver"""
                 )
-        if self.memo_type.memo_key == "Payment" and self.amountfig <= 0:
+        if self.memo_type.memo_key == "Payment" and self.request_total_amount <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
@@ -1978,6 +1978,7 @@ class Memo_Model(models.Model):
                 'picking_type_id': stock_picking_type_out.id,
                 'location_id': self.source_location_id.id,
                 'location_dest_id': self.dest_location_id.id,
+                'branch_id': self.employee_id.user_id.branch_id.id,
                 'origin': self.code,
                 'memo_id': self.id,
                 'partner_id': self.employee_id.user_id.partner_id.id,
@@ -2103,7 +2104,7 @@ class Memo_Model(models.Model):
                 if self.dest_location_id.id == self.source_location_id.id:
                     self.source_location_id = False
                     raise ValidationError("Destination location and source location cannot be the same")
-            
+                 
     def generate_vehicle_request(self, body_msg):
         # generate fleet asset
         Fleet = self.env['memo.fleet'].sudo()
@@ -2262,7 +2263,7 @@ class Memo_Model(models.Model):
             if not journal_id:
                 raise UserError(f"""
                                 You do have any journal set to the current company {self.company_id.name} 
-                                with type in 'purchase' and journal code set as 'BILL'
+                                with type in 'purchase' or journal code set as 'BILL'
                                 """
                                 )
             account_move = self.env['account.move'].sudo()

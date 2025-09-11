@@ -584,7 +584,10 @@ class PortalRequest(http.Controller):
    			('id', 'not in', [int(i) for i in productItems]),
 			('company_id', '=', request.env.user.company_id.id), 
    			('active', '=', True), 
-      		('name', 'ilike', query)
+      		'|','|', 
+			('name', 'ilike', query),
+			('default_code', 'ilike', query),
+			('barcode', 'ilike', query)
 			]
 		_logger.info(f'CQUERY {query}')
 
@@ -784,25 +787,30 @@ class PortalRequest(http.Controller):
 		Returns:
 			dict: Response
 		"""
-		_logger.info(f'Checking product for {product_id} District {district} check_ qty No ...{qty}')
-		if product_id and type(product_id) in [int]:
+		_logger.info(f'Checking product for {product_id}, REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
+		if product_id:# and type(product_id) in [int]:
 			product = request.env['product.product'].sudo().search(
 			[
 				('active', '=', True),
 				# ('detailed_type', '=', 'product'),
-				('id', '=', int(product_id))
+				('id', '=', int(product_id)),
 			], 
 			limit=1) 
 			if product:
 				domain = [
-					('company_id', '=', request.env.user.company_id.id) 
+					('company_id', '=', request.env.user.company_id.id),
+     				('branch_id', '=', request.env.user.branch_id.id)
 				] 
-				warehouse_location_id = request.env['stock.warehouse'].search(domain, limit=1)
+				_logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+				warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
 				stock_location_id = warehouse_location_id.lot_stock_id
+    
+
 				# should_bypass_reservation : False
 				if request_type in ['material_request'] and product.detailed_type in ['product']:
 					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
 					product_qty = float(qty) if qty else 0
+					_logger.info(f'CHECKING VALLID warehouse {warehouse_location_id.name} District LOCATION {stock_location_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
 					if product_qty > total_availability:
 						return {
 							"status": False,
@@ -815,17 +823,17 @@ class PortalRequest(http.Controller):
 							}
 				else:
 					return {
-						"status": True,
-						"message": "", 
-						}
+							"status": False,
+							"message": f"Selected product is not a storable product ({product.name})", 
+							}
 			else:
 				return {
-					"status": True,
+					"status": False,
 					"message": "The product does not exist on the inventory", 
 					}
 		else:
 			return {
-				"status": True,
+				"status": False,
 				"message": "Please ensure you select a product line", 
 				}
 
@@ -1105,7 +1113,7 @@ class PortalRequest(http.Controller):
 			sessions['start'] = 0 
 			sessions['end'] = 10
 		
-		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].search([])]
+		all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].sudo().search([])]
 		
 		memo_type = ['payment_request', 'Loan'] if type in ['payment_request', 'Loan'] \
 			else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \

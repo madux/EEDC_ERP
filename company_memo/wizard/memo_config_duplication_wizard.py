@@ -145,7 +145,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                                 'company_id': comp.id,
                             })
                             stage_ids.append(new_stage.id)
-                        new_config.update({'stage_ids': [(6, 0, [stage_ids])]})
+                        new_config.update({'stage_ids': [(6, 0, stage_ids)]})
 
 class DummyMemoStage(models.TransientModel):
     _name = 'dummy.memo.stage'

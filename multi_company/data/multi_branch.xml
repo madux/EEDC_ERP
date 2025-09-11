@@ -41,6 +41,7 @@
             <field name="company_id" ref="multi_company.company_main_power"/>
 
         </record>
+        
         <record model="multi.branch" id="branch0008">
             <field name="name">NSUKKA DISTRICT</field>
             <field name="code">BR0008</field>
@@ -113,6 +114,12 @@
             <field name="name">OGIDI DISTRICT</field>
             <field name="code">BR0021</field>
             <field name="company_id" ref="multi_company.company_firstpower"/> 
+        </record>
+
+        <record model="multi.branch" id="branch022">
+            <field name="name">9TH / NINTH DISTRICT</field>
+            <field name="code">BR0022</field>
+            <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
     </data>
 </odoo>
