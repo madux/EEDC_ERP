@@ -929,6 +929,7 @@ class PortalRequest(http.Controller):
 				"justification_reason": post.get("justification_reason"),
 				"state": "Sent",
 				"company_id": request.env.user.company_id.id,
+				"branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
                 "currency_id": request.env.user.company_id.currency_id.id,
 				"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 				"description": description_body, 

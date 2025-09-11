@@ -11,13 +11,11 @@
     'License': 'AGPL-3.0',
     'depends': [
         'base', 'account', 'purchase', 'stock', 'mail', 'hr', 
-        'contacts', 'hr_holidays', 'hr_recruitment',
-                'documents', 'documents_project', 'documents_sign',
-                'documents_hr_recruitment',
-                'widget_addons',
-                'account_payment_invoice_online_payment_patch',
-                'ik_multi_branch',
-                'l10n_uk'],
+        'contacts', 'hr_holidays', 'hr_recruitment', 'documents', 
+        'documents_project', 'documents_sign', 'documents_hr_recruitment',
+        'widget_addons', 'account_payment_invoice_online_payment_patch',
+        'ik_multi_branch', 'l10n_uk'
+        ],
     'data': [
         'security/security_group.xml', 
         'sequence/sequence.xml',
