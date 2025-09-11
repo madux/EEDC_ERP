@@ -9,7 +9,7 @@ from . import config_setting
 from . import account_account
 from . import account_move
 from . import purchase_order
-from . import stock_picking
+from . import stock_picking, stock_quant
 from . import hr_employee
 from . import document
 from . import product_template

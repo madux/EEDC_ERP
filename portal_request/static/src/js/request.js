@@ -30,6 +30,8 @@ odoo.define('portal_request.portal_request', function (require) {
         'employee_update'
 
     ];
+
+    
     const ItemRequest = [
         'material_request', 
         'Procurement',
@@ -37,6 +39,12 @@ odoo.define('portal_request.portal_request', function (require) {
         'leave_request',
         'cash_advance',
         'soe',
+    ];
+
+    const productRequiredItems = [
+        'material_request', 
+        'Procurement',
+        'vehicle_request',
     ];
     function getSelectedProductItem(valueName){
         // use to compile id no of the checked options for assessors and moderators
@@ -579,6 +587,7 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function TriggerProductField(lastRow_count){
+        // PRODUCTSEARCH
         $(`input[special_id='${lastRow_count}']`).select2({
             ajax: {
               url: '/portal-request-product',
@@ -894,15 +903,19 @@ odoo.define('portal_request.portal_request', function (require) {
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
                 let selectedproductQty = qty_elm.val(); 
-                this._rpc({
-                    route: `/check-quantity`,
-                    params:{
-                        'product_id': qty_elm.attr('id'),
-                        'qty': selectedproductQty,
-                        'district': $("#selectDistrict").val(),
-                        'request_type': $("#selectRequestOption").val()
-                    }
-                }).then(function(data){
+                let request_type = $("#selectRequestOption").val()
+                console.log('THE REQUEST TYPE IS ==> ', request_type)
+                if ($.inArray(request_type, productRequiredItems) !== -1){
+                    console.log('THE REQUEST TYPE IS 2222 ==> ', request_type)
+                    this._rpc({
+                        route: `/check-quantity`,
+                        params:{
+                            'product_id': qty_elm.attr('id'),
+                            'qty': selectedproductQty,
+                            'district': $("#selectDistrict").val(),
+                            'request_type': $("#selectRequestOption").val()
+                        }
+                    }).then(function(data){
                         if(!data.status){
                             qty_elm.attr('required', true);
                             qty_elm.val("");
@@ -916,7 +929,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             qty_elm.attr('value', selectedproductQty);
                             compute_total_amount();
                         }
-                })
+                    })
+                }
             },
 
             'blur input[name=staff_id]': function(ev){
@@ -1538,7 +1552,6 @@ odoo.define('portal_request.portal_request', function (require) {
             'click .button_req_submit': function (ev) {
                 //// main event starts
                 var list_of_fields = [];
-
                 //ensure leave reliever is added 
                 if($('#selectRequestOption').val() == "leave_request" && $('#leave_reliever').val() == ''){
                     modal_message.text("Please ensure to add a reliever")

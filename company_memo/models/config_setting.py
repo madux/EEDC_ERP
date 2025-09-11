@@ -283,7 +283,7 @@ class MemoStage(models.Model):
             memo_duplicate = self.env['memo.stage'].search([
                 ('memo_config_id.memo_type', '=', self.memo_config_id.memo_type.id),
                 ('sequence', '=', self.sequence),
-                ('memo_config_id.department_id', '=', self.memo_config_id.department_id.id)
+                ('memo_config_id.company_id', '=', self.memo_config_id.id)
                 ])
             if memo_duplicate and len(memo_duplicate.ids) > 1:
                 raise ValidationError("You have already created a stage with the same sequence")
@@ -443,12 +443,13 @@ class MemoConfig(models.Model):
         return res
     
     def update_parent_setting(self):
-        if self.stage_ids:
-            for rec in self.stage_ids:
-                rec.is_approved_stage = False
-                rec.memo_config_id = self.id
-            if len(self.stage_ids) > 2:
-                self.stage_ids[-2].is_approved_stage = True
+        for mc in self:
+            if mc.stage_ids:
+                for rec in mc.stage_ids:
+                    rec.is_approved_stage = False
+                    rec.memo_config_id = mc.id
+                if len(mc.stage_ids) > 2:
+                    mc.stage_ids[-2].is_approved_stage = True
 
     @api.constrains('memo_type')
     def _check_duplicate_memo_type(self):
