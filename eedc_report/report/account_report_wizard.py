@@ -63,7 +63,7 @@ class AccountDynamicReport(models.Model):
         required=False, default="pdf"
     )
     
-    branch_ids = fields.Many2many('multi.branch', string='MDA')
+    branch_ids = fields.Many2many('multi.branch', string='District')
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
@@ -226,7 +226,7 @@ class AccountDynamicReport(models.Model):
         self.ensure_one()
         branches_to_process = self.branch_ids or self.env['multi.branch'].search([])
         if not branches_to_process:
-            raise ValidationError("No MDA/Branch selected or configured for the current user.")
+            raise ValidationError("No district selected or configured for the current user.")
         
         start_date, end_date, month_headers = self._get_date_range()
         
@@ -266,7 +266,7 @@ class AccountDynamicReport(models.Model):
         }
         
         
-        action_ref = 'eedc_report.action_report_overhead_quarterly' if is_quarterly else 'eedc_report.action_report_overhead_monthly'
+        action_ref = 'eedc_report.action_report_expenditure_quarterly' if is_quarterly else 'eedc_report.action_report_expenditure_monthly'
         report_action = self.env.ref(action_ref)
         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
         if self.format == 'html':
@@ -585,7 +585,7 @@ class AccountDynamicReport(models.Model):
 
         branches_to_process = self.branch_ids or self.env.user.branch_id
         if not branches_to_process:
-            raise ValidationError("No MDA/Branch selected or configured for the current user.")
+            raise ValidationError("No district selected or configured for the current user.")
 
         start_date, end_date, month_headers = self._get_date_range()
         is_quarterly = 'quarterly' in self.report_type
@@ -702,7 +702,7 @@ class AccountDynamicReport(models.Model):
         
         branches_to_process = self.branch_ids or self.env.user.branch_id
         if not branches_to_process:
-            raise ValidationError("No MDA/Branch selected or configured for the current user.")
+            raise ValidationError("No district selected or configured for the current user.")
 
         start_date, end_date, month_headers = self._get_date_range()
         is_quarterly = 'quarterly' in self.report_type
@@ -714,7 +714,7 @@ class AccountDynamicReport(models.Model):
             if report_lines:
                 all_branch_reports.append({
                     'title': f'HEAD: {branch.code} - {branch.name}',
-                    'mda_code': branch.code,
+                    'district_code': branch.code,
                     'report_lines': report_lines,
                 })
         
@@ -729,8 +729,8 @@ class AccountDynamicReport(models.Model):
 
         for report_data in all_branch_reports:
             report_element = ET.SubElement(root, 'Report', attrib={
-                'mda_name': report_data['title'].split(' - ')[-1],
-                'mda_code': report_data.get('mda_code', '')
+                'district_name': report_data['title'].split(' - ')[-1],
+                'district_code': report_data.get('district_code', '')
             })
             
             lines_element = ET.SubElement(report_element, 'ReportLines')
