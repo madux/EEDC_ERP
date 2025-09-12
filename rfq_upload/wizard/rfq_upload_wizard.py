@@ -74,15 +74,30 @@ class RFQUploadWizard(models.TransientModel):
             
             if validation_errors:
                 self.validation_result = "Validation Errors Found:\n\n" + "\n".join(validation_errors)
+                # return {
+                #     'type': 'ir.actions.client',
+                #     'tag': 'display_notification',
+                #     'params': {
+                #         'title': _('Validation Failed'),
+                #         'message': _('Please check validation results and correct the errors.'),
+                #         'sticky': False,
+                #         'type': 'warning'
+                #     }
+                # }
+                partner = self.env.user.partner_id
+                payload = {
+                    'type': 'warning',
+                    'title': _("Validation Failed"),
+                    'message': _("Please check validation results and correct the errors."),
+                    'sticky': False,
+                }
+                self.env['bus.bus']._sendone(partner.id, 'simple_notification', payload)
                 return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': _('Validation Failed'),
-                        'message': _('Please check validation results and correct the errors.'),
-                        'sticky': False,
-                        'type': 'warning'
-                    }
+                    'type': 'ir.actions.act_window',
+                    'res_model': self._name,
+                    'res_id': self.id,
+                    'view_mode': 'form',
+                    'target': 'new',
                 }
             else:
                 self.validation_result = f"✓ File validation successful!\n\nFound {len(rfq_data)} valid RFQ lines from sheet '{self.sheet or 'default'}'."
