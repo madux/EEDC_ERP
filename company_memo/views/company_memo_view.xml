@@ -582,9 +582,10 @@
 					<field name="memo_type" string="Request type"/>
 					<field name="set_staff" string = "Assigned to?"/>
 					<field name="code"/> 
-					<field name="state" invisible="1"/>
-					<field name="stage_id"/>
-					<field name="status_progress" widget="progressbar" string="Progress(%)"/>
+					<field name="state" invisible="0" optional="hide"/>
+					<field name="stage_id" optional="hide"/>
+					<field name="status_progress" widget="progressbar" string="Progress(%)" optional="show"/>
+					<field name="branch_id" invisible="0" optional="hide"/>
 				</tree>
 			</field>
 		</record>
@@ -600,7 +601,8 @@
 					<field name="employee_id"/>
 					<field name="project_id"/>
 					<field name="code"/> 
-					<field name="date" /> 
+					<field name="date" />
+					<field name="branch_id" invisible="0"/> 
 					<group expand="0" string="Group By">
 						<filter name="name" string="Name" icon="terp-personal" domain="[]" context="{'group by':'name'}" />
 						<filter name="Approve" string="Approve" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
@@ -608,6 +610,7 @@
 						<filter name="Done" string="Done" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />
 						<filter name="group_to_create_document" string="Status" domain="[]" context="{'group_by' : 'stage_id'}"/>
 						<filter name="Date" string="Date" icon="terp-personal" domain="[]" context="{'group by':'date'}" />
+						<filter name="branch" string="Branch" icon="terp-personal" domain="[]" context="{'group by':'branch_id'}" />
 					</group>
 				</search>
 			</field>

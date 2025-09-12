@@ -4,7 +4,7 @@ import logging
 from odoo.exceptions import ValidationError, UserError, AccessError
 _logger = logging.getLogger(__name__)
 
-
+     
 class ResUsers(models.Model):
     _inherit = 'res.users'
     branch_ids = fields.Many2many('multi.branch', string='Allowed branches')

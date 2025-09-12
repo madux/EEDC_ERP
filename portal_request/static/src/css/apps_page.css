@@ -16,6 +16,7 @@
       min-height: 100vh;
       background: linear-gradient(135deg, rgba(7, 7, 7, 0.9) 0%, rgba(41, 41, 41, 0.9) 50%, rgba(32, 32, 32, 0.9) 100%);
       position: relative;
+      padding-bottom: 50px;
     }
 
     .switch-mode {
@@ -88,7 +89,7 @@
 
     .performance-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 40px;
       padding: 0 204px;
       max-width: 1440px;
@@ -252,6 +253,7 @@
 
     /* Performance System Icons */
     .hr-pms-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .feedback-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
     .feedback-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
 
     /* Other Applications Icons */

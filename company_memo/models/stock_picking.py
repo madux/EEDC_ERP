@@ -4,6 +4,7 @@ from odoo.exceptions import ValidationError
     
 class StockPicking(models.Model):
     _inherit = "stock.picking"
+    _order = "id desc"
 
     memo_id = fields.Many2one('memo.model', string='Memo Reference')
     legacy_id = fields.Integer(string="legacy_id")

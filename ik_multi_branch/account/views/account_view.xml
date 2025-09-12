@@ -453,7 +453,7 @@
             <field name="inherit_id" ref="account.view_account_payment_register_form"/>
             <field name="arch" type="xml">
                 <field name="journal_id" position="after">
-                    <field name="branch_id" attrs="{'readonly': True}" options="{'no_create': True}" />
+                    <field name="branch_id" attrs="{'readonly': False}" options="{'no_create': True}" />
                 </field>
             </field>
         </record>
