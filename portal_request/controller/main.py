@@ -800,41 +800,79 @@ class PortalRequest(http.Controller):
 			if product:
 				domain = [
 					('company_id', '=', request.env.user.company_id.id),
-     				('branch_id', '=', request.env.user.branch_id.id)
+     				('branch_id', '=', request.env.user.branch_id.id),
+     				('usage', '=', 'internal')
 				] 
-				_logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-				warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
-				stock_location_id = warehouse_location_id.lot_stock_id
+				# _logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+				# warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
+				# stock_location_id = warehouse_location_id.lot_stock_id
     
+				# _logger.info(f"""
+                #  USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION 
+                #  {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}"""
+                #  ) 
 
 				# should_bypass_reservation : False
 				if request_type in ['material_request'] and product.detailed_type in ['product']:
-					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
-					product_qty = float(qty) if qty else 0
-					_logger.info(f'CHECKING VALLID warehouse {warehouse_location_id.name} District LOCATION {stock_location_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-					if product_qty > total_availability:
+					location_ids = request.env['stock.location'].sudo().search(domain)
+					if not location_ids:
 						return {
 							"status": False,
-							"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
+							"location_id": False,
+							"message": f"""No internal storage location found for your company {request.env.user.company_id.name}
+       						and district ({request.env.user.branch_id.name})""", 
+							}
+					location = False
+					product_qty = float(qty) if qty else 0
+					total_availability = 0
+					for loc in location_ids:
+						location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
+						if location_with_qty:
+							location = loc
+							total_availability = sum([r.available_quantity for r in location_with_qty])
+							break
+					if not location: 
+						return {
+							"status": False,
+							"location_id": False,
+							"message": f"Selected product: ({product_qty}) quantity is higher than the Available Quantity. Available quantity is {total_availability}", 
 							}
 					else:
 						return {
 							"status": True,
-							"message": "", 
+							"message": "",
+							"location_id": location.id
+        
 							}
+					# total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
+					# product_qty = float(qty) if qty else 0
+					# if not location:
+					# if product_qty > total_availability:
+					# 	return {
+					# 		"status": False,
+					# 		"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
+					# 		}
+					# else:
+					# 	return {
+					# 		"status": True,
+					# 		"message": "", 
+					# 		}
 				else:
 					return {
 							"status": False,
+       						"location_id": False,
 							"message": f"Selected product is not a storable product ({product.name})", 
 							}
 			else:
 				return {
 					"status": False,
+       				"location_id": False,
 					"message": "The product does not exist on the inventory", 
 					}
 		else:
 			return {
 				"status": False,
+    			"location_id": False,
 				"message": "Please ensure you select a product line", 
 				}
 
@@ -917,6 +955,7 @@ class PortalRequest(http.Controller):
 				"leave_start_date": leave_start_date,
 				"leave_end_date": leave_end_date,
 				"leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
+				"source_location_id": int(post.get("TargetSourceLocation")) if post.get("TargetSourceLocation") else False,
 				"applicationChange": True if post.get("applicationChange") == "on" else False,
 				"enhancement": True if post.get("enhancement") == "on" else False,
 				"datapatch": True if post.get("datapatch") == "on" else False,
