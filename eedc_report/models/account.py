@@ -1,0 +1,59 @@
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+
+
+import logging
+
+_logger = logging.getLogger(__name__)
+
+class EconomicTag(models.Model):
+    _name = "economic.tag"
+
+    name = fields.Char(string="Name")
+    code = fields.Char("Code", required=True)
+    parent_tag_id = fields.Many2one('economic.tag', string='Parent')
+    account_head_type = fields.Selection(
+        [
+        ("Revenue", "Revenue"), 
+        ("Personnel", "Personnel"),
+        ("Overhead", "Overhead"), 
+        ("Expenditure", "Expenditure"), 
+        ("Capital", "Capital Expenditure"),
+        ("Other", "Others"),
+        ], string="Budget Type", 
+    )
+    active = fields.Boolean(string='Active', default=True)
+    
+    account_ids = fields.Many2many('account.account')
+    
+    _sql_constraints = [
+        ('code_unique', 'unique(code)', 'Code must be unique.')
+    ]
+
+    @api.constrains('code')
+    def _check_code_hierarchy(self):
+        for rec in self:
+            if rec.parent_tag_id:
+                try:
+                    if int(rec.code) < int(rec.parent_tag_id.code):
+                        raise ValidationError('Code must be greater than the parent\'s code.')
+                except ValueError:
+                    raise ValidationError('Code and parent code must be numeric to compare hierarchy.')
+
+# class accountAccount(models.Model):
+#     _inherit = "account.account"
+
+#     account_segment_id = fields.Many2one('account.public.segment', string='Account Segment')
+#     account_head_type = fields.Selection(
+#         [
+#         ("Revenue", "Revenue"), 
+#         ("Personnel", "Personnel"),
+#         ("Overhead", "Overhead"), 
+#         ("Expenditure", "Expenditure"), 
+#         ("Capital", "Capital Expenditure"),
+#         ("Other", "Others"),
+#         ], string="Budget Type", 
+#     )
+#     active = fields.Boolean(string='Active')
+    
+#     economic_tag = fields.Many2one('economic.tag')
