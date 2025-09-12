@@ -928,6 +928,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
                             compute_total_amount();
+                            $('#TargetSourceLocation').val(data.location_id)
                         }
                     })
                 }
