@@ -47,7 +47,7 @@
             id="res_group_role_menu_users"
             name="User role"
             action="company_memo.res_group_role_action"
-            parent="company_memo.base.menu_users"
+            parent="base.menu_users"
             sequence="4"/>
 
 
