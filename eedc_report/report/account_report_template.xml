@@ -171,7 +171,7 @@
     </t>
 </template>
 
-    <template id="report_capital_monthly_template">
+    <template id="report_total_monthly_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
                 <t t-foreach="data" t-as="report">
@@ -184,23 +184,20 @@
                         <table class="report-table mt-3">
                             <thead>
                                 <tr>
-                                    <th style="width: 25%;">DESCRIPTION</th>
-                                    <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
-                                    <th style="width: 13%;" class="text-right"><t t-esc="fiscal_year"/> APPROVED BUDGET</th>
-                                    <th style="width: 13%;" class="text-right">PREVIOUS ACTUAL</th>
-                                    <t t-foreach="month_headers" t-as="month"><th style="width: 13%;" class="text-right">EXP. FOR THE MONTH OF <t t-esc="month"/></th></t>
-                                    <th style="width: 13%;" class="text-right">TOTAL ACTUAL EXP. TO DATE</th>
+                                    <th style="width: 25%;">CODE</th>
+                                    <th style="width: 20%;">DESCRIPTION</th>
+                                    <t t-foreach="district_headers" t-as="district"><th style="width: 13%;" class="text-right"><t t-esc="district"/> DISTRICT</th></t>
+                                    <th style="width: 13%;" class="text-right">TOTAL REV.</th>
+                                    <th style="width: 13%;" class="text-right">TOTAL EXP.</th>
                                     <th style="width: 13%;" class="text-right">BALANCE</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="report.get('report_lines')" t-as="line">
                                     <tr>
+                                        <td><span t-esc="line.get('code', '')"/></td>
                                         <td><span t-esc="line.get('description', '')"/></td>
-                                        <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/></td>
-                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district, 0.0))"/></td></t>
                                         <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/></td>
                                         <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
                                     </tr>

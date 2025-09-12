@@ -78,7 +78,7 @@ class AccountDynamicReport(models.Model):
         ("Expenditure", "Expenditure"), 
         ("Capital", "Capital Expenditure"),
         ("Other", "Others"),
-        ], default="Overhead", string="Account / Budget Type", 
+        ], default="Overhead", string="Account Type", 
     )
     excel_file = fields.Binary('Download Excel file', readonly=True)
     filename = fields.Char('Excel File')
@@ -392,23 +392,24 @@ class AccountDynamicReport(models.Model):
 
     def _get_capital_report_data(self, start_date, end_date, month_headers, branch, is_quarterly=False):
         
-        domain = self._build_base_domain(start_date, end_date, branch.id)
-        domain.extend([
-            ('ng_budget_line_id.budget_type', '=', self.account_head_type),
-            ('display_type', '=', 'product'), 
-            ('debit', '>', 0)
-            ])
+        domain = self._build_base_domain(start_date, end_date, branch)
+        # domain.extend([
+        #     ('ng_budget_line_id.budget_type', '=', self.account_head_type),
+        #     ('display_type', '=', 'product'), 
+        #     ('debit', '>', 0)
+        #     ])
         
         all_invoice_lines = self.env['account.move.line'].search(domain)
 
         if not all_invoice_lines:
-            _logger.warning(f"No capital invoice lines found for branch '{branch.name}'.")
+            _logger.warning(f"No invoice lines found for selected branches '{branch.name}'.")
             return []
 
-        capital_data = []
+        districts_data = []
         for line in all_invoice_lines:
             budget_line = line.ng_budget_line_id
-            approved_budget = budget_line.allocated_amount if budget_line else 0.0
+            # approved_budget = budget_line.allocated_amount if budget_line else 0.0
+            approved_budget = 0.0
             
             total_utilized = 0.0
             if budget_line:
