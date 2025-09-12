@@ -38,7 +38,6 @@
                             .text-right { text-align: right !important; }
                             .text-center { text-align: center !important; }
                             .text-left { text-align: left !important; }
-                            /* The .bold-row class is no longer needed for this logic */
                             .parent-level { background-color: #f8f8f8; }
                             .account-row { font-style: italic; }
                         </style>
@@ -46,24 +45,20 @@
                         <table class="report-table mt-3">
                             <thead>
                                 <tr>
-                                    <th style="width: 8%; text-align: center;">Sub-Head</th>
-                                    <th style="width: 25%; text-align: left;">Description</th>
-                                    <th style="width: 12%; text-align: right;">
-                                        <t t-esc="fiscal_year"/> Approved<br/>Budget
-                                    </th>
-                                    <th style="width: 12%; text-align: right;">Previous<br/>Actual</th>
+                                    <th style="width: 12%; text-align: center;">Sub-Head</th>
+                                    <th style="width: 35%; text-align: left;">Description</th>
+                                    <th style="width: 15%; text-align: right;">Previous<br/>Actual</th>
                                     <t t-if="len(month_headers) == 1">
-                                        <th style="width: 12%; text-align: right;">
+                                        <th style="width: 18%; text-align: right;">
                                             Exp. for the<br/>Month of <t t-esc="month_headers[0].capitalize()"/>
                                         </th>
                                     </t>
                                     <t t-else="">
                                         <t t-foreach="month_headers" t-as="month">
-                                            <th style="width: 8%; text-align: right;"><t t-esc="month"/></th>
+                                            <th style="width: 12%; text-align: right;"><t t-esc="month"/></th>
                                         </t>
                                     </t>
-                                    <th style="width: 12%; text-align: right;">Total Actual<br/>Exp. to Date</th>
-                                    <th style="width: 11%; text-align: right;">Balance</th>
+                                    <th style="width: 20%; text-align: right;">Total Actual<br/>Exp. to Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -80,9 +75,6 @@
                                             <span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/>
                                         </td>
                                         <td class="text-right">
-                                            <span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/>
-                                        </td>
-                                        <td class="text-right">
                                             <span t-esc="'{:,.2f}'.format(line.get('previous_actual', 0.0))"/>
                                         </td>
                                         <t t-foreach="month_headers" t-as="month">
@@ -92,9 +84,6 @@
                                         </t>
                                         <td class="text-right">
                                             <span t-esc="'{:,.2f}'.format(line.get('total_exp_to_date', 0.0))"/>
-                                        </td>
-                                        <td class="text-right">
-                                            <span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -138,17 +127,19 @@
                         <table class="report-table mt-3">
                             <thead>
                                 <tr>
-                                    <th style="width: 8%;">Sub-Head</th>
-                                    <th style="width: 22%;">Description</th>
-                                    <th style="width: 11%;" class="text-right">
-                                        <t t-esc="fiscal_year"/> Approved Budget
-                                    </th>
+                                    <th style="width: 12%;">Sub-Head</th>
+                                    <th style="width: 35%;">Description</th>
                                     <t t-foreach="month_headers" t-as="month">
-                                        <th style="width: 9%;" class="text-right"><t t-esc="month"/></th>
+                                        <th style="width: 15%;" class="text-right"><t t-esc="month"/></th>
                                     </t>
-                                    <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
-                                    <th style="width: 7%;">% Perf to Date</th>
-                                    <th style="width: 11%;" class="text-right">Balance</th>
+                                    <th style="width: 18%;" class="text-right">
+                                        <t t-if="quarterly_total_header">
+                                            <t t-esc="quarterly_total_header"/>
+                                        </t>
+                                        <t t-else="">
+                                            Total
+                                        </t>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,24 +152,24 @@
                                             <span t-esc="line.get('name', '')" t-att-class="'account-row' if is_account else ''"/>
                                         </td>
                                         
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
                                         <t t-foreach="month_headers" t-as="month">
-                                            <td class="text-right">
-                                                <span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/>
-                                            </td>
-                                        </t>
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
-                                        <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-                </t>
+                                        <td class="text-right">
+                                            <span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/>
+                                        </td>
+                                    </t>
+                                    
+                                    <td class="text-right">
+                                        <span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0) if line.get('quarterly_total') else line.get('total_exp_to_date', 0.0))"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
             </t>
         </t>
-    </template>
+    </t>
+</template>
 
     <template id="report_capital_monthly_template">
         <t t-call="web.html_container">
@@ -522,17 +513,17 @@
             <field name="name">Monthly Expenditure Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_overhead_monthly_template</field>
-            <field name="report_file">plateau_addons.report_overhead_monthly_template</field>
-        <!-- <field name="paperformat_id" ref="plateau_addons.paperformat_report_monthly_expenditure"/> -->
+            <field name="report_name">eedc_report.report_overhead_monthly_template</field>
+            <field name="report_file">eedc_report.report_overhead_monthly_template</field>
+        <!-- <field name="paperformat_id" ref="eedc_report.paperformat_report_monthly_expenditure"/> -->
         </record>
         
         <record id="action_report_overhead_quarterly" model="ir.actions.report">
             <field name="name">Quarterly Expenditure Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_overhead_quarterly_template</field>
-            <field name="report_file">plateau_addons.report_overhead_quarterly_template</field>
+            <field name="report_name">eedc_report.report_overhead_quarterly_template</field>
+            <field name="report_file">eedc_report.report_overhead_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
 
@@ -540,16 +531,16 @@
             <field name="name">Monthly Capital Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_capital_monthly_template</field>
-            <field name="report_file">plateau_addons.report_capital_monthly_template</field>
+            <field name="report_name">eedc_report.report_capital_monthly_template</field>
+            <field name="report_file">eedc_report.report_capital_monthly_template</field>
         </record>
 
         <record id="action_report_capital_quarterly" model="ir.actions.report">
             <field name="name">Quarterly Capital Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_capital_quarterly_template</field>
-            <field name="report_file">plateau_addons.report_capital_quarterly_template</field>
+            <field name="report_name">eedc_report.report_capital_quarterly_template</field>
+            <field name="report_file">eedc_report.report_capital_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
 
@@ -557,8 +548,8 @@
             <field name="name">Monthly Revenue Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_revenue_monthly_template</field>
-            <field name="report_file">plateau_addons.report_revenue_monthly_template</field>
+            <field name="report_name">eedc_report.report_revenue_monthly_template</field>
+            <field name="report_file">eedc_report.report_revenue_monthly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
 
@@ -566,24 +557,24 @@
             <field name="name">Quarterly Revenue Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_revenue_quarterly_template</field>
-            <field name="report_file">plateau_addons.report_revenue_quarterly_template</field>
+            <field name="report_name">eedc_report.report_revenue_quarterly_template</field>
+            <field name="report_file">eedc_report.report_revenue_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
         <record id="action_report_expenditure_monthly" model="ir.actions.report">
             <field name="name">Monthly Expenditure Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_expenditure_monthly_template</field>
-            <field name="report_file">plateau_addons.report_expenditure_monthly_template</field>
+            <field name="report_name">eedc_report.report_expenditure_monthly_template</field>
+            <field name="report_file">eedc_report.report_expenditure_monthly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
         <record id="action_report_expenditure_quarterly" model="ir.actions.report">
             <field name="name">Quarterly Revenue Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_expenditure_quarterly_template</field>
-            <field name="report_file">plateau_addons.report_expenditure_quarterly_template</field>
+            <field name="report_name">eedc_report.report_expenditure_quarterly_template</field>
+            <field name="report_file">eedc_report.report_expenditure_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
 
@@ -591,16 +582,16 @@
             <field name="name">Monthly Personnel Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_personnel_monthly_template</field>
-            <field name="report_file">plateau_addons.report_personnel_monthly_template</field>
+            <field name="report_name">eedc_report.report_personnel_monthly_template</field>
+            <field name="report_file">eedc_report.report_personnel_monthly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
         <record id="action_report_personnel_quarterly" model="ir.actions.report">
             <field name="name">Quarterly Revenue Report</field>
             <field name="model">account.dynamic.report</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">plateau_addons.report_personnel_quarterly_template</field>
-            <field name="report_file">plateau_addons.report_personnel_quarterly_template</field>
+            <field name="report_name">eedc_report.report_personnel_quarterly_template</field>
+            <field name="report_file">eedc_report.report_personnel_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
         </record>
 </odoo>

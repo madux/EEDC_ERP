@@ -40,20 +40,20 @@ class EconomicTag(models.Model):
                 except ValueError:
                     raise ValidationError('Code and parent code must be numeric to compare hierarchy.')
 
-class accountAccount(models.Model):
-    _inherit = "account.account"
+# class accountAccount(models.Model):
+#     _inherit = "account.account"
 
-    account_segment_id = fields.Many2one('account.public.segment', string='Account Segment')
-    account_head_type = fields.Selection(
-        [
-        ("Revenue", "Revenue"), 
-        ("Personnel", "Personnel"),
-        ("Overhead", "Overhead"), 
-        ("Expenditure", "Expenditure"), 
-        ("Capital", "Capital Expenditure"),
-        ("Other", "Others"),
-        ], string="Budget Type", 
-    )
-    active = fields.Boolean(string='Active')
+#     account_segment_id = fields.Many2one('account.public.segment', string='Account Segment')
+#     account_head_type = fields.Selection(
+#         [
+#         ("Revenue", "Revenue"), 
+#         ("Personnel", "Personnel"),
+#         ("Overhead", "Overhead"), 
+#         ("Expenditure", "Expenditure"), 
+#         ("Capital", "Capital Expenditure"),
+#         ("Other", "Others"),
+#         ], string="Budget Type", 
+#     )
+#     active = fields.Boolean(string='Active')
     
-    economic_tag = fields.Many2one('economic.tag')
+#     economic_tag = fields.Many2one('economic.tag')

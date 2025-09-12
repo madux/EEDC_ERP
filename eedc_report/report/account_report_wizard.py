@@ -150,12 +150,6 @@ class AccountDynamicReport(models.Model):
             res.update({'branch_ids': [(6, 0, unique_branch_ids)]})
         return res
     
-    # def get_budget(self, tag, branch_ids):
-    #     budget_line = self.env['ng.account.budget.line'].sudo()
-    #     budget_line_ids = budget_line.search([
-    #         ('budget_type', '=', tag.account_head_type),
-    #         ('branch_id.id', 'in', branch_ids)])
-    #     return budget_line_ids
     
     def _get_budget(self):
         return self.env['ng.account.budget'].search([
@@ -217,136 +211,6 @@ class AccountDynamicReport(models.Model):
         return domain
 
         
-    # def action_print_report(self):
-    #     move_records = []
-    #     user_branch_ids = self.env.user.branch_ids.ids + [self.env.user.branch_id.id]
-    #     search_domain = [('move_id.state', 'in', ['posted']), ('branch_id', 'in', user_branch_ids), ('account_id.account_head_type', '!=', False)]
-    #     if self.journal_ids:
-    #         search_domain.append(('move_id.journal_id.id', 'in', [j.id for j in self.journal_ids]))
-    #     if self.branch_ids:
-    #         search_domain.append(('move_id.branch_id.id', 'in', [j.id for j in self.branch_ids]))
-    #     if self.account_ids:
-    #         search_domain.append(('account_id.id', 'in', [j.id for j in self.account_ids]))
-    #     if self.account_head_type:
-    #         search_domain.append(('account_id.account_head_type', '=', self.account_head_type))
-    #     if self.date_from and self.date_to:
-    #         search_domain.extend([('date', '>=', self.date_from),('date', '<=', self.date_to)])
-    #     search_domain = self.search_domain()
-        
-    #     account_move_line = self.env['account.move.line'].search(search_domain)
-    #     account_ids, journal_ids = [], []
-    #     for record in account_move_line:
-    #         move_records.append(record)
-    #         self.moveline_ids = [(4, record.id)]
-    #         account_ids.append(record.account_id)
-    #         journal_ids.append(record.journal_id)
-    #     total_debit, total_credit = 0, 0
-    #     data = []
-    #     fiscal_year = self.fiscal_year
-    #     for acc in list(set(account_ids)):
-    #         all_move_line_with_account_ids = self.mapped('moveline_ids').filtered(
-    #             lambda s: s.account_id.id == acc.id)
-    #         account_data = {
-    #             'account_obj': None,
-    #             }
-    #         account_data['account_obj'] = {
-    #             'fiscal_year': fiscal_year.strftime('%Y') or fields.Date.today().strftime('%Y'),
-    #             'account_name': f"{acc.code} {acc.name}",
-    #             # 'current_balance': f"{acc.currency_id.symbol or self.env.user.company_id.currency_id.symbol} {acc.current_balance}",
-    #             # 'current_balance': 0, # abs(acc.current_balance),
-    #             'actual_amount': 0, # abs(acc.current_balance),
-    #             'budget_utilized': 0,
-    #             'budget_amount': 0,
-    #             'budget_balance': 0,
-    #             'account_move_line': [],
-    #             } 
-    #         # account_data = {
-    #         #     'account_name': f"{acc.code} {acc.name}",
-    #         #     'current_balance': f"{acc.currency_id.symbol or self.env.user.company_id.currency_id.symbol} {acc.current_balance}",
-    #         #     'budget_amount': self.get_budget_amount(acc),
-    #         #     'account_move_line': [],
-    #         #     } 
-    #         ''' {
-    #             'account_obj': {
-                    
-    #                 'account_name': 'Tax',
-    #                 'actual_amount': abs(acc.price_subtotal),
-    #                 'budget_utilized': 43320,
-    #                 'budget_amount': 2000,
-    #                 'budget_balance': 90000,
-    #                 'account_move_line': [
-    #                             {
-    #                                 'move_description': 'Trip to london',
-    #                                 'journal': '2345555 BANK',
-    #                                 'move_debit': 455000
-    #                                 'move_credit': 0
-    #                                 'move_balance': 455000,
-    #                                 }, {}, {}, 
-    #                 ],
-    #             }  
-            
-    #         }
-    #         '''
-             
-    #         for jl in all_move_line_with_account_ids:
-    #             BudgetAmount = jl.ng_budget_line_id.allocated_amount if jl.ng_budget_line_id else 0
-    #             BudgetUtilization = jl.price_subtotal
-    #             ActualAmount = jl.price_subtotal
-    #             BudgetBalance = jl.ng_budget_line_id.allocated_amount - jl.price_subtotal if jl.ng_budget_line_id else 0
-    #             move_item = {
-    #                         'move_description': BeautifulSoup(jl.name.capitalize() if jl.name else "", features="lxml").get_text(),
-    #                         'journal': f"{jl.journal_id.code}",# {jl.journal_id.name}",
-    #                         'move_debit': jl.debit,
-    #                         'move_credit': jl.credit,
-    #                         'move_balance': abs(jl.credit - jl.debit),
-    #                         'account_and_journal_budget': BudgetAmount,
-    #                         'account_and_journal_budget_utilization': BudgetUtilization,
-    #                         'account_and_journal_budget_variance': BudgetBalance,
-    #                         },
-    #             account_data['account_obj']['actual_amount'] += abs(ActualAmount)
-    #             account_data['account_obj']['budget_amount'] += BudgetAmount
-    #             account_data['account_obj']['budget_utilized'] += BudgetUtilization
-    #             account_data['account_obj']['budget_balance'] += BudgetBalance
-    #             account_data['account_obj']['account_move_line'] += move_item
-    #         data.append(account_data)
-    #     data = {
-    #         'data': data,
-    #     }
-    #     _logger.info(f"THERE IS GOD {data.get('data')}")
-    #     # raise ValidationError(data)
-        
-    #     '''data = [
-    #                 'account_obj': {
-    #                     'account_name': 'Tax',
-    #                     'current_balance': abs(acc.current_balance),
-    #                     'budget_utilized': 43320,
-    #                     'budget_amount': 2000,
-    #                     'budget_balance': 90000,
-    #                     'account_move_line': [
-    #                                 {
-    #                                     'move_description': 'Trip to london',
-    #                                     'journal': '2345555 BANK',
-    #                                     'move_debit': 455000
-    #                                     'move_credit': 0
-    #                                     'move_balance': 455000,
-    #                                     }, {}, {}, 
-    #                     ],
-    #                 }  
-            
-    #         }, {}, {}]'''
-    #     _logger.info(data)
-    #     if data.get('data'):
-    #         if self.format == 'pdf':
-    #             return self.env.ref('plateau_addons.print_account_report').report_action(self, data)
-    #         elif self.format == 'xls':
-    #             return self.action_export_as_excel(data)
-    #         else:
-    #             raise ValidationError("Ops.. Sorry, for now only PDF and excel is enabled")
-    #     else:
-    #         raise ValidationError(
-    #             "Ops.. There is not record to generated !"
-    #             )
-    
     
     def action_generate_report(self):
         self.ensure_one()
@@ -401,18 +265,8 @@ class AccountDynamicReport(models.Model):
             'quarterly_total_header': f"{month_headers[0] if month_headers else ''} - {month_headers[-1] if month_headers else ''} {end_date.year}" if is_quarterly else ""
         }
         
-        # if self.account_head_type == 'Revenue':
-        #     action_ref = 'plateau_addons.action_report_revenue_quarterly' if is_quarterly else 'plateau_addons.action_report_revenue_monthly'
-        # elif self.account_head_type == 'Capital':
-        #     action_ref = 'plateau_addons.action_report_capital_quarterly' if is_quarterly else 'plateau_addons.action_report_capital_monthly'
-        # elif self.account_head_type == 'Expenditure':
-        #     action_ref = 'plateau_addons.action_report_expenditure_quarterly' if is_quarterly else 'plateau_addons.action_report_expenditure_monthly'
-        # elif self.account_head_type == 'Personnel':
-        #     action_ref = 'plateau_addons.action_report_personnel_quarterly' if is_quarterly else 'plateau_addons.action_report_personnel_monthly'
-        # else:
-        #     action_ref = 'plateau_addons.action_report_overhead_quarterly' if is_quarterly else 'plateau_addons.action_report_overhead_monthly'
         
-        action_ref = 'plateau_addons.action_report_overhead_quarterly' if is_quarterly else 'plateau_addons.action_report_overhead_monthly'
+        action_ref = 'eedc_report.action_report_overhead_quarterly' if is_quarterly else 'eedc_report.action_report_overhead_monthly'
         report_action = self.env.ref(action_ref)
         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
         if self.format == 'html':
@@ -435,15 +289,15 @@ class AccountDynamicReport(models.Model):
         base_domain.append(('account_id', 'in', all_accounts.ids))
         all_moves = self.env['account.move.line'].search(base_domain)
 
-        budget_domain = [('budget_type', '=', self.account_head_type), ('account_id', 'in', all_accounts.ids), ('branch_id', '=', branch.id)]
-        all_budget_lines = self.env['ng.account.budget.line'].search(budget_domain)
+        # budget_domain = [('budget_type', '=', self.account_head_type), ('account_id', 'in', all_accounts.ids), ('branch_id', '=', branch.id)]
+        # all_budget_lines = self.env['ng.account.budget.line'].search(budget_domain)
         
         sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
 
         account_data = {}
         for acc in all_accounts:
             moves_for_acc = all_moves.filtered(lambda m: m.account_id == acc)
-            budget_for_acc = all_budget_lines.filtered(lambda b: b.account_id == acc)
+            # budget_for_acc = all_budget_lines.filtered(lambda b: b.account_id == acc)
             
             monthly_values = {month: 0.0 for month in month_headers}
             for move in moves_for_acc.filtered(lambda m: start_date <= m.date <= end_date):
@@ -452,7 +306,8 @@ class AccountDynamicReport(models.Model):
                     monthly_values[month_key] += getattr(move, sum_field, 0.0)
 
             account_data[acc.code] = {
-                'approved_budget': sum(budget_for_acc.mapped('allocated_amount')),
+                # 'approved_budget': sum(budget_for_acc.mapped('allocated_amount')),
+                'approved_budget': 0.0,
                 'monthly_values': monthly_values,
                 'previous_actual': sum(m.debit for m in moves_for_acc if m.date < start_date),
                 'total_actual_to_date': sum(m.debit for m in moves_for_acc),
@@ -470,7 +325,8 @@ class AccountDynamicReport(models.Model):
                     monthly_vals[month] += account_data.get(acc.code, {}).get('monthly_values', {}).get(month, 0)
             
             line_data = { 'code': tag.code, 'name': tag.name, 'level': 0, 'is_acc': 'no',
-                           'approved_budget': approved, 'monthly_values': monthly_vals }
+                           'approved_budget': approved, 
+                           'monthly_values': monthly_vals }
             
             if is_quarterly:
                 line_data.update({
