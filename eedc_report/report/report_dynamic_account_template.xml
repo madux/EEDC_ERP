@@ -1,0 +1,45 @@
+<odoo>
+  <template id="report_dynamic_account_document">
+    <t t-call="web.external_layout">
+      <t t-set="doc" t-value="docs[0]"/>
+      <div class="page">
+        <h2>[[ doc.report_name ]]</h2>
+        <p><strong>Agency:</strong> [[ doc.branch_name ]]</p>
+        <p><strong>Period:</strong> [[ doc.period ]]</p>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Description</th>
+              <th>Approved</th>
+              <th>Previous</th>
+              <th>Current</th>
+              <th>To Date</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="doc.rows" t-as="r">
+              <tr>
+                <td>[[ r.code ]]</td>
+                <td t-att-style="'padding-left:%srem;' % (r.depth * 1.5)">[[ r.description ]]</td>
+                <td class="text-right">[[ r.approved ]]</td>
+                <td class="text-right">[[ r.previous ]]</td>
+                <td class="text-right">[[ r.current ]]</td>
+                <td class="text-right">[[ r.to_date ]]</td>
+                <td class="text-right">[[ r.balance ]]</td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    </t>
+    <t t-jquery=".page" t-operation="append">
+      <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { border: 1px solid #333; padding: 4px; }
+        .text-right { text-align: right; }
+      </style>
+    </t>
+  </template>
+</odoo>

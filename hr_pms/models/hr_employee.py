@@ -149,6 +149,13 @@ class HrEmployee(models.Model):
             record = self.env['hr.employee'].browse([rec])
             if record.name:
                 record.update({'name': record.name.upper()})
+            if record.first_name:
+                record.update({'first_name': record.name.upper()})
+            if record.middle_name:
+                record.update({'first_name': record.name.upper()})
+            if record.middle_name:
+                record.update({'last_name': record.name.upper()})
+
 
     def update_pms_user_group(self, user, groups=[]):
         emp_group = self.env.ref("hr_pms.group_pms_user_id")
