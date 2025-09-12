@@ -508,7 +508,7 @@
             </record>
 
             
-<record id="user_see_request_line_company_related_record_28" model="ir.rule">
+            <!-- <record id="user_see_request_line_company_related_record_28" model="ir.rule">
                 <field name="name">request.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_request_line"/>
                 <field name="global" eval="True"/>
@@ -541,7 +541,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_auditlog_log_company_related_record_30" model="ir.rule">
@@ -598,7 +598,7 @@
             </record>
 
             
-<record id="user_see_memo_stage_invoice_line_company_related_record_33" model="ir.rule">
+<!-- <record id="user_see_memo_stage_invoice_line_company_related_record_33" model="ir.rule">
                 <field name="name">memo.stage.invoice.line: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_stage_invoice_line"/>
                 <field name="global" eval="True"/>
@@ -613,7 +613,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_hr_job_company_related_record_34" model="ir.rule">
@@ -634,7 +634,7 @@
             </record>
 
             
-<record id="user_see_skill_proficiency_scale_company_related_record_35" model="ir.rule">
+<!-- <record id="user_see_skill_proficiency_scale_company_related_record_35" model="ir.rule">
                 <field name="name">skill.proficiency.scale: Normal users see company related</field>
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_skill_proficiency_scale"/>
                 <field name="global" eval="True"/>
@@ -703,7 +703,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_hr_certification_company_related_record_39" model="ir.rule">
@@ -724,7 +724,7 @@
             </record>
 
             
-<record id="user_see_training_section_line_company_related_record_40" model="ir.rule">
+<!-- <record id="user_see_training_section_line_company_related_record_40" model="ir.rule">
                 <field name="name">training.section.line: Normal users see company related</field>
                 <field name="model_id" ref="hr_pms.model_training_section_line"/>
                 <field name="global" eval="True"/>
@@ -757,7 +757,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_pms_department_company_related_record_42" model="ir.rule">
@@ -859,7 +859,7 @@
             </record>
 
 
-            <record id="user_see_memo_category_company_related_record_48" model="ir.rule">
+            <!-- <record id="user_see_memo_category_company_related_record_48" model="ir.rule">
                 <field name="name">memo.category: Normal users see company related</field>
                 <field name="model_id" ref="company_memo.model_memo_category"/>
                 <field name="global" eval="True"/>
@@ -883,7 +883,7 @@
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[ (4, ref('base.group_system')), (4, ref('multi_company.top_general_group'))]"/>
                 <field name="domain_force">[(1, '=', 1)]</field>
-            </record>
+            </record> -->
 
             
 <record id="user_see_hr_contract_wizard_company_related_record_49" model="ir.rule">

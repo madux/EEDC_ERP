@@ -93,6 +93,31 @@
             </field>
         </record>
 
+         <record model="ir.ui.view" id="hr_view_employee_public_inherited_form">
+            <field name="name">hr.employee</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.hr_employee_public_view_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='mobile_phone']" position="before">
+                    <field name="first_name"/>
+                    <field name="middle_name"/>
+                    <field name="last_name"/>
+                </xpath>
+                <xpath expr="//field[@name='work_location_id']" position="after">
+                    <field name="parent_id"/>
+                    <field name="state_id"/>
+                    <field name="local_government"/>
+                </xpath>
+            
+                <xpath expr="//field[@name='coach_id']" position="after">
+                    <field name="employee_number"/>
+                </xpath>
+                <xpath expr="//field[@name='coach_id']" position="attributes">
+                   <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
         <record model="ir.ui.view" id="hr_view_employee_inherited_filter_for_eedc_addons" >
             <field name="name">hr.employee.eedc_addons</field>
             <field name="model">hr.employee</field>
@@ -113,6 +138,8 @@
  
             </field>
         </record>
+
+
  
         <record id="action_external_employee" model="ir.actions.act_window">
 			<field name="name">External Employees</field>

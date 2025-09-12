@@ -293,7 +293,8 @@ class PortalRequest(http.Controller):
 					return {
 						"status": True,
 						"data": {
-							'number_of_days_display': leave_allocation_id.number_of_days_display,
+							'number_of_days_display': employee.allocation_remaining_display,
+							# 'number_of_days_display': leave_allocation_id.number_of_days_display,
 						},
 						"message": "", 
 					}

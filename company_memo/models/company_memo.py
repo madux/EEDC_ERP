@@ -94,7 +94,7 @@ class Memo_Model(models.Model):
     memo_soe_status = fields.Boolean('')
     memo_bagde_status = fields.Boolean('')
     memo_bagde_undone = fields.Boolean('', default=True)
-    branch_id = fields.Many2one('multi.branch', string='Memo')
+    branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id)
     dummy_memo_types = fields.Many2many(
         'memo.type',
         'memo_model_type_rel',
