@@ -94,7 +94,7 @@ class Memo_Model(models.Model):
     memo_soe_status = fields.Boolean('')
     memo_bagde_status = fields.Boolean('')
     memo_bagde_undone = fields.Boolean('', default=True)
-    
+    branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id)
     dummy_memo_types = fields.Many2many(
         'memo.type',
         'memo_model_type_rel',
@@ -2283,9 +2283,10 @@ class Memo_Model(models.Model):
                     'name': f"{self.id}/ {self.code}",
                     'move_type': 'in_receipt',
                     'invoice_date': fields.Date.today(),
+                    'invoice_date_due': fields.Date.today(),
                     'date': fields.Date.today(),
                     'journal_id': journal_id.id,
-				    'company_id': self.company_id.id,
+				    'branch_id': self.employee_id.branch_id.id,
                     'invoice_line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',

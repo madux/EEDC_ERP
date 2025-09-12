@@ -182,6 +182,21 @@ class MemoType(models.Model):
     active = fields.Boolean("Active", default=True)
     allow_for_publish = fields.Boolean("Allow to be published?", default=True)
 
+
+class MemoUserRole(models.Model):
+    _name = "res.group.role"
+    _description = "User group role"
+    _order = 'id desc'
+    
+    name = fields.Char("Name", required=True)
+    group_ids = fields.Many2many("res.groups", string="Groups", domain=lambda self: self.non_user_type_role(), required=True)
+    
+    def non_user_type_role(self):
+        internal, admin,portal, public = self.env.ref('base.group_user').id, self.env.ref('base.group_system').id, \
+            self.env.ref('base.group_portal').id, self.env.ref('base.group_public').id
+        group_to_show_ids = self.env['res.groups'].search([('id', 'not in', [internal, admin, portal, public])])
+        return [('id', 'in', group_to_show_ids.ids)] if group_to_show_ids else [('id', '=', 0)]
+    
 class MemoStage(models.Model):
     _name = "memo.stage"
     _description = "Memo Stage"
@@ -194,6 +209,7 @@ class MemoStage(models.Model):
     is_approved_stage = fields.Boolean("Is approved stage", help="if set true, it is used to determine if this stage is the final approved stage")
     approver_id = fields.Many2one("hr.employee", string="Responsible Approver")
     approver_ids = fields.Many2many("hr.employee", string="Responsible Approvers")
+    user_role_ids = fields.Many2many("res.group.role", string="User Roles")
     memo_config_id = fields.Many2one("memo.config", string="Parent settings")
     loaded_from_data = fields.Boolean(string="Loaded from data", default=False)
     publish_on_dashboard = fields.Boolean("Publish on Dashboard", default=False)

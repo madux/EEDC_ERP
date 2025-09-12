@@ -293,7 +293,8 @@ class PortalRequest(http.Controller):
 					return {
 						"status": True,
 						"data": {
-							'number_of_days_display': leave_allocation_id.number_of_days_display,
+							'number_of_days_display': employee.allocation_remaining_display,
+							# 'number_of_days_display': leave_allocation_id.number_of_days_display,
 						},
 						"message": "", 
 					}
@@ -929,6 +930,7 @@ class PortalRequest(http.Controller):
 				"justification_reason": post.get("justification_reason"),
 				"state": "Sent",
 				"company_id": request.env.user.company_id.id,
+				"branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
                 "currency_id": request.env.user.company_id.currency_id.id,
 				"cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
 				"description": description_body, 
