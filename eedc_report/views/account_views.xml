@@ -45,10 +45,23 @@
 			</field>
 		</record>
 
-		<menuitem
+		<!-- <menuitem
 			id="economic_tag_menu"
 			name="Economic Tag"
 			action="economic_tag_action"
 			parent="eedc_report.eedc_report_main_menu"
+			sequence="30"/> -->
+
+		<menuitem
+			id="economic_tag_submenu"
+			name="Reporting"
+			parent="account.menu_finance_configuration"
 			sequence="30"/>
+
+		<menuitem
+			id="economic_tag_action_menu"
+			name="Economic Tag"
+			action="economic_tag_action"
+			parent="eedc_report.economic_tag_submenu"
+			sequence="01"/>
 </odoo>

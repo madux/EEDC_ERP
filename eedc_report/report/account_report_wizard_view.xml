@@ -60,16 +60,16 @@
         <field name="target">new</field>
     </record> 
 
-    <menuitem
+    <!-- <menuitem
             id="eedc_report_main_menu"
             name="EEDC Report"
-            sequence="102"/>
+            sequence="102"/> -->
 
-    <menuitem
+    <!-- <menuitem
             id="eedc_report_reporting_menu"
             name="Reporting"
             parent="eedc_report_main_menu"
-            sequence="56"/>
+            sequence="56"/> -->
 
     <menuitem
             id="print_dynamic_report"
@@ -78,11 +78,11 @@
             action="action_account_dynamic_report"
             sequence="102"/>
     
-    <menuitem
+    <!-- <menuitem
             id="print_dynamic_report_from_memo"
             name="Financial Report"
             parent="eedc_report.eedc_report_reporting_menu"
             action="action_account_dynamic_report"
-            sequence="102"/>
+            sequence="102"/> -->
 
 </odoo>
