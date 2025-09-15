@@ -25,7 +25,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
     const NonItemRequest = [
         'server_access', 
-        'payment_request',
+        'Payment',
         'leave_request',
         'employee_update'
 
@@ -152,7 +152,7 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#used_amount_for_soe_th').addClass('d-none');
             $('#note_label_th').addClass('d-none');
         }
-        // else if ($.inArray(memo_type, ['payment_request']) !== -1){
+        // else if ($.inArray(memo_type, ['Payment']) !== -1){
         //     $('#used_qty_for_soe').addClass('d-none');
         //     $('#used_amount_for_soe').addClass('d-none');
         // }
@@ -1166,8 +1166,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#employee_item_form_div').removeClass('d-none');
                             
                         }
-                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
-                        else if(selectedTarget == "payment_request"){
+                        // else if($.inArray(selectedTarget, ["Payment", "cash_advance"])){
+                        else if(selectedTarget == "Payment"){
                             $('#amount_section').removeClass('d-none');
                             $('#amount_fig').attr("required", true);
                             console.log("request selected== ", selectedTarget);
@@ -1320,12 +1320,17 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#employee_item_form_div').removeClass('d-none');
                             
                         }
-                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
-                        else if(memo_type_key == "payment_request"){
-                            $('#amount_section').removeClass('d-none');
-                            $('#amount_fig').attr("required", true);
+                        // else if($.inArray(selectedTarget, ["Payment", "cash_advance"])){
+                        else if(memo_type_key == "Payment"){
+                            // $('#amount_section').removeClass('d-none');
+                            // $('#amount_fig').attr("required", true);
+                           
                             console.log("request selected== ", memo_type_key);
                             displayNonLeaveElement()
+                             $('#PaymentcashAdvanceDiv').removeClass('d-none');
+                            $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#product_form_div').removeClass('d-none');
+                            $('.add_item').removeClass('d-none');
                         }
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if(memo_type_key == "cash_advance"){
@@ -1608,17 +1613,17 @@ odoo.define('portal_request.portal_request', function (require) {
                             var row_co = $(this).attr('row_count') 
                             var list_item = {
                                     'product_id': '', 
-                                    'description': '',
-                                    'qty': '',
-                                    'amount_total': '',
-                                    'used_qty': '',
-                                    'used_amount': '',
-                                    'note': '',
-                                    'line_checked': false,
-                                    'code': 'mef00981',
-                                    'request_line_id': '',
-                                    'distance_from': '',
-                                    'distance_to': '',
+                                'description': '',
+                                'qty': '',
+                                'amount_total': '',
+                                'used_qty': '',
+                                'used_amount': '',
+                                'note': '',
+                                'line_checked': false,
+                                'code': 'mef00981',
+                                'request_line_id': '',
+                                'distance_from': '',
+                                'distance_to': '',
                             }
                             // input[type='text'], input[type='number']
                             $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
@@ -1787,6 +1792,10 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#div_justification_reason').addClass('d-none');
         $('#justification_reason').attr('required', false);
         $('#justification_reason').val('');
+
+        $('#PaymentcashAdvanceDiv').addClass('d-none');
+        $('#PaymentcashAdvanceLabel').addClass('d-none');
+        $('#PaymentcashAdvance').val('');
         // $('#justification_reason').addClass("is-valid");
     }
     var form = $('#msform')[0];

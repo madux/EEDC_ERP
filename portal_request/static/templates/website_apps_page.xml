@@ -88,7 +88,7 @@
 							</a>
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/payment_request">
+							<a href="/my/requests/Payment">
 								<div class="app-icon payment-icon">💳</div>
 								<div class="app-label">Payment</div>
 							</a>

@@ -155,33 +155,31 @@ odoo.define('portal_request.portal_request_form', function (require) {
     let checkEditableRequiredFields = function () {
         let lf = [];
         const excluded = ['message'];
-        $('input[required], textarea[required], select[required]')
-            .filter(':visible:not([disabled]):not([readonly])')
+        // $('input[required], textarea[required], select[required]')
+        //     .filter(':visible:not([disabled]):not([readonly])')
         // $('input,textarea,select,select2').filter('[required]:visible')
-            .each(function () {
+        $('input[required], textarea[required], select[required]').filter(':visible:not([disabled])')
+        .each(function () {
                 let field = $(this);
                 console.log('show me fields to edit', field);
-                
-                if (!field.val() || field.val().trim() === "") {
+                if (field.val() == "" || field.val().trim() === "") {
                     field.addClass('is-invalid');
-
                     // Prefer labelfor, fallback to name or id
                     let label =  field.attr('labelfor') || field.attr('name') || field.attr('id') 
-                   
                     console.log(`All edited fields in forms ${label}`);
                     lf.push(label);
                 } else {
                     field.removeClass('is-invalid'); // cleanup if corrected
                 }
-            });
-        // let arr = arr.filter(item => item !== 'message');
-        // if (arr.length > 0) {
-        if (lf.filter(item => item !== 'message').length > 0) {
-            let lf_no_message = lf.filter(item => item !== 'message')
-            console.log(`length of fields not filled  ${lf_no_message}`);
-            let message = `Validation: Please ensure the following fields are filled:\n - ${lf_no_message.join("\n - ")}`;
-            return lf_no_message;
-        }
+            }); 
+        let fields_to_exclude = ['message', 'product_item_id']
+        let filtered_fields = lf.filter(item => $.inArray(item, fields_to_exclude) === -1);
+        if (filtered_fields.length > 0) {
+            // let lf_no_message = lf.filter(item => item !== 'message')
+            console.log(`length of fields not filled  ${filtered_fields}`);
+            let message = `Validation: Please ensure the following fields are filled:\n - ${filtered_fields.join("\n - ")}`;
+            return filtered_fields;
+        } 
         else{
             return false;
         }
@@ -212,7 +210,50 @@ odoo.define('portal_request.portal_request_form', function (require) {
             $(this).prop('disabled', true) 
         })
     }
-
+    let saveProductitem = function(){
+        let DataItems = []
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_co = $(this).attr('row_count') 
+            console.log('rrrooowsssss', row_co)
+            var list_item = {
+                'product_id': '', 
+                'description': '',
+                'qty': '',
+                'amount_total': '',
+                'used_qty': '',
+                'used_amount': '',
+                'note': '',
+                'line_checked': false,
+                'code': 'mef00981',
+                'request_line_id': $(this).attr('id'),
+                'distance_from': '',
+                'distance_to': '',
+            }
+            // input[type='text'], input[type='number']
+            $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
+                function(){
+                    if($(this).attr('name') == "product_item_id"){
+                        console.log('HERE NA MY FIELD VALUE ', $(this).val())
+                        list_item['product_id'] = $(this).val()
+                    }
+                    if($(this).attr('name') == "product_item_description"){
+                        console.log($(this).val())
+                        list_item['description'] = $(this).val()
+                    }
+                    if($(this).attr('main_name') === "quantity_available"){
+                        list_item['qty'] = $(this).val()
+                    } 
+                    if($(this).attr('main_name') == "amount_total"){
+                        console.log($(this).val())
+                        list_item['amount_total'] = $(this).val()
+                    }
+                    
+                }
+            )
+            DataItems.push(list_item)
+        })
+        return DataItems;
+    }
     publicWidget.registry.PortalRequestFormWidgets = publicWidget.Widget.extend({
         selector: '#portal-request-form',
         start: function(){
@@ -277,8 +318,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let leave_remaining = $("#leave_remaining")
                 let leave_reliever_ids = $("#leave_reliever_ids")
                 let description = $("#description")
+                let payment_reference_form = $("#payment_reference_form")
                 let record_id = $(".record_id").attr('id')
-                console.log('saving record data => 1')
+                console.log('saving record data => 1', saveProductitem())
                 // call a save route 
                 
                 this._rpc({
@@ -288,8 +330,11 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'leave_start_date': leave_start_datex.val(),
                         'leave_end_date': leave_end_datex.val(),
                         'leave_Reliever': leave_reliever_ids.val(),
+                        'leave_Reliever': leave_reliever_ids.val(),
                         'description': description.val(),
                         'memo_id': record_id,
+                        'payment_reference': payment_reference_form,
+                        'Dataitem': saveProductitem()
                     },
                 }).then(function (data) {
                     if(data.status){
