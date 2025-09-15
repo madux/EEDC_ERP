@@ -112,7 +112,10 @@
 								<field name="user_owned_cash_advance_ids" invisible="1" widget="many2many_tags"/>
 								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" attrs="{'readonly':[('state','=', 'Done')], 'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
-								<!-- <field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'), ('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/> -->
+								
+								<field name="payment_reference" attrs="{'readonly':[('state','!=', 'submit')], 'invisible':[('memo_type_key','!=', 'Payment')]}"/>
+								<field name="payment_reference_id" attrs="{'invisible':[('memo_type_key','!=', 'Payment')]}"
+                                options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
 								<field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
@@ -121,6 +124,7 @@
 								<field name="memo_setting_id" invisible="1" force_save="1" 
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 								/>
+
 								<field name="direct_employee_id" required="0" invisible="1" string= "Through" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								<field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
 								<field name="demo_staff" invisible="1"/>

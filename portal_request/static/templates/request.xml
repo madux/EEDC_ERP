@@ -188,16 +188,23 @@
                                                         <option value="soe">Statement of Expense</option> -->
                                                     </select>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectTypeRequest">
+                                                <label class="col-form-label col-sm-auto s_website_form_label d-none" style="width: 200px" for="selectTypeRequest">
                                                     <span class="s_website_form_label_content">Type of Request</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm" id="selectTypeRequestDiv">
+                                                <div class="col-sm d-none" id="selectTypeRequestDiv">
                                                     <select name="selectTypeRequest" id="selectTypeRequest" required="required" data-init="new" class="form-control" labelfor="Request Type">
                                                         <option disabled="true" selected="true" value=""></option>
                                                         <option value="new" selected="true">New</option>
                                                         <option value="existing">Existing Request</option>
                                                     </select>
+                                                </div>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" id="PaymentcashAdvanceLabel" for="PaymentcashAdvance">
+                                                    <span class="s_website_form_label_content">Payment Ref</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm" id="PaymentcashAdvanceDiv">
+                                                    <input type="text" class="form-control s_website_form_input" name="PaymentcashAdvance" id="PaymentcashAdvance" labelfor="PaymentcashAdvance"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -722,7 +729,7 @@
                                         <div class="collapse" data-bs-parent="#myCollapse" role="tabpanel" id="myCollapseTab488915_3">
                                             <div class="card-body">
                                                 <p class="card-text o_default_snippet_text" id="payment_request">This displays the list of all payment request you have initiated as a portal User.</p>
-                                                <a id="payment_view" href="/my/requests/payment_request" class="btn btn-secondary btn-sm">View Requests</a>
+                                                <a id="payment_view" href="/my/requests/Payment" class="btn btn-secondary btn-sm">View Requests</a>
                                             </div>
                                         </div>
                                     </div>

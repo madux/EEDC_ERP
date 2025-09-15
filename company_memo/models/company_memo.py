@@ -186,10 +186,33 @@ class Memo_Model(models.Model):
         store=True,
         readonly=True
         )
-    soe_advance_reference = fields.Many2one('memo.model', 'SOE ref.')
+    soe_advance_reference = fields.Many2one(
+        'memo.model',
+        string='SOE ref.')
     cash_advance_reference = fields.Many2one(
         'memo.model', 
         'Cash Advance ref.')
+    payment_reference = fields.Char(
+        string="Payment Cash advance")
+    payment_reference_id = fields.Many2one(
+        'memo.model', 
+        string="Payment Cash advance ID", 
+        compute="compute_cash_advance_payment_reference")
+    
+    @api.depends('payment_reference')
+    def compute_cash_advance_payment_reference(self):
+        '''if cash advance reference, system computes and update with existing
+        cash advance for reference purposes'''
+        for rec in self:
+            if rec.payment_reference:
+                cash_advance = self.env['memo.model'].search([
+                    ('code', '=ilike', rec.payment_reference),
+                    ('employee_id', '=', rec.employee_id.id)
+                    ], limit=1)
+                rec.payment_reference_id = cash_advance and cash_advance.id
+            else:
+                rec.payment_reference_id = False
+    
     user_owned_cash_advance_ids = fields.Many2many(
         'memo.model', 
         'user_owned_cash_advance_rel',
