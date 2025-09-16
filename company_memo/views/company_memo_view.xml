@@ -714,7 +714,7 @@
 			<field name="view_mode">tree,form</field>
 		</record>
 
-		<menuitem id="internal_memo_menu_model_main2" name="Office Memo" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer" action = "internal_memo_model_action" sequence = "2" web_icon="company_memo,static/description/icon.png"/>
+		<menuitem id="internal_memo_menu_model_main2" name="ERP Requests" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer" action = "internal_memo_model_action" sequence = "2" web_icon="company_memo,static/description/icon.png"/>
 		<record model="ir.actions.act_url" id="action_memo_open_my_request_url">
 			<field name="name">Open URL for the</field>
 			<field name="url">/my/requests</field>
@@ -726,7 +726,7 @@
 			<field name="groups_id" eval="[(6, 0, [ref('documents.group_documents_user')])]"/>
 		</record>
 
-		<menuitem id="internal_memo_menu_model_1" name="Office Memo Type"
+		<menuitem id="internal_memo_menu_model_1" name="ERP Request Type"
 		parent="internal_memo_menu_model_main2" sequence="3" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
 			<!-- parent="internal_memo_menu_model_main2" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/> -->
 			<menuitem id="internal_memo_menu_model2" sequence= "1" name="Memo Requests"

@@ -136,23 +136,22 @@ class MemoModel(models.Model):
         """Extracts product data from the memo's request lines to pre-populate the template."""
         template_data = {
             'VENDOR CODE': [],'VENDOR NAME': [], 'VENDOR EMAIL': [], 'VENDOR PHONE': [],
-            'PRODUCT CODE': [], 'PRODUCT NAME': [], 'PRODUCT DESCRIPTION': [],
-            'QTY TO SUPPLY': [], 'PRICE PER QUANTITY': [],
-            'MEMO_NUMBER': [], 'REQUEST_LINE_ID': []
+            'VENDOR ADDRESS': [],'PRODUCT CODE': [], 'PRODUCT NAME': [],
+            'QUANTITY': [], 'UNIT PRICE': [],
         }
         if not self.product_ids:
             return {}
 
         for line in self.product_ids:
-            for key in ['VENDOR CODE' ,'VENDOR NAME', 'VENDOR EMAIL', 'VENDOR PHONE', 'PRICE PER QUANTITY']:
+            for key in ['VENDOR CODE' ,'VENDOR NAME', 'VENDOR EMAIL', 'VENDOR PHONE', 'VENDOR ADDRESS', 'UNIT PRICE']:
                 template_data[key].append('')
             
             template_data['PRODUCT CODE'].append(line.product_id.default_code or '')
             template_data['PRODUCT NAME'].append(line.product_id.name or '')
-            template_data['PRODUCT DESCRIPTION'].append(line.description or line.product_id.name or '')
-            template_data['QTY TO SUPPLY'].append(line.quantity_available or 1.0)
-            template_data['MEMO_NUMBER'].append(self.code or '')
-            template_data['REQUEST_LINE_ID'].append(line.id)
+            # template_data['PRODUCT DESCRIPTION'].append(line.description or line.product_id.name or '')
+            template_data['QUANTITY'].append(line.quantity_available or 1.0)
+            # template_data['MEMO_NUMBER'].append(self.code or '')
+            # template_data['REQUEST_LINE_ID'].append(line.id)
             
         return template_data
 
@@ -200,9 +199,9 @@ class MemoModel(models.Model):
             
         return {
             'product_id': product.id,
-            'name': line_data.get('PRODUCT DESCRIPTION') or product.name,
-            'product_qty': float(line_data.get('QTY TO SUPPLY', 1)),
-            'price_unit': float(line_data.get('PRICE PER QUANTITY', 0)),
+            'name': product.name,
+            'product_qty': float(line_data.get('QUANTITY', 1)),
+            'price_unit': float(line_data.get('UNIT PRICE', 0)),
             'product_uom': product.uom_po_id.id,
             'date_planned': fields.Date.today(),
         }

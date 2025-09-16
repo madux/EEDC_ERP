@@ -773,6 +773,74 @@ class PortalRequest(http.Controller):
 				}
 				 
 		
+	# @http.route(['/check-quantity'], type='json', website=True, auth="user", csrf=False)
+	# def check_qty(self,  *args, **kwargs):
+	# 	# params = kwargs.get('params')
+	# 	product_id = kwargs.get('product_id')
+	# 	qty = kwargs.get('qty') 
+	# 	district = kwargs.get('district') 
+	# 	request_type = kwargs.get('request_type') 
+
+	# 	"""Check quantity.
+	# 	Args:
+	# 		product_id (id): The Id No to be validated
+	# 		qty (qty): qty
+	# 	Returns:
+	# 		dict: Response
+	# 	"""
+	# 	_logger.info(f'Checking product for {product_id}, REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
+	# 	if product_id:# and type(product_id) in [int]:
+	# 		product = request.env['product.product'].sudo().search(
+	# 		[
+	# 			('active', '=', True),
+	# 			# ('detailed_type', '=', 'product'),
+	# 			('id', '=', int(product_id)),
+	# 		], 
+	# 		limit=1) 
+	# 		if product:
+	# 			domain = [
+	# 				('company_id', '=', request.env.user.company_id.id),
+    #  				('branch_id', '=', request.env.user.branch_id.id)
+	# 			] 
+	# 			_logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+	# 			warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
+	# 			stock_location_id = warehouse_location_id.lot_stock_id
+    
+
+	# 			# should_bypass_reservation : False
+	# 			if request_type in ['material_request'] and product.detailed_type in ['product']:
+	# 				total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
+	# 				product_qty = float(qty) if qty else 0
+	# 				_logger.info(f'CHECKING VALLID warehouse {warehouse_location_id.name} District LOCATION {stock_location_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+	# 				if product_qty > total_availability:
+	# 					return {
+	# 						"status": False,
+	# 						"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
+	# 						}
+	# 				else:
+	# 					return {
+	# 						"status": True,
+	# 						"message": "", 
+	# 						}
+	# 			else:
+	# 				return {
+	# 						"status": False,
+	# 						"message": f"Selected product is not a storable product ({product.name})", 
+	# 						}
+	# 		else:
+	# 			return {
+	# 				"status": False,
+	# 				"message": "The product does not exist on the inventory", 
+	# 				}
+	# 	else:
+	# 		return {
+	# 			"status": False,
+	# 			"message": "Please ensure you select a product line", 
+	# 			}
+
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+ 
 	@http.route(['/check-quantity'], type='json', website=True, auth="user", csrf=False)
 	def check_qty(self,  *args, **kwargs):
 		# params = kwargs.get('params')
@@ -798,48 +866,81 @@ class PortalRequest(http.Controller):
 			], 
 			limit=1) 
 			if product:
-				domain = [
-					('company_id', '=', request.env.user.company_id.id),
-     				('branch_id', '=', request.env.user.branch_id.id)
-				] 
-				_logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+				domain = [('company_id', '=', request.env.user.company_id.id)]
+				
+				if request.env.user.branch_id:
+					domain.append(('branch_id', '=', request.env.user.branch_id.id))
+				
 				warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
+				
+				if not warehouse_location_id:
+					_logger.info(f'No warehouse found with branch, trying without branch filter')
+					domain = [('company_id', '=', request.env.user.company_id.id)]
+					warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
+				
+				if not warehouse_location_id:
+					_logger.info(f'No warehouse found, using default warehouse for company')
+					warehouse_location_id = request.env['stock.warehouse'].sudo().search([
+						('company_id', '=', request.env.user.company_id.id)
+					], limit=1)
+				
+				if not warehouse_location_id:
+					return {
+						"status": False,
+						"message": f"No warehouse configured for company {request.env.user.company_id.name}. Contact admin.", 
+					}
+				
 				stock_location_id = warehouse_location_id.lot_stock_id
-    
+				
+				if not stock_location_id:
+					return {
+						"status": False,
+						"message": f"No stock location found for warehouse {warehouse_location_id.name}. Contact admin.", 
+					}
 
-				# should_bypass_reservation : False
+				_logger.info(f'USER VALID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name if request.env.user.branch_id else "No Branch"} REQUEST TYPE {request_type} check_ qty No ...{qty}')
+				_logger.info(f'FOUND warehouse {warehouse_location_id.name} with stock location {stock_location_id.name}')
+
 				if request_type in ['material_request'] and product.detailed_type in ['product']:
-					total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
-					product_qty = float(qty) if qty else 0
-					_logger.info(f'CHECKING VALLID warehouse {warehouse_location_id.name} District LOCATION {stock_location_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-					if product_qty > total_availability:
+					try:
+						total_availability = request.env['stock.quant'].sudo()._get_available_quantity(
+							product, stock_location_id, allow_negative=False
+						) or 0.0
+						product_qty = float(qty) if qty else 0
+						
+						_logger.info(f'CHECKING VALID warehouse {warehouse_location_id.name} stock location {stock_location_id.name} REQUEST TYPE {request_type} requested qty {product_qty} available qty {total_availability}')
+						
+						if product_qty > total_availability:
+							return {
+								"status": False,
+								"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
+							}
+						else:
+							return {
+								"status": True,
+								"message": "", 
+							}
+					except Exception as e:
+						_logger.error(f'Error checking stock quantity: {str(e)}')
 						return {
 							"status": False,
-							"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
-							}
-					else:
-						return {
-							"status": True,
-							"message": "", 
-							}
+							"message": f"Error checking stock availability: {str(e)}", 
+						}
 				else:
 					return {
-							"status": False,
-							"message": f"Selected product is not a storable product ({product.name})", 
-							}
+						"status": False,
+						"message": f"Selected product is not a storable product ({product.name})", 
+					}
 			else:
 				return {
 					"status": False,
 					"message": "The product does not exist on the inventory", 
-					}
+				}
 		else:
 			return {
 				"status": False,
 				"message": "Please ensure you select a product line", 
-				}
-
-	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
-	# total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
+			}
 	
 	def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
 		attachment = request.env['ir.attachment'].sudo()
