@@ -28,42 +28,6 @@ class MemoModel(models.Model):
             'context': {'default_memo_id': self.id}
         }
 
-    def download_rfq_template(self):
-        """Generates and returns the RFQ Excel template with pre-populated product data."""
-        self.ensure_one()
-        template_data = self._get_template_data()
-        if not template_data.get('PRODUCT CODE'):
-            raise ValidationError(_("There are no request items in this memo to generate a template for."))
-
-        try:
-            df = pd.DataFrame(template_data)
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df.to_excel(writer, sheet_name='RFQ_Template', index=False)
-                worksheet = writer.sheets['RFQ_Template']
-                for idx, col in enumerate(df):
-                    max_len = max((df[col].astype(str).map(len).max(), len(str(df[col].name)))) + 2
-                    worksheet.column_dimensions[chr(65 + idx)].width = min(max_len, 50) # Cap width at 50
-
-            excel_file = base64.b64encode(output.getvalue())
-            filename = f'RFQ_Template_{self.code or "New"}.xlsx'
-            
-            attachment = self.env['ir.attachment'].create({
-                'name': filename,
-                'datas': excel_file,
-                'res_model': self._name,
-                'res_id': self.id,
-                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            })
-            return {
-                'type': 'ir.actions.act_url',
-                'url': f'/web/content/{attachment.id}?download=true',
-                'target': 'self',
-            }
-        except Exception as e:
-            _logger.error("Error generating RFQ template: %s", str(e))
-            raise ValidationError(_("Failed to generate template: %s") % str(e))
-
     def create_or_update_po_from_rfq(self, rfq_data, options):
         """
         Creates Purchase Orders from the validated RFQ data provided by the wizard.
@@ -95,7 +59,6 @@ class MemoModel(models.Model):
                     continue
                 groups.append({'vendor_info': row, 'lines': [row]})
 
-        # for key, data in vendor_groups.items():
         for data in groups:
             partner = self._find_or_create_vendor(data['vendor_info'], options)
             if not partner:
@@ -123,38 +86,12 @@ class MemoModel(models.Model):
                 po = self.env['purchase.order'].with_context(rfq_excel_upload=True).create(po_vals)
                 created_pos |= po
                 
-                if created_pos:
-                    self.update({
-                        'po_ids': [(4, po.id) for po in created_pos]
-                    })
-        # if created_pos:
-        #     self.write({'po_ids': [(4, id) for id in created_pos.ids]})
+        if created_pos:
+            self.update({
+                'po_ids': [(4, po.id) for po in created_pos]
+            })
         
         return created_pos
-
-    def _get_template_data(self):
-        """Extracts product data from the memo's request lines to pre-populate the template."""
-        template_data = {
-            'VENDOR CODE': [],'VENDOR NAME': [], 'VENDOR EMAIL': [], 'VENDOR PHONE': [],
-            'PRODUCT CODE': [], 'PRODUCT NAME': [], 'PRODUCT DESCRIPTION': [],
-            'QTY TO SUPPLY': [], 'PRICE PER QUANTITY': [],
-            'MEMO_NUMBER': [], 'REQUEST_LINE_ID': []
-        }
-        if not self.product_ids:
-            return {}
-
-        for line in self.product_ids:
-            for key in ['VENDOR CODE' ,'VENDOR NAME', 'VENDOR EMAIL', 'VENDOR PHONE', 'PRICE PER QUANTITY']:
-                template_data[key].append('')
-            
-            template_data['PRODUCT CODE'].append(line.product_id.default_code or '')
-            template_data['PRODUCT NAME'].append(line.product_id.name or '')
-            template_data['PRODUCT DESCRIPTION'].append(line.description or line.product_id.name or '')
-            template_data['QTY TO SUPPLY'].append(line.quantity_available or 1.0)
-            template_data['MEMO_NUMBER'].append(self.code or '')
-            template_data['REQUEST_LINE_ID'].append(line.id)
-            
-        return template_data
 
     def _find_or_create_vendor(self, vendor_data, options):
         """Finds an existing vendor or creates a new one based on wizard options."""
@@ -200,9 +137,9 @@ class MemoModel(models.Model):
             
         return {
             'product_id': product.id,
-            'name': line_data.get('PRODUCT DESCRIPTION') or product.name,
-            'product_qty': float(line_data.get('QTY TO SUPPLY', 1)),
-            'price_unit': float(line_data.get('PRICE PER QUANTITY', 0)),
+            'name': product.name,
+            'product_qty': float(line_data.get('QUANTITY', 1)),
+            'price_unit': float(line_data.get('UNIT PRICE', 0)),
             'product_uom': product.uom_po_id.id,
             'date_planned': fields.Date.today(),
         }
