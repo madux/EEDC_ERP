@@ -192,7 +192,7 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Payment Reference</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" id="payment_reference_form" name="payment_reference_form" readonly="true" disabled="true"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
                                                 </span>
                                             </div> 
                                         </t>
@@ -288,7 +288,7 @@
                                         <!-- <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="descriptionDiv"> -->
                                         <div class="row mb-4 mb-5" name="descriptionDiv">
                                             <t t-set="raw_description" t-value="req.description"/>
-                                            <textarea class="form-control s_website_form_input" name="description" required="1" id="description" disabled="true" readonly="true" rows="3" labelfor="Description"><t t-esc="description_body"/></textarea>
+                                            <textarea class="form-control s_website_form_input" name="description" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -362,15 +362,14 @@
                                                             </span>
                                                         </th>
                                                         <th width="5%">
-                                                            <input type="text" main_name = "quantity_available" t-att-name="prod.quantity_available" t-att-id="prod.id" required="required" t-att-value="prod.quantity_available" class="productinput form-control" readonly="readonly"/> 
+                                                            <input type="text" main_name = "quantity_available" t-att-name="prod.quantity_available" t-att-id="prod.id" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
                                                         <th width="20%">
-                                                            <input type="text" main_name = "amount_total" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" required="required" class="productinput form-control" readonly="readonly"/> 
+                                                            <input type="text" main_name = "amount_total" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
                                                         </th>
                                                         <th width="20%">
-                                                                <!-- <input type="text" t-att-name="prod.sub_total_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.sub_total_amount))" class="productinput form-control" readonly="readonly"/>  -->
-                                                                <span class="productinput form-control" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" t-att-id="prod.id"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                                <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" id="sub_total_amount" t-att-value="'{0:,}'.format(float(prod.sub_total_amount))"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
                                                             </th>
                                                         <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
                                                             <th width="10%">

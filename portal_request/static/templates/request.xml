@@ -591,6 +591,9 @@
                                                             <th id="unit_price_label" width="10%">
                                                                 <label>Unit Price</label>
                                                             </th>
+                                                            <th id="unit_sub_total" width="15%">
+                                                                <label>SubTotal</label>
+                                                            </th>
                                                             <!-- 6 -->
                                                             <th id="used_qty_for_soe" width="5%">
                                                                 <label>Used Qty</label>
