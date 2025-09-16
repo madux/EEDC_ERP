@@ -185,6 +185,72 @@ odoo.define('portal_request.portal_request_form', function (require) {
         }
     };
 
+     var formatCurrency = function(value) {
+        if (value) {
+            return value.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+        }
+    }
+
+    // var compute_total_amount = function(){
+    //     let total = 0;
+
+    //     $('.sub_total_amount').each(function () {
+    //     let text = $(this).text().trim();
+    //     let value = parseFloat(text.replace(/,/g, '')); // remove commas and convert to number
+
+    //     if (!isNaN(value)) {
+    //         total += value;
+    //     }
+
+    //     console.log(`Subtotal item: ${value}`);
+    //     });
+    //     console.log(`Total subtotal amount: ${total}`); 
+    //     var amount = formatCurrency(total)
+    //     $('#all_total_amount').text(amount)
+
+    //     // $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+    // }
+    var compute_total_amount = function(){
+        var total = 0
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_co = $(this).attr('row_count')
+            var amount = 0
+            var qty = 0
+            var amt = false
+            var subtotal = false
+            let top_m = $(this)
+            $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
+                
+                function(){
+                    // if($(this).attr('main_name') == 'sub_total_amount'){
+                    //     let qty_val = Number($(this).val())
+                    //     console.log(`what is subtotal qty ${qty_val} gggg ${$(this).text()}`)
+                    //     qty = qty_val
+                    // }
+                    if($(this).attr('main_name') == 'quantity_available'){
+                        let qty_val = Number($(this).val())
+                        console.log(`what is subtotal qty ${qty_val}`)
+                        qty = qty_val
+                    }
+                    if($(this).attr('main_name') == 'amount_total'){
+                        amt = Number($(this).val())
+                        console.log(`what is subtotal qty ${amt}`)
+
+                    } 
+                }
+            )
+            console.log(`what is subtotal and qty ${qty} / ${amt}`)
+            let qt = qty * amt
+            total += qt
+        })
+        var amount = formatCurrency(total)
+        $('#all_total_amount').text(amount)
+        console.log(`what is subtotal final amount ${total}`)
+
+        // $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+    }
+
     // let checkEditableRequiredFields = function(){
     //     var list_of_fields = [];
     //     $('input,textarea,select,select2').filter('[required]:visible').each(function(ev){
@@ -333,7 +399,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'leave_Reliever': leave_reliever_ids.val(),
                         'description': description.val(),
                         'memo_id': record_id,
-                        'payment_reference': payment_reference_form,
+                        'payment_reference': payment_reference_form.val(),
                         'Dataitem': saveProductitem()
                     },
                 }).then(function (data) {
@@ -350,6 +416,39 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
+            },
+
+            'change .AmountTots': function(ev){
+                // assigning the property: name of quantity field as the quantity selected
+                let qty_elm = $(ev.target);
+                console.log("WE ARE HERE TO GET TARGET", qty_elm)
+
+                let productinput_id = qty_elm.attr('id');
+                console.log("WE ARE HERE TO GET TARGET", productinput_id)
+
+                // $(`.SUBTOTAL${productinput_id}`).val();
+                let unit_price = qty_elm.val()
+                let unit = $(`.QTY${productinput_id}`)
+                if (unit.val() < -1){
+                    alert('Unit must be greater than 0');
+                    unit_price.val('');
+                    qty_elm.addClass('is-invalid', true);
+                    unit.addClass('is-invalid', true);
+                console.log("WE ARE HERE TO GET TARGET 1", qty_elm)
+
+                }else{
+                    let subtotal = $(`.SUBTOTAL${productinput_id}`)
+
+                    let result = unit.val() * unit_price 
+                    subtotal.val(result);
+                    subtotal.text(result);
+                    $(`.AMTTOTAL${productinput_id}`).removeClass('is-invalid', true);
+                    unit.removeClass('is-invalid', true);
+                compute_total_amount();
+
+                }
+
+                
             },
 
             'blur input[name=leave_start_datex]': function(ev){
