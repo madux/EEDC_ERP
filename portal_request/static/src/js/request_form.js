@@ -155,37 +155,101 @@ odoo.define('portal_request.portal_request_form', function (require) {
     let checkEditableRequiredFields = function () {
         let lf = [];
         const excluded = ['message'];
-        $('input[required], textarea[required], select[required]')
-            .filter(':visible:not([disabled]):not([readonly])')
+        // $('input[required], textarea[required], select[required]')
+        //     .filter(':visible:not([disabled]):not([readonly])')
         // $('input,textarea,select,select2').filter('[required]:visible')
-            .each(function () {
+        $('input[required], textarea[required], select[required]').filter(':visible:not([disabled])')
+        .each(function () {
                 let field = $(this);
                 console.log('show me fields to edit', field);
-                
-                if (!field.val() || field.val().trim() === "") {
+                if (field.val() == "" || field.val().trim() === "") {
                     field.addClass('is-invalid');
-
                     // Prefer labelfor, fallback to name or id
                     let label =  field.attr('labelfor') || field.attr('name') || field.attr('id') 
-                   
                     console.log(`All edited fields in forms ${label}`);
                     lf.push(label);
                 } else {
                     field.removeClass('is-invalid'); // cleanup if corrected
                 }
-            });
-        // let arr = arr.filter(item => item !== 'message');
-        // if (arr.length > 0) {
-        if (lf.filter(item => item !== 'message').length > 0) {
-            let lf_no_message = lf.filter(item => item !== 'message')
-            console.log(`length of fields not filled  ${lf_no_message}`);
-            let message = `Validation: Please ensure the following fields are filled:\n - ${lf_no_message.join("\n - ")}`;
-            return lf_no_message;
-        }
+            }); 
+        let fields_to_exclude = ['message', 'product_item_id']
+        let filtered_fields = lf.filter(item => $.inArray(item, fields_to_exclude) === -1);
+        if (filtered_fields.length > 0) {
+            // let lf_no_message = lf.filter(item => item !== 'message')
+            console.log(`length of fields not filled  ${filtered_fields}`);
+            let message = `Validation: Please ensure the following fields are filled:\n - ${filtered_fields.join("\n - ")}`;
+            return filtered_fields;
+        } 
         else{
             return false;
         }
     };
+
+     var formatCurrency = function(value) {
+        if (value) {
+            return value.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+        }
+    }
+
+    // var compute_total_amount = function(){
+    //     let total = 0;
+
+    //     $('.sub_total_amount').each(function () {
+    //     let text = $(this).text().trim();
+    //     let value = parseFloat(text.replace(/,/g, '')); // remove commas and convert to number
+
+    //     if (!isNaN(value)) {
+    //         total += value;
+    //     }
+
+    //     console.log(`Subtotal item: ${value}`);
+    //     });
+    //     console.log(`Total subtotal amount: ${total}`); 
+    //     var amount = formatCurrency(total)
+    //     $('#all_total_amount').text(amount)
+
+    //     // $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+    // }
+    var compute_total_amount = function(){
+        var total = 0
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_co = $(this).attr('row_count')
+            var amount = 0
+            var qty = 0
+            var amt = false
+            var subtotal = false
+            let top_m = $(this)
+            $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
+                
+                function(){
+                    // if($(this).attr('main_name') == 'sub_total_amount'){
+                    //     let qty_val = Number($(this).val())
+                    //     console.log(`what is subtotal qty ${qty_val} gggg ${$(this).text()}`)
+                    //     qty = qty_val
+                    // }
+                    if($(this).attr('main_name') == 'quantity_available'){
+                        let qty_val = Number($(this).val())
+                        console.log(`what is subtotal qty ${qty_val}`)
+                        qty = qty_val
+                    }
+                    if($(this).attr('main_name') == 'amount_total'){
+                        amt = Number($(this).val())
+                        console.log(`what is subtotal qty ${amt}`)
+
+                    } 
+                }
+            )
+            console.log(`what is subtotal and qty ${qty} / ${amt}`)
+            let qt = qty * amt
+            total += qt
+        })
+        var amount = formatCurrency(total)
+        $('#all_total_amount').text(amount)
+        console.log(`what is subtotal final amount ${total}`)
+
+        // $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+    }
 
     // let checkEditableRequiredFields = function(){
     //     var list_of_fields = [];
@@ -212,7 +276,50 @@ odoo.define('portal_request.portal_request_form', function (require) {
             $(this).prop('disabled', true) 
         })
     }
-
+    let saveProductitem = function(){
+        let DataItems = []
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_co = $(this).attr('row_count') 
+            console.log('rrrooowsssss', row_co)
+            var list_item = {
+                'product_id': '', 
+                'description': '',
+                'qty': '',
+                'amount_total': '',
+                'used_qty': '',
+                'used_amount': '',
+                'note': '',
+                'line_checked': false,
+                'code': 'mef00981',
+                'request_line_id': $(this).attr('id'),
+                'distance_from': '',
+                'distance_to': '',
+            }
+            // input[type='text'], input[type='number']
+            $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
+                function(){
+                    if($(this).attr('name') == "product_item_id"){
+                        console.log('HERE NA MY FIELD VALUE ', $(this).val())
+                        list_item['product_id'] = $(this).val()
+                    }
+                    if($(this).attr('name') == "product_item_description"){
+                        console.log($(this).val())
+                        list_item['description'] = $(this).val()
+                    }
+                    if($(this).attr('main_name') === "quantity_available"){
+                        list_item['qty'] = $(this).val()
+                    } 
+                    if($(this).attr('main_name') == "amount_total"){
+                        console.log($(this).val())
+                        list_item['amount_total'] = $(this).val()
+                    }
+                    
+                }
+            )
+            DataItems.push(list_item)
+        })
+        return DataItems;
+    }
     publicWidget.registry.PortalRequestFormWidgets = publicWidget.Widget.extend({
         selector: '#portal-request-form',
         start: function(){
@@ -277,8 +384,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let leave_remaining = $("#leave_remaining")
                 let leave_reliever_ids = $("#leave_reliever_ids")
                 let description = $("#description")
+                let payment_reference_form = $("#payment_reference_form")
                 let record_id = $(".record_id").attr('id')
-                console.log('saving record data => 1')
+                console.log('saving record data => 1', saveProductitem())
                 // call a save route 
                 
                 this._rpc({
@@ -288,8 +396,11 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'leave_start_date': leave_start_datex.val(),
                         'leave_end_date': leave_end_datex.val(),
                         'leave_Reliever': leave_reliever_ids.val(),
+                        'leave_Reliever': leave_reliever_ids.val(),
                         'description': description.val(),
                         'memo_id': record_id,
+                        'payment_reference': payment_reference_form.val(),
+                        'Dataitem': saveProductitem()
                     },
                 }).then(function (data) {
                     if(data.status){
@@ -305,6 +416,39 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
+            },
+
+            'change .AmountTots': function(ev){
+                // assigning the property: name of quantity field as the quantity selected
+                let qty_elm = $(ev.target);
+                console.log("WE ARE HERE TO GET TARGET", qty_elm)
+
+                let productinput_id = qty_elm.attr('id');
+                console.log("WE ARE HERE TO GET TARGET", productinput_id)
+
+                // $(`.SUBTOTAL${productinput_id}`).val();
+                let unit_price = qty_elm.val()
+                let unit = $(`.QTY${productinput_id}`)
+                if (unit.val() < -1){
+                    alert('Unit must be greater than 0');
+                    unit_price.val('');
+                    qty_elm.addClass('is-invalid', true);
+                    unit.addClass('is-invalid', true);
+                console.log("WE ARE HERE TO GET TARGET 1", qty_elm)
+
+                }else{
+                    let subtotal = $(`.SUBTOTAL${productinput_id}`)
+
+                    let result = unit.val() * unit_price 
+                    subtotal.val(result);
+                    subtotal.text(result);
+                    $(`.AMTTOTAL${productinput_id}`).removeClass('is-invalid', true);
+                    unit.removeClass('is-invalid', true);
+                compute_total_amount();
+
+                }
+
+                
             },
 
             'blur input[name=leave_start_datex]': function(ev){

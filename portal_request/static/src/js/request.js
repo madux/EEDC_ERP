@@ -25,7 +25,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
     const NonItemRequest = [
         'server_access', 
-        'payment_request',
+        'Payment',
         'leave_request',
         'employee_update'
 
@@ -142,17 +142,19 @@ odoo.define('portal_request.portal_request', function (require) {
 
             $('#req_qty_label').addClass('d-none');
             $('#unit_price_label').addClass('d-none');
+            $('#unit_sub_total').addClass('d-none');
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
             $('#note_label').addClass('d-none');
 
             $('#req_qty_label_th').addClass('d-none');
             $('#unit_price_label_th').addClass('d-none');
+            $('#sub_total_amount_th').addClass('d-none');
             $('#used_qty_for_soe_th').addClass('d-none');
             $('#used_amount_for_soe_th').addClass('d-none');
             $('#note_label_th').addClass('d-none');
         }
-        // else if ($.inArray(memo_type, ['payment_request']) !== -1){
+        // else if ($.inArray(memo_type, ['Payment']) !== -1){
         //     $('#used_qty_for_soe').addClass('d-none');
         //     $('#used_amount_for_soe').addClass('d-none');
         // }
@@ -165,10 +167,13 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#distance_to_th').addClass('d-none');
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
+            $('#unit_sub_total').removeClass('d-none');
             $('#used_qty_for_soe').removeClass('d-none');
             $('#used_amount_for_soe').removeClass('d-none');
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
+            $('#sub_total_amount_th').removeClass('d-none');
+            
             $('#note_label_th').removeClass('d-none');
         }
         else if ($.inArray(memo_type, ['cash_advance']) !== -1){
@@ -180,10 +185,13 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#distance_to_th').addClass('d-none');
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
+            $('#unit_sub_total').removeClass('d-none');
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
+            $('#sub_total_amount_th').removeClass('d-none');
+
             $('#note_label_th').removeClass('d-none');
         }
         else if ($.inArray(memo_type, ['material_request']) !== -1){
@@ -198,7 +206,10 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
             $('#unit_price_label').addClass('d-none');
+            $('#unit_sub_total').addClass('d-none');
             $('#unit_price_label_th').addClass('d-none');
+            $('#sub_total_amount_th').addClass('d-none');
+
             $('#note_label_th').removeClass('d-none');
         }else{
             $('#distance_from').addClass('d-none');
@@ -207,6 +218,7 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#distance_to_th').addClass('d-none');
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
+            $('#unit_sub_total').removeClass('d-none');
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
             $('#used_qty_for_soe_th').addClass('d-none');
@@ -214,6 +226,7 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#note_label').removeClass('d-none');
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
+            $('#sub_total_amount_th').removeClass('d-none');
             $('#note_label_th').removeClass('d-none');
         }
     }
@@ -293,12 +306,15 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
                 <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1"/>
+                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
                 </th>
                 <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Unit Price"/> 
+                    <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
                 </th>
-                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">about:blank#blocked
+                <th width="15%" id="sub_total_amount_th" class="sub_total_amount ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
+                    <input type="number" value="0" name="sub_total_amount" id="sub_amount_totalx-${lastRow_count}-id" main_name = "sub_total_amount" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="sub_total_amount form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''} SUBTOTAL${lastRow_count}" labelfor="Subtotal" readonly="true" disabled="true"/> 
+                </th>
+                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}"> 
                     <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Quantity"/> 
                 </th>
                 <th width="10%" id="used_amount_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
@@ -396,6 +412,19 @@ odoo.define('portal_request.portal_request', function (require) {
         return result;
       }
 
+    var compute_sub_total =function(row_count, unitPrice){
+        // onchange of unit price
+        // target = $(ev.target)
+        var row_count = row_count // target.attr('row_count');
+        var unitPrice = unitPrice // target.val();
+        // var amountTotal_name = target.attr('name')
+        var productQtyrow = $(`.QTY${row_count}`).val()
+        var subTtotal = $(`.SUBTOTAL${row_count}`)
+        var sub_total = productQtyrow * unitPrice
+        console.log(`DETAILED INFO - row_count-> ${row_count} unitPrice-> ${unitPrice} productQtyrow-> ${productQtyrow} subTtotal-> ${subTtotal}`)
+        subTtotal.val(sub_total);
+    }
+
     var compute_total_amount = function(targetEv){
         // targetEv: amount_total or usedAmount
         var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
@@ -405,6 +434,7 @@ odoo.define('portal_request.portal_request', function (require) {
             var amount = 0
             var qty = 0
             var amt = false
+            var subtotal = false
             $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
                 
                 function(){
@@ -422,9 +452,13 @@ odoo.define('portal_request.portal_request', function (require) {
                     // qty = getAmountQtyProcess($(this).val(), $(this).attr('productinput'), 'productreqQty')
                     // console.log(`what is totalxx ${amount} ane ${qty}`)
                     amt = amount * qty
+                    // let subtotal = $(`SUBTOTAL${row_co}`)
+                    // console.log('SUBTOTAL NA', subtotal)
                 }
             )
             total += amt
+            $(`.SUBTOTAL${row_co}`).val(amt)
+            $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
             console.log(`what is total ${total}`)
         })
         var amount = formatCurrency(total)
@@ -875,6 +909,7 @@ odoo.define('portal_request.portal_request', function (require) {
             'change .productAmt': function(ev){
                 //computation of the total unit price
                 compute_total_amount();
+                // compute_sub_total($(this).attr('row_count'), $(this).val());
             },
             'change .productUsedAmt': function(ev){
                 //computation of the total productUsedQty unit price
@@ -902,6 +937,11 @@ odoo.define('portal_request.portal_request', function (require) {
             'change .productinput': function(ev){
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
+                let productinput_rowcount = qty_elm.attr('row_count');
+                $(`.SUBTOTAL${productinput_rowcount}`).val('')
+                $(`.AmounTotal${productinput_rowcount}`).val('')
+                $(`.SUBTOTAL${productinput_rowcount}`).removeClass('is-invalid', true);
+
                 let selectedproductQty = qty_elm.val(); 
                 let request_type = $("#selectRequestOption").val()
                 console.log('THE REQUEST TYPE IS ==> ', request_type)
@@ -928,6 +968,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
                             compute_total_amount();
+                            $('#TargetSourceLocation').val(data.location_id)
                         }
                     })
                 }
@@ -1165,8 +1206,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#employee_item_form_div').removeClass('d-none');
                             
                         }
-                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
-                        else if(selectedTarget == "payment_request"){
+                        // else if($.inArray(selectedTarget, ["Payment", "cash_advance"])){
+                        else if(selectedTarget == "Payment"){
                             $('#amount_section').removeClass('d-none');
                             $('#amount_fig').attr("required", true);
                             console.log("request selected== ", selectedTarget);
@@ -1319,12 +1360,17 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#employee_item_form_div').removeClass('d-none');
                             
                         }
-                        // else if($.inArray(selectedTarget, ["payment_request", "cash_advance"])){
-                        else if(memo_type_key == "payment_request"){
-                            $('#amount_section').removeClass('d-none');
-                            $('#amount_fig').attr("required", true);
+                        // else if($.inArray(selectedTarget, ["Payment", "cash_advance"])){
+                        else if(memo_type_key == "Payment"){
+                            // $('#amount_section').removeClass('d-none');
+                            // $('#amount_fig').attr("required", true);
+                           
                             console.log("request selected== ", memo_type_key);
                             displayNonLeaveElement()
+                             $('#PaymentcashAdvanceDiv').removeClass('d-none');
+                            $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#product_form_div').removeClass('d-none');
+                            $('.add_item').removeClass('d-none');
                         }
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if(memo_type_key == "cash_advance"){
@@ -1607,17 +1653,17 @@ odoo.define('portal_request.portal_request', function (require) {
                             var row_co = $(this).attr('row_count') 
                             var list_item = {
                                     'product_id': '', 
-                                    'description': '',
-                                    'qty': '',
-                                    'amount_total': '',
-                                    'used_qty': '',
-                                    'used_amount': '',
-                                    'note': '',
-                                    'line_checked': false,
-                                    'code': 'mef00981',
-                                    'request_line_id': '',
-                                    'distance_from': '',
-                                    'distance_to': '',
+                                'description': '',
+                                'qty': '',
+                                'amount_total': '',
+                                'used_qty': '',
+                                'used_amount': '',
+                                'note': '',
+                                'line_checked': false,
+                                'code': 'mef00981',
+                                'request_line_id': '',
+                                'distance_from': '',
+                                'distance_to': '',
                             }
                             // input[type='text'], input[type='number']
                             $(`tr[row_count=${row_co}]`).closest(":has(input, textarea)").find('input,textarea').each(
@@ -1786,6 +1832,10 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#div_justification_reason').addClass('d-none');
         $('#justification_reason').attr('required', false);
         $('#justification_reason').val('');
+
+        $('#PaymentcashAdvanceDiv').addClass('d-none');
+        $('#PaymentcashAdvanceLabel').addClass('d-none');
+        $('#PaymentcashAdvance').val('');
         // $('#justification_reason').addClass("is-valid");
     }
     var form = $('#msform')[0];
