@@ -407,12 +407,9 @@ class AccountDynamicReport(models.Model):
         if not branches_to_process:
             raise ValidationError("No districts selected or configured for the current user.")
         
-        # Get all relevant accounts - if specific accounts selected, use those
-        # Otherwise get accounts from tags with matching account_head_type
         if self.account_ids:
             all_accounts = self.account_ids
         else:
-            # Get accounts through tags that match the account_head_type
             tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
             all_accounts = tags.mapped('account_ids')
         
@@ -422,20 +419,16 @@ class AccountDynamicReport(models.Model):
         consolidated_data = {}
         district_headers = []
         
-        # Build data for each district
         for branch in branches_to_process:
             district_headers.append(branch.code.upper())
             
-            # Get base domain for this branch
             base_domain = self._build_base_domain(start_date, end_date, branch.id)
             base_domain.append(('account_id', 'in', all_accounts.ids))
             
             branch_moves = self.env['account.move.line'].search(base_domain)
             
-            # Determine field to sum (debit vs credit)
             sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
             
-            # Process by individual accounts
             for account in all_accounts:
                 account_key = f"{account.code}_{account.name}"
                 if account_key not in consolidated_data:
@@ -451,15 +444,12 @@ class AccountDynamicReport(models.Model):
                         'total_expenditure': 0.0,
                     }
                 
-                # Get moves for this specific account
                 account_moves = branch_moves.filtered(lambda m: m.account_id == account)
                 
                 if account_moves:
-                    # Calculate totals
                     revenue_total = sum(account_moves.mapped('credit'))
                     expenditure_total = sum(account_moves.mapped('debit'))
                     
-                    # Store district values based on account_head_type
                     if self.account_head_type == 'Revenue':
                         consolidated_data[account_key]['district_values'][branch.code] = revenue_total
                         consolidated_data[account_key]['total_revenue'] += revenue_total
@@ -467,7 +457,6 @@ class AccountDynamicReport(models.Model):
                         consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
                         consolidated_data[account_key]['total_expenditure'] += expenditure_total
                     
-                    # Store move line details for expansion
                     if branch.code not in consolidated_data[account_key]['move_details']:
                         consolidated_data[account_key]['move_details'][branch.code] = []
                     
@@ -487,20 +476,16 @@ class AccountDynamicReport(models.Model):
                         }
                         consolidated_data[account_key]['move_details'][branch.code].append(move_data)
                     
-                    # Sort moves by date (most recent first)
                     consolidated_data[account_key]['move_details'][branch.code].sort(
                         key=lambda x: x['date'], reverse=True
                     )
 
-        # Convert to list and calculate balances
         report_lines = []
         for key, data in consolidated_data.items():
             data['balance'] = data['total_revenue'] - data['total_expenditure']
-            # Only include accounts that have some activity
             if data['total_revenue'] > 0 or data['total_expenditure'] > 0:
                 report_lines.append(data)
         
-        # Sort by account code
         report_lines.sort(key=lambda x: x.get('code', ''))
         
         return report_lines, district_headers
@@ -510,26 +495,23 @@ class AccountDynamicReport(models.Model):
         self.ensure_one()
         
         if self.report_type != 'consolidated_district':
-            return self.action_generate_report()  # Fall back to existing logic
+            return self.action_generate_report()
         
         start_date, end_date, month_headers = self._get_date_range()
         
-        # Get consolidated data
         report_lines, district_headers = self._get_consolidated_district_data(start_date, end_date, month_headers)
         
         if not report_lines:
             raise ValidationError("No data could be generated for the selected criteria.")
         
-        # Prepare data for template
         budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
         period_string = self._get_period_string(start_date, end_date)
         
-        # Get company name (will be extended to support multiple companies)
         company_name = self.company_id.name if self.company_id else self.env.company.name
         
         data = {
             'doc_model': self._name,
-            'data': [{  # Wrap in data array like your existing reports
+            'data': [{
                 'report_lines': report_lines,
                 'district_headers': district_headers,
                 'company_name': company_name,
@@ -540,7 +522,6 @@ class AccountDynamicReport(models.Model):
             'end_date': end_date,
         }
         
-        # Use the existing report action pattern
         report_action = self.env.ref('eedc_report.action_consolidated_district_report')
         return report_action.report_action(self, data=data)
         
@@ -550,70 +531,6 @@ class AccountDynamicReport(models.Model):
             return f"MONTHLY RETURNS {start_date.strftime('%B %Y')}"
         else:
             return f"CONSOLIDATED RETURNS {start_date.strftime('%B %Y')} - {end_date.strftime('%B %Y')}"
-
-    
-
-    def _get_capital_report_data(self, start_date, end_date, month_headers, branch, is_quarterly=False):
-        
-        domain = self._build_base_domain(start_date, end_date, branch)
-        # domain.extend([
-        #     ('ng_budget_line_id.budget_type', '=', self.account_head_type),
-        #     ('display_type', '=', 'product'), 
-        #     ('debit', '>', 0)
-        #     ])
-        
-        all_invoice_lines = self.env['account.move.line'].search(domain)
-
-        if not all_invoice_lines:
-            _logger.warning(f"No invoice lines found for selected branches '{branch.name}'.")
-            return []
-
-        districts_data = []
-        for line in all_invoice_lines:
-            budget_line = line.ng_budget_line_id
-            # approved_budget = budget_line.allocated_amount if budget_line else 0.0
-            approved_budget = 0.0
-            
-            total_utilized = 0.0
-            if budget_line:
-                all_budget_moves = self.env['account.move.line'].search([
-                    ('ng_budget_line_id', '=', budget_line.id),
-                    ('move_id.state', '=', 'posted'),
-                ])
-                total_utilized = sum(all_budget_moves.mapped('debit'))
-
-            monthly_values = {month: 0.0 for month in month_headers}
-            if start_date <= line.date <= end_date:
-                month_key = line.date.strftime('%b').upper()
-                if month_key in monthly_values:
-                    monthly_values[month_key] = line.debit
-
-            line_data = {
-                'description': line.name, 
-                'code': line.account_id.code,
-                'economic_code_and_desc': f'{line.account_id.code} - {line.account_id.name}',
-                'approved_budget': approved_budget,
-                'monthly_values': monthly_values
-            }
-
-            if is_quarterly:
-                line_data.update({
-                    'quarterly_total': total_utilized,
-                    'balance': approved_budget - total_utilized,
-                    'percentage_perf': (total_utilized / approved_budget) * 100 if approved_budget else 0.0,
-                })
-            else:
-                previous_actual = total_utilized - line.debit
-                line_data.update({
-                    'previous_actual': previous_actual,
-                    'total_exp_to_date': total_utilized,
-                    'balance': approved_budget - total_utilized,
-                })
-            
-            if start_date <= line.date <= end_date:
-                capital_data.append(line_data)
-            
-        return sorted(capital_data, key=lambda x: x.get('code', ''))
     
     
     def get_account_and_journal_budget(self, account_id, fiscal_year=False):
