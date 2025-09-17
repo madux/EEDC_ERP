@@ -1775,6 +1775,7 @@ class Memo_Model(models.Model):
             )
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
+        self.message_subscribe(partner_ids=[rec.user_id.partner_id.id for rec in self.users_followers])
         self.portal_check_po_config(self.memo_setting_id)
 
     def mail_sending_direct(self, body_msg, email_to=False): 

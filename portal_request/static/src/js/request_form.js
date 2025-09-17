@@ -120,12 +120,66 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
     let storeOldFieldsValue = function(){
         let storeFieldItem = {};
-        $('input,textarea,select,select2').each(function(ev){
+        $('input,textarea,select,select2,span').each(function(ev){
             var field_id = $(this);
-            storeFieldItem[`${field_id.attr('id')}`] = field_id.val()
+            var tagName = field_id.prop("tagName").toLowerCase();
+            if (tagName == 'span'){
+                storeFieldItem[`${field_id.attr('field_name')}`] = field_id.text()
+            }
+            else{
+                storeFieldItem[`${field_id.attr('field_name')}`] = field_id.val()
+            }
         });
         localStorage.setItem('oldValueStore', JSON.stringify(storeFieldItem))
     }
+
+    let discardRestoreOldFieldsValue = function(){
+        let stored = localStorage.getItem('oldValueStore');
+        if (!stored) return; // nothing stored yet
+        
+        let oldValues = JSON.parse(stored); 
+        $('input, textarea, select, select2, span').each(function(){
+            let field = $(this);
+            let fieldName = field.attr('field_name');
+            if (!fieldName) return; // skip if no field_name
+
+            let tagName = field.prop("tagName").toLowerCase();
+            let oldValue = oldValues[fieldName];
+
+            if (oldValue !== undefined) {
+                if (tagName === 'span') {
+                    // display field
+                    field.text(oldValue);
+
+                } else if (tagName === 'input') {
+                    let type = field.attr('type');
+                    if (type === 'checkbox') {
+                        field.prop('checked', oldValue === true || oldValue === "true");
+                    } else if (type === 'radio') {
+                        // restore radio by value match
+                        if (field.val() == oldValue) {
+                            field.prop('checked', true);
+                        }
+                    } else {
+                        // text, number, hidden, etc.
+                        field.val(oldValue);
+                    }
+
+                } else if (tagName === 'select') {
+                    field.val(oldValue);
+                    // handle select2 if applied
+                    if (field.hasClass("select2-hidden-accessible")) {
+                        field.trigger('change.select2');
+                    } else {
+                        field.trigger('change');
+                    }
+
+                } else if (tagName === 'textarea') {
+                    field.val(oldValue);
+                }
+            }
+        });
+    };
 
     let makeWritableFieldsEditable = function(){
         console.log('All writable fields are now readable to edit');
@@ -147,9 +201,22 @@ odoo.define('portal_request.portal_request_form', function (require) {
             // open the description text for editting
             // $('#description').prop('contenteditable', true)
             // trigger leave date
-            
         });
 
+    }
+
+    let resetModificationProps=function(){
+        let save = $('#save');
+        let edit = $('#editbtn');
+        let back = $('#previous')
+        let discard = $('#discardbtn')
+        let resend_request = $('.resend_request')
+        save.addClass('d-none');
+        discard.addClass('d-none');
+        edit.removeClass('d-none');
+        back.removeClass('d-none');
+        resend_request.removeClass('d-none');
+        // saveChangedFieldsValues();
     }
 
     let checkEditableRequiredFields = function () {
@@ -271,7 +338,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
     //     }
     // }
 
-    let lockFieldsFunction = function(){
+    let makeAllFieldsReadonly = function(){
         $('input, select, textarea, select2').each(function(ev){
             $(this).prop('disabled', true) 
         })
@@ -345,7 +412,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let edit = $(ev.target);
                 let save = $('#save');
                 let back = $('#previous')
-                let discard = $('#discard')
+                let discard = $('#discardbtn')
                 let resend_request = $('.resend_request')
 
                 edit.addClass('d-none');
@@ -365,18 +432,19 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     alert(cef);
                     return false;
                 }
-                let save = $(ev.target);
-                let edit = $('#editbtn');
-                let back = $('#previous')
-                let discard = $('#discard')
-                let resend_request = $('.resend_request')
+                resetModificationProps()
+                // let save = $(ev.target);
+                // let edit = $('#editbtn');
+                // let back = $('#previous')
+                // let discard = $('#discardbtn')
+                // let resend_request = $('.resend_request')
 
-                edit.removeClass('d-none');
-                back.removeClass('d-none');
-                resend_request.removeClass('d-none');
-                save.addClass('d-none');
-                discard.addClass('d-none');
-                // saveChangedFieldsValues();
+                // edit.removeClass('d-none');
+                // back.removeClass('d-none');
+                // resend_request.removeClass('d-none');
+                // save.addClass('d-none');
+                // discard.addClass('d-none');
+                // // saveChangedFieldsValues();
 
                 let leave_type_id = $("#leave_type_id")
                 let leave_start_datex = $("#leave_start_datex")
@@ -407,7 +475,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         console.log('return saved record data => ')
                         $("#is_edit_mode").prop('checked', false);
                         // lock all fields 
-                        lockFieldsFunction();
+                        makeAllFieldsReadonly();
                     }else{
                         alert(data.message);
                     }
@@ -416,6 +484,14 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
+            },
+
+            'click #discardbtn': function(ev){
+                discardRestoreOldFieldsValue();
+                $("#is_edit_mode").prop('checked', false);
+                // lock all fields 
+                makeAllFieldsReadonly();
+                resetModificationProps();
             },
 
             'change .AmountTots': function(ev){

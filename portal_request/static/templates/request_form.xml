@@ -15,7 +15,7 @@
                             <t t-call="portal_request.website_app_page"/>
                         </section>
                         
-                        <div class="navbar-light py-0 mb-2">
+                        <div class="navbar-light py-0 mb-2 pt-1 p-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
                                 Back
                             </a>
@@ -25,7 +25,7 @@
                             <a id="save" class="btn btn-success btn-sm d-none">
                                 Save
                             </a>
-                            <a id="discard" class="btn btn-danger btn-sm d-none">
+                            <a id="discardbtn" class="btn btn-danger btn-sm d-none">
                                 Discard
                             </a>
                             <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]">
@@ -161,8 +161,8 @@
                                                 <h5>
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
-                                                    <small class="text-muted"> (#<span t-field="req.code"/>) </small>
-                                                    <small class="text-muted"> (#<t t-esc="current_user"/>) </small>
+                                                    <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
+                                                    <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small>
                                                     <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
                                                     <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
@@ -179,20 +179,20 @@
                                             <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
-                                                <span t-field="req.stage_id.name" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                <span t-field="req.stage_id.name" field_name="status" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div id="card_body" class="card-body">
                                         <div class="row mb-4">
-                                            <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
+                                            <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" field_name="request_date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                         </div><br/>
                                         <t t-if="req.memo_type.memo_key in ['Payment']">
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Payment Reference</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" field_name="payment_reference" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
                                                 </span>
                                             </div> 
                                         </t>
@@ -202,7 +202,7 @@
                                                 <strong class="col-md-4">Staff ID</strong>:
                                                 <span class="col-md-6">
                                                     <a t-attf-href="#">
-                                                        <span t-field="req.employee_id.employee_number" name="staff_id" id="staff_id"/>
+                                                        <span t-field="req.employee_id.employee_number" name="staff_id" id="staff_id" field_name="staff_id"/>
                                                     </a>
                                                 </span>
                                             </div> 
@@ -216,12 +216,12 @@
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
-                                                <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
+                                                <strong class="col-md-4">Request date</strong>: <span class="col-md-6" field_name="date" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                             </div><br/>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave type</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true" required="required">
+                                                    <select field_name="leave_type" id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true" required="required">
                                                         <option selected="selected" t-attf-value="{{req.leave_type_id.id}}"><span t-esc="req.leave_type_id.name"/></option>
                                                         <t t-foreach="leave_type_ids" t-as="lv">
                                                             <option t-att-value="lv.id">
@@ -234,29 +234,29 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Start date</strong>: 
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_datex" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_start_date" id="leave_start_datex" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave End date</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_end" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Remaining</strong>: 
                                                 <span class="col-md-6">
-                                                    <input type="hidden" class="form-control s_website_form_input" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
+                                                    <input type="hidden" class="form-control s_website_form_input" field_name= "leave_remaining" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
                                                     <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
-                                                <strong class="col-md-4">Leave Days Taken</strong>:<span class="col-md-6" id="leave_taken"><t t-esc="leave_taken"/></span>
+                                                <strong class="col-md-4">Leave Days Taken</strong>:<span field_name= "leave_taken" class="col-md-6" id="leave_taken"><t t-esc="leave_taken"/></span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Reliever</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_reliever_ids" name="leave_reliever_id" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" required="required" disabled="true">
+                                                    <select id="leave_reliever_ids" name="leave_reliever_id" field_name= "leave_taken" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" required="required" disabled="true">
                                                         <option selected="selected" t-attf-value="{{req.leave_Reliever.id}}"><span t-esc="req.leave_Reliever.name"/></option>
                                                         <t t-foreach="employee_ids" t-as="emp">
                                                             <option t-att-value="emp.id">
@@ -271,7 +271,7 @@
                                             <strong class="col-md-4">Manager</strong>:
                                             <span class="col-md-6">
                                                 <a t-attf-href="#">
-                                                    <span t-field="req.employee_id.parent_id.name"/>
+                                                    <span t-field="req.employee_id.parent_id.name" field_name= "employer_manager"/>
                                                 </a>
                                             </span>
                                         </div>
@@ -288,7 +288,7 @@
                                         <!-- <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="descriptionDiv"> -->
                                         <div class="row mb-4 mb-5" name="descriptionDiv">
                                             <t t-set="raw_description" t-value="req.description"/>
-                                            <textarea class="form-control s_website_form_input" name="description" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
+                                            <textarea class="form-control s_website_form_input" name="description" field_name= "description_id" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -348,24 +348,24 @@
                                                     <tr class="heading prod_row" t-att-id="prod.id" t-att-name="prod_row" t-att-row_count="prod.id">
                                                         <th width="2%">
                                                             <span>
-                                                                <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
+                                                                <input type="checkbox" readonly="readonly" field_name= "checkbox" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
                                                             </span>
                                                         </th>
                                                         <th width="30%">
                                                             <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" field_name= "product_id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
                                                             </span>
                                                         </th>
                                                         <th width="35%">
                                                             <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" required="required" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
+                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
                                                             </span>
                                                         </th>
                                                         <th width="5%">
-                                                            <input type="text" main_name = "quantity_available" t-att-name="prod.quantity_available" t-att-id="prod.id" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
                                                         <th width="20%">
-                                                            <input type="text" main_name = "amount_total" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
                                                         </th>
                                                         <th width="20%">

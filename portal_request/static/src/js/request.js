@@ -700,6 +700,30 @@ odoo.define('portal_request.portal_request', function (require) {
         allowClear: true,
     });
 
+    $('#inputFollowers').select2({
+        ajax: {
+            url: '/portal-request-employee-reliever',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 3,
+        multiple: true,
+        placeholder: 'Search for a reliever',
+        allowClear: true,
+    });
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
@@ -1756,6 +1780,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                     else{
                         formData.append('DataItems', JSON.stringify(DataItems))
+                        formData.append('inputFollowers', $('#inputFollowers').select2('data'))
                         console.log("sssXMLREQUEST Successful====", DataItems);
 
                         $.ajax({
@@ -1779,7 +1804,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
                                 
                                 
-                                window.location.href = `/portal-success`;
+                                // window.location.href = `/portal-success`;
                                 $btn.attr('disabled', false);
                                 $btn.html($btnHtml)
                                 $.unblockUI()
