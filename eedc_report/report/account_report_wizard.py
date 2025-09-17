@@ -42,6 +42,7 @@ class AccountDynamicReport(models.Model):
             ("second_quarterly", "Second Quarterly Expenditures"),
             ("third_quarterly", "Third Quarterly Expenditures"),
             ("fourth_quarterly", "Fourth Quarterly Expenditures"),
+            ("consolidated_district", "Consolidated District Report"),
             ("cf", "CashFlow Statement"),
             ("bank", "Trial Balance"),
             ("cash", "General Ledger"),
@@ -64,6 +65,7 @@ class AccountDynamicReport(models.Model):
     )
     
     branch_ids = fields.Many2many('multi.branch', string='District')
+    company_id = fields.Many2one('res.company')
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
@@ -148,6 +150,8 @@ class AccountDynamicReport(models.Model):
                 branch_ids.append(user.branch_id.id)
             unique_branch_ids = list(set(branch_ids))
             res.update({'branch_ids': [(6, 0, unique_branch_ids)]})
+        if 'company_id' in fields_list and user.company_id:
+            res.update({'company_id': [(6, 0, user.company_id)]})
         return res
     
     
@@ -205,6 +209,7 @@ class AccountDynamicReport(models.Model):
             ('date', '>=', date_from), ('date', '<=', date_to),
             ('move_id.state', '=', 'posted'),
         ]
+        if self.company_id: domain.append(('move_id.company_id', '=', self.company_id.id))
         if self.journal_ids: domain.append(('journal_id', 'in', self.journal_ids.ids))
         if self.account_ids: domain.append(('account_id', 'in', self.account_ids.ids))
         if self.partner_id: domain.append(('partner_id', '=', self.partner_id.id))
@@ -214,6 +219,10 @@ class AccountDynamicReport(models.Model):
     
     def action_generate_report(self):
         self.ensure_one()
+        
+        if self.report_type == 'consolidated_district':
+            return self.action_generate_consolidated_district_report()
+    
         if self.format in ['pdf', 'html']:
             return self.action_print_report()
         elif self.format == 'xls':
@@ -387,6 +396,144 @@ class AccountDynamicReport(models.Model):
         for tag in tags.filtered(lambda t: not t.parent_tag_id).sorted(key=lambda t: t.code):
             build_recursive(tag, 0)
         return final_report_data
+    
+    def _get_consolidated_district_data(self, start_date, end_date, month_headers):
+        """
+        Generates consolidated data across all selected districts for the same period.
+        Returns data in format: {tag/account: {district_code: amount, ...}}
+        """
+        branches_to_process = self.branch_ids or self.env['multi.branch'].search([])
+        if not branches_to_process:
+            raise ValidationError("No districts selected or configured for the current user.")
+        
+        # Get all relevant tags based on account_head_type
+        tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
+        all_accounts = tags.mapped('account_ids')
+        if not all_accounts:
+            return [], []
+
+        consolidated_data = {}
+        district_headers = []
+        
+        # Build data for each district
+        for branch in branches_to_process:
+            district_headers.append(branch.code.upper())
+            
+            # Get base domain for this branch
+            base_domain = self._build_base_domain(start_date, end_date, branch.id)
+            base_domain.append(('account_id', 'in', all_accounts.ids))
+            
+            branch_moves = self.env['account.move.line'].search(base_domain)
+            
+            # Determine field to sum (debit vs credit)
+            sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
+            
+            # Process by tags (economic codes)
+            for tag in tags:
+                tag_key = f"{tag.code}_{tag.name}"
+                if tag_key not in consolidated_data:
+                    consolidated_data[tag_key] = {
+                        'code': tag.code,
+                        'description': tag.name,
+                        'level': 0,
+                        'is_account': False,
+                        'is_expandable': True,
+                        'district_values': {},
+                        'account_details': {},
+                        'total_revenue': 0.0,
+                        'total_expenditure': 0.0,
+                    }
+                
+                # Get moves for this tag's accounts
+                tag_moves = branch_moves.filtered(lambda m: m.account_id in tag.account_ids)
+                
+                # Calculate totals
+                revenue_total = sum(tag_moves.mapped('credit'))
+                expenditure_total = sum(tag_moves.mapped('debit'))
+                
+                # Store district values based on account_head_type
+                if self.account_head_type == 'Revenue':
+                    consolidated_data[tag_key]['district_values'][branch.code] = revenue_total
+                    consolidated_data[tag_key]['total_revenue'] += revenue_total
+                else:
+                    consolidated_data[tag_key]['district_values'][branch.code] = expenditure_total
+                    consolidated_data[tag_key]['total_expenditure'] += expenditure_total
+                
+                # Store account-level details for expansion
+                if branch.code not in consolidated_data[tag_key]['account_details']:
+                    consolidated_data[tag_key]['account_details'][branch.code] = []
+                
+                for account in tag.account_ids:
+                    account_moves = tag_moves.filtered(lambda m: m.account_id == account)
+                    if account_moves:
+                        account_revenue = sum(account_moves.mapped('credit'))
+                        account_expenditure = sum(account_moves.mapped('debit'))
+                        
+                        consolidated_data[tag_key]['account_details'][branch.code].append({
+                            'code': account.code,
+                            'name': account.name,
+                            'revenue': account_revenue,
+                            'expenditure': account_expenditure,
+                            'level': 1,
+                            'is_account': True,
+                        })
+
+        # Convert to list and calculate balances
+        report_lines = []
+        for key, data in consolidated_data.items():
+            data['balance'] = data['total_revenue'] - data['total_expenditure']
+            report_lines.append(data)
+        
+        # Sort by code
+        report_lines.sort(key=lambda x: x.get('code', ''))
+        
+        return report_lines, district_headers
+    
+    def action_generate_consolidated_district_report(self):
+        """Generate consolidated district report for browser display"""
+        self.ensure_one()
+        
+        if self.report_type != 'consolidated_district':
+            return self.action_generate_report()  # Fall back to existing logic
+        
+        start_date, end_date, month_headers = self._get_date_range()
+        
+        # Get consolidated data
+        report_lines, district_headers = self._get_consolidated_district_data(start_date, end_date, month_headers)
+        
+        if not report_lines:
+            raise ValidationError("No data could be generated for the selected criteria.")
+        
+        # Prepare data for template
+        budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
+        period_string = self._get_period_string(start_date, end_date)
+        
+        # Get company name (will be extended to support multiple companies)
+        company_name = self.company_id.name if self.company_id else self.env.company.name
+        
+        data = {
+            'doc_model': self._name,
+            'data': [{  # Wrap in data array like your existing reports
+                'report_lines': report_lines,
+                'district_headers': district_headers,
+                'company_name': company_name,
+                'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
+                'account_head_type': self.account_head_type,
+            }],
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+        
+        # Use the existing report action pattern
+        report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+        return report_action.report_action(self, data=data)
+        
+    def _get_period_string(self, start_date, end_date):
+        """Helper to generate period string for report subtitle"""
+        if start_date.year == end_date.year and start_date.month == end_date.month:
+            return f"MONTHLY RETURNS {start_date.strftime('%B %Y')}"
+        else:
+            return f"CONSOLIDATED RETURNS {start_date.strftime('%B %Y')} - {end_date.strftime('%B %Y')}"
 
     
 

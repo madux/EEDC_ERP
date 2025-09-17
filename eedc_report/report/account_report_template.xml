@@ -210,7 +210,7 @@
         </t>
     </template>
 
-    <template id="report_capital_quarterly_template">
+    <template id="report_total_quarterly_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
                 <t t-foreach="data" t-as="report">
@@ -223,10 +223,9 @@
                         <table class="report-table mt-3">
                             <thead>
                                 <tr>
-                                    <th style="width: 25%;">DESCRIPTION</th>
-                                    <th style="width: 20%;">ECONOMIC CODE AND DESCRIPTION</th>
-                                    <th style="width: 11%;" class="text-right">APPROVED BUDGET</th>
-                                    <t t-foreach="month_headers" t-as="month"><th style="width: 9%;" class="text-right"><t t-esc="month"/></th></t>
+                                    <th style="width: 25%;">Code</th>
+                                    <th style="width: 20%;">DESCRIPTION</th>
+                                    <t t-foreach="district_headers" t-as="district"><th style="width: 9%;" class="text-right"><t t-esc="district"/></th></t>
                                     <th style="width: 10%;" class="text-right"><t t-esc="quarterly_total_header"/></th>
                                     <th style="width: 7%;">% PERF TO DATE</th>
                                     <th style="width: 11%;" class="text-right">BALANCE</th>
@@ -235,15 +234,241 @@
                             <tbody>
                                 <t t-foreach="report.get('report_lines')" t-as="line">
                                     <tr>
+                                        <td><span t-esc="line.get('code', '')"/></td>
                                         <td><span t-esc="line.get('description', '')"/></td>
-                                        <td><span t-esc="line.get('economic_code_and_desc', '')"/></td>
-                                        <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('approved_budget', 0.0))"/></td>
-                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('monthly_values', {}).get(month, 0.0))"/></td></t>
+                                        <t t-foreach="month_headers" t-as="month"><td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district, 0.0))"/></td></t>
                                         <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('quarterly_total', 0.0))"/></td>
                                         <td class="text-center"><span t-esc="'{:.2f}%'.format(line.get('percentage_perf', 0.0))"/></td>
                                         <td class="text-right"><span t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
                                     </tr>
                                 </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Fixed Consolidated District Report Template -->
+    <template id="consolidated_district_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="data" t-as="report">
+                    <div class="page">
+                        <!-- Header Section -->
+                        <div class="text-center mb-4">
+                            <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
+                                <t t-esc="report.get('company_name', 'MAIN POWER')"/>
+                            </h2>
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">
+                                CONSOLIDATED DISTRICT REPORT
+                            </h3>
+                            <h4 style="font-size: 12px; font-weight: bold; margin-top: 0;">
+                                <t t-esc="report.get('subtitle')"/>
+                            </h4>
+                        </div>
+
+                        <!-- Styles -->
+                        <style>
+                            .consolidated-table {
+                                border-collapse: collapse;
+                                width: 100%;
+                                font-size: 10px;
+                                margin-top: 20px;
+                            }
+                            .consolidated-table th, .consolidated-table td {
+                                border: 1px solid #000;
+                                padding: 6px;
+                                vertical-align: middle;
+                            }
+                            .consolidated-table th {
+                                background-color: #e6e6e6;
+                                font-weight: bold;
+                                text-align: center;
+                                font-size: 9px;
+                            }
+                            .text-right {
+                                text-align: right !important;
+                            }
+                            .text-center {
+                                text-align: center !important;
+                            }
+                            .expandable-row {
+                                cursor: pointer;
+                                background-color: #f8f9fa;
+                            }
+                            .expandable-row:hover {
+                                background-color: #e9ecef;
+                            }
+                            .account-detail-row {
+                                display: none;
+                                background-color: #f1f3f4;
+                                font-size: 9px;
+                            }
+                            .expand-icon {
+                                font-weight: bold;
+                                font-size: 12px;
+                                margin-right: 5px;
+                                color: #007bff;
+                            }
+                            .indent-account {
+                                padding-left: 25px;
+                            }
+                            .total-row {
+                                background-color: #d4edda;
+                                font-weight: bold;
+                            }
+                        </style>
+
+                        <!-- JavaScript for expand/collapse functionality -->
+                        <script type="text/javascript">
+                            function toggleDetails(rowId) {
+                                var detailRows = document.querySelectorAll('.detail-' + rowId);
+                                var icon = document.getElementById('icon-' + rowId);
+                                
+                                var isVisible = false;
+                                detailRows.forEach(function(row) {
+                                    if (row.style.display === 'none' || row.style.display === '') {
+                                        row.style.display = 'table-row';
+                                        isVisible = true;
+                                    } else {
+                                        row.style.display = 'none';
+                                        isVisible = false;
+                                    }
+                                });
+                                
+                                // Toggle icon
+                                icon.innerHTML = isVisible ? '▼' : '▶';
+                            }
+                        </script>
+
+                        <!-- Main Table -->
+                        <table class="consolidated-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">CHART OF ACCOUNT</th>
+                                    <th style="width: 25%;">DESCRIPTION</th>
+                                    <!-- Dynamic district columns -->
+                                    <t t-foreach="report.get('district_headers', [])" t-as="district">
+                                        <th style="width: 8%;" class="text-right">
+                                            <t t-esc="district"/> DISTRICT
+                                        </th>
+                                    </t>
+                                    <th style="width: 10%;" class="text-right">TOTAL REV.</th>
+                                    <th style="width: 10%;" class="text-right">TOTAL EXP.</th>
+                                    <th style="width: 12%;" class="text-right">BALANCE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="report.get('report_lines', [])" t-as="line">
+                                    <!-- Main economic tag row (expandable) -->
+                                    <tr t-attf-class="expandable-row" 
+                                        t-att-onclick="'toggleDetails(' + str(line_index) + ')'">
+                                        <td>
+                                            <span t-attf-id="icon-#{line_index}" class="expand-icon">▶</span>
+                                            <span t-esc="line.get('code', '')"/>
+                                        </td>
+                                        <td>
+                                            <strong t-esc="line.get('description', '')"/>
+                                        </td>
+                                        <!-- District values -->
+                                        <t t-foreach="report.get('district_headers', [])" t-as="district">
+                                            <td class="text-right">
+                                                <span t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district, 0.0))"/>
+                                            </td>
+                                        </t>
+                                        <td class="text-right">
+                                            <strong t-esc="'{:,.2f}'.format(line.get('total_revenue', 0.0))"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <strong t-esc="'{:,.2f}'.format(line.get('total_expenditure', 0.0))"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <strong t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Account detail rows (hidden by default) -->
+                                    <t t-foreach="report.get('district_headers', [])" t-as="district">
+                                        <t t-set="district_accounts" t-value="line.get('account_details', {}).get(district, [])"/>
+                                        <t t-if="district_accounts">
+                                            <!-- District separator row -->
+                                            <tr t-attf-class="account-detail-row detail-#{line_index}" 
+                                                style="display: none; background-color: #e3f2fd;">
+                                                <td colspan="2" class="indent-account">
+                                                    <strong><t t-esc="district"/> District Accounts:</strong>
+                                                </td>
+                                                <td t-attf-colspan="#{len(report.get('district_headers', [])) + 3}"></td>
+                                            </tr>
+                                            <!-- Individual account rows -->
+                                            <t t-foreach="district_accounts" t-as="account">
+                                                <tr t-attf-class="account-detail-row detail-#{line_index}" 
+                                                    style="display: none;">
+                                                    <td class="indent-account">
+                                                        <t t-esc="account.get('code', '')"/>
+                                                    </td>
+                                                    <td class="indent-account">
+                                                        <t t-esc="account.get('name', '')"/>
+                                                    </td>
+                                                    <!-- Empty cells for other districts -->
+                                                    <t t-foreach="report.get('district_headers', [])" t-as="other_district">
+                                                        <td class="text-right">
+                                                            <t t-if="other_district == district">
+                                                                <t t-if="report.get('account_head_type') == 'Revenue'">
+                                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
+                                                                </t>
+                                                            </t>
+                                                            <t t-else="">-</t>
+                                                        </td>
+                                                    </t>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0) - account.get('expenditure', 0.0))"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+                                
+                                <!-- Total row (optional) -->
+                                <tr class="total-row">
+                                    <td colspan="2"><strong>GRAND TOTAL</strong></td>
+                                    <t t-foreach="report.get('district_headers', [])" t-as="district">
+                                        <td class="text-right">
+                                            <strong>
+                                                <t t-set="district_total" t-value="sum([line.get('district_values', {}).get(district, 0.0) for line in report.get('report_lines', [])])"/>
+                                                <span t-esc="'{:,.2f}'.format(district_total)"/>
+                                            </strong>
+                                        </td>
+                                    </t>
+                                    <td class="text-right">
+                                        <strong>
+                                            <t t-set="total_revenue" t-value="sum([line.get('total_revenue', 0.0) for line in report.get('report_lines', [])])"/>
+                                            <span t-esc="'{:,.2f}'.format(total_revenue)"/>
+                                        </strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <strong>
+                                            <t t-set="total_expenditure" t-value="sum([line.get('total_expenditure', 0.0) for line in report.get('report_lines', [])])"/>
+                                            <span t-esc="'{:,.2f}'.format(total_expenditure)"/>
+                                        </strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <strong>
+                                            <span t-esc="'{:,.2f}'.format(total_revenue - total_expenditure)"/>
+                                        </strong>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -269,6 +494,16 @@
             <field name="report_name">eedc_report.report_expenditure_quarterly_template</field>
             <field name="report_file">eedc_report.report_expenditure_quarterly_template</field>
             <field name="binding_model_id" eval="False"/>
+        </record>
+
+        <record id="action_consolidated_district_report" model="ir.actions.report">
+            <field name="name">Consolidated District Report</field>
+            <field name="model">account.dynamic.report</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">eedc_report.consolidated_district_report_template</field>
+            <field name="report_file">eedc_report.consolidated_district_report_template</field>
+            <field name="binding_model_id" ref="model_account_dynamic_report"/>
+            <field name="binding_type">report</field>
         </record>
 
         <record id="action_report_capital_monthly" model="ir.actions.report">
