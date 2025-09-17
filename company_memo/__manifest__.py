@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Office Memo Application',
+    'name': 'ERP Requests Application',
     'version': '14.0',
     'author': 'Maach Services',
-    'description': """An Odoo Memo application use to send memo / information accross individuals: 
+    'description': """An ERP Requests application use to create requests: 
     It can also be used to send requests.""",
     'summary': 'Memo application for Companies etc ',
     'category': 'Base',
@@ -14,7 +14,7 @@
         'contacts', 'hr_holidays', 'hr_recruitment', 'documents', 
         'documents_project', 'documents_sign', 'documents_hr_recruitment',
         'widget_addons', 'account_payment_invoice_online_payment_patch',
-        'ik_multi_branch', 'l10n_uk'
+        'ik_multi_branch', 'l10n_uk',
         ],
     'data': [
         'security/security_group.xml', 

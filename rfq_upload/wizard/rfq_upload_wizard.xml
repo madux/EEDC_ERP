@@ -14,7 +14,6 @@
                         <p class="text-muted">Download template with your request items, get vendor quotations, then upload to create purchase orders</p>
                     </div>
                     
-                    
                     <group>
                         <group>
                             <field name="memo_id" readonly="1"/>
@@ -27,30 +26,24 @@
                             <field name="sheet_count" invisible="1"/>
                             <field name="sheet_list" attrs="{'invisible': [('sheet_count', '&lt;=', 1)]}" readonly="1"/>
                             <field name="sheet" attrs="{'invisible': [('sheet_count', '&lt;=', 1)], 'required': [('sheet_count', '>', 1)]}"/>
-                            <!-- <field name="sheet"/> -->
                         </group>
                         <group>
-                            <!-- <label for="memo_details" string="Memo Details"/>
-                            <div name="memo_details">
-                                <div><strong>Request Number:</strong> <field name="memo_id" readonly="1" nolabel="1" widget="char" attrs="{'invisible': [('memo_id', '=', False)]}"/></div>
-                                <div><strong>Items in Request:</strong> <span class="text-muted">Will be pre-populated in template</span></div>
-                            </div> -->
+                            <!-- Empty group for layout -->
                         </group>
                     </group>
 
                     <group string="Processing Options" attrs="{'invisible': [('rfq_excel_file', '=', False)]}">
                         <group>
-                            <field name="validate_only" help="Check this to only validate the file without creating purchase orders"/>
-                            <field name="create_missing_products" attrs="{'invisible': [('validate_only', '=', True)]}"/>
+                            <field name="create_missing_products"/>
+                            <field name="create_missing_vendors"/>
                         </group>
                         <group>
-                            <field name="create_missing_vendors" attrs="{'invisible': [('validate_only', '=', True)]}"/>
-                            <field name="group_by_vendor" attrs="{'invisible': [('validate_only', '=', True)]}"/>
+                            <field name="group_by_vendor"/>
                         </group>
                     </group>
 
                     <!-- Instructions Section -->
-                    <div class="alert alert-info">
+                    <div class="alert alert-info" attrs="{'invisible': ['|', ('validation_result', '!=', ''), ('processing_result', '!=', '')]}">
                         <h4><i class="fa fa-info-circle"/> Step-by-Step Instructions</h4>
                         <ol class="mb0">
                             <li><strong>Download Template:</strong> Click "Download Template" button below to get an Excel file pre-populated with your request items</li>
@@ -58,11 +51,12 @@
                             <li><strong>Complete Vendor Info:</strong> Fill in vendor details (name, email, phone, address) for each quote</li>
                             <li><strong>Set Prices:</strong> Enter the quoted prices from vendors (quantities are already filled from your request)</li>
                             <li><strong>Upload File:</strong> Upload the completed Excel file using the file picker above</li>
+                            <li><strong>Validate:</strong> Click "Validate File" to check for errors before processing</li>
                             <li><strong>Process:</strong> Click "Upload &amp; Process" to create purchase orders automatically</li>
                         </ol>
                     </div>
                     
-                    <div class="row">
+                    <div class="row" attrs="{'invisible': ['|', ('validation_result', '!=', ''), ('processing_result', '!=', '')]}">
                         <div class="col-md-6">
                             <div class="alert alert-success">
                                 <h5><i class="fa fa-download"/> Template Features</h5>
@@ -82,14 +76,14 @@
                                     <li>Vendor Code (required)</li>
                                     <li>Vendor Name (required)</li>
                                     <li>Vendor Email (recommended)</li>
-                                    <li>Price Per Quantity (required)</li>
+                                    <li>Price Per Unit (required)</li>
                                     <li>Vendor Phone &amp; Address (optional)</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-info" attrs="{'invisible': ['|', ('validation_result', '!=', ''), ('processing_result', '!=', '')]}">
                         <h5><i class="fa fa-lightbulb-o"/> Pro Tips</h5>
                         <ul class="mb0">
                             <li><strong>Multiple Vendors:</strong> You can quote the same item from different vendors - separate POs will be created</li>
@@ -99,36 +93,26 @@
                         </ul>
                     </div>
 
-                    <!-- Validation Results Section -->
-                    <div attrs="{'invisible': [('validation_result', '=', '')]}" class="mt16">
-                        <div class="alert alert-info mb8" >
-                            <i class="fa fa-check-circle"/> Validation completed successfully!
+                    <div attrs="{'invisible': ['&amp;', ('validation_result', '=', ''), ('processing_result', '=', '')]}" class="mt16">
+
+                        <div class="alert alert-info mb8" attrs="{'invisible': [('validation_result', '=', '')]}">
+                            <i class="fa fa-check-circle"/> Validation Result
                         </div>
-                        <div class="alert alert-warning mb8">
-                            <i class="fa fa-exclamation-triangle"/> Validation found issues that need to be fixed.
-                        </div>
-                        <group>
-                            <field name="validation_result" 
-                                   widget="text" 
-                                   readonly="1"
-                                   string="Validation Results"
-                                   class="o_field_text_validation_result"/>
+
+                        <group attrs="{'invisible': [('validation_result', '=', '')]}">
+                            <field name="validation_result" widget="text" readonly="1" string="Validation Result"/>
                         </group>
+
+                        <div class="alert alert-info mb8" attrs="{'invisible': [('processing_result', '=', '')]}">
+                            <i class="fa fa-check-circle"/> Processing Result
+                        </div>
+
+                        <group attrs="{'invisible': [('processing_result', '=', '')]}">
+                            <field name="processing_result" widget="text" readonly="1" string="Processing Result"/>
+                        </group>
+
                     </div>
 
-                    <!-- Processing Results Section -->
-                    <div attrs="{'invisible': [('processing_result', '=', '')]}" class="mt16">
-                        <div class="alert alert-success mb8">
-                            <i class="fa fa-check-circle"/> Processing completed successfully!
-                        </div>
-                        <group>
-                            <field name="processing_result" 
-                                   widget="text" 
-                                   readonly="1"
-                                   string="Processing Results"
-                                   class="o_field_text_processing_result"/>
-                        </group>
-                    </div>
 
                 </sheet>
                 
@@ -154,11 +138,10 @@
                             icon="fa-upload"
                             attrs="{'invisible': [('rfq_excel_file', '=', False)]}"/>
                     
-                    
                     <button string="Cancel" 
                             class="btn-secondary" 
                             special="cancel"
-                            attrs="{'invisible': [('rfq_excel_file', '=', True)]}"
+                            attrs="{'invisible': [('rfq_excel_file', '!=', False)]}"
                             />
                     
                     <button string="Close" 
