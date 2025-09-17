@@ -400,15 +400,22 @@ class AccountDynamicReport(models.Model):
     def _get_consolidated_district_data(self, start_date, end_date, month_headers):
         """
         Generates consolidated data across all selected districts for the same period.
-        Returns data in format: {tag/account: {district_code: amount, ...}}
+        Shows individual accounts instead of tags, with expandable move lines.
+        Returns data in format: {account: {district_code: {amount, moves}, ...}}
         """
         branches_to_process = self.branch_ids or self.env['multi.branch'].search([])
         if not branches_to_process:
             raise ValidationError("No districts selected or configured for the current user.")
         
-        # Get all relevant tags based on account_head_type
-        tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
-        all_accounts = tags.mapped('account_ids')
+        # Get all relevant accounts - if specific accounts selected, use those
+        # Otherwise get accounts from tags with matching account_head_type
+        if self.account_ids:
+            all_accounts = self.account_ids
+        else:
+            # Get accounts through tags that match the account_head_type
+            tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
+            all_accounts = tags.mapped('account_ids')
+        
         if not all_accounts:
             return [], []
 
@@ -428,67 +435,72 @@ class AccountDynamicReport(models.Model):
             # Determine field to sum (debit vs credit)
             sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
             
-            # Process by tags (economic codes)
-            for tag in tags:
-                tag_key = f"{tag.code}_{tag.name}"
-                if tag_key not in consolidated_data:
-                    consolidated_data[tag_key] = {
-                        'code': tag.code,
-                        'description': tag.name,
+            # Process by individual accounts
+            for account in all_accounts:
+                account_key = f"{account.code}_{account.name}"
+                if account_key not in consolidated_data:
+                    consolidated_data[account_key] = {
+                        'code': account.code,
+                        'description': account.name,
                         'level': 0,
-                        'is_account': False,
+                        'is_account': True,
                         'is_expandable': True,
                         'district_values': {},
-                        'account_details': {},
+                        'move_details': {},
                         'total_revenue': 0.0,
                         'total_expenditure': 0.0,
                     }
                 
-                # Get moves for this tag's accounts
-                tag_moves = branch_moves.filtered(lambda m: m.account_id in tag.account_ids)
+                # Get moves for this specific account
+                account_moves = branch_moves.filtered(lambda m: m.account_id == account)
                 
-                # Calculate totals
-                revenue_total = sum(tag_moves.mapped('credit'))
-                expenditure_total = sum(tag_moves.mapped('debit'))
-                
-                # Store district values based on account_head_type
-                if self.account_head_type == 'Revenue':
-                    consolidated_data[tag_key]['district_values'][branch.code] = revenue_total
-                    consolidated_data[tag_key]['total_revenue'] += revenue_total
-                else:
-                    consolidated_data[tag_key]['district_values'][branch.code] = expenditure_total
-                    consolidated_data[tag_key]['total_expenditure'] += expenditure_total
-                
-                # Store account-level details for expansion (THIS IS THE KEY CHANGE)
-                if branch.code not in consolidated_data[tag_key]['account_details']:
-                    consolidated_data[tag_key]['account_details'][branch.code] = []
-                
-                for account in tag.account_ids:
-                    account_moves = tag_moves.filtered(lambda m: m.account_id == account)
-                    if account_moves:
-                        account_revenue = sum(account_moves.mapped('credit'))
-                        account_expenditure = sum(account_moves.mapped('debit'))
-                        
-                        # Only add accounts that have transactions
-                        if account_revenue > 0 or account_expenditure > 0:
-                            consolidated_data[tag_key]['account_details'][branch.code].append({
-                                'code': account.code,
-                                'name': account.name,
-                                'revenue': account_revenue,
-                                'expenditure': account_expenditure,
-                                'level': 1,
-                                'is_account': True,
-                            })
+                if account_moves:
+                    # Calculate totals
+                    revenue_total = sum(account_moves.mapped('credit'))
+                    expenditure_total = sum(account_moves.mapped('debit'))
+                    
+                    # Store district values based on account_head_type
+                    if self.account_head_type == 'Revenue':
+                        consolidated_data[account_key]['district_values'][branch.code] = revenue_total
+                        consolidated_data[account_key]['total_revenue'] += revenue_total
+                    else:
+                        consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
+                        consolidated_data[account_key]['total_expenditure'] += expenditure_total
+                    
+                    # Store move line details for expansion
+                    if branch.code not in consolidated_data[account_key]['move_details']:
+                        consolidated_data[account_key]['move_details'][branch.code] = []
+                    
+                    for move_line in account_moves:
+                        move_data = {
+                            'id': move_line.id,
+                            'date': move_line.date.strftime('%Y-%m-%d'),
+                            'reference': move_line.move_id.name or move_line.name,
+                            'description': move_line.name or move_line.move_id.ref or 'No Description',
+                            'partner': move_line.partner_id.name if move_line.partner_id else '',
+                            'debit': move_line.debit,
+                            'credit': move_line.credit,
+                            'balance': move_line.credit if self.account_head_type == 'Revenue' else move_line.debit,
+                            'level': 1,
+                            'is_account': False,
+                            'is_move_line': True,
+                        }
+                        consolidated_data[account_key]['move_details'][branch.code].append(move_data)
+                    
+                    # Sort moves by date (most recent first)
+                    consolidated_data[account_key]['move_details'][branch.code].sort(
+                        key=lambda x: x['date'], reverse=True
+                    )
 
         # Convert to list and calculate balances
         report_lines = []
         for key, data in consolidated_data.items():
             data['balance'] = data['total_revenue'] - data['total_expenditure']
-            # Only include tags that have some activity
+            # Only include accounts that have some activity
             if data['total_revenue'] > 0 or data['total_expenditure'] > 0:
                 report_lines.append(data)
         
-        # Sort by code
+        # Sort by account code
         report_lines.sort(key=lambda x: x.get('code', ''))
         
         return report_lines, district_headers

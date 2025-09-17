@@ -250,7 +250,7 @@
         </t>
     </template>
 
-    <!-- Fixed Consolidated District Report Template -->
+    <!-- Updated Consolidated District Report Template with Account Move Lines -->
     <template id="consolidated_district_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
@@ -297,47 +297,76 @@
                             .expandable-row {
                                 cursor: pointer;
                                 background-color: #f8f9fa;
+                                font-weight: bold;
                             }
                             .expandable-row:hover {
                                 background-color: #e9ecef;
                             }
-                            .account-detail-row {
+                            .move-detail-row {
                                 display: none;
-                                background-color: #f1f3f4;
+                                background-color: #fff;
                                 font-size: 9px;
+                                font-weight: normal;
+                            }
+                            .move-detail-row.show {
+                                display: table-row;
                             }
                             .expand-icon {
                                 font-weight: bold;
                                 font-size: 12px;
                                 margin-right: 5px;
                                 color: #007bff;
+                                display: inline-block;
+                                transition: transform 0.2s;
                             }
-                            .indent-account {
-                                padding-left: 25px;
+                            .expand-icon.expanded {
+                                transform: rotate(90deg);
+                            }
+                            .indent-move {
+                                padding-left: 30px;
+                                font-style: italic;
+                                color: #666;
                             }
                             .total-row {
                                 background-color: #d4edda;
                                 font-weight: bold;
+                                border-top: 2px solid #000;
+                            }
+                            .account-code {
+                                font-family: 'Courier New', monospace;
+                                font-weight: bold;
+                            }
+                            .move-reference {
+                                font-size: 8px;
+                                color: #666;
                             }
                         </style>
 
                         <!-- JavaScript for expand/collapse functionality -->
                         <script type="text/javascript">
                             document.addEventListener('DOMContentLoaded', function() {
-                                window.toggleDetails = function(rowId) {
-                                    var detailRows = document.querySelectorAll('.detail-' + rowId);
-                                    var icon = document.getElementById('icon-' + rowId);
+                                window.toggleAccountDetails = function(accountCode) {
+                                    var detailRows = document.querySelectorAll('.moves-' + accountCode.replace(/[^a-zA-Z0-9]/g, '_'));
+                                    var icon = document.getElementById('icon-' + accountCode.replace(/[^a-zA-Z0-9]/g, '_'));
                                     
                                     if (!detailRows.length || !icon) return;
                                     
-                                    var isVisible = detailRows[0].style.display === 'table-row';
+                                    var isVisible = detailRows[0].classList.contains('show');
                                     
                                     detailRows.forEach(function(row) {
-                                        row.style.display = isVisible ? 'none' : 'table-row';
+                                        if (isVisible) {
+                                            row.classList.remove('show');
+                                        } else {
+                                            row.classList.add('show');
+                                        }
                                     });
                                     
                                     // Toggle icon
-                                    icon.innerHTML = isVisible ? '▶' : '▼';
+                                    if (isVisible) {
+                                        icon.classList.remove('expanded');
+                                    } else {
+                                        icon.classList.add('expanded');
+                                    }
                                 };
                             });
                         </script>
@@ -361,12 +390,14 @@
                             </thead>
                             <tbody>
                                 <t t-foreach="report.get('report_lines', [])" t-as="line">
-                                    <!-- Main economic tag row (expandable) -->
+                                    <t t-set="safe_account_code" t-value="str(line.get('code', '')).replace('.', '_').replace('-', '_').replace(' ', '_')"/>
+                                    
+                                    <!-- Main account row (expandable) -->
                                     <tr class="expandable-row" style="cursor: pointer;" 
-                                        t-att-onclick="'toggleDetails(' + str(line_index) + ')'">
+                                        t-att-onclick="'toggleAccountDetails(\'' + safe_account_code + '\')'">
                                         <td>
-                                            <span t-attf-id="icon-#{line_index}" class="expand-icon">▶</span>
-                                            <span t-esc="line.get('code', '')"/>
+                                            <span t-attf-id="icon-#{safe_account_code}" class="expand-icon">▶</span>
+                                            <span class="account-code" t-esc="line.get('code', '')"/>
                                         </td>
                                         <td>
                                             <strong t-esc="line.get('description', '')"/>
@@ -374,7 +405,7 @@
                                         <!-- District values -->
                                         <t t-foreach="report.get('district_headers', [])" t-as="district">
                                             <td class="text-right">
-                                                <span t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district, 0.0))"/>
+                                                <strong t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district, 0.0))"/>
                                             </td>
                                         </t>
                                         <td class="text-right">
@@ -388,47 +419,64 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Account detail rows for all districts (hidden by default) -->
+                                    <!-- Move line detail rows for each district (hidden by default) -->
                                     <t t-foreach="report.get('district_headers', [])" t-as="district">
-                                        <t t-set="district_accounts" t-value="line.get('account_details', {}).get(district, [])"/>
-                                        <t t-foreach="district_accounts" t-as="account">
-                                            <tr t-attf-class="account-detail-row detail-#{line_index}" 
-                                                style="display: none; background-color: #f8f9fa;">
-                                                <td class="indent-account">
-                                                    <t t-esc="account.get('code', '')"/>
+                                        <t t-set="district_moves" t-value="line.get('move_details', {}).get(district, [])"/>
+                                        <t t-if="district_moves">
+                                            <!-- District header row for moves -->
+                                            <tr t-attf-class="move-detail-row moves-#{safe_account_code}" 
+                                                style="background-color: #e8f4f8;">
+                                                <td class="indent-move" colspan="2">
+                                                    <strong>📍 <t t-esc="district"/> District Transactions:</strong>
                                                 </td>
-                                                <td class="indent-account">
-                                                    <t t-esc="account.get('name', '')"/> (<t t-esc="district"/>)
-                                                </td>
-                                                <!-- District columns - only show amount in relevant district column -->
-                                                <t t-foreach="report.get('district_headers', [])" t-as="other_district">
-                                                    <td class="text-right">
-                                                        <t t-if="other_district == district">
-                                                            <t t-if="report.get('account_head_type') == 'Revenue'">
-                                                                <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
-                                                            </t>
-                                                            <t t-else="">
-                                                                <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
-                                                            </t>
-                                                        </t>
-                                                        <t t-else="">-</t>
-                                                    </td>
-                                                </t>
-                                                <td class="text-right">
-                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
-                                                </td>
-                                                <td class="text-right">
-                                                    <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
-                                                </td>
-                                                <td class="text-right">
-                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0) - account.get('expenditure', 0.0))"/>
+                                                <td colspan="5" class="text-right">
+                                                    <strong>Count: <t t-esc="len(district_moves)"/> transactions</strong>
                                                 </td>
                                             </tr>
+                                            
+                                            <!-- Individual move lines -->
+                                            <t t-foreach="district_moves" t-as="move">
+                                                <tr t-attf-class="move-detail-row moves-#{safe_account_code}">
+                                                    <td class="indent-move">
+                                                        <span class="move-reference">
+                                                            <t t-esc="move.get('date', '')"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="indent-move">
+                                                        <div>
+                                                            <strong><t t-esc="move.get('description', '')[:50]"/>
+                                                            <t t-if="len(move.get('description', '')) > 50">...</t></strong>
+                                                        </div>
+                                                        <div class="move-reference">
+                                                            Ref: <t t-esc="move.get('reference', '')"/>
+                                                            <t t-if="move.get('partner')"> | Partner: <t t-esc="move.get('partner')"/></t>
+                                                        </div>
+                                                    </td>
+                                                    <!-- District columns - only show amount in relevant district column -->
+                                                    <t t-foreach="report.get('district_headers', [])" t-as="other_district">
+                                                        <td class="text-right">
+                                                            <t t-if="other_district == district">
+                                                                <span t-esc="'{:,.2f}'.format(move.get('balance', 0.0))"/>
+                                                            </t>
+                                                            <t t-else="">-</t>
+                                                        </td>
+                                                    </t>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(move.get('credit', 0.0))"/>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(move.get('debit', 0.0))"/>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{:,.2f}'.format(move.get('credit', 0.0) - move.get('debit', 0.0))"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
                                         </t>
                                     </t>
                                 </t>
                                 
-                                <!-- Total row (optional) -->
+                                <!-- Grand Total row -->
                                 <tr class="total-row">
                                     <td colspan="2"><strong>GRAND TOTAL</strong></td>
                                     <t t-foreach="report.get('district_headers', [])" t-as="district">
@@ -459,6 +507,16 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- Legend -->
+                        <div style="margin-top: 20px; font-size: 9px; color: #666;">
+                            <p><strong>Instructions:</strong></p>
+                            <ul>
+                                <li>Click on any account row (with ▶ arrow) to expand/collapse detailed transactions</li>
+                                <li>Each district's transactions are grouped separately when expanded</li>
+                                <li>Transaction details include date, description, reference, and partner information</li>
+                            </ul>
+                        </div>
                     </div>
                 </t>
             </t>
