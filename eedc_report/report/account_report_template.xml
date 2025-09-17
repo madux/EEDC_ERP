@@ -323,24 +323,23 @@
 
                         <!-- JavaScript for expand/collapse functionality -->
                         <script type="text/javascript">
-                            function toggleDetails(rowId) {
-                                var detailRows = document.querySelectorAll('.detail-' + rowId);
-                                var icon = document.getElementById('icon-' + rowId);
-                                
-                                var isVisible = false;
-                                detailRows.forEach(function(row) {
-                                    if (row.style.display === 'none' || row.style.display === '') {
-                                        row.style.display = 'table-row';
-                                        isVisible = true;
-                                    } else {
-                                        row.style.display = 'none';
-                                        isVisible = false;
-                                    }
-                                });
-                                
-                                // Toggle icon
-                                icon.innerHTML = isVisible ? '▼' : '▶';
-                            }
+                            document.addEventListener('DOMContentLoaded', function() {
+                                window.toggleDetails = function(rowId) {
+                                    var detailRows = document.querySelectorAll('.detail-' + rowId);
+                                    var icon = document.getElementById('icon-' + rowId);
+                                    
+                                    if (!detailRows.length || !icon) return;
+                                    
+                                    var isVisible = detailRows[0].style.display === 'table-row';
+                                    
+                                    detailRows.forEach(function(row) {
+                                        row.style.display = isVisible ? 'none' : 'table-row';
+                                    });
+                                    
+                                    // Toggle icon
+                                    icon.innerHTML = isVisible ? '▶' : '▼';
+                                };
+                            });
                         </script>
 
                         <!-- Main Table -->
@@ -363,7 +362,7 @@
                             <tbody>
                                 <t t-foreach="report.get('report_lines', [])" t-as="line">
                                     <!-- Main economic tag row (expandable) -->
-                                    <tr t-attf-class="expandable-row" 
+                                    <tr class="expandable-row" style="cursor: pointer;" 
                                         t-att-onclick="'toggleDetails(' + str(line_index) + ')'">
                                         <td>
                                             <span t-attf-id="icon-#{line_index}" class="expand-icon">▶</span>
@@ -389,53 +388,42 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Account detail rows (hidden by default) -->
+                                    <!-- Account detail rows for all districts (hidden by default) -->
                                     <t t-foreach="report.get('district_headers', [])" t-as="district">
                                         <t t-set="district_accounts" t-value="line.get('account_details', {}).get(district, [])"/>
-                                        <t t-if="district_accounts">
-                                            <!-- District separator row -->
+                                        <t t-foreach="district_accounts" t-as="account">
                                             <tr t-attf-class="account-detail-row detail-#{line_index}" 
-                                                style="display: none; background-color: #e3f2fd;">
-                                                <td colspan="2" class="indent-account">
-                                                    <strong><t t-esc="district"/> District Accounts:</strong>
+                                                style="display: none; background-color: #f8f9fa;">
+                                                <td class="indent-account">
+                                                    <t t-esc="account.get('code', '')"/>
                                                 </td>
-                                                <td t-attf-colspan="#{len(report.get('district_headers', [])) + 3}"></td>
-                                            </tr>
-                                            <!-- Individual account rows -->
-                                            <t t-foreach="district_accounts" t-as="account">
-                                                <tr t-attf-class="account-detail-row detail-#{line_index}" 
-                                                    style="display: none;">
-                                                    <td class="indent-account">
-                                                        <t t-esc="account.get('code', '')"/>
-                                                    </td>
-                                                    <td class="indent-account">
-                                                        <t t-esc="account.get('name', '')"/>
-                                                    </td>
-                                                    <!-- Empty cells for other districts -->
-                                                    <t t-foreach="report.get('district_headers', [])" t-as="other_district">
-                                                        <td class="text-right">
-                                                            <t t-if="other_district == district">
-                                                                <t t-if="report.get('account_head_type') == 'Revenue'">
-                                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
-                                                                </t>
-                                                                <t t-else="">
-                                                                    <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
-                                                                </t>
+                                                <td class="indent-account">
+                                                    <t t-esc="account.get('name', '')"/> (<t t-esc="district"/>)
+                                                </td>
+                                                <!-- District columns - only show amount in relevant district column -->
+                                                <t t-foreach="report.get('district_headers', [])" t-as="other_district">
+                                                    <td class="text-right">
+                                                        <t t-if="other_district == district">
+                                                            <t t-if="report.get('account_head_type') == 'Revenue'">
+                                                                <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
                                                             </t>
-                                                            <t t-else="">-</t>
-                                                        </td>
-                                                    </t>
-                                                    <td class="text-right">
-                                                        <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
+                                                            <t t-else="">
+                                                                <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
+                                                            </t>
+                                                        </t>
+                                                        <t t-else="">-</t>
                                                     </td>
-                                                    <td class="text-right">
-                                                        <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
-                                                    </td>
-                                                    <td class="text-right">
-                                                        <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0) - account.get('expenditure', 0.0))"/>
-                                                    </td>
-                                                </tr>
-                                            </t>
+                                                </t>
+                                                <td class="text-right">
+                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0))"/>
+                                                </td>
+                                                <td class="text-right">
+                                                    <span t-esc="'{:,.2f}'.format(account.get('expenditure', 0.0))"/>
+                                                </td>
+                                                <td class="text-right">
+                                                    <span t-esc="'{:,.2f}'.format(account.get('revenue', 0.0) - account.get('expenditure', 0.0))"/>
+                                                </td>
+                                            </tr>
                                         </t>
                                     </t>
                                 </t>
@@ -476,7 +464,6 @@
             </t>
         </t>
     </template>
-
 
         <record id="action_report_expenditure_monthly" model="ir.actions.report">
             <field name="name">Monthly Expenditure Report</field>

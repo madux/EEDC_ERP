@@ -459,7 +459,7 @@ class AccountDynamicReport(models.Model):
                     consolidated_data[tag_key]['district_values'][branch.code] = expenditure_total
                     consolidated_data[tag_key]['total_expenditure'] += expenditure_total
                 
-                # Store account-level details for expansion
+                # Store account-level details for expansion (THIS IS THE KEY CHANGE)
                 if branch.code not in consolidated_data[tag_key]['account_details']:
                     consolidated_data[tag_key]['account_details'][branch.code] = []
                 
@@ -469,20 +469,24 @@ class AccountDynamicReport(models.Model):
                         account_revenue = sum(account_moves.mapped('credit'))
                         account_expenditure = sum(account_moves.mapped('debit'))
                         
-                        consolidated_data[tag_key]['account_details'][branch.code].append({
-                            'code': account.code,
-                            'name': account.name,
-                            'revenue': account_revenue,
-                            'expenditure': account_expenditure,
-                            'level': 1,
-                            'is_account': True,
-                        })
+                        # Only add accounts that have transactions
+                        if account_revenue > 0 or account_expenditure > 0:
+                            consolidated_data[tag_key]['account_details'][branch.code].append({
+                                'code': account.code,
+                                'name': account.name,
+                                'revenue': account_revenue,
+                                'expenditure': account_expenditure,
+                                'level': 1,
+                                'is_account': True,
+                            })
 
         # Convert to list and calculate balances
         report_lines = []
         for key, data in consolidated_data.items():
             data['balance'] = data['total_revenue'] - data['total_expenditure']
-            report_lines.append(data)
+            # Only include tags that have some activity
+            if data['total_revenue'] > 0 or data['total_expenditure'] > 0:
+                report_lines.append(data)
         
         # Sort by code
         report_lines.sort(key=lambda x: x.get('code', ''))
