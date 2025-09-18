@@ -120,11 +120,11 @@ odoo.define('portal_request.portal_request', function (require) {
     // }
 
     function validateLineItems(DataItems){
-        let memo_type_with_line = ['material_request', 'soe', 'vehicle_request', 'procurement_request', 'employee_update', 'cash_advance'];
+        let memo_type_with_line = ['payment_request', 'Payment', 'material_request', 'soe', 'vehicle_request', 'procurement_request', 'employee_update', 'cash_advance'];
         // if the memo type in memo_type_with_line
         var selectRequestOption = $('#selectRequestOption'); 
         if ($.inArray(selectRequestOption.val(), memo_type_with_line) !== -1 && DataItems.length < 1){
-            alert(`Validation: Please ensure request line items are added`)
+            alert(`Validation: Please ensure Request line items are added`)
             return false;
         }else{
             return true;
@@ -134,7 +134,6 @@ odoo.define('portal_request.portal_request', function (require) {
     function displaytableProps(memo_type){
         // Hiding labels of the product row
         if(memo_type == 'vehicle_request'){
-            console.log('HIDE VEHICLE PROPS')
             $('#distance_from').removeClass('d-none');
             $('#distance_to').removeClass('d-none');
             $('#distance_from_th').removeClass('d-none');
@@ -232,7 +231,6 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
-        console.log("Product table building loading")
         $.each(data, function (k, elm) {
             if (elm) {
                 var lastRow_count = getOrAssignRowNumber()
@@ -279,7 +277,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 // $(`input[special_id='${lastRow_count}'`).attr('readonly', true);
                 setProductdata.push(elm.id)
             } else {
-                console.log('No product items found')
+                console.log('-')
             }
         });
     }
@@ -287,9 +285,8 @@ odoo.define('portal_request.portal_request', function (require) {
     function buildProductRow(memo_type){ 
         // for new request: building each line of item 
         let lastRow_count = getOrAssignRowNumber()
-        console.log("what is memo type ==", memo_type)
-        console.log(`lastrowcount ${lastRow_count}`)
-
+        // console.log("what is memo type ==", memo_type)
+        // console.log(`lastrowcount ${lastRow_count}`)
         $(`#tbody_product`).append(
             `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
                 <th width="5%">
@@ -344,8 +341,8 @@ odoo.define('portal_request.portal_request', function (require) {
     function buildEmployeeRow(memo_type){ 
         // used to build employee lines for promotion and transfers
         let lastRow_count = getOrAssignRowNumber(memo_type)
-        console.log("what is memo type ==", memo_type)
-        console.log(`lastrowcount ${lastRow_count}`)
+        // console.log("what is memo type ==", memo_type)
+        // console.log(`lastrowcount ${lastRow_count}`)
         $(`#tbody_employee`).append(
             `<tr class="heading employee_row" name="employee_row" row_count=${lastRow_count}>
                 <th width="5%">
@@ -388,7 +385,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
     function getSelectedProductItems(){
         let products = JSON.parse(localStorage.getItem('SelectedProductItems'));
-        console.log("Products store is ", products)
+        // console.log("Products store is ", products)
         return products
     }
 
@@ -401,12 +398,12 @@ odoo.define('portal_request.portal_request', function (require) {
 
     function getAmountQtyProcess(objVal, attrs, targetEv) {
         let result = 0
-        console.log(`val res ${objVal}`)
+        // console.log(`val res ${objVal}`)
 
         if(attrs == targetEv){
-            console.log(`element attributes ${attrs}`)
+            // console.log(`element attributes ${attrs}`)
             result = Number(objVal)
-            console.log(`what is result ${result}`)
+            // console.log(`what is result ${result}`)
             return result;
         }
         return result;
@@ -421,7 +418,7 @@ odoo.define('portal_request.portal_request', function (require) {
         var productQtyrow = $(`.QTY${row_count}`).val()
         var subTtotal = $(`.SUBTOTAL${row_count}`)
         var sub_total = productQtyrow * unitPrice
-        console.log(`DETAILED INFO - row_count-> ${row_count} unitPrice-> ${unitPrice} productQtyrow-> ${productQtyrow} subTtotal-> ${subTtotal}`)
+        // console.log(`DETAILED INFO - row_count-> ${row_count} unitPrice-> ${unitPrice} productQtyrow-> ${productQtyrow} subTtotal-> ${subTtotal}`)
         subTtotal.val(sub_total);
     }
 
@@ -442,11 +439,11 @@ odoo.define('portal_request.portal_request', function (require) {
                         // let compute_amount = $(this).val() * $(this).attr('productinput')
                         // total += Number($(this).val())
                         amount = Number($(this).val())
-                        console.log(`what is amount ${amount}`)
+                        // console.log(`what is amount ${amount}`)
                     }
                     else if($(this).attr('productinput') == 'productreqQty'){
                         qty = Number($(this).val())
-                        console.log(`what is qty ${qty}`)
+                        // console.log(`what is qty ${qty}`)
                     }
                     // amount = getAmountQtyProcess($(this).val(), $(this).attr('name'), targetEv)
                     // qty = getAmountQtyProcess($(this).val(), $(this).attr('productinput'), 'productreqQty')
@@ -459,7 +456,6 @@ odoo.define('portal_request.portal_request', function (require) {
             total += amt
             $(`.SUBTOTAL${row_co}`).val(amt)
             $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
-            console.log(`what is total ${total}`)
         })
         var amount = formatCurrency(total)
         $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
@@ -471,7 +467,6 @@ odoo.define('portal_request.portal_request', function (require) {
         var lastElement = memo_type !== 'employee_update' ? $(`#tbody_product > tr.prod_row > th > span > input.productitemrow`) : $(`#tbody_employee > tr.employee_row > th > span > input.employeeitemrow`) 
         if (lastElement){
             let special_id = memo_type !== 'employee_update' ? lastElement.last().attr('special_id') : lastElement.last().attr('employee_special_id');
-            console.log("Last element found is, ", lastElement)
             lastRow_count = special_id ? parseInt(special_id) + 1 : lastRow_count + 1
         }else {
             lastRow_count + 1
@@ -530,7 +525,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                console.log(data);
+                // console.log(data);
                 return {results: data.results, more: more};
               },
               cache: true
@@ -556,7 +551,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                console.log(data);
+                // console.log(data);
                 return {results: data.results, more: more};
               },
               cache: true
@@ -582,7 +577,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                console.log(data);
+                // console.log(data);
                 return {results: data.results, more: more};
               },
               cache: true
@@ -608,7 +603,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                console.log(data);
+                // console.log(data);
                 return {results: data.results, more: more};
               },
               cache: true
@@ -638,7 +633,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                console.log(data);
+                // console.log(data);
                 // localStorage.setItem('productStorage', JSON.stringify(data.results))
                 return {results: data.results, more: more};
               },
@@ -700,6 +695,30 @@ odoo.define('portal_request.portal_request', function (require) {
         allowClear: true,
     });
 
+    $('#inputFollowers').select2({
+        ajax: {
+            url: '/portal-request-employee-reliever',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 3,
+        multiple: true,
+        placeholder: 'Search for followers',
+        allowClear: true,
+    });
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
@@ -721,14 +740,14 @@ odoo.define('portal_request.portal_request', function (require) {
                         $('#leave_start_date').attr('required', true);
                         $('#leave_start_date').addClass('is-invalid', true);
                         let message = `Validation Error! ${data.message}`
-                        console.log("not Passed for leave, ", message)
+                        // console.log("not Passed for leave, ", message)
                         // alert(message); 
                         // return false
                         modal_message.text(message)
                         alert_modal.modal('show');
 
                     }else{
-                        console.log("Passed for leave")
+                        console.log("--")
                     }
                 }).guardedCatch(function (error) {
                     let msg = error.message.message
@@ -744,7 +763,6 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function displayNonLeaveElement() {
-        console.log("Leave set to false")
         $('#leave_section').addClass('d-none');
         $('#leave_section2').addClass('d-none');
         $('#leave_start_date').attr("required", false);
@@ -842,7 +860,7 @@ odoo.define('portal_request.portal_request', function (require) {
         willStart: function(){
             var self = this; 
             return this._super.apply(this, arguments).then(function(){
-                console.log("All events start")
+                console.log("ERP event has started")
             })
         },
  
@@ -858,16 +876,13 @@ odoo.define('portal_request.portal_request', function (require) {
 
             'change .productitemrow': function(ev){
                 let product_elm = $(ev.target);
-                let product_val = product_elm.val();
-                console.log('Product value ==', product_val)
-                // let selectedproductId = product_val.split('-')[1] 
-                // console.log('Product value selected ==', selectedproductId)
+                let product_val = product_elm.val(); 
                 var link = product_elm.closest(":has(input.productinput)").find('input.productinput');
                 var remove_link = product_elm.closest(":has(a.remove_field)").find('a.remove_field');
                 link.attr('id', product_val);
                 remove_link.attr('id', product_val);
                 setProductdata.push(parseInt(product_val));
-                console.log('sele ==> ', setProductdata) 
+                // console.log('sele ==> ', setProductdata) 
             },
 
             'change .employeeitemrow': function(ev){
@@ -886,8 +901,8 @@ odoo.define('portal_request.portal_request', function (require) {
                     if($(this).attr('row_count') == elm_remove_id){
                         let remove_element_id = elm.attr('id'); 
                         setProductdata.splice(setProductdata.indexOf(remove_element_id),1)
-                        console.log(`See it ${$.inArray(remove_element_id, setProductdata)}}`)
-                        console.log('SEE PRD ', setProductdata)
+                        // console.log(`See it ${$.inArray(remove_element_id, setProductdata)}}`)
+                        // console.log('SEE PRD ', setProductdata)
                         $(this).remove();
                         compute_total_amount();
                     }
@@ -944,9 +959,9 @@ odoo.define('portal_request.portal_request', function (require) {
 
                 let selectedproductQty = qty_elm.val(); 
                 let request_type = $("#selectRequestOption").val()
-                console.log('THE REQUEST TYPE IS ==> ', request_type)
+                // console.log('THE REQUEST TYPE IS ==> ', request_type)
                 if ($.inArray(request_type, productRequiredItems) !== -1){
-                    console.log('THE REQUEST TYPE IS 2222 ==> ', request_type)
+                    // console.log('THE REQUEST TYPE IS 2222 ==> ', request_type)
                     this._rpc({
                         route: `/check-quantity`,
                         params:{
@@ -1620,13 +1635,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert_modal.modal('show');
                     return false;
                 }else{
-                     let $btn = $('.button_req_submit');
-                    let $btnHtml = $btn.html()
-                    $btn.attr('disabled', 'disabled');
-                    $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                    $.blockUI({
-                        'message': '<h2 class="card-name">Please wait ...</h2>'
-                    });
+                    
 
                     var current_btn = $(ev.target);
                     var form = $('#msform')[0];
@@ -1755,9 +1764,17 @@ odoo.define('portal_request.portal_request', function (require) {
                         return false
                     }
                     else{
+                       
                         formData.append('DataItems', JSON.stringify(DataItems))
+                        formData.append('inputFollowers', $('#inputFollowers').select2('data'))
                         console.log("sssXMLREQUEST Successful====", DataItems);
-
+                         let $btn = $('.button_req_submit');
+                        let $btnHtml = $btn.html()
+                        $btn.attr('disabled', 'disabled');
+                        $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                        $.blockUI({
+                            'message': '<h2 class="card-name">Please wait ...</h2>'
+                        });
                         $.ajax({
                             type: "POST",
                             enctype: 'multipart/form-data',

@@ -1049,7 +1049,7 @@ class Memo_Model(models.Model):
                     self.picking_type_id = picking_id
                     self.requested_department_id = self.employee_id.department_id.id
                     self.users_followers = [
-                        (4, self.employee_id.administrative_supervisor_id.id),
+                        (4, self.sudo().employee_id.administrative_supervisor_id.id),
                         ] 
                 else:
                     self.memo_type = False
@@ -1373,7 +1373,12 @@ class Memo_Model(models.Model):
             lambda s: s.mapped('invoice_line_ids').filtered(
                 lambda x: x.price_unit <= 0)):
             raise ValidationError("All invoice line must have a price amount greater than 0") 
-        if self.sudo().stage_id.approver_ids and self.env.user.id not in [r.user_id.id for r in self.sudo().stage_id.approver_ids]:
+        computed_approvers = [r.user_id.id for r in self.sudo().stage_id.approver_ids]
+        if self.sudo().memo_setting_id.stage_ids.ids.index(self.sudo().stage_id.id) in [0, 1]:
+            """checks if the stage is at draft and manager can approve if not configured"""
+            manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
+            computed_approvers.append(manager_id)
+        if self.sudo().stage_id.approver_ids and self.env.user.id not in computed_approvers:
             raise ValidationError(
                 """You are not allowed to Forward / Approve this record !!! \n Contact sys admin to add you as approver"""
                 )
@@ -1383,7 +1388,8 @@ class Memo_Model(models.Model):
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
-        approver_ids = self.sudo().stage_id.approver_ids
+        # approver_ids = self.sudo().stage_id.approver_ids
+        approver_ids = manager_id or approver_ids and approver_ids[0].id if approver_ids else False
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -1395,7 +1401,7 @@ class Memo_Model(models.Model):
                 'context': {
                     'default_memo_record': self.id,
                     'default_resp': self.env.uid,
-                    'default_direct_employee_id': approver_ids and approver_ids[0].id if approver_ids else False,
+                    'default_direct_employee_id': approver_ids,
                     'default_dummy_conditional_stage_ids': [(6, 0, condition_stages)],
                     'default_has_conditional_stage': True if self.stage_id.memo_has_condition else False,
                     'default_stage_id': self.stage_id.id,
@@ -1420,11 +1426,7 @@ class Memo_Model(models.Model):
         args: from_website: used to decide if the record is 
         generated from the website or from odoo internal use
         """
-        approver_ids = []
-        # memo_settings = self.env['memo.config'].sudo().search([
-        #     ('memo_type', '=', self.memo_type.id),
-        #     ('department_id', '=', self.employee_id.department_id.id)
-        #     ], limit=1) or self.memo_setting_id
+        approver_ids = [] 
         document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
         helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
         memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
@@ -1436,15 +1438,21 @@ class Memo_Model(models.Model):
         _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
+            manager_can_approve = False
             last_stage = mstages[-1] if mstages else False # 'e.g 9'
             if last_stage and last_stage.id != current_stage_id.id:
                 current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+                if current_stage_index in [0, 1]:
+                    manager_can_approve = True
                 next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:
                 next_stage_id = self.stage_id.id
             next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
+                if manager_can_approve:
+                    manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
+                    approver_ids.append(manager_id) 
             return approver_ids, next_stage_record.id
         else:
             if not from_website:
@@ -1775,6 +1783,7 @@ class Memo_Model(models.Model):
             )
         body_main = body + "\n with the comments: %s" %(comments)
         self.follower_messages(body_main)
+        self.message_subscribe(partner_ids=[rec.user_id.partner_id.id for rec in self.users_followers])
         self.portal_check_po_config(self.memo_setting_id)
 
     def mail_sending_direct(self, body_msg, email_to=False): 

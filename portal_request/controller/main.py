@@ -599,7 +599,10 @@ class PortalRequest(http.Controller):
                            ('id', 'not in', [int(i) for i in productItems]),
                         ('company_id', '=', request.env.user.company_id.id), 
                         ('active', '=', True), 
-                        ('name', 'ilike', query)
+                        '|','|', 
+                        ('name', 'ilike', query),
+                        ('default_code', 'ilike', query),
+                        ('barcode', 'ilike', query)
                       ]
         # domain = [('id', 'in', [403, 222, 1000, 5000])]
         products = request.env["product.product"].sudo().search(domain)
@@ -614,7 +617,11 @@ class PortalRequest(http.Controller):
     def get_employee_reliever(self, **post):
         available_employees = []
         query = request.params.get('q', '') 
-        domain = [('active', '=', True), ('name', 'ilike', query)]#, ('id', 'in', available_employees)]
+        domain = [
+            ('active', '=', True), 
+            ('company_id', '=', request.env.user.company_id.id),
+            '|', ('name', 'ilike', query),('employee_number', 'ilike', query),
+            ]#, ('id', 'in', available_employees)]
         employees = request.env["hr.employee"].sudo().search(domain)
         return json.dumps({
             "results": [{"id": item.id, "text": f'{item.name} - {item.employee_number}'} for item in employees],
@@ -630,7 +637,8 @@ class PortalRequest(http.Controller):
             if request_type_option == "employee":
                 employeeItems = json.loads(post.get('employeeItems'))
                 _logger.info(f'Employeeitemmms {employeeItems}')
-                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems])]
+                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems]), 
+                          ('company_id', '=', request.env.user.company_id.id)]
                 employees = request.env["hr.employee"].sudo().search(domain)
                 return json.dumps({
                     "results": [{"id": item.id,"text": f'{item.name} - {item.employee_number}'} for item in employees],
@@ -639,7 +647,7 @@ class PortalRequest(http.Controller):
                     }
                 })	
             elif request_type_option == "department":
-                domain = [('active', '=', True)]
+                domain = [('active', '=', True), ('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["hr.department"].sudo().search(domain)
                 return json.dumps({
                     "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
@@ -648,7 +656,7 @@ class PortalRequest(http.Controller):
                     }
                 })
             elif request_type_option == "role":
-                domain = [('active', '=', True)]
+                domain = [('active', '=', True), ('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["hr.job"].sudo().search(domain)
                 return json.dumps({
                     "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
@@ -657,7 +665,7 @@ class PortalRequest(http.Controller):
                     }
                 })
             elif request_type_option == "district":
-                domain = []
+                domain = [('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["multi.branch"].sudo().search(domain)
                 return json.dumps({
                     "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
@@ -895,7 +903,12 @@ class PortalRequest(http.Controller):
     @http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):
         '''used to process portal data'''
+        _logger.info(f"All posted data ======> {post.get('inputFollowers')}")
+        _logger.info(post)
         try:
+            # inputFollowers = '6083, 36646, 37111'
+            inputFollowers = [int(r) for r in str(post.get('inputFollowers')).split(',')] if post.get('inputFollowers') else [] 
+            #request.httprequest.form.getlist('inputFollowers[]')  # get multiple values
             employee_id = request.env['hr.employee'].sudo().search([
                 ('user_id', '=', request.env.uid), 
                 ('employee_number', '=', post.get('staff_id'))], limit=1)
@@ -941,6 +954,18 @@ class PortalRequest(http.Controller):
             """
             # memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
             memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
+            # relative_names = request.httprequest.form.getlist('relative_name[]')
+
+            _logger.info(f'what is inputfollowers {inputFollowers}')
+            # Example: attach them as followers to something
+            
+            def get_browsed_data(model, recid):
+                data = request.env[f'{model}'].sudo().browse(int(recid))
+                if data:
+                    return data 
+                else:
+                    return False
+            # follower_ids = [int(id) for id in inputFollowers]
             vals = {
                 "employee_id": employee_id.id,
                 "memo_type": memo_config.memo_type.id,
@@ -973,6 +998,7 @@ class PortalRequest(http.Controller):
                 "branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
                 "currency_id": request.env.user.company_id.currency_id.id,
                 "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
+                "users_followers": [(6, 0, inputFollowers)], 
                 "description": description_body, 
                 "request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
                 "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
@@ -1006,8 +1032,8 @@ class PortalRequest(http.Controller):
                     file_name = attachment.filename
                     datas = base64.b64encode(attachment.read())
                     other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
-            ####
             # memo_id.action_submit_button()
+            memo_id.message_subscribe(partner_ids=[get_browsed_data('hr.employee', id) and get_browsed_data('hr.employee', id).user_id.partner_id.id for id in inputFollowers])
             stage_id = memo_id.get_initial_stage(
                 memo_config.id,
                 )
@@ -1440,7 +1466,11 @@ class PortalRequest(http.Controller):
                             }
                 # approver_ids, stage = request_record.get_next_stage_artifact()
                 current_stage_approvers = request_record.sudo().stage_id.approver_ids
+                manager_approvals = []
+                if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
+                    manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
                 # user_employeeid = request.env.user.employee_id.id
+                stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
