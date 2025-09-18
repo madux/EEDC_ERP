@@ -28,7 +28,7 @@
                             <a id="discardbtn" class="btn btn-danger btn-sm d-none">
                                 Discard
                             </a>
-                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]">
+                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
                                 <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
@@ -495,7 +495,7 @@
                             </t>
                             <t t-else="">
                             </t>
-                            <t t-if="req.employee_id.user_id.id == current_user">
+                            <t t-if="current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id, req.employee_id.user_id.id]">
                                 <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
                                     <h4><strong>Message(s) and communication history</strong></h4>
                                     <t t-call="portal.message_thread">

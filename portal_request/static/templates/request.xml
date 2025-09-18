@@ -428,12 +428,14 @@
                                                 </div> 
                                             </div>
                                         </div> 
-                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                        <div class="s_website_form_field mb-3 col-8 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                <label for="fancySelect" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
+                                                <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
                                                     <span class="s_website_form_label_content">Choose Followers</span>
                                                 </label>
-                                                <input id="inputFollowers" class="select2-tags form-control" field_name="inputFollowers" name="inputFollowers"/>
+                                                 <div class="col-sm">
+                                                    <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers"/>
+                                                </div> 
                                             </div>
                                         </div> 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" id="leave_section" data-type="text" data-name="Field">
@@ -508,7 +510,7 @@
                                                 </label>
                                                 <div class="col-sm">
                                                     <input id="leave_reliever" class="form-control" name="leave_reliever" labelfor="leave_reliever"/>
-                                                    <input id="TargetSourceLocation" class="form-control" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
+                                                    <!-- <input id="TargetSourceLocation" class="form-control" name="TargetSourceLocation" labelfor="TargetSourceLocation"/> -->
                                                 </div> 
                                             </div>
                                         </div> 
@@ -555,7 +557,6 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="tbody_employee" name="tbody_employee">
-                                                
                                             </tbody>
                                         </table>
                                     </div> 

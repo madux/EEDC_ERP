@@ -1032,9 +1032,8 @@ class PortalRequest(http.Controller):
                     file_name = attachment.filename
                     datas = base64.b64encode(attachment.read())
                     other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
-            ####
             # memo_id.action_submit_button()
-            memo_id.message_subscribe(partner_ids=[get_browsed_data('hr.employee', id) and get_browsed_data().user_id.partner_id.id for id in follower_ids])
+            memo_id.message_subscribe(partner_ids=[get_browsed_data('hr.employee', id) and get_browsed_data('hr.employee', id).user_id.partner_id.id for id in inputFollowers])
             stage_id = memo_id.get_initial_stage(
                 memo_config.id,
                 )
@@ -1467,7 +1466,11 @@ class PortalRequest(http.Controller):
                             }
                 # approver_ids, stage = request_record.get_next_stage_artifact()
                 current_stage_approvers = request_record.sudo().stage_id.approver_ids
+                manager_approvals = []
+                if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
+                    manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
                 # user_employeeid = request.env.user.employee_id.id
+                stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
