@@ -1374,7 +1374,10 @@ class PortalRequest(http.Controller):
         # request_id = request.env['memo.model'].sudo()
         rec = request.env['memo.model'].sudo().browse([int(post.get('memo_id'))])
         if rec:
-            if rec.stage_id and user.id not in [r.user_id.id for r in rec.sudo().stage_id.approver_ids]: 
+            approver_ids = [r.user_id.id for r in rec.sudo().stage_id.approver_ids]
+            manager_approve = [rec.employee_id.administrative_supervisor_id.user_id.id, rec.employee_id.parent_id.user_id.id]
+            approver_ids = manager_approve + approver_ids
+            if rec.stage_id and user.id not in approver_ids: 
                 return {
                     "status": False, 
                     "message": "You are not authorized to refuse this request", 
