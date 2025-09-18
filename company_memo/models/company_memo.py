@@ -1388,7 +1388,7 @@ class Memo_Model(models.Model):
             raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
-        # approver_ids = self.sudo().stage_id.approver_ids
+        approver_ids = self.sudo().stage_id.approver_ids
         approver_ids = manager_id or approver_ids and approver_ids[0].id if approver_ids else False
         return {
                 'name': 'Forward Memo',
