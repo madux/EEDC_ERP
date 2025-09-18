@@ -1374,6 +1374,7 @@ class Memo_Model(models.Model):
                 lambda x: x.price_unit <= 0)):
             raise ValidationError("All invoice line must have a price amount greater than 0") 
         computed_approvers = [r.user_id.id for r in self.sudo().stage_id.approver_ids]
+        manager_id = False
         if self.sudo().memo_setting_id.stage_ids.ids.index(self.sudo().stage_id.id) in [0, 1]:
             """checks if the stage is at draft and manager can approve if not configured"""
             manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
