@@ -48,6 +48,7 @@ class RequestLine(models.Model):
     amount_total = fields.Float(string="Unit Price")
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
+    difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
     used_qty = fields.Float(string="Qty Used", default=1)
     used_amount = fields.Float(string="Amount Used (per unit)")
     note = fields.Char(string="Note")
@@ -79,9 +80,12 @@ class RequestLine(models.Model):
     def compute_retire_sub_total(self):
         for x in self:
             if (x.used_qty and x.used_amount):
-                x.retire_sub_total_amount =  x.used_qty * x.used_amount
+                retired_amount_computed =  x.used_qty * x.used_amount
+                x.retire_sub_total_amount = retired_amount_computed
+                x.difference_in_amount = x.sub_total_amount - retired_amount_computed
             else:
                 x.retire_sub_total_amount = 0.00
+                x.difference_in_amount = 0.00
     
     @api.onchange('product_id')
     def onchange_product(self):

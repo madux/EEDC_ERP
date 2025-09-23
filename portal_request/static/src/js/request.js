@@ -142,8 +142,11 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#req_qty_label').addClass('d-none');
             $('#unit_price_label').addClass('d-none');
             $('#unit_sub_total').addClass('d-none');
+            $('#sub_total_line').addClass('d-none');
+
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
+            $('#retirement_sub_total').addClass('d-none');
             $('#note_label').addClass('d-none');
 
             $('#req_qty_label_th').addClass('d-none');
@@ -151,6 +154,7 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#sub_total_amount_th').addClass('d-none');
             $('#used_qty_for_soe_th').addClass('d-none');
             $('#used_amount_for_soe_th').addClass('d-none');
+            $('#retirement_sub_total_th').addClass('d-none');
             $('#note_label_th').addClass('d-none');
         }
         // else if ($.inArray(memo_type, ['Payment']) !== -1){
@@ -160,6 +164,7 @@ odoo.define('portal_request.portal_request', function (require) {
         else if ($.inArray(memo_type, ['soe']) !== -1){
             $('#used_qty_for_soe_th').removeClass('d-none');
             $('#used_amount_for_soe_th').removeClass('d-none');
+            $('#retirement_sub_total_th').removeClass('d-none');
             $('#distance_from').addClass('d-none');
             $('#distance_to').addClass('d-none');
             $('#distance_from_th').addClass('d-none');
@@ -167,8 +172,12 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
             $('#unit_sub_total').removeClass('d-none');
+            $('#sub_total_line').removeClass('d-none');
+
             $('#used_qty_for_soe').removeClass('d-none');
             $('#used_amount_for_soe').removeClass('d-none');
+            $('#retirement_sub_total').removeClass('d-none');
+
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
             $('#sub_total_amount_th').removeClass('d-none');
@@ -178,6 +187,8 @@ odoo.define('portal_request.portal_request', function (require) {
         else if ($.inArray(memo_type, ['cash_advance']) !== -1){
             $('#used_qty_for_soe_th').addClass('d-none');
             $('#used_amount_for_soe_th').addClass('d-none');
+            $('#retirement_sub_total_th').addClass('d-none');
+
             $('#distance_from').addClass('d-none');
             $('#distance_to').addClass('d-none');
             $('#distance_from_th').addClass('d-none');
@@ -185,8 +196,12 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
             $('#unit_sub_total').removeClass('d-none');
+            $('#sub_total_line').removeClass('d-none');
+
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
+            $('#retirement_sub_total').addClass('d-none');
+
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
             $('#sub_total_amount_th').removeClass('d-none');
@@ -196,6 +211,8 @@ odoo.define('portal_request.portal_request', function (require) {
         else if ($.inArray(memo_type, ['material_request']) !== -1){
             $('#used_qty_for_soe_th').addClass('d-none');
             $('#used_amount_for_soe_th').addClass('d-none');
+            $('#retirement_sub_total_th').addClass('d-none');
+
             $('#distance_from').addClass('d-none');
             $('#distance_from_th').addClass('d-none');
             $('#distance_to').addClass('d-none');
@@ -204,8 +221,12 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#req_qty_label_th').removeClass('d-none');
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
+            $('#retirement_sub_total').addClass('d-none');
+
             $('#unit_price_label').addClass('d-none');
             $('#unit_sub_total').addClass('d-none');
+            $('#sub_total_line').addClass('d-none');
+
             $('#unit_price_label_th').addClass('d-none');
             $('#sub_total_amount_th').addClass('d-none');
 
@@ -218,10 +239,14 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#req_qty_label').removeClass('d-none');
             $('#unit_price_label').removeClass('d-none');
             $('#unit_sub_total').removeClass('d-none');
+            $('#sub_total_line').removeClass('d-none');
             $('#used_qty_for_soe').addClass('d-none');
             $('#used_amount_for_soe').addClass('d-none');
+            $('#retirement_sub_total').addClass('d-none');
             $('#used_qty_for_soe_th').addClass('d-none');
             $('#used_amount_for_soe_th').addClass('d-none');
+            $('#retirement_sub_total_th').addClass('d-none');
+
             $('#note_label').removeClass('d-none');
             $('#req_qty_label_th').removeClass('d-none');
             $('#unit_price_label_th').removeClass('d-none');
@@ -244,24 +269,32 @@ odoo.define('portal_request.portal_request', function (require) {
                         </th>
                         <th width="20%">
                             <span id=${elm.id}>
-                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" class="form-control productitemrow d-none" name="product_item_id" value=${elm.id} labelfor="Product Name - ${elm.name}"/>
-                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" class="form-control productitemrowx" name="product_item_idx" value=${elm.name} labelfor="Product Name - ${elm.name}"/>
+                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrow d-none" name="product_item_id" value=${elm.id} labelfor="Product Name - ${elm.name}"/>
+                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrowx" name="product_item_idx" value=${elm.name} labelfor="Product Name - ${elm.name}"/>
                             </span>
                         </th>
                         <th width="10%">
-                            <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
+                            <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" disabled="true" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
+                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
                         </th>
                         <th width="10%">
-                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Amount"/> 
+                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" disabled="true" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Amount"/> 
                         </th>
+                        
+                        <th width="10%">
+                            <input type="text" name="sub_total_line" id="sub_total_line" value="${elm.sub_total_amount}" sub_total="${elm.sub_total_amount}" required="${require}" readonly="readonly" disabled="true" class="productSubTotal form-control ${hidden}" labelfor="unit_sub_total"/> 
+                        </th>
+
                         <th width="10%">
                             <input type="text" name="usedqty" id="${elm.id-lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" class="productUsedQty form-control ${hidden}" labelfor="Used Quantity"/> 
                         </th>
                         <th width="10%">
                             <input type="text" name="usedAmount" id="${elm.used_amount-lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required': ''}" class="productUsedAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor=" Used Amount"/> 
+                        </th>
+                        <th width="10%" id="retirement_sub_total_th">
+                            <input type="number" value="${elm.sub_total_amount}" name="retireSubTotal" id="${elm.sub_total_amount-lastRow_count}" main_name = "retireSubTotal" class="retireSubTotal${lastRow_count} form-control ${memo_type == 'soe' ? '': 'd-none'}}" labelfor="Retire Subtotal" readonly="true" disabled="true"/> 
                         </th>
                         <th width="45%">
                             <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
@@ -317,6 +350,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 <th width="10%" id="used_amount_for_soe_th" class="${memo_type == 'soe' ? '': 'd-none'}">
                     <input type="number" name="UsedAmount" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" required="${memo_type == 'soe' ? 'required': ''}" readonly="${memo_type == 'soe' ? '': 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Used Amount"/> 
                 </th>
+                
                 <th width="10%" id="note_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
                     <textarea rows="2" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Note"/> 
                 </th>
@@ -408,22 +442,12 @@ odoo.define('portal_request.portal_request', function (require) {
         }
         return result;
       }
-
-    var compute_sub_total =function(row_count, unitPrice){
-        // onchange of unit price
-        // target = $(ev.target)
-        var row_count = row_count // target.attr('row_count');
-        var unitPrice = unitPrice // target.val();
-        // var amountTotal_name = target.attr('name')
-        var productQtyrow = $(`.QTY${row_count}`).val()
-        var subTtotal = $(`.SUBTOTAL${row_count}`)
-        var sub_total = productQtyrow * unitPrice
-        // console.log(`DETAILED INFO - row_count-> ${row_count} unitPrice-> ${unitPrice} productQtyrow-> ${productQtyrow} subTtotal-> ${subTtotal}`)
-        subTtotal.val(sub_total);
-    }
-
+ 
     var compute_total_amount = function(targetEv){
         // targetEv: amount_total or usedAmount
+        // GOES THROUGH EACH TR >TABLE ROW, LOOP AGAIN TO GET THE ...
+        // request quantity and total amount and give the result of subtotal 
+        // used qty and used amount and give the total of retirement subtotal 
         var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
         var total = 0
         $(`#tbody_product > tr.prod_row`).each(function(){
@@ -431,31 +455,32 @@ odoo.define('portal_request.portal_request', function (require) {
             var amount = 0
             var qty = 0
             var amt = false
+            var r_amt = false
+            var rt_amt = false
+            var r_qty = false
             var subtotal = false
             $(`tr[row_count=${row_co}]`).closest(":has(input)").find('input').each(
-                
                 function(){
                     if($(this).attr('name') == targetEv){
-                        // let compute_amount = $(this).val() * $(this).attr('productinput')
-                        // total += Number($(this).val())
                         amount = Number($(this).val())
-                        // console.log(`what is amount ${amount}`)
                     }
-                    else if($(this).attr('productinput') == 'productreqQty'){
+                    if($(this).attr('productinput') == 'productreqQty'){
                         qty = Number($(this).val())
-                        // console.log(`what is qty ${qty}`)
                     }
-                    // amount = getAmountQtyProcess($(this).val(), $(this).attr('name'), targetEv)
-                    // qty = getAmountQtyProcess($(this).val(), $(this).attr('productinput'), 'productreqQty')
-                    // console.log(`what is totalxx ${amount} ane ${qty}`)
+                    if($(this).attr('name') == 'usedqty'){
+                        r_qty = Number($(this).val())
+                    }
+                    if($(this).attr('name') == 'usedAmount'){
+                        r_amt = Number($(this).val())
+                    }
                     amt = amount * qty
-                    // let subtotal = $(`SUBTOTAL${row_co}`)
-                    // console.log('SUBTOTAL NA', subtotal)
+                    rt_amt = r_amt * r_qty
                 }
             )
             total += amt
             $(`.SUBTOTAL${row_co}`).val(amt)
             $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
+            $(`.retireSubTotal${row_co}`).val(rt_amt)
         })
         var amount = formatCurrency(total)
         $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
@@ -927,6 +952,11 @@ odoo.define('portal_request.portal_request', function (require) {
                 // compute_sub_total($(this).attr('row_count'), $(this).val());
             },
             'change .productUsedAmt': function(ev){
+                //computation of the total productUsedQty unit price
+                compute_total_amount();
+            },
+
+            'change .productUsedQty': function(ev){
                 //computation of the total productUsedQty unit price
                 compute_total_amount();
             },
@@ -1486,6 +1516,8 @@ odoo.define('portal_request.portal_request', function (require) {
                     }).then(function (data) {
                         console.log('retrieved existing_order data => '+ JSON.stringify(data))
                         if (!data.status) {
+                        console.log('retrieved existing_order link => '+ data.link)
+
                             $(ev.target).val('')
                             $("#existing_order").val('')
                             $("#phone_number").val('')
@@ -1497,7 +1529,11 @@ odoo.define('portal_request.portal_request', function (require) {
                             $("#selectDistrict").val('')
                             $("#product_ids").val('').trigger('change')
                             $("#tbody_product").empty();
-                            alert(`Validation Error! ${data.message}`)
+                            alert(`Validation Error!${data.message}`)
+                            if (data.link){
+                                // window.location.href = data.link
+                                window.open(data.link, '_blank');
+                            }
                         }else{
                             var employee_name = data.data.name;
                             var email = data.data.work_email;
@@ -1768,7 +1804,7 @@ odoo.define('portal_request.portal_request', function (require) {
                         formData.append('DataItems', JSON.stringify(DataItems))
                         formData.append('inputFollowers', $('#inputFollowers').select2('data'))
                         console.log("sssXMLREQUEST Successful====", DataItems);
-                         let $btn = $('.button_req_submit');
+                        let $btn = $('.button_req_submit');
                         let $btnHtml = $btn.html()
                         $btn.attr('disabled', 'disabled');
                         $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
@@ -1794,8 +1830,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                 $("#tbody_product").empty()
                                 $("#tbody_employee").empty()
                                 console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                
-                                
                                 window.location.href = `/portal-success`;
                                 $btn.attr('disabled', false);
                                 $btn.html($btnHtml)

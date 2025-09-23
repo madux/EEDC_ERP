@@ -733,6 +733,7 @@ class Memo_Model(models.Model):
             ('branch_id', '=', employee.user_id.branch_id.id),
             ('company_id', '=', employee.user_id.company_id.id),
             ])
+        _logger.info(f'THis is configs == > {memo_configs}')
         # user_company = user.company_id.id
         # cds = []
         # for rec in memo_configs:
@@ -785,8 +786,34 @@ class Memo_Model(models.Model):
         if self.memo_setting_id:
             ms = self.memo_setting_id.sudo()
             # raise UserError(f" poor Configuration:{ms.id} {ms} No  {ms.stage_ids}")
+            
+            has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
+    #                 memo_setting_stage = ms.stage_ids[0]
+    #                 self.has_invoice = has_invoice
+    #                 self.has_po = has_po
+    #                 self.has_so = has_so
+    #                 self.has_transformer = has_transformer
+    #                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
+    #                 self.memo_setting_id = ms.id
+    #                 self.memo_type_key = self.memo_type.memo_key  
+    #                 picking_id = self.get_default_picking_id()
+    #                 self.picking_type_id = picking_id
+    #                 self.requested_department_id = self.employee_id.department_id.id
+    #                 self.users_followers = [
+    #                     (4, self.sudo().employee_id.administrative_supervisor_id.id),
+    #                     ] 
+    
             if ms and ms.stage_ids:
+                has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
                 memo_setting_stage = ms.stage_ids[0]
+                self.has_invoice = has_invoice
+                self.has_po = has_po
+                self.has_so = has_so
+                self.has_transformer = has_transformer
+                picking_id = self.get_default_picking_id()
+                self.picking_type_id = picking_id
+                self.requested_department_id = self.employee_id.department_id.id
+                
                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
                 self.memo_type_key = ms.memo_type.memo_key
                 self.memo_type = ms.memo_type.id
@@ -811,6 +838,12 @@ class Memo_Model(models.Model):
                 self.stage_id = False
                 self.memo_type_key = False
                 self.has_sub_stage = False
+                self.picking_type_id = False
+                self.requested_department_id = False
+                self.has_invoice = False
+                self.has_po = False
+                self.has_so = False
+                self.has_transformer = False
                 raise UserError("Configuration: No stages configured for the selected request")
         else:
             self.stage_id = False
@@ -1017,54 +1050,53 @@ class Memo_Model(models.Model):
             ], limit=1)
         return op_type.id if op_type else False 
          
-    @api.onchange('memo_type')
-    def get_default_stage_id(self):
-        """ Gives default stage_id """
-        if self.memo_type and not self.memo_type.is_document:
-            Employee = self.env['hr.employee'].sudo().with_context(force_company=False)
-            employee = Employee.search([('user_id', '=', self.env.uid)], limit=1)
-            self.employee_id = employee.id
-            # raise ValidationError(employee)
-            if not employee.department_id:
-                raise ValidationError("Contact Admin !!! Employee does not have a department assigned")
-            if not self.res_users:
-                department_id = employee.department_id
-                ms = self.env['memo.config'].sudo().search([
-                    ('memo_type', '=', self.memo_type.id),
-                    # ('department_id', '=', department_id.id)
-                   ('branch_id', '=', employee.user_id.branch_id.id),
-                    ('company_id', '=', employee.user_id.company_id.id),
-                    ], limit=1)
-                if ms:
-                    has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
-                    memo_setting_stage = ms.stage_ids[0]
-                    self.has_invoice = has_invoice
-                    self.has_po = has_po
-                    self.has_so = has_so
-                    self.has_transformer = has_transformer
-                    self.stage_id = memo_setting_stage.id if memo_setting_stage else False
-                    self.memo_setting_id = ms.id
-                    self.memo_type_key = self.memo_type.memo_key  
-                    picking_id = self.get_default_picking_id()
-                    self.picking_type_id = picking_id
-                    self.requested_department_id = self.employee_id.department_id.id
-                    self.users_followers = [
-                        (4, self.sudo().employee_id.administrative_supervisor_id.id),
-                        ] 
-                else:
-                    self.memo_type = False
-                    self.stage_id = False
-                    self.memo_setting_id = False
-                    self.memo_type_key = False
-                    self.requested_department_id = False
-                    msg = f"No stage configured for department {department_id.name} and selected memo type. Please contact administrator"
-                    return {'warning': {
-                                'title': "Validation",
-                                'message':msg,
-                            }
-                    }
-        else:
-            self.stage_id = False
+    # @api.onchange('memo_type')
+    # def get_default_stage_id(self):
+    #     """ Gives default stage_id """
+    #     if self.memo_type and not self.memo_type.is_document:
+    #         Employee = self.env['hr.employee'].sudo().with_context(force_company=False)
+    #         employee = Employee.search([('user_id', '=', self.env.uid)], limit=1)
+    #         self.employee_id = employee.id
+    #         if not employee.department_id:
+    #             raise ValidationError("Contact Admin !!! Employee does not have a department assigned")
+    #         if not self.res_users:
+    #             department_id = employee.department_id
+    #             ms = self.env['memo.config'].sudo().search([
+    #                 ('memo_type', '=', self.memo_type.id),
+    #                 # ('department_id', '=', department_id.id)
+    #                ('branch_id', '=', employee.user_id.branch_id.id),
+    #                 ('company_id', '=', employee.user_id.company_id.id),
+    #                 ], limit=1)
+    #             if ms:
+    #                 has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
+    #                 memo_setting_stage = ms.stage_ids[0]
+    #                 self.has_invoice = has_invoice
+    #                 self.has_po = has_po
+    #                 self.has_so = has_so
+    #                 self.has_transformer = has_transformer
+    #                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
+    #                 self.memo_setting_id = ms.id
+    #                 self.memo_type_key = self.memo_type.memo_key  
+    #                 picking_id = self.get_default_picking_id()
+    #                 self.picking_type_id = picking_id
+    #                 self.requested_department_id = self.employee_id.department_id.id
+    #                 self.users_followers = [
+    #                     (4, self.sudo().employee_id.administrative_supervisor_id.id),
+    #                     ] 
+    #             else:
+    #                 self.memo_type = False
+    #                 self.stage_id = False
+    #                 self.memo_setting_id = False
+    #                 self.memo_type_key = False
+    #                 self.requested_department_id = False
+    #                 msg = f"No stage configured for your districts and selected company {self.env.user.company_id.name}. Please contact administrator"
+    #                 return {'warning': {
+    #                             'title': "Validation",
+    #                             'message':msg,
+    #                         }
+    #                 }
+    #     else:
+    #         self.stage_id = False
 
     @api.depends('approver_id')
     def compute_user_is_approver(self):
@@ -1261,14 +1293,21 @@ class Memo_Model(models.Model):
         
     def validate_soe_line(self):
         if self.memo_type.memo_key == "soe":
-            soe_line_not_cleared = self.mapped('product_ids').filtered(
-                lambda s: s.to_retire == True)
-            for r in soe_line_not_cleared: 
-                if r.used_qty < 0 or r.used_amount < 1:
-                    # if soe_line_not_cleared:
-                    raise ValidationError(
-                        'Each Request line item must have used qty and used amount greater than 0'
+            soe_lines = self.mapped('product_ids')#.filtered(
+            #     lambda s: s.to_retire == True)
+            for r in soe_lines:
+                if r.used_qty < 1 or r.used_amount < 1:
+                        raise ValidationError(
+                            'Each Request line item must have used qty and used amount greater than 0'
                     )
+            # soe_line_not_cleared = self.mapped('product_ids').filtered(
+            #     lambda s: s.to_retire == True)
+            # for r in soe_line_not_cleared: 
+            #     if r.used_qty < 0 or r.used_amount < 1:
+            #         # if soe_line_not_cleared:
+            #         raise ValidationError(
+            #             'Each Request line item must have used qty and used amount greater than 0'
+            #         )
             
     def build_po_line(self, order_id):
         '''args: order_id: the po_id already created'''
@@ -1360,7 +1399,7 @@ class Memo_Model(models.Model):
         self.validate_compulsory_document()
         self.validate_sub_stage()
         self.validate_invoice_line()
-        # self.validate_soe_line()
+        self.validate_soe_line()
         if self.to_create_document:
             attach_document_ids = self.env['ir.attachment'].sudo().search([
                     ('res_id', '=', self.id), 
@@ -1387,10 +1426,14 @@ class Memo_Model(models.Model):
             raise ValidationError("Payment amount must be greater than 0.0")
         elif self.memo_type.memo_key == "material_request" and not self.product_ids:
             raise ValidationError("Please add request line") 
+        # elif self.memo_type.memo_key == "soe":
+        #     if self.mapped('product_ids').filtered(lambda x: x.used_qty < 1 and x.used_amount > 1)
+        #     raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
         approver_ids = self.sudo().stage_id.approver_ids
-        approver_ids = manager_id or approver_ids and approver_ids[0].id if approver_ids else False
+        approver_ids = manager_id if manager_id else approver_ids and approver_ids[0].id if approver_ids else False
+        # raise ValidationError(self.env['hr.employee'].browse(approver_ids).name)
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -1544,7 +1587,7 @@ class Memo_Model(models.Model):
         movetype = kwargs.get('movetype')
         purchase_journal_id = self.env['account.journal'].sudo().search(
         [('type', '=', 'purchase'),
-            ('code', '=', 'BILL')
+            # ('code', '=', 'BILL')
             ], limit=1)
         sale_journal_id = self.env['account.journal'].sudo().search(
         [('type', '=', 'sale'), ('code', '=', 'INV')], limit=1)
@@ -2268,19 +2311,27 @@ class Memo_Model(models.Model):
             }
         return ret
 
-    def get_move_line_expense_account(self, pr):
+    def get_move_line_expense_account(self, pr, journal_id=False):
         '''pr: line'''
-        company_debit_account_id = self.company_id.account_default_debit_account_id
-        account_id = company_debit_account_id if company_debit_account_id else pr.product_id.property_account_expense_id \
-            if pr.product_id.property_account_expense_id else pr.product_id.categ_id.property_account_expense_categ_id 
+        account_id = None
+        company_cash_advance_account_id = self.company_id.default_cash_advance_account_id
+        account_id = company_cash_advance_account_id
+            # else pr.product_id.property_account_expense_id \
+            # if pr.product_id.property_account_expense_id else pr.product_id.categ_id.property_account_expense_categ_id
+        # if journal_id and journal_id.default_account_id:
+        #     account_id = journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"No cash advance / asset account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and select the cash advance account...")
         return account_id
     
-    # def get_move_line_revenue_account(self, pr):
-    #     '''pr: line'''
-    #     company_debit_account_id = self.company_id.account_journal_payment_debit_account_id
-    #     account_id = company_debit_account_id if company_debit_account_id else pr.product_id.property_account_income_id \
-    #         if pr.product_id.property_account_income_id else pr.product_id.categ_id.property_account_income_categ_id  
-    #     return account_id.id
+    def get_soe_expense_account(self, pr, journal_id=False):
+        '''pr: line'''
+        account_id = None
+        company_expense_account_id = self.company_id.account_default_debit_account_id
+        account_id = company_expense_account_id or journal_id and journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"No default expense account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the default expense account or set the journal default expense account...")
+        return account_id
                     
     def generate_move_entries(self):
         is_config_approver = self.determine_if_user_is_config_approver()
@@ -2323,7 +2374,7 @@ class Memo_Model(models.Model):
                     'invoice_line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-                            'account_id': self.get_move_line_expense_account(pr).id or journal_id.default_account_id.id,
+                            'account_id': self.get_move_line_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             # 'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
                             # 'account_id': self.memo_setting_id.expense_account_id.id if self.memo_setting_id.expense_account_id else pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id and pr.product_id.property_account_expense_id or pr.product_id.categ_id.property_account_expense_categ_id else journal_id.default_account_id.id,
                             'price_unit': pr.amount_total,
@@ -2334,6 +2385,7 @@ class Memo_Model(models.Model):
 				            'branch_id': self.employee_id.user_id.branch_id.id,
                             'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
                             'product_id': pr.product_id.id if pr.product_id else None,
+                            'tax_ids': False,
                     }) for pr in self.product_ids],
                 })
             self.move_id = inv.id
@@ -2410,12 +2462,12 @@ class Memo_Model(models.Model):
             journal_id = self.env['account.journal'].sudo().search(
             [
                 ('company_id', '=', self.company_id.id),
-                ('type', '=', 'bank'),
+                ('type', 'in', ['bank', 'general']),
                 # ('type', '=', 'general'),
             #  ('code', '=', 'INV')
              ], limit=1)
             if not journal_id:
-                raise UserError(f"No General / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
+                raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
@@ -2438,8 +2490,7 @@ class Memo_Model(models.Model):
                     'line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-                            # 'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            'account_id': self.get_move_line_expense_account(pr).id or journal_id.default_account_id.id,
+                            'account_id': self.get_soe_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.retire_sub_total_amount,
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
@@ -2448,7 +2499,6 @@ class Memo_Model(models.Model):
                                                             'credit': sum([r.retire_sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
                                                             })],
-                    
                 })
                 if self.product_ids_with_qty_to_return():
                     self.to_update_inventory_product = True
