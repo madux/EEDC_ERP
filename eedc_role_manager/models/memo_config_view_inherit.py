@@ -4,7 +4,6 @@ from odoo.exceptions import ValidationError
 class MemoStageInherit(models.Model):
     _inherit = 'memo.stage'
 
-    # Add the new field to the existing memo.stage model
     approval_role_ids = fields.Many2many(
         "user.role",
         string="Approval Roles",
