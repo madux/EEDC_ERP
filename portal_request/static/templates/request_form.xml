@@ -15,20 +15,20 @@
                             <t t-call="portal_request.website_app_page"/>
                         </section>
                         
-                        <div class="navbar-light py-0 mb-2">
+                        <div class="navbar-light py-0 mb-2 pt-1 p-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
                                 Back
                             </a>
-                            <a t-if="req.state in ['submit', 'refuse', 'Refuse']" id="editbtn" class="btn btn-secondary btn-sm editbtn">
+                            <a t-if="req.state in ['submit', 'refuse', 'Refuse'] and current_user in [req.employee_id.user_id.id, req.create_uid.id]" id="editbtn" class="btn btn-secondary btn-sm editbtn">
                                 Edit
                             </a>
                             <a id="save" class="btn btn-success btn-sm d-none">
                                 Save
                             </a>
-                            <a id="discard" class="btn btn-danger btn-sm d-none">
+                            <a id="discardbtn" class="btn btn-danger btn-sm d-none">
                                 Discard
                             </a>
-                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids]">
+                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
                                 <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
@@ -161,8 +161,8 @@
                                                 <h5>
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
-                                                    <small class="text-muted"> (#<span t-field="req.code"/>) </small>
-                                                    <small class="text-muted"> (#<t t-esc="current_user"/>) </small>
+                                                    <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
+                                                    <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small>
                                                     <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
                                                     <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
@@ -179,20 +179,20 @@
                                             <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
-                                                <span t-field="req.stage_id.name" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                <span t-field="req.stage_id.name" field_name="status" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div id="card_body" class="card-body">
                                         <div class="row mb-4">
-                                            <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
+                                            <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" field_name="request_date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                         </div><br/>
                                         <t t-if="req.memo_type.memo_key in ['Payment']">
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Payment Reference</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" field_name="payment_reference" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
                                                 </span>
                                             </div> 
                                         </t>
@@ -202,7 +202,7 @@
                                                 <strong class="col-md-4">Staff ID</strong>:
                                                 <span class="col-md-6">
                                                     <a t-attf-href="#">
-                                                        <span t-field="req.employee_id.employee_number" name="staff_id" id="staff_id"/>
+                                                        <span t-field="req.employee_id.employee_number" name="staff_id" id="staff_id" field_name="staff_id"/>
                                                     </a>
                                                 </span>
                                             </div> 
@@ -216,12 +216,12 @@
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
-                                                <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
+                                                <strong class="col-md-4">Request date</strong>: <span class="col-md-6" field_name="date" t-field="req.date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                             </div><br/>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave type</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true" required="required">
+                                                    <select field_name="leave_type" id="leave_type_id" name="leave_type_id" disabled="true" class="form-control form-control-sm" labelfor="Leave type" readonly="true" required="required">
                                                         <option selected="selected" t-attf-value="{{req.leave_type_id.id}}"><span t-esc="req.leave_type_id.name"/></option>
                                                         <t t-foreach="leave_type_ids" t-as="lv">
                                                             <option t-att-value="lv.id">
@@ -234,29 +234,29 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Start date</strong>: 
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_datex" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_start_date" id="leave_start_datex" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave End date</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_end" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Remaining</strong>: 
                                                 <span class="col-md-6">
-                                                    <input type="hidden" class="form-control s_website_form_input" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
+                                                    <input type="hidden" class="form-control s_website_form_input" field_name= "leave_remaining" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
                                                     <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
-                                                <strong class="col-md-4">Leave Days Taken</strong>:<span class="col-md-6" id="leave_taken"><t t-esc="leave_taken"/></span>
+                                                <strong class="col-md-4">Leave Days Taken</strong>:<span field_name= "leave_taken" class="col-md-6" id="leave_taken"><t t-esc="leave_taken"/></span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Reliever</strong>:
                                                 <span class="col-md-6">
-                                                    <select id="leave_reliever_ids" name="leave_reliever_id" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" required="required" disabled="true">
+                                                    <select id="leave_reliever_ids" name="leave_reliever_id" field_name= "leave_taken" class="form-control form-control-sm" labelfor="Leave Reliever" readonly="true" required="required" disabled="true">
                                                         <option selected="selected" t-attf-value="{{req.leave_Reliever.id}}"><span t-esc="req.leave_Reliever.name"/></option>
                                                         <t t-foreach="employee_ids" t-as="emp">
                                                             <option t-att-value="emp.id">
@@ -271,7 +271,7 @@
                                             <strong class="col-md-4">Manager</strong>:
                                             <span class="col-md-6">
                                                 <a t-attf-href="#">
-                                                    <span t-field="req.employee_id.parent_id.name"/>
+                                                    <span t-field="req.employee_id.parent_id.name" field_name= "employer_manager"/>
                                                 </a>
                                             </span>
                                         </div>
@@ -288,7 +288,7 @@
                                         <!-- <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="descriptionDiv"> -->
                                         <div class="row mb-4 mb-5" name="descriptionDiv">
                                             <t t-set="raw_description" t-value="req.description"/>
-                                            <textarea class="form-control s_website_form_input" name="description" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
+                                            <textarea class="form-control s_website_form_input" name="description" field_name= "description_id" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -309,6 +309,7 @@
                                 <div class="form-row" id="product_item_form_div">
                                     <h3 class="fs-title">Request Items</h3>
                                     <t t-set="total_amount" t-value="0"/>
+                                    <t t-set="retire_total_amount" t-value="0"/>
                                     <div class="tableclass table-responsive" id="product_table_div">
                                         <table width="100%" border="1" bordercolor="#FFFFFF" bgcolor="#F7F7EF" border-collapse="collapse" align="center" id="product_table" class="table table-bordered" style="height: 200px !important;overflow-y: scroll !important;display: block;">
                                             <thead>
@@ -316,14 +317,14 @@
                                                     <th width="5%">
                                                         <label/>
                                                     </th>
-                                                    <th width="30%">
+                                                    <th width="30%" id="productHeader">
                                                         Product Name
                                                     </th>
                                                     <th width="35%">
                                                         Description
                                                     </th>
                                                     <th width="10%">
-                                                        <label>Qty</label>
+                                                        <label>Unit Qty</label>
                                                     </th>
                                                     <th width="15%">
                                                         <label>UnitPrice</label>
@@ -331,9 +332,22 @@
                                                     <th width="15%">
                                                         <label>SubTotal</label>
                                                     </th>
-                                                    <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                    <t t-if="req.memo_type.memo_key in ['soe']">
+                                                        
                                                         <th width="10%">
-                                                            <label>Retired</label>
+                                                            <label>Used Qty</label>
+                                                        </th>
+                                                        <th width="10%">
+                                                            <label>Used Unit Price</label>
+                                                        </th>
+                                                        <th width="10%">
+                                                            <label>Retire SubTotal</label>
+                                                        </th>
+                                                        <th width="10%">
+                                                            <label>Difference</label>
+                                                        </th>
+                                                        <th width="10%">
+                                                            <label>✔</label>
                                                         </th>
                                                     </t>
                                                     <t t-else="">
@@ -348,30 +362,43 @@
                                                     <tr class="heading prod_row" t-att-id="prod.id" t-att-name="prod_row" t-att-row_count="prod.id">
                                                         <th width="2%">
                                                             <span>
-                                                                <input type="checkbox" readonly="readonly" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
+                                                                <input type="checkbox" disable="true" readonly="readonly" field_name= "checkbox" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
                                                             </span>
                                                         </th>
+                                                        
                                                         <th width="30%">
                                                             <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" field_name= "product_id" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
                                                             </span>
                                                         </th>
                                                         <th width="35%">
                                                             <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" required="required" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
+                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
                                                             </span>
                                                         </th>
                                                         <th width="5%">
-                                                            <input type="text" main_name = "quantity_available" t-att-name="prod.quantity_available" t-att-id="prod.id" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" disable="true" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
                                                         <th width="20%">
-                                                            <input type="text" main_name = "amount_total" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
                                                         </th>
                                                         <th width="20%">
-                                                                <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" id="sub_total_amount" t-att-value="'{0:,}'.format(float(prod.sub_total_amount))"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                            <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="'{0:,}'.format(float(prod.sub_total_amount))"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                        </th>
+                                                        <t t-if="req.memo_type.memo_key in ['soe']">
+                                                            <th width="10%">
+                                                                <input type="text" main_name = "used_qty" field_name= "used_qty" t-att-name="prod.used_qty" t-att-id="prod.id" required="required" t-att-value="prod.used_qty" t-att-class="'productinput form-control USEDQTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             </th>
-                                                        <t t-if="req.memo_type.memo_key in ['cash_advance', 'soe']">
+                                                            <th width="10%">
+                                                                <input type="text" main_name = "used_amount" field_name= "used_amount" t-att-name="prod.used_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.used_amount))" required="required" t-att-class="'productinput form-control UsedAmountTots USEDAMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            </th>
+                                                            <th width="10%">
+                                                                <input type="text" main_name = "retire_sub_total_amount" disable="true" field_name= "retire_sub_total_amount" t-att-name="prod.retire_sub_total_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.retire_sub_total_amount))" required="required" t-att-class="'productinput form-control RTOTAL RTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            </th>
+                                                            <th width="10%">
+                                                                <input type="text" main_name = "difference_in_amount" disable="true" field_name= "difference_in_amount" t-att-name="prod.difference_in_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.difference_in_amount))" required="required" t-att-class="'productinput form-control DiffTotal DiffTotal%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            </th>
                                                             <th width="10%">
                                                                 <t t-if="prod.retired">
                                                                     <span>
@@ -384,7 +411,7 @@
                                                         </t>
                                                         <t t-else="">
                                                             <th width="5%">
-                                                                <label>X</label>
+                                                                <label></label>
                                                             </th>
                                                         </t>
                                                         
@@ -393,6 +420,7 @@
                                                         </th>
                                                     </tr>
                                                     <t t-set="total_amount" t-value="total_amount + prod.sub_total_amount"/>
+                                                    <t t-set="retire_total_amount" t-value="retire_total_amount + prod.retire_sub_total_amount"/>
                                                 </t>
                                             </tbody>
                                             <tbody id="total_amount_form">
@@ -408,11 +436,24 @@
                                                     <td width="10%">
                                                         <span style="font-size: 2em; font-weight: bold; white-space:nowrap;">Total - </span>
                                                     </td>
+                                                    
+                                                     
                                                     <td width="20%">
                                                         <span name="all_total_amount" id="all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">
                                                             <t t-esc="'{0:,}'.format(float(total_amount))"/>
                                                         </span>
                                                     </td>
+                                                    <t t-if="req.memo_type.memo_key in ['soe']">
+                                                        <td width="20%">
+                                                        </td>
+                                                        <td width="10%">
+                                                        </td> 
+                                                        <td width="10%">
+                                                            <span name="retire_total_amount_elm" id="retire_total_amount_elm" style="font-size: 2em; font-weight: bold; white-space:nowrap;">
+                                                                <t t-esc="'{0:,}'.format(float(retire_total_amount))"/>
+                                                            </span>
+                                                        </td>
+                                                    </t>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -495,7 +536,7 @@
                             </t>
                             <t t-else="">
                             </t>
-                            <t t-if="req.employee_id.user_id.id == current_user">
+                            <t t-if="current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id, req.employee_id.user_id.id]">
                                 <div class="o_portal_messages_container mt32" id="request_chat" data-anchor="true">
                                     <h4><strong>Message(s) and communication history</strong></h4>
                                     <t t-call="portal.message_thread">

@@ -121,14 +121,15 @@
 							</a>
 						</div>
 						<div class="app-item">
-							<!-- <a href="/my/requests/soe"> -->
-							<a t-att-href="'/get-menu-url/%s' % 'soe' if not request.env.user._is_public() else '/my/requests/soe'">
+							<a href="/my/requests/soe">
+							<!-- <a t-att-href="'/get-menu-url/%s' % 'soe' if not request.env.user._is_public() else '/my/requests/soe'"> -->
 								<div class="app-icon expense-icon">📝</div>
 								<div class="app-label">Retirement</div>
 							</a>
 						</div>
 						<div class="app-item">
-							<a t-att-href="'/get-menu-url/%s' % 'payroll' if not request.env.user._is_public() else '/web/login'">
+							<!-- <a t-att-href="'/get-menu-url/%s' % 'payroll' if not request.env.user._is_public() else '/web/login'"> -->
+							<a t-att-href="'/web/login'">
 								<div class="app-icon payroll-icon">💼</div>
 								<div class="app-label">Payroll</div>
 							</a>
@@ -149,7 +150,8 @@
 				</div>
 				<div class="performance-grid">
 					<div class="app-item">
-					<a href="/my/requests/material_request" target="_blank">
+					<a t-att-href="'/my/portal/dashboard/%s' % request.env.user.id if not request.env.user._is_public() else '/web/login'">
+					<!-- <a href="/my/requests/material_request" target="_blank"> -->
 						<div class="app-icon employee-dir-icon">👥</div>
 						<div class="app-label">Employee</div>
 					</a>
@@ -244,14 +246,14 @@
 
 					</div>
 					<div class="app-item">
-						<a href="https://superedge.myeedc.com/amber2">
+						<a href="https://superedge.myeedc.com/amber2" target="_blank">
 							<div class="app-icon super-edge-icon">⭐</div>
 							<div class="app-label">Super Edge</div>
 						</a>
 
 					</div>
 					<div class="app-item">
-						<a href="https://meterrequest.eedc.online/admin">
+						<a href="https://meterrequest.eedc.online/admin" target="_blank">
 							<div class="app-icon map-icon">🗺️</div>
 							<div class="app-label">MAP</div>
 						</a>
@@ -265,20 +267,20 @@
 
 					</div>
 					<div class="app-item">
-						<a href="https://customerapp.myeedc.com">
+						<a href="https://customerapp.myeedc.com" target="_blank">
 							<div class="app-icon eedc-connect-icon">🔗</div>
 							<div class="app-label">EEDC Connect</div>
 						</a>
 					</div>
 					<div class="app-item">
-						<a href="https://cashcollection.myeedc.com">
+						<a href="https://cashcollection.myeedc.com" target="_blank">
 							<div class="app-icon cash-collection-icon">💵</div>
 							<div class="app-label">Cash Collection</div>
 						</a>
 						
 					</div>
 					<div class="app-item">
-						<a href="/my/requests/material_request">
+						<a href="/kyc.eedc.online" target="_blank">
 							<div class="app-icon kyc-icon">🎭</div>
 							<div class="app-label">KYC</div>
 						</a>

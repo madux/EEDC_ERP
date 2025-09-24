@@ -120,12 +120,66 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
     let storeOldFieldsValue = function(){
         let storeFieldItem = {};
-        $('input,textarea,select,select2').each(function(ev){
+        $('input,textarea,select,select2,span').each(function(ev){
             var field_id = $(this);
-            storeFieldItem[`${field_id.attr('id')}`] = field_id.val()
+            var tagName = field_id.prop("tagName").toLowerCase();
+            if (tagName == 'span'){
+                storeFieldItem[`${field_id.attr('field_name')}`] = field_id.text()
+            }
+            else{
+                storeFieldItem[`${field_id.attr('field_name')}`] = field_id.val()
+            }
         });
         localStorage.setItem('oldValueStore', JSON.stringify(storeFieldItem))
     }
+
+    let discardRestoreOldFieldsValue = function(){
+        let stored = localStorage.getItem('oldValueStore');
+        if (!stored) return; // nothing stored yet
+        
+        let oldValues = JSON.parse(stored); 
+        $('input, textarea, select, select2, span').each(function(){
+            let field = $(this);
+            let fieldName = field.attr('field_name');
+            if (!fieldName) return; // skip if no field_name
+
+            let tagName = field.prop("tagName").toLowerCase();
+            let oldValue = oldValues[fieldName];
+
+            if (oldValue !== undefined) {
+                if (tagName === 'span') {
+                    // display field
+                    field.text(oldValue);
+
+                } else if (tagName === 'input') {
+                    let type = field.attr('type');
+                    if (type === 'checkbox') {
+                        field.prop('checked', oldValue === true || oldValue === "true");
+                    } else if (type === 'radio') {
+                        // restore radio by value match
+                        if (field.val() == oldValue) {
+                            field.prop('checked', true);
+                        }
+                    } else {
+                        // text, number, hidden, etc.
+                        field.val(oldValue);
+                    }
+
+                } else if (tagName === 'select') {
+                    field.val(oldValue);
+                    // handle select2 if applied
+                    if (field.hasClass("select2-hidden-accessible")) {
+                        field.trigger('change.select2');
+                    } else {
+                        field.trigger('change');
+                    }
+
+                } else if (tagName === 'textarea') {
+                    field.val(oldValue);
+                }
+            }
+        });
+    };
 
     let makeWritableFieldsEditable = function(){
         console.log('All writable fields are now readable to edit');
@@ -138,18 +192,38 @@ odoo.define('portal_request.portal_request_form', function (require) {
         // $('input,textarea,select,select2').filter('[readonly]:visible').each(function(ev){
         $('input,textarea,select,select2').each(function(ev){
             var field = $(this); 
-            field.prop('readonly', false);
-            field.prop('disabled', false);
-            field.prop('required', true);
+            if (field.prop('readonly')) {
+                field.prop('readonly', false);
+            }
+            if (field.prop('disabled')) {
+                field.prop('disabled', false);
+            }
+            if (field.prop('required')) {
+                field.prop('required', true);
+            }
+
             $('input[name=is_edit_mode]').prop('checked', true);
             trigger_date_function($('#leave_start_datex'))
             trigger_date_function($('#leave_end_datex'))
             // open the description text for editting
             // $('#description').prop('contenteditable', true)
             // trigger leave date
-            
         });
 
+    }
+
+    let resetModificationProps=function(){
+        let save = $('#save');
+        let edit = $('#editbtn');
+        let back = $('#previous')
+        let discard = $('#discardbtn')
+        let resend_request = $('.resend_request')
+        save.addClass('d-none');
+        discard.addClass('d-none');
+        edit.removeClass('d-none');
+        back.removeClass('d-none');
+        resend_request.removeClass('d-none');
+        // saveChangedFieldsValues();
     }
 
     let checkEditableRequiredFields = function () {
@@ -271,7 +345,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
     //     }
     // }
 
-    let lockFieldsFunction = function(){
+    let makeAllFieldsReadonly = function(){
         $('input, select, textarea, select2').each(function(ev){
             $(this).prop('disabled', true) 
         })
@@ -336,7 +410,16 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 console.log(".....")
             })
         },
+
+        _onSubmitSearch: function (ev) {
+            ev.preventDefault();
+            let query = this.$('#search_input_panel').val() || '';
+            console.log("Custom search for:", query);
+            // Example: redirect to controller
+            window.location = `/my/requests/param/${query}`;
+        },
         events: {
+            'submit': '_onSubmitSearch',
             'click .editbtn': function(ev){
                 console.log("EDIT MODE ACTIVATED")
                 // hide editbtn 
@@ -345,7 +428,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let edit = $(ev.target);
                 let save = $('#save');
                 let back = $('#previous')
-                let discard = $('#discard')
+                let discard = $('#discardbtn')
                 let resend_request = $('.resend_request')
 
                 edit.addClass('d-none');
@@ -365,18 +448,19 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     alert(cef);
                     return false;
                 }
-                let save = $(ev.target);
-                let edit = $('#editbtn');
-                let back = $('#previous')
-                let discard = $('#discard')
-                let resend_request = $('.resend_request')
+                resetModificationProps()
+                // let save = $(ev.target);
+                // let edit = $('#editbtn');
+                // let back = $('#previous')
+                // let discard = $('#discardbtn')
+                // let resend_request = $('.resend_request')
 
-                edit.removeClass('d-none');
-                back.removeClass('d-none');
-                resend_request.removeClass('d-none');
-                save.addClass('d-none');
-                discard.addClass('d-none');
-                // saveChangedFieldsValues();
+                // edit.removeClass('d-none');
+                // back.removeClass('d-none');
+                // resend_request.removeClass('d-none');
+                // save.addClass('d-none');
+                // discard.addClass('d-none');
+                // // saveChangedFieldsValues();
 
                 let leave_type_id = $("#leave_type_id")
                 let leave_start_datex = $("#leave_start_datex")
@@ -407,7 +491,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         console.log('return saved record data => ')
                         $("#is_edit_mode").prop('checked', false);
                         // lock all fields 
-                        lockFieldsFunction();
+                        makeAllFieldsReadonly();
                     }else{
                         alert(data.message);
                     }
@@ -416,6 +500,14 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
+            },
+
+            'click #discardbtn': function(ev){
+                discardRestoreOldFieldsValue();
+                $("#is_edit_mode").prop('checked', false);
+                // lock all fields 
+                makeAllFieldsReadonly();
+                resetModificationProps();
             },
 
             'change .AmountTots': function(ev){
@@ -577,6 +669,13 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
             'click .supervisor_comment_button': function(ev){
                 let targetElement = $(ev.target).attr('id');
+                let $btn = $('.refuse_comment_button');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Resending ...</h2>'
+                });
                 console.log(`supervisor comment clicked ${targetElement}`)
                 this._rpc({
                     route: `/update/data`,
@@ -586,6 +685,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'status': ''
                     },
                 }).then(function (data) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     if(data.status){
                         console.log('updating record data => '+ JSON.stringify(data))
                         $('#supervisor_comment_message').val('');
@@ -597,12 +699,22 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     }
                     
                 }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
             },
             'click .refuse_comment_button': function(ev){
                 let targetElement = $(ev.target).attr('id');
+                let $btn = $('.refuse_comment_button');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Refusing ...</h2>'
+                });
                 console.log(`refusal comment clicked ${targetElement}`)
                 this._rpc({
                     route: `/update/data`,
@@ -612,6 +724,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'status': 'Refuse'
                     },
                 }).then(function (data) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     if(data.status){
                         console.log('updating manager comment record data => '+ JSON.stringify(data))
                         $('#refuse_comment_message').val('');
@@ -625,12 +740,22 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     }
                     
                 }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
             },
             'click .refuse_request_btn': function(ev){
                 let targetElement = $(ev.target).attr('id');
+                let $btn = $('.refuse_request_btn');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Refusing ...</h2>'
+                });
                 this._rpc({
                     route: `/user/approver`,
                     params: {
@@ -638,15 +763,33 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     },
                 }).then(function (data) {
                     console.log('updating manager comment record data => '+ JSON.stringify(data))
+                    
                     if(!data.status){
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
                         modal_message.text(data.message)
                         alert_modal.modal('show');
                     }else{
-                        divRefuseCommentMessage.show();
-                        modalfooter4cancel.hide();
-                        refuseCommentMessage.attr('required', true);
+                        if (data.warning){
+                            $btn.attr('disabled', false);
+                            $btn.html($btnHtml)
+                            $.unblockUI()
+                            alert(data.message);
+                        }
+                        else{
+                            $btn.attr('disabled', false);
+                            $btn.html($btnHtml)
+                            $.unblockUI()
+                            divRefuseCommentMessage.show();
+                            modalfooter4cancel.hide();
+                            refuseCommentMessage.attr('required', true);
+                        }
                     }
                 }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
@@ -658,6 +801,13 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
             'click .resend_request': function(ev){
                 let targetElementid = $('.record_id').attr('id');
+                let $btn = $('.resend_request');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Resending ...</h2>'
+                });
                 this._rpc({
                     route: `/my/request/update`,
                     params: {
@@ -668,13 +818,22 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     if(data.status){
                         console.log('updating resending status => '+ JSON.stringify(data))
                         // $('#successful_alert').show()
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
                         alert(data.message);
                         window.location.href = `/my/request/view/${$('.record_id').attr('id')}`
                     }else{
                         alert(data.message);
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
                     }
                     
                 }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
@@ -682,6 +841,13 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
             'click .approve_request': function(ev){
                 let targetElementId = $('.record_id').attr('id');
+                let $btn = $('.approve_request');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Approving ...</h2>'
+                });
                 this._rpc({
                     route: `/my/request/update`,
                     params: {
@@ -694,13 +860,27 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         // $('#successful_alert').show()
                         alert(data.message);
                         $('#div_supervisor_comment_message').addClass('d-none');
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
                         window.location.href = `/my/request/view/${targetElementId}`
                     }else{
+                        
                         alert(data.message);
-                        return false;
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
+                        if (data.link){
+                            // window.location.href = data.link
+                            window.open( data.link, '_blank');
+                        }
+                        // return false;
                     }
                     
                 }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
                 });
@@ -710,24 +890,32 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 $('#refuse_comment_message').attr('required', false);
                 divRefuseCommentMessage.hide();
                 modalfooter4cancel.show()
-
-
             },
 
             'click .cancel_modal_btn': function(ev){
                 let targetElementid = $('.record_id').attr('id');
+                let $btn = $('.cancel_modal_btn');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Cancelling ...</h2>'
+                });
                 this._rpc({
                     route: `/my/request/update`,
                     params: {
                         'status': 'cancel',
                         'memo_id': targetElementid
                     },
-                }).then(function (data) {
+                }).then(function (data) { 
                     if(data.status){
                         console.log('updating cancelled status => '+ JSON.stringify(data))
                         // $('#successful_alert').show()
                         alert(data.message);
                         window.location.href = `/my/request/view/${targetElementid}`
+                        $btn.attr('disabled', false);
+                        $btn.html($btnHtml)
+                        $.unblockUI()
                     }else{
                         alert(data.message);
                     }
@@ -735,6 +923,10 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 }).guardedCatch(function (error) {
                     let msg = error.message.message
                     alert(`Unknown Error! ${msg}`)
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
+                    alert(data.message);
                 });
             },
          },

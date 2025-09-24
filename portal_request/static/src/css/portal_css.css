@@ -265,4 +265,32 @@
   left: 0;   /* slides into view */
 }
 
+/* select 2 followers widget */
+.select2-container--default .select2-selection--multiple {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.35rem;
+    min-height: 45px;
+}
 
+/* Selected option badges */
+.select2-tags {
+    background-color: #0d6efd; /* Bootstrap primary */
+    border: none;
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    margin-top: 0.25rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Hover effect on selected items */
+.select2-tags:hover {
+    background-color: #0b5ed7;
+}
+
+/* Placeholder text */
+.select2-tags::placeholder {
+    color: #6c757d;
+}

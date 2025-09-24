@@ -93,22 +93,34 @@
                             </div>
                         </div>
                         <t t-out="0"/>
-                        <form class="o_portal_search_panel ms-lg-4 col-xl-4 col-md-5">
+                        <!-- <form class="o_portal_search_panel o_search_form ms-lg-4 col-xl-4 col-md-5" method="get" class="o_searchbar_form"> -->
+                        <!-- <form method="get" class="o_searchbar_form"> -->
+                        <form method="get">
                             <div class="input-group input-group-sm w-100">
-                                <!-- <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/> -->
-                                <!-- <div class="dropdown-menu" role="menu">
+                                <!-- ///<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/>
+                                <div class="dropdown-menu" role="menu">
                                     <t t-foreach='searchbar_inputs' t-as='input'>
                                         <a t-att-href="'#' + input_value['input']"
                                             t-attf-class="dropdown-item#{search_in == input_value['input'] and ' active' or ''}">
                                             <span t-out="input_value['label']"/>
                                         </a>
                                     </t>
-                                </div> -->
+                                </div>//// -->
+                                <!-- <input type="text" class="o_search_query form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/> -->
                                 <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/>
                                 <a class="btn btn-secondary o_wait_lazy_js search_panel_btn" id="search_panel">
                                     <span class="fa fa-search"/> 
                                 </a>
                             </div>
+
+                            <!-- <div class="input-group o_searchbar">
+                                <input type="search"
+                                        class="o_searchbar_input form-control"
+                                        placeholder="Search..." name="search" id="search_input_panel"/>
+                                <button type="submit" id="search_panel" class="btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div> -->
                         </form>
                     </div>
                         <!-- </div>
