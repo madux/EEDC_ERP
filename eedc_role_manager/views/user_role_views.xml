@@ -1,0 +1,81 @@
+<odoo>
+    <record id="view_user_role_tree" model="ir.ui.view">
+        <field name="name">user.role.tree</field>
+        <field name="model">user.role</field>
+        <field name="arch" type="xml">
+            <tree string="User Roles">
+                <field name="name"/>
+                <field name="description" optional="hide"/>
+                <field name="users_count" string="Active Users"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_user_role_form" model="ir.ui.view">
+        <field name="name">user.role.form</field>
+        <field name="model">user.role</field>
+        <field name="arch" type="xml">
+            <form string="User Role">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_users" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="users_count" widget="statinfo" string="Users"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Finance Manager"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="description" placeholder="Describe the purpose of this role..."/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Permissions">
+                            <group>
+                                <field name="group_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Add security groups..."/>
+                                <field name="company_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Add companies..."/>
+                            </group>
+                        </page>
+                        <page string="Memo Approvals">
+                            <group>
+                                <field name="is_request_approver"/>
+                            </group>
+                        </page>
+                        <page string="Assigned Users">
+                            <field name="user_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="login"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_user_role" model="ir.actions.act_window">
+        <field name="name">User Roles</field>
+        <field name="res_model">user.role</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new User Role
+            </p><p>
+                Define logical roles like "Accountant" or "Sales Manager" and assign a set of permissions. When you assign this role to a user, they will automatically get all the associated security groups.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_user_role"
+              name="Roles"
+              parent="base.menu_users"
+              action="action_user_role"
+              sequence="15"/>
+</odoo>
