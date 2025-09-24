@@ -17,6 +17,20 @@
       background: linear-gradient(135deg, rgba(7, 7, 7, 0.9) 0%, rgba(41, 41, 41, 0.9) 50%, rgba(32, 32, 32, 0.9) 100%);
       position: relative;
       padding-bottom: 50px;
+
+      color: white; /* text white in dark mode */
+      position: relative;
+      padding-bottom: 50px;
+      transition: all 0.3s ease-in-out; /* smooth mode switch */
+    }
+
+    .dashboard.light-mode {
+      background: #f9f9f9;   /* light background */
+      color: black;          /* all text black */
+    }
+
+    .light-mode-text {
+      color: black;          /* all text black */
     }
 
     .switch-mode {
@@ -166,6 +180,7 @@
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); /* glassy shadow */
           border: 1px solid rgba(255, 255, 255, 0.25);
           border-radius: 12px;
+          padding-left: 10px;
 
         }
 
@@ -179,6 +194,10 @@
             color: white;
             font-size: 14px;
             font-weight: 400;
+        }
+
+        .header-text {
+            color: #A3A3A3;
         }
 
     /* .app-item:hover {

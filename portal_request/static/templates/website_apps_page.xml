@@ -5,58 +5,34 @@
 			
 
 			<div class="dashboard">
-				<!-- <div class="section-back"> 
-					<div class="back-btn-wrapper">
-						<div class="back-btn d-flex align-items-center">
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
-							<path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/>
-							</svg>
-							<span id="navigateBack" class="ms-2 text-white">Back</span>
-							<span id="myProfile" class="ms-2 text-white">
-							<a t-att-href="'/my/portal/dashboard/%s' % request.env.user.id if not request.env.user._is_public() else '/web/login'" class="ms-2 text-white">
-								My Profile
-							</a>
-							</span>
-						</div>
-					</div> 
-				</div>
-				<div class="switch-mode">
-					<svg viewBox="0 0 24 24">
-						<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-					</svg>
-					<span>Switch mode</span>
-				</div> -->
-
-				<header class="header-emp">
+				 
+				<!-- ERP Applications Section -->
+				<div class="section"> 
 					<div class="header-content-emp">
 						<div class="header-left-emp glass-hover" id="navigateBack">
 							<div class="header-icon-emp back-icon">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" id="back-icon" height="24" fill="white" viewBox="0 0 24 24">
 								<path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/>
 								</svg>
 							</div>
 							<span class="header-text">Back</span>
 						</div>
-						<div class="header-right-emp glass-hover">
-							<div class="header-left-emp" id="myProfile">
+						<div class="header-right-emp">
+							<div class="header-left-emp glass-hover" id="myProfile">
 								<a t-att-href="'/my/portal/dashboard/%s' % request.env.user.id if not request.env.user._is_public() else '/web/login'" class="ms-2 text-white">
-									<span class="header-text">My Profile</span>
+									<span class="header-text" id="myprofile">My Profile</span>
 								</a> 
 							</div>
-							<div class="header-left-emp">
-								<div class="header-icon-emp mode-icon">
-									<svg viewBox="0 0 24 24">
+							<div class="header-left-emp switch_mode_btn glass-hover" id="switchModeBtn">
+								<div class="header-icon-emp mode-icon switch_mode_btn" id="switchModeBtn2">
+									<svg viewBox="0 0 24 24" id="switchModeBtn1" fill="white">
 										<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
 									</svg>
 								</div>
-								<span class="header-text-emp">Switch mode</span>
+								<span class="header-text-emp" id="switchModeBtn3">Switch to Dark mode</span>
 							</div>
 						</div>
 					</div>
-				</header>
-
-				<!-- ERP Applications Section -->
-				<div class="section"> 
 					<div class="section-header">
 						<h2 class="section-title">ERP Applications</h2>
 					</div>
