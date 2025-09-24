@@ -123,7 +123,7 @@
 
                                         <li t-if="req.approver_ids" class="list-group-item flex-grow-1">
                                             <div class="col-12 col-md-12 pb-2">
-                                                <strong>To be Approved by:</strong>
+                                                <strong>Approvers:</strong>
                                                 <t t-foreach="req.approver_ids" t-as="appr">
                                                     <t t-if="appr.user_id">
                                                         <div class="d-flex ps-3 flex-nowrap">
@@ -243,7 +243,7 @@
                                                     <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_end" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
                                                 </span>
                                             </div>
-                                            <div class="row mb-4">
+                                            <div class="row mb-4 d-none">
                                                 <strong class="col-md-4">Leave Remaining</strong>: 
                                                 <span class="col-md-6">
                                                     <input type="hidden" class="form-control s_website_form_input" field_name= "leave_remaining" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
@@ -466,7 +466,6 @@
                                 </div>
                             </t>
                             <t t-else="">
-                            x..
                             </t> 
                             <t t-if="req.memo_type.memo_key == 'employee_update'">
                                 <div class="form-row" id="emp_item_form_div">

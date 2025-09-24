@@ -159,6 +159,16 @@ class PortalRequest(http.Controller):
                 ('active', '=', True),
                 ('user_id', '=', user.id)], limit=1)
             if employee:
+                if employee.leave_reliever:
+                    return {
+                        "status": False,
+                        "data": {
+                            'name': "",
+                            'phone': "",
+                            'work_email': "",
+                        },
+                        "message": " Are you back from Leave? if yes, kindly click the button 'I am Available Now'", 
+                    }
                 if employee.department_id:
                     
                     return {
@@ -192,6 +202,24 @@ class PortalRequest(http.Controller):
                     },
                     "message": "Employee with staff ID provided does not exist. Contact Admin", 
                 }
+                
+                
+    @http.route(['/relieve/reliever'], type='json', website=True, auth="user", csrf=False)
+    def reset_relieve_reliever(self, **post):
+        user = request.env.user
+        employee = request.env['hr.employee'].sudo().search(
+        [('active', '=', True), ('user_id', '=', user.id)], limit=1)
+        if employee:
+            employee.reset_leave_reliever()
+            return {
+                "status": True,
+                "message": "", 
+            }
+        else:
+            return {
+                "status": False,
+                "message": "You are not linked to any employee record.. Contact HR", 
+            } 
             
     # @http.route(
     # 		['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 

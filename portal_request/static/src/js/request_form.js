@@ -890,7 +890,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 $('#refuse_comment_message').attr('required', false);
                 divRefuseCommentMessage.hide();
                 modalfooter4cancel.show()
-            },
+            }, 
 
             'click .cancel_modal_btn': function(ev){
                 let targetElementid = $('.record_id').attr('id');

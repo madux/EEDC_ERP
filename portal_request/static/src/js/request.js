@@ -1036,8 +1036,10 @@ odoo.define('portal_request.portal_request', function (require) {
                             $("#employed_id").val('')
                             $("#phone_number").val('')
                             $("#email_from").val('')
-                            alert(`Validation Error! ${data.message}`)
+                            $('#relieveBtn').removeClass('d-none')
+                            alert(`[[]] ${data.message}`)
                         }else{
+                            $('#relieveBtn').addClass('d-none')
                             var employee_name = data.data.name;
                             var email = data.data.work_email;
                             var phone = data.data.phone; 
@@ -1583,6 +1585,42 @@ odoo.define('portal_request.portal_request', function (require) {
                 }else{
                     alert("[Staff ID, Request option, Existing Ref # ] Must all be provideds")
                 }
+            },
+
+            'click .relieveBtn': function(ev){
+                let targetElement = $(ev.target).attr('id');
+                let $btn = $('.relieveBtn');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Resetting ...</h2>'
+                });
+                this._rpc({
+                    route: `/relieve/reliever`,
+                    params: {
+                        'user_id': 0, ///$('.record_id').attr('id'),
+                    },
+                }).then(function (data) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
+                    console.log('updating manager comment record dataState reliever => '+ JSON.stringify(data))
+                    if(!data.status){
+                        $('#relieveBtn').removeClass('d-none')
+                        modal_message.text(data.message)
+                        alert_modal.modal('show');
+                    }else{
+                        $('#relieveBtn').addClass('d-none')
+                        console.log('reliever reset')
+                    }
+                }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
+                    let msg = error.message.message
+                    alert(`Unknown Error! ${msg}`)
+                });
             },
             'change select[name=selectTypeRequest]': function(){
                 // if new request type; hide existing order else reveal it
