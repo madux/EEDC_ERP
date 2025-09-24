@@ -51,7 +51,7 @@
                 </footer>
             </form>
         </field>
-    </record> 
+    </record>
 
     <record id="action_account_dynamic_report" model="ir.actions.act_window">
         <field name="name">Account Reports</field>

@@ -201,7 +201,7 @@ class AccountDynamicReport(models.Model):
             
         return start_date, end_date, list(dict.fromkeys(month_headers))
 
-    def _build_base_domain(self, date_from, date_to, branch_id):
+    def _build_base_domain(self, date_from, date_to, branch_id, company_id):
         """Builds a dynamic search domain based on wizard selections."""
         domain = [
             # ('move_id.branch_id', 'in', self.branch_ids.ids),
@@ -209,7 +209,7 @@ class AccountDynamicReport(models.Model):
             ('date', '>=', date_from), ('date', '<=', date_to),
             ('move_id.state', '=', 'posted'),
         ]
-        if self.company_id: domain.append(('move_id.company_id', '=', self.company_id.id))
+        if company_id: domain.append(('move_id.company_id', '=', company_id))
         if self.journal_ids: domain.append(('journal_id', 'in', self.journal_ids.ids))
         if self.account_ids: domain.append(('account_id', 'in', self.account_ids.ids))
         if self.partner_id: domain.append(('partner_id', '=', self.partner_id.id))
@@ -237,13 +237,15 @@ class AccountDynamicReport(models.Model):
         if not branches_to_process:
             raise ValidationError("No district selected or configured for the current user.")
         
+        company = self.company_id
+        
         start_date, end_date, month_headers = self._get_date_range()
         
         is_quarterly = True if 'quarterly' in self.report_type else False
         
         all_branch_reports = []
         for branch in branches_to_process:
-            report_lines = self._get_hierarchical_report_data(start_date, end_date, month_headers, branch, is_quarterly=is_quarterly)
+            report_lines = self._get_hierarchical_report_data(start_date, end_date, month_headers, branch, company, is_quarterly=is_quarterly)
             if report_lines:
                 all_branch_reports.append({
                     'title': f'HEAD: {branch.code} - {branch.name}',
@@ -286,7 +288,7 @@ class AccountDynamicReport(models.Model):
         return report_action.report_action(self, data=data)
     
     
-    def _get_hierarchical_report_data(self, start_date, end_date, month_headers, branch, is_quarterly=False):
+    def _get_hierarchical_report_data(self, start_date, end_date, month_headers, branch, company, is_quarterly=False):
         year_start = end_date.replace(day=1, month=1)
         domain_end_date = end_date
         
@@ -294,7 +296,7 @@ class AccountDynamicReport(models.Model):
         all_accounts = tags.mapped('account_ids')
         if not all_accounts: return []
 
-        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id)
+        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company.id)
         base_domain.append(('account_id', 'in', all_accounts.ids))
         all_moves = self.env['account.move.line'].search(base_domain)
 
@@ -397,32 +399,37 @@ class AccountDynamicReport(models.Model):
             build_recursive(tag, 0)
         return final_report_data
     
-    def _get_consolidated_district_data(self, start_date, end_date, month_headers):
+    def _get_consolidated_district_data(self, start_date, end_date, month_headers, company):
         """
         Generates consolidated data across all selected districts for the same period.
         Shows individual accounts instead of tags, with expandable move lines.
         Returns data in format: {account: {district_code: {amount, moves}, ...}}
         """
-        branches_to_process = self.branch_ids or self.env['multi.branch'].search([])
+        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
         if not branches_to_process:
-            raise ValidationError("No districts selected or configured for the current user.")
+            raise ValidationError("No districts selected or available for the selected company.")
         
         if self.account_ids:
             all_accounts = self.account_ids
         else:
             tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
             all_accounts = tags.mapped('account_ids')
+            
+        all_accounts = self.env['account.account'].search([('company_id','=', company.id)])
         
         if not all_accounts:
             return [], []
 
         consolidated_data = {}
         district_headers = []
+        district_codes = []
         
         for branch in branches_to_process:
-            district_headers.append(branch.code.upper())
+            # district_headers.append(branch.code.upper())
+            district_headers.append(branch.name.upper())
+            district_codes.append(branch.code.upper())
             
-            base_domain = self._build_base_domain(start_date, end_date, branch.id)
+            base_domain = self._build_base_domain(start_date, end_date, branch.id, company.id)
             base_domain.append(('account_id', 'in', all_accounts.ids))
             
             branch_moves = self.env['account.move.line'].search(base_domain)
@@ -488,7 +495,7 @@ class AccountDynamicReport(models.Model):
         
         report_lines.sort(key=lambda x: x.get('code', ''))
         
-        return report_lines, district_headers
+        return report_lines, district_headers, district_codes
     
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display"""
@@ -497,9 +504,11 @@ class AccountDynamicReport(models.Model):
         if self.report_type != 'consolidated_district':
             return self.action_generate_report()
         
+        company = self.company_id
+        
         start_date, end_date, month_headers = self._get_date_range()
         
-        report_lines, district_headers = self._get_consolidated_district_data(start_date, end_date, month_headers)
+        report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
         
         if not report_lines:
             raise ValidationError("No data could be generated for the selected criteria.")
@@ -514,6 +523,7 @@ class AccountDynamicReport(models.Model):
             'data': [{
                 'report_lines': report_lines,
                 'district_headers': district_headers,
+                'district_codes': district_codes,
                 'company_name': company_name,
                 'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
                 'account_head_type': self.account_head_type,
@@ -522,7 +532,15 @@ class AccountDynamicReport(models.Model):
             'end_date': end_date,
         }
         
-        report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+        # report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+        if self.format == 'html':
+            report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+            report_obj.sudo().update({'report_type': 'qweb-html'})
+        else:
+            report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
+            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+            report_obj.sudo().update({'report_type': 'qweb-pdf'})
         return report_action.report_action(self, data=data)
         
     def _get_period_string(self, start_date, end_date):
