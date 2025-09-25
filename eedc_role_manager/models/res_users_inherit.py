@@ -59,8 +59,7 @@ class ResUsers(models.Model):
         ownership_model = self.env['user.role.group.ownership']
         
         users_to_sync = self.filtered(lambda u: u.id != SUPERUSER_ID)
-        _logger.info("Super user ID: {SUPERUSER_ID}......")
-        for user in users_to_sync:
+        for user in self:
             desired_groups = user.role_ids.mapped('group_ids')
             
             current_ownerships = ownership_model.search([('user_id', '=', user.id)])
@@ -104,10 +103,15 @@ class ResUsers(models.Model):
         """
         MemoStage = self.env['memo.stage']
         ownership_model = self.env['user.role.approval.ownership']
-
-        for user in self.filtered(lambda u: u.employee_id):
-            employee = user.employee_id
+        
+        employees = self.env['hr.employee'].search([('user_id', 'in', self.ids)])
+        
+        for employee in employees:
+            user = employee.user_id
+            _logger.info(f"Processing user: {user.name} with employee: {employee.name}")
+            
             approval_roles = user.role_ids.filtered('is_request_approver')
+            _logger.info(f"Approval roles {approval_roles}....")
 
             stages_user_should_approve = self.env['memo.stage']
             if approval_roles:
@@ -116,6 +120,7 @@ class ResUsers(models.Model):
                     stage_config = stage.memo_config_id
                     stage_company = stage_config.company_id
                     stage_branch = stage_config.branch_id
+                    _logger.info(f"Stages: {stage.name}.....")
 
                     matching_roles = approval_roles & stage.approval_role_ids
                     if not matching_roles:
@@ -123,7 +128,6 @@ class ResUsers(models.Model):
 
                     should_approve = False
                     for role in matching_roles:
-                        # Company check
                         role_allows_company = True
                         if stage_company and role.company_ids:
                             if stage_company not in role.company_ids:

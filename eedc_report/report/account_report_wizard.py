@@ -47,7 +47,7 @@ class AccountDynamicReport(models.Model):
             ("bank", "Trial Balance"),
             ("cash", "General Ledger"),
         ],
-        string="Report Type", tracking=True,
+        string="Report Type",
         required=False, default="monthly_expenditure"
     )
     format = fields.Selection(
