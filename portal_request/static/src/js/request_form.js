@@ -23,6 +23,35 @@ odoo.define('portal_request.portal_request_form', function (require) {
     refuseCommentMessage.attr('required', false);
     let localStorage = window.localStorage;
 
+    let triggerEndDate = function(){
+        var endDate = new Date($('#leave_start_datex').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
+        var maxDate = endDate + (21 * 24 * 60 * 60 * 1000)
+        var prefixendDate = new Date(endDate).getMonth() + 1 
+        var prefixmaxDate = new Date(maxDate).getMonth() + 1
+        var join1 = prefixendDate.length == 1 ? `0${prefixendDate}` : prefixendDate;
+        var join2 = prefixmaxDate.length == 1 ? `0${prefixmaxDate}` : prefixmaxDate;
+        var st = `${join1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
+        var end = `${join2}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
+        console.log(`trigger end date on start ${st} ${end}`)
+        return [st, end]
+    }
+
+    function workingDaysBetweenDates(startDate, endDate) {
+        let count = 0;
+        let curDate = new Date(startDate);
+
+        while (curDate <= endDate) {
+            const dayOfWeek = curDate.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {  
+                // 0 = Sunday, 6 = Saturday
+                count++;
+            }
+            curDate.setDate(curDate.getDate() + 1); // move to next day
+        }
+
+        return count;
+    }
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         var staff_num = $('#staff_id').val();
@@ -72,8 +101,8 @@ odoo.define('portal_request.portal_request_form', function (require) {
             dateFormat: 'mm/dd/yy',
             changeMonth: true,
             changeYear: true,
-            yearRange: '2023:2050',
-            maxDate: maxDate,
+            yearRange: '2024:2050',
+            maxDate: null,
             minDate: minDate,
             // Disable Saturday (6) & Sunday (0)
             beforeShowDay: function (date) {
@@ -192,15 +221,18 @@ odoo.define('portal_request.portal_request_form', function (require) {
         // $('input,textarea,select,select2').filter('[readonly]:visible').each(function(ev){
         $('input,textarea,select,select2').each(function(ev){
             var field = $(this); 
+           
             if (field.prop('readonly')) {
-                field.prop('readonly', false);
+                if (!field.attr('date_field')){
+                    field.prop('readonly', false);
+                }
             }
             if (field.prop('disabled')) {
                 field.prop('disabled', false);
             }
             if (field.prop('required')) {
                 field.prop('required', true);
-            }
+            } 
 
             $('input[name=is_edit_mode]').prop('checked', true);
             trigger_date_function($('#leave_start_datex'))
@@ -400,6 +432,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
             var self = this;
             return this._super.apply(this, arguments).then(function(){
                 console.log("started form request")
+                let [st, end] = triggerEndDate();
+                console.log(`what is TRIGGERENDDATE ${st} -- ${end}`)
+                trigger_date_function($('#leave_end_datex'), st, end)
                
             });
 
@@ -422,6 +457,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
             'submit': '_onSubmitSearch',
             'click .editbtn': function(ev){
                 console.log("EDIT MODE ACTIVATED")
+                let [st, end] = triggerEndDate();
+                console.log(`what is TRIGGERENDDATE2 ${st} -- ${end}`)
+                trigger_date_function($('#leave_end_datex'), st, end)
                 // hide editbtn 
                 // display save and discard option
                 // enable all fields to be writtable 
@@ -429,8 +467,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let save = $('#save');
                 let back = $('#previous')
                 let discard = $('#discardbtn')
-                let resend_request = $('.resend_request')
-
+                let resend_request = $('.resend_request');
                 edit.addClass('d-none');
                 resend_request.addClass('d-none');
                 back.addClass('d-none');
@@ -513,27 +550,29 @@ odoo.define('portal_request.portal_request_form', function (require) {
             'change .AmountTots': function(ev){
                 // assigning the property: name of quantity field as the quantity selected
                 let qty_elm = $(ev.target);
-                console.log("WE ARE HERE TO GET TARGET", qty_elm)
+                console.log("WE ARE HERE TO GET TARGET1", qty_elm)
 
                 let productinput_id = qty_elm.attr('id');
-                console.log("WE ARE HERE TO GET TARGET", productinput_id)
 
                 // $(`.SUBTOTAL${productinput_id}`).val();
                 let unit_price = qty_elm.val()
                 let unit = $(`.QTY${productinput_id}`)
-                if (unit.val() < -1){
+                console.log(`WE ARE HERE TO GET TARGET22222 ${unit} AND VAL ==${parseFloat(unit.val())}== ID ${productinput_id}`)
+
+                if (parseFloat(unit.val()) < -1){
                     alert('Unit must be greater than 0');
-                    unit_price.val('');
+                    qty_elm.val('');
                     qty_elm.addClass('is-invalid', true);
                     unit.addClass('is-invalid', true);
-                console.log("WE ARE HERE TO GET TARGET 1", qty_elm)
+                    console.log("WE ARE HERE TO GET TARGET 1", qty_elm)
 
                 }else{
                     let subtotal = $(`.SUBTOTAL${productinput_id}`)
-
-                    let result = unit.val() * unit_price 
+                    let result = parseFloat(unit.val()) * parseFloat(unit_price)
                     subtotal.val(result);
                     subtotal.text(result);
+                    console.log(`What is ${result} and unit price ${unit_price}, unit ${unit}`)
+
                     $(`.AMTTOTAL${productinput_id}`).removeClass('is-invalid', true);
                     unit.removeClass('is-invalid', true);
                 compute_total_amount();
@@ -542,6 +581,43 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
                 
             },
+            'change select[name=leave_type_id]': function(ev){
+                let leave_id = $(ev.target).val();
+                let staff_num = $('#staff_id').text();
+                $("#leave_start_datex").val('')//.trigger('change')
+                $("#leave_end_datex").val('')
+                if(staff_num !== '' && leave_id !== ''){  
+                    var self = this;
+                    this._rpc({
+                        route: `/get/leave-allocation`, ///${leave_id}/${staff_num}`,
+                        params: {
+                            'staff_num': staff_num.trim(),
+                            'leave_id': leave_id
+                        },
+                    }).then(function (data) {
+                        console.log('retrieved staff leave data => '+ JSON.stringify(data))
+                        if (!data.status) {
+                            $(ev.target).val('')
+                            $("#leave_start_datex").val('')//.trigger('change')
+                            $("#leave_end_datex").val('')//.trigger('change')
+                            $("#leave_remaining").val('')
+                            $("#leave_remain").text('0')
+                            $("#leave_reliever").val('')
+
+                            alert(`Validation Error! ${data.message}`)
+                        }else{
+                            var number_of_days_display = data.data.number_of_days_display; 
+                            console.log(number_of_days_display)
+                            $("#leave_remaining").val(number_of_days_display)
+                            $("#leave_remain").text(number_of_days_display)
+                        }
+                    }).guardedCatch(function (error) {
+                        let msg = error.message.message
+                        console.log(msg)
+                        alert(`Unknown Error! ${msg}`)
+                    });
+                }
+            }, 
 
             'blur input[name=leave_start_datex]': function(ev){
                 if ($('#leave_type_id').val() == ""){
@@ -551,10 +627,11 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     alert(message);
                     return false;
                 }
-                let leave_remaining = $('#leave_remaining').val(); 
-                let start_date = $(ev.target);
-                let remain_days = leave_remaining !== undefined ? parseInt($('#leave_remaining').val()) : 1
-                var selectStartLeaveDate = new Date(start_date.val());
+                $('#leave_end_datex').val('')
+                // let leave_remaining = $('#leave_remaining').val(); 
+                // let start_date = $(ev.target);
+                // let remain_days = leave_remaining !== undefined ? parseInt($('#leave_remaining').val()) : 1
+                // var selectStartLeaveDate = new Date(start_date.val());
                 var endDate = new Date($('#leave_start_datex').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
                 var maxDate = endDate + (21 * 24 * 60 * 60 * 1000)
                 var prefixendDate = new Date(endDate).getMonth() + 1 
@@ -568,15 +645,31 @@ odoo.define('portal_request.portal_request_form', function (require) {
             },
             'blur input[name=leave_end_datex]': function(ev){
                 let leaveRemaining = $('#leave_remaining').val();
-                console.log(`leaveRemaining IS : ${leaveRemaining}`)
                 let start_date = $('#leave_start_datex');
-                let endDate = $(ev.target);
+                if (!start_date){
+                    alert("Please select Start date first");
+                    return true
+                }
+                let endDate = $(ev.target); 
                 var date1 = new Date(start_date.val());
                 var date2 = new Date(endDate.val());
-                var Difference_In_Time = date2.getTime() - date1.getTime();
-                var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
-                console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
-                if (parseInt(leaveRemaining) > 0 && Difference_In_Days > parseInt(leaveRemaining)){
+
+                console.log(`leaveRemaining IS : ${leaveRemaining} START DATE ${start_date.val()} IS ${date1} AND END IS ${date2}`)
+                if (date2 < date1){
+                    alert(`Please End date ${date2} must be greater than Start date ${date2}`);
+                    endDate.val('').trigger('change')
+                    return true
+                }
+                // var Difference_In_Time = date2.getTime() - date1.getTime();
+                // var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                // console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
+                // if (Difference_In_Days > parseInt(leaveRemaining)){
+                // //if (parseInt(leaveRemaining) > 0 && Difference_In_Days > parseInt(leaveRemaining)){
+
+                let workingDays = workingDaysBetweenDates(date1, date2);
+                console.log(`leaveRemaining IS : ${leaveRemaining} workingDays ${workingDays}`)
+
+                if (workingDays > parseInt(leaveRemaining)) {
                     $('#leave_end_datex').val("");
                     $('#leave_end_datex').attr('required', true);
                     alert(`You only have ${leaveRemaining} number of leave remaining for this leave type. Please Ensure the date range is within the available day allocated for you.`)
@@ -585,7 +678,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 else{
                     $('#leave_end_datex').attr('required', false);
                     endDate.removeClass('is-invalid').addClass('is-valid');
-                    $('#leave_taken').text(Difference_In_Days + ` Day(s)`)
+                    $('#leave_taken').text(workingDays + ` Day(s)`)
 
                 }
                 checkOverlappingLeaveDate(this)
@@ -631,41 +724,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 }
             },
 
-            'change select[name=leave_type_id]': function(ev){
-                let leave_id = $(ev.target).val();
-                let staff_num = $('#staff_id').text();
-                if(staff_num !== '' && leave_id !== ''){  
-                    var self = this;
-                    this._rpc({
-                        route: `/get/leave-allocation`, ///${leave_id}/${staff_num}`,
-                        params: {
-                            'staff_num': staff_num.trim(),
-                            'leave_id': leave_id
-                        },
-                    }).then(function (data) {
-                        console.log('retrieved staff leave data => '+ JSON.stringify(data))
-                        if (!data.status) {
-                            $(ev.target).val('')
-                            $("#leave_start_datex").val('')//.trigger('change')
-                            $("#leave_end_datex").val('')//.trigger('change')
-                            $("#leave_remaining").val('')
-                            $("#leave_remain").text('0')
-                            $("#leave_reliever").val('')
-
-                            alert(`Validation Error! ${data.message}`)
-                        }else{
-                            var number_of_days_display = data.data.number_of_days_display; 
-                            console.log(number_of_days_display)
-                            $("#leave_remaining").val(number_of_days_display)
-                            $("#leave_remain").text(number_of_days_display)
-                        }
-                    }).guardedCatch(function (error) {
-                        let msg = error.message.message
-                        console.log(msg)
-                        alert(`Unknown Error! ${msg}`)
-                    });
-                }
-            }, 
+            
 
             'click .supervisor_comment_button': function(ev){
                 let targetElement = $(ev.target).attr('id');

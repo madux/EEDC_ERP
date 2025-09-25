@@ -9,13 +9,14 @@ from odoo import http, fields
 from odoo.exceptions import ValidationError
 from odoo.tools import consteq, plaintext2html
 from odoo.http import request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 import odoo
 import odoo.addons.web.controllers.home as main
 from odoo.addons.web.controllers.utils import ensure_db, _get_login_redirect_url, is_user_internal
 from odoo.tools.translate import _
+from odoo.tools.misc import format_date
 
 
 _logger = logging.getLogger(__name__)
@@ -1344,10 +1345,27 @@ class PortalRequest(http.Controller):
         values = {'requests': requests}
         return request.render("portal_request.my_portal_request", values)
     
+    # def get_leave_days_taken(self, record):
+    #     if record and record.leave_end_date and record.leave_start_date:
+    #         duration = record.leave_end_date - record.leave_start_date
+    #         return duration.days if duration else 0
+    #     else:
+    #         return 0
     def get_leave_days_taken(self, record):
         if record and record.leave_end_date and record.leave_start_date:
-            duration = record.leave_end_date - record.leave_start_date
-            return duration.days if duration else 0
+            start = record.leave_start_date
+            end = record.leave_end_date
+
+            day_count = 0
+            current = start
+
+            while current <= end:
+                # Monday = 0 ... Sunday = 6
+                if current.weekday() < 5:  # exclude Saturday(5) and Sunday(6)
+                    day_count += 1
+                current += timedelta(days=1)
+
+            return day_count
         else:
             return 0
 
@@ -1436,6 +1454,7 @@ class PortalRequest(http.Controller):
                     ], limit=1)
         values = {
             'req': requests,
+            # 'format_date': lambda date, fmt='%m/%d/%Y': format_date(request.env, date, date_format=fmt),
             'is_edit_mode': 'on' if requests.state in ['draft', 'submit', 'refuse', 'cancel'] else 'off',
                'leave_taken': self.get_leave_days_taken(requests),
             'current_user': user.id,
@@ -1443,8 +1462,8 @@ class PortalRequest(http.Controller):
                'employee_ids': request.env['hr.employee'].sudo().search([('active', '=', True)]),
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
             'record_attachment_ids': memo_attachment_ids,
-            "number_of_days_display": leave_allocation_id.number_of_days_display,
-               "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
+            "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
         }
         return request.render("portal_request.request_form_template", values) 
     

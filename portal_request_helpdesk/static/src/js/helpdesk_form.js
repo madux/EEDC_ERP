@@ -15,7 +15,7 @@ odoo.define('portal_request.helpdesk_form', function (require) {
             dateFormat: 'mm/dd/yy',
             changeMonth: true,
             changeYear: true,
-            yearRange: '2023:2050',
+            yearRange: '2024:2050',
             maxDate: maxDate,
             minDate: minDate
         });
