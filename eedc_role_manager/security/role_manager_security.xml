@@ -2,14 +2,12 @@
 <odoo>
     <data noupdate="0">
         
-        <!-- Category for Role Manager -->
         <record id="module_role_manager_category" model="ir.module.category">
             <field name="name">Role Manager</field>
             <field name="description">Role Management System</field>
             <field name="sequence">10</field>
         </record>
 
-        <!-- Admin Group - Full access to role management -->
         <record id="group_role_manager_admin" model="res.groups">
             <field name="name">Role Manager Admin</field>
             <field name="category_id" ref="module_role_manager_category"/>
@@ -17,7 +15,6 @@
             <field name="comment">Full access to role management system, can create/edit roles and assign to users</field>
         </record>
 
-        <!-- User Group - Can view and use roles -->
         <record id="group_role_manager_user" model="res.groups">
             <field name="name">Role Manager User</field>
             <field name="category_id" ref="module_role_manager_category"/>

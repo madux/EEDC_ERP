@@ -24,7 +24,6 @@
         <field name="model">res.users</field>
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
-            <!-- Add the Roles page to the notebook -->
             <xpath expr="//notebook" position="inside">
                 <page name="roles" string="Roles" groups="base.group_no_one,eedc_role_manager.group_role_manager_admin">
                     <group>
@@ -36,7 +35,6 @@
                         </group>
                     </group>
                     
-                    <!-- Optional: Add a separator and manual sync button for admins -->
                     <separator string="Role Management"/>
                     <div class="oe_button_box">
                         <button name="action_sync_roles_manually" 
@@ -48,7 +46,6 @@
                 </page>
             </xpath>
             
-            <!-- Try to hide the groups field - use a more flexible xpath -->
             <xpath expr="//field[contains(@name,'groups')]" position="attributes">
                 <attribute name="groups">eedc_role_manager.group_role_manager_admin</attribute>
             </xpath>

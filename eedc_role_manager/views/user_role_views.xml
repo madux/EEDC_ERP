@@ -6,6 +6,7 @@
             <tree string="User Roles">
                 <field name="name"/>
                 <field name="description" optional="hide"/>
+                <field name="is_request_approver" widget="boolean_toggle"/>
                 <field name="users_count" string="Active Users"/>
                 <field name="active" widget="boolean_toggle"/>
             </tree>
@@ -33,24 +34,54 @@
                             <field name="description" placeholder="Describe the purpose of this role..."/>
                             <field name="active"/>
                         </group>
+                        <group>
+                            <field name="is_request_approver"/>
+                        </group>
                     </group>
+                    
                     <notebook>
                         <page string="Permissions">
                             <group>
-                                <field name="group_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Add security groups..."/>
-                                <field name="company_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Add companies..."/>
+                                <field name="group_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Add security groups..."/>
+                                <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Add companies..."/>
                             </group>
                         </page>
-                        <page string="Memo Approvals">
-                            <group>
-                                <field name="is_request_approver"/>
+                        
+                        <page string="Memo Approvals" attrs="{'invisible': [('is_request_approver', '=', False)]}">
+                            <group string="Company Context">
+                                <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all companies"/>
                             </group>
+                            <group string="Branch Context">
+                                <field name="branch_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all branches"/>
+                            </group>
+                            <separator string="How it Works"/>
+                            <div class="alert alert-info" style="margin: 10px;">
+                                <p><strong>Automatic Approval Assignment:</strong></p>
+                                <ul>
+                                    <li>When you assign this role to a user, they will be automatically added as approvers to memo stages that require this role.</li>
+                                    <li><strong>Company Filter:</strong> If companies are specified, the user will only be added to stages for memo configs in those companies.</li>
+                                    <li><strong>Branch Filter:</strong> If branches are specified, users will only be added to stages where their assigned branches intersect with the role's allowed branches.</li>
+                                    <li><strong>User Branch Matching:</strong> Users must have at least one branch that matches both the role's branch restrictions and the memo stage's branch requirement.</li>
+                                    <li>When you remove this role from a user, they will be automatically removed from the corresponding approvals.</li>
+                                </ul>
+                            </div>
                         </page>
+                        
                         <page string="Assigned Users">
                             <field name="user_ids" readonly="1">
                                 <tree>
                                     <field name="name"/>
                                     <field name="login"/>
+                                    <field name="branch_ids" widget="many2many_tags"/>
+                                    <field name="employee_id"/>
                                 </tree>
                             </field>
                         </page>
@@ -68,7 +99,7 @@
             <p class="o_view_nocontent_smiling_face">
                 Create a new User Role
             </p><p>
-                Define logical roles like "Accountant" or "Sales Manager" and assign a set of permissions. When you assign this role to a user, they will automatically get all the associated security groups.
+                Define logical roles like "Accountant" or "Sales Manager" and assign a set of permissions. When you assign this role to a user, they will automatically get all the associated security groups and memo approvals.
             </p>
         </field>
     </record>
