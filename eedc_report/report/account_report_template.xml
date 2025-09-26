@@ -250,11 +250,42 @@
         </t>
     </template>
 
+    
+    
     <template id="consolidated_district_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
-                <t t-foreach="data" t-as="report">
-                    <div class="page">
+
+                <div class="d-print-none" style="background:#f8f9fa; padding:10px; margin-bottom:10px; border:1px solid #dee2e6;">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="rpt_date_from">Date From:</label>
+                            <input type="date" id="rpt_date_from" class="form-control form-control-sm" t-att-value="current_date_from or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="rpt_date_to">Date To:</label>
+                            <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="rpt_account_head_type">Account Type:</label>
+                            <select id="rpt_account_head_type" class="form-control form-control-sm">
+                                <t t-foreach="account_head_types or []" t-as="aht">
+                                    <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
+                                        <t t-esc="aht[1]"/>
+                                    </option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button id="rpt_apply_btn" class="btn btn-primary btn-sm mr-2" t-att-data-wizard-id="wizard_id or ''">Apply Filters</button>
+                            <div id="rpt_loading" style="display:none;"><i class="fa fa-spinner fa-spin"></i> Updating...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <t t-foreach="data or []" t-as="report">
+                    <div class="page" style="margin-bottom: 20px;">
+
                         <div class="text-center mb-4">
                             <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
                                 <t t-esc="report.get('company_name', 'EEDC')"/>
@@ -263,110 +294,201 @@
                                 CONSOLIDATED DISTRICT REPORT
                             </h3>
                             <h4 style="font-size: 12px; font-weight: bold; margin-top: 0;">
-                                <t t-esc="report.get('subtitle')"/>
+                                <t t-esc="report.get('subtitle','')"/>
                             </h4>
                         </div>
 
                         <style>
-                            .consolidated-table {
-                                border-collapse: collapse;
-                                width: 100%;
-                                font-size: 10px;
-                                margin-top: 20px;
-                            }
-                            .consolidated-table th, .consolidated-table td {
-                                border: 1px solid #000;
-                                padding: 6px;
-                                vertical-align: middle;
-                            }
-                            .consolidated-table th {
-                                background-color: #e6e6e6;
-                                font-weight: bold;
-                                text-align: center;
-                                font-size: 9px;
-                            }
-                            .text-right {
-                                text-align: right !important;
-                            }
-                            .text-center {
-                                text-align: center !important;
-                            }
-                            .expandable-row {
-                                cursor: pointer;
-                                background-color: #f8f9fa;
-                                font-weight: bold;
-                            }
-                            .expandable-row:hover {
-                                background-color: #e9ecef;
-                            }
-                            .move-detail-row {
-                                display: none;
-                                background-color: #fff;
-                                font-size: 9px;
-                                font-weight: normal;
-                            }
-                            .move-detail-row.show {
-                                display: table-row;
-                            }
-                            .expand-icon {
-                                font-weight: bold;
-                                font-size: 12px;
-                                margin-right: 5px;
-                                color: #007bff;
-                                display: inline-block;
-                                transition: transform 0.2s;
-                            }
-                            .expand-icon.expanded {
-                                transform: rotate(90deg);
-                            }
-                            .indent-move {
-                                padding-left: 30px;
-                                font-style: italic;
-                                color: #666;
-                            }
-                            .total-row {
-                                background-color: #d4edda;
-                                font-weight: bold;
-                                border-top: 2px solid #000;
-                            }
-                            .account-code {
-                                font-family: 'Courier New', monospace;
-                                font-weight: bold;
-                            }
-                            .move-reference {
-                                font-size: 8px;
-                                color: #666;
-                            }
+                            .consolidated-table { border-collapse: collapse; width: 100%; font-size: 10px; margin-top: 20px; }
+                            .consolidated-table th, .consolidated-table td { border: 1px solid #000; padding: 6px; vertical-align: middle; }
+                            .consolidated-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; font-size: 9px; }
+                            .text-right { text-align: right !important; }
+                            .text-center { text-align: center !important; }
+                            .expandable-row { cursor: pointer; background-color: #f8f9fa; font-weight: bold; }
+                            .expandable-row:hover { background-color: #e9ecef; }
+                            .move-detail-row { display: none; background-color: #fff; font-size: 9px; font-weight: normal; }
+                            .move-detail-row.show { display: table-row; }
+                            .expand-icon { font-weight: bold; font-size: 12px; margin-right: 5px; color: #007bff; display:inline-block; transition: transform 0.2s; }
+                            .expand-icon.expanded { transform: rotate(90deg); }
+                            .indent-move { padding-left: 30px; font-style: italic; color: #666; }
+                            .total-row { background-color: #d4edda; font-weight: bold; border-top: 2px solid #000; }
+                            .account-code { font-family: 'Courier New', monospace; font-weight: bold; }
+                            .move-reference { font-size: 8px; color: #666; }
                         </style>
 
-                        <script type="text/javascript">
+                        <script type="text/javascript"><![CDATA[
                             document.addEventListener('DOMContentLoaded', function() {
+                                // existing toggle function (keeps current behaviour)
                                 window.toggleAccountDetails = function(accountCode) {
-                                    // Use the accountCode directly, as it's already sanitized in QWeb
-                                    var detailRows = document.querySelectorAll('.moves-' + accountCode);
-                                    var icon = document.getElementById('icon-' + accountCode);
-                                    
-                                    if (!detailRows.length || !icon) return;
-                                    
-                                    var isVisible = detailRows[0].classList.contains('show');
-                                    
-                                    detailRows.forEach(function(row) {
-                                        if (isVisible) {
-                                            row.classList.remove('show');
-                                        } else {
-                                            row.classList.add('show');
-                                        }
-                                    });
-                                    
-                                    // Toggle icon
-                                    if (isVisible) {
-                                        icon.classList.remove('expanded');
-                                    } else {
-                                        icon.classList.add('expanded');
+                                    try {
+                                        var detailRows = document.querySelectorAll('.moves-' + accountCode);
+                                        var icon = document.getElementById('icon-' + accountCode);
+                                        if (!detailRows.length || !icon) return;
+                                        var isVisible = detailRows[0].classList.contains('show');
+                                        detailRows.forEach(function(row) {
+                                            if (isVisible) { row.classList.remove('show'); }
+                                            else { row.classList.add('show'); }
+                                        });
+                                        if (isVisible) { icon.classList.remove('expanded'); }
+                                        else { icon.classList.add('expanded'); }
+                                    } catch (err) {
+                                        console.error('toggleAccountDetails error', err);
                                     }
                                 };
+
+                                // --------------------------
+                                // Date-range shortcut logic
+                                // --------------------------
+                                function jsonRpcCall(model, method, args, kwargs) {
+                                    var payload = {
+                                        jsonrpc: "2.0",
+                                        method: "call",
+                                        params: {
+                                            model: model,
+                                            method: method,
+                                            args: args || [],
+                                            kwargs: kwargs || {}
+                                        },
+                                        id: new Date().getTime()
+                                    };
+                                    return fetch('/web/dataset/call_kw/' + model + '/' + method, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        credentials: 'same-origin',
+                                        body: JSON.stringify(payload)
+                                    }).then(function (r) { return r.json(); });
+                                }
+
+                                function showLoading(flag) {
+                                    var spinner = document.getElementById('rpt_loading');
+                                    var btn = document.getElementById('rpt_apply_btn');
+                                    if (!spinner || !btn) return;
+                                    if (flag) {
+                                        spinner.style.display = '';
+                                        btn.disabled = true;
+                                    } else {
+                                        spinner.style.display = 'none';
+                                        btn.disabled = false;
+                                    }
+                                }
+
+                                function applyDateFilters() {
+                                    try {
+                                        var btn = document.getElementById('rpt_apply_btn');
+                                        if (!btn) return;
+                                        var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
+                                        if (!wizardId) {
+                                            console.warn('No wizard id found on Apply button - cannot update params.');
+                                            return;
+                                        }
+                                        var dateFrom = (document.getElementById('rpt_date_from') || {}).value || false;
+                                        var dateTo = (document.getElementById('rpt_date_to') || {}).value || false;
+
+                                        // nothing to do if both empty
+                                        if (!dateFrom && !dateTo) {
+                                            // still reload to reflect possible other changes (optional)
+                                            return;
+                                        }
+
+                                        showLoading(true);
+                                        // call model method: update_report_params(wizard_id, **kwargs)
+                                        jsonRpcCall('account.dynamic.report', 'update_report_params', [wizardId], {date_from: dateFrom || false, date_to: dateTo || false})
+                                            .then(function (resp) {
+                                                showLoading(false);
+                                                if (resp && resp.result && resp.result.success) {
+                                                    // reload page so report re-renders with new wizard params
+                                                    window.location.reload();
+                                                } else {
+                                                    // graceful error display
+                                                    var err = (resp && resp.error && resp.error.message) ? resp.error.message : 'Failed to update report parameters';
+                                                    console.error('update_report_params error:', resp);
+                                                    alert('Could not update report parameters:\\n' + err);
+                                                }
+                                            })
+                                            .catch(function (err) {
+                                                showLoading(false);
+                                                console.error('RPC error', err);
+                                                alert('Could not update report parameters (network or server error). See console for details.');
+                                            });
+                                            
+                                            // --- populate inputs from wizard record if empty ---
+                                            function loadWizardParamsIntoForm() {
+                                                try {
+                                                    var btn = document.getElementById('rpt_apply_btn');
+                                                    if (!btn) return;
+                                                    var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
+                                                    if (!wizardId) return;
+
+                                                    // If fields are already non-empty, skip (prevents overwriting)
+                                                    var df = document.getElementById('rpt_date_from');
+                                                    var dt = document.getElementById('rpt_date_to');
+                                                    var sel = document.getElementById('rpt_account_head_type');
+                                                    var needLoad = !( (df && df.value) || (dt && dt.value) || (sel && sel.value) );
+
+                                                    if (!needLoad) return;
+
+                                                    // Read the wizard record (returns list of dicts)
+                                                    jsonRpcCall('account.dynamic.report', 'read', [[parseInt(wizardId, 10)], ['date_from','date_to','account_head_type']], {})
+                                                        .then(function(resp){
+                                                            if (!resp || !resp.result) return;
+                                                            var rows = resp.result;
+                                                            if (!rows || !rows.length) return;
+                                                            var vals = rows[0] || {};
+
+                                                            if (df && vals.date_from) df.value = vals.date_from;
+                                                            if (dt && vals.date_to) dt.value = vals.date_to;
+
+                                                            if (sel && vals.account_head_type) {
+                                                                // attempt to select matching option value
+                                                                var opt = Array.prototype.slice.call(sel.options).find(function(o){ return o.value == vals.account_head_type; });
+                                                                if (opt) sel.value = opt.value;
+                                                            }
+                                                        })
+                                                        .catch(function(err){
+                                                            // non-fatal: leave inputs blank and let user type
+                                                            console.warn('Could not load wizard params for report filters', err);
+                                                        });
+                                                } catch (e) {
+                                                    console.error('loadWizardParamsIntoForm error', e);
+                                                }
+                                            }
+
+                                            // call it once on load (after jsonRpcCall defined)
+                                            loadWizardParamsIntoForm();
+
+                                    } catch (err) {
+                                        console.error('applyDateFilters error', err);
+                                    }
+                                }
+
+                                // wire up Apply button and Enter key on inputs
+                                var applyBtn = document.getElementById('rpt_apply_btn');
+                                if (applyBtn) {
+                                    applyBtn.addEventListener('click', function (ev) {
+                                        ev.preventDefault();
+                                        applyDateFilters();
+                                    });
+                                }
+                                // allow pressing Enter in either date box to apply quickly
+                                var dfrom = document.getElementById('rpt_date_from');
+                                var dto = document.getElementById('rpt_date_to');
+                                [dfrom, dto].forEach(function(el) {
+                                    if (!el) return;
+                                    el.addEventListener('keydown', function(e) {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            applyDateFilters();
+                                        }
+                                    });
+                                });
+
+                                // hide spinner initially (in case not already hidden)
+                                (function(){ var s = document.getElementById('rpt_loading'); if (s) s.style.display = 'none'; })();
                             });
-                        </script>
+                            ]]></script>
 
                         <table class="consolidated-table">
                             <thead>
@@ -374,9 +496,7 @@
                                     <th style="width: 15%;">CHART OF ACCOUNT</th>
                                     <th style="width: 25%;">DESCRIPTION</th>
                                     <t t-foreach="report.get('district_headers', [])" t-as="district">
-                                        <th style="width: 8%;" class="text-right">
-                                            <t t-esc="district"/>
-                                        </th>
+                                        <th style="width: 8%;" class="text-right"><t t-esc="district"/></th>
                                     </t>
                                     <th style="width: 10%;" class="text-right">TOTAL REV.</th>
                                     <th style="width: 10%;" class="text-right">TOTAL EXP.</th>
@@ -385,32 +505,23 @@
                             </thead>
                             <tbody>
                                 <t t-foreach="report.get('report_lines', [])" t-as="line">
-                                    <t t-set="safe_account_code" t-value="str(line.get('code', '')).replace('.', '_').replace('-', '_').replace(' ', '_')"/>
+                                    <t t-set="safe_account_code" t-value="str(line.get('code','')).replace('.','_').replace('-','_').replace(' ','_')"/>
                                     
-                                    <tr class="expandable-row" style="cursor: pointer;" 
-                                        t-att-onclick="'toggleAccountDetails(\'' + safe_account_code + '\')'">
+                                    <tr class="expandable-row" style="cursor: pointer;" t-attf-onclick="toggleAccountDetails('#{safe_account_code}')">
                                         <td>
                                             <span t-attf-id="icon-#{safe_account_code}" class="expand-icon">▶</span>
-                                            <span class="account-code" t-esc="line.get('code', '')"/>
+                                            <span class="account-code" t-esc="line.get('code','')"/>
                                         </td>
-                                        <td>
-                                            <strong t-esc="line.get('description', '')"/>
-                                        </td>
+                                        <td><strong t-esc="line.get('description','')"/></td>
                                         <t t-foreach="range(len(report.get('district_codes', [])))" t-as="i">
                                             <t t-set="district_code" t-value="report['district_codes'][i]"/>
                                             <td class="text-right">
                                                 <strong t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district_code, 0.0))"/>
                                             </td>
                                         </t>
-                                        <td class="text-right">
-                                            <strong t-esc="'{:,.2f}'.format(line.get('total_revenue', 0.0))"/>
-                                        </td>
-                                        <td class="text-right">
-                                            <strong t-esc="'{:,.2f}'.format(line.get('total_expenditure', 0.0))"/>
-                                        </td>
-                                        <td class="text-right">
-                                            <strong t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/>
-                                        </td>
+                                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('total_revenue', 0.0))"/></td>
+                                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('total_expenditure', 0.0))"/></td>
+                                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
                                     </tr>
 
                                     <t t-foreach="range(len(report.get('district_codes', [])))" t-as="i">
@@ -419,67 +530,56 @@
                                         <t t-set="district_moves" t-value="line.get('move_details', {}).get(district_code, [])"/>
                                         <t t-if="district_moves">
                                             <tr t-attf-class="move-detail-row moves-#{safe_account_code}" style="background-color: #e8f4f8;">
-                                                <td class="indent-move" colspan="2">
-                                                    <strong>📍 <t t-esc="district_name"/> District Transactions:</strong>
-                                                </td>
+                                                <td class="indent-move" colspan="2"><strong>📍 <t t-esc="district_name"/> District Transactions:</strong></td>
                                                 <td t-att-colspan="len(report.get('district_codes', [])) + 1" class="text-right">
                                                     <strong>Count: <t t-esc="len(district_moves)"/> transactions</strong>
                                                 </td>
-                                                <td colspan="2"/> </tr>
-                                            
+                                                <td colspan="2"/> 
+                                            </tr>
+
                                             <t t-foreach="district_moves" t-as="move">
                                                 <tr t-attf-class="move-detail-row moves-#{safe_account_code}">
+                                                    <td class="indent-move"><span class="move-reference"><t t-esc="move.get('date','')"/></span></td>
                                                     <td class="indent-move">
-                                                        <span class="move-reference"><t t-esc="move.get('date', '')"/></span>
-                                                    </td>
-                                                    <td class="indent-move">
-                                                        <div><strong><t t-esc="move.get('description', '')[:50]"/><t t-if="len(move.get('description', '')) > 50">...</t></strong></div>
-                                                        <div class="move-reference">Ref: <t t-esc="move.get('reference', '')"/><t t-if="move.get('partner')"> | Partner: <t t-esc="move.get('partner')"/></t></div>
+                                                        <div><strong><t t-esc="move.get('description','')[:50]"/><t t-if="len(move.get('description','')) &gt; 50">...</t></strong></div>
+                                                        <div class="move-reference">Ref: <t t-esc="move.get('reference','')"/><t t-if="move.get('partner')"> | Partner: <t t-esc="move.get('partner')"/></t></div>
                                                     </td>
                                                     <t t-foreach="report.get('district_codes', [])" t-as="other_district_code">
                                                         <td class="text-right">
                                                             <t t-if="other_district_code == district_code">
-                                                                <span t-esc="'{:,.2f}'.format(move.get('balance', 0.0))"/>
+                                                                <span t-esc="'{:,.2f}'.format(move.get('balance',0.0))"/>
                                                             </t>
                                                             <t t-else="">-</t>
                                                         </td>
                                                     </t>
-                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('credit', 0.0))"/></td>
-                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('debit', 0.0))"/></td>
-                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('credit', 0.0) - move.get('debit', 0.0))"/></td>
+                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('credit',0.0))"/></td>
+                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('debit',0.0))"/></td>
+                                                    <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('credit',0.0) - move.get('debit',0.0))"/></td>
                                                 </tr>
                                             </t>
                                         </t>
                                     </t>
                                 </t>
-                                
+
                                 <tr class="total-row">
                                     <td colspan="2"><strong>GRAND TOTAL</strong></td>
                                     <t t-foreach="report.get('district_codes', [])" t-as="district_code">
-                                        <td class="text-right">
-                                            <strong>
-                                                <t t-set="district_total" t-value="sum([line.get('district_values', {}).get(district_code, 0.0) for line in report.get('report_lines', [])])"/>
-                                                <span t-esc="'{:,.2f}'.format(district_total)"/>
-                                            </strong>
-                                        </td>
+                                        <td class="text-right"><strong>
+                                            <t t-set="district_total" t-value="sum([line.get('district_values', {}).get(district_code, 0.0) for line in report.get('report_lines', [])])"/>
+                                            <span t-esc="'{:,.2f}'.format(district_total)"/>
+                                        </strong></td>
                                     </t>
-                                    <td class="text-right">
-                                        <strong>
-                                            <t t-set="total_revenue" t-value="sum([line.get('total_revenue', 0.0) for line in report.get('report_lines', [])])"/>
-                                            <span t-esc="'{:,.2f}'.format(total_revenue)"/>
-                                        </strong>
-                                    </td>
-                                    <td class="text-right">
-                                        <strong>
-                                            <t t-set="total_expenditure" t-value="sum([line.get('total_expenditure', 0.0) for line in report.get('report_lines', [])])"/>
-                                            <span t-esc="'{:,.2f}'.format(total_expenditure)"/>
-                                        </strong>
-                                    </td>
-                                    <td class="text-right">
-                                        <strong>
-                                            <span t-esc="'{:,.2f}'.format(sum([line.get('balance', 0.0) for line in report.get('report_lines', [])]))"/>
-                                        </strong>
-                                    </td>
+                                    <td class="text-right"><strong>
+                                        <t t-set="total_revenue" t-value="sum([line.get('total_revenue', 0.0) for line in report.get('report_lines', [])])"/>
+                                        <span t-esc="'{:,.2f}'.format(total_revenue)"/>
+                                    </strong></td>
+                                    <td class="text-right"><strong>
+                                        <t t-set="total_expenditure" t-value="sum([line.get('total_expenditure', 0.0) for line in report.get('report_lines', [])])"/>
+                                        <span t-esc="'{:,.2f}'.format(total_expenditure)"/>
+                                    </strong></td>
+                                    <td class="text-right"><strong>
+                                        <span t-esc="'{:,.2f}'.format(sum([line.get('balance', 0.0) for line in report.get('report_lines', [])]))"/>
+                                    </strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -494,9 +594,19 @@
                         </div>
                     </div>
                 </t>
+
+                <style>
+                    .company-section { page-break-after: always; }
+                    .company-section:last-child { page-break-after: auto; }
+                    .tag-line { font-weight:600; background:#f8f9fa; }
+                    .account-line { background:#ffffff; }
+                    @media print { .d-print-none { display:none !important; } }
+                </style>
+
             </t>
         </t>
     </template>
+
 
     <template id="consolidated_district_report_pdf_template">
         <t t-call="web.html_container">
@@ -676,7 +786,6 @@
                                         
                                         <t t-if="district_moves">
                                             <t t-set="has_transactions" t-value="True"/>
-                                            <!-- District Header -->
                                             <tr class="pdf-district-header">
                                                 <td class="pdf-indent">📍</td>
                                                 <td class="pdf-indent">
@@ -687,7 +796,6 @@
                                                 </td>
                                             </tr>
                                             
-                                            <!-- Show top 5 transactions for PDF brevity -->
                                             <t t-foreach="district_moves[:5]" t-as="move">
                                                 <tr class="pdf-move-detail-row">
                                                     <td class="pdf-indent-2">
@@ -716,7 +824,6 @@
                                                 </tr>
                                             </t>
                                             
-                                            <!-- Show count of remaining transactions if there are more -->
                                             <t t-if="len(district_moves) > 5">
                                                 <tr class="pdf-move-detail-row" style="font-style: italic; color: #666;">
                                                     <td class="pdf-indent-2" colspan="2">
@@ -728,7 +835,6 @@
                                         </t>
                                     </t>
                                     
-                                    <!-- Separator line if account had transactions -->
                                     <t t-if="has_transactions">
                                         <tr>
                                             <td colspan="100%" style="border-bottom: 2px solid #ccc; padding: 2px;"></td>
@@ -736,7 +842,6 @@
                                     </t>
                                 </t>
                                 
-                                <!-- Grand Total Row -->
                                 <tr class="pdf-total-row">
                                     <td colspan="2"><strong>GRAND TOTAL</strong></td>
                                     <t t-foreach="report.get('district_codes', [])" t-as="district_code">
@@ -768,7 +873,6 @@
                             </tbody>
                         </table>
 
-                        <!-- Footer Notes -->
                         <div style="margin-top: 15px; font-size: 8px; color: #666;">
                             <p><strong>Report Notes:</strong></p>
                             <ul style="margin: 5px 0; padding-left: 15px;">
