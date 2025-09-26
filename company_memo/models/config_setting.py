@@ -489,7 +489,7 @@ class MemoConfig(models.Model):
     #                 and department: {[]}
     #                 has already been configured for this companies 
     #                 {','.join([self.env['res.company'].sudo().browse([r]).name for r in company_found])}, 
-    #                 kindly discard locate it and select the approvers""")
+    #                 kindly discard locate it and select the approvers""") ####
 
     @api.onchange('active')
     def onchange_active(self):
