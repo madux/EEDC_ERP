@@ -56,6 +56,10 @@ class UserRole(models.Model):
         string="Users Count",
         store=True
     )
+    limit_to_user_context = fields.Boolean(
+        string='Limit to User Context',
+        help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/branches."
+    )
     
     active = fields.Boolean(default=True)
 
@@ -89,7 +93,7 @@ class UserRole(models.Model):
                         self.mapped('name'), len(self.user_ids))
             self.user_ids._sync_permissions_from_roles()
         
-        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids']):
+        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context']):
             _logger.info("Role approval settings changed for %s. Syncing approvals for %d users.", 
                         self.mapped('name'), len(self.user_ids))
             self.user_ids._sync_approvals_from_roles()

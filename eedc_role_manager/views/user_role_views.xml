@@ -32,7 +32,8 @@
                     <group>
                         <group>
                             <field name="description" placeholder="Describe the purpose of this role..."/>
-                            <field name="active"/>
+                            <field name="limit_to_user_context"/>
+                            <!-- <field name="active"/> -->
                         </group>
                         <group>
                             <field name="is_request_approver"/>
@@ -45,13 +46,24 @@
                                 <field name="group_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" 
                                        placeholder="Add security groups..."/>
+                                <!-- <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Add companies..."/> -->
+                            </group>
+                            <separator string="Location"/>
+                            <group string="Company Context">
                                 <field name="company_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" 
-                                       placeholder="Add companies..."/>
+                                       placeholder="Leave empty for all companies"/>
+                            </group>
+                            <group string="Branch Context">
+                                <field name="branch_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all branches"/>
                             </group>
                         </page>
                         
-                        <page string="Memo Approvals" attrs="{'invisible': [('is_request_approver', '=', False)]}">
+                        <!-- <page string="Memo Approvals" attrs="{'invisible': [('is_request_approver', '=', False)]}">
                             <group string="Company Context">
                                 <field name="company_ids" widget="many2many_tags" 
                                        options="{'no_create': True}" 
@@ -73,7 +85,7 @@
                                     <li>When you remove this role from a user, they will be automatically removed from the corresponding approvals.</li>
                                 </ul>
                             </div>
-                        </page>
+                        </page> -->
                         
                         <page string="Assigned Users">
                             <field name="user_ids" readonly="1">
