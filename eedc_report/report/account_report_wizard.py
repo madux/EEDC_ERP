@@ -422,103 +422,7 @@ class AccountDynamicReport(models.Model):
             build_recursive(tag, 0)
         return final_report_data
     
-    # def _get_consolidated_district_data(self, start_date, end_date, month_headers, company):
-    #     """
-    #     Generates consolidated data across all selected districts for the same period.
-    #     Shows individual accounts instead of tags, with expandable move lines.
-    #     Returns data in format: {account: {district_code: {amount, moves}, ...}}
-    #     """
-    #     branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
-    #     if not branches_to_process:
-    #         raise ValidationError("No districts selected or available for the selected company.")
-        
-    #     if self.account_ids:
-    #         all_accounts = self.account_ids
-    #     else:
-    #         tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
-    #         all_accounts = tags.mapped('account_ids')
-            
-    #     all_accounts = self.env['account.account'].search([('company_id','=', company.id)])
-        
-    #     if not all_accounts:
-    #         return [], []
-
-    #     consolidated_data = {}
-    #     district_headers = []
-    #     district_codes = []
-        
-    #     for branch in branches_to_process:
-    #         # district_headers.append(branch.code.upper())
-    #         district_headers.append(branch.name.upper())
-    #         district_codes.append(branch.code.upper())
-            
-    #         base_domain = self._build_base_domain(start_date, end_date, branch.id, company.id)
-    #         base_domain.append(('account_id', 'in', all_accounts.ids))
-            
-    #         branch_moves = self.env['account.move.line'].search(base_domain)
-            
-    #         sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
-            
-    #         for account in all_accounts:
-    #             account_key = f"{account.code}_{account.name}"
-    #             if account_key not in consolidated_data:
-    #                 consolidated_data[account_key] = {
-    #                     'code': account.code,
-    #                     'description': account.name,
-    #                     'level': 0,
-    #                     'is_account': True,
-    #                     'is_expandable': True,
-    #                     'district_values': {},
-    #                     'move_details': {},
-    #                     'total_revenue': 0.0,
-    #                     'total_expenditure': 0.0,
-    #                 }
-                
-    #             account_moves = branch_moves.filtered(lambda m: m.account_id == account)
-                
-    #             if account_moves:
-    #                 revenue_total = sum(account_moves.mapped('credit'))
-    #                 expenditure_total = sum(account_moves.mapped('debit'))
-                    
-    #                 if self.account_head_type == 'Revenue':
-    #                     consolidated_data[account_key]['district_values'][branch.code] = revenue_total
-    #                     consolidated_data[account_key]['total_revenue'] += revenue_total
-    #                 else:
-    #                     consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
-    #                     consolidated_data[account_key]['total_expenditure'] += expenditure_total
-                    
-    #                 if branch.code not in consolidated_data[account_key]['move_details']:
-    #                     consolidated_data[account_key]['move_details'][branch.code] = []
-                    
-    #                 for move_line in account_moves:
-    #                     move_data = {
-    #                         'id': move_line.id,
-    #                         'date': move_line.date.strftime('%Y-%m-%d'),
-    #                         'reference': move_line.move_id.name or move_line.name,
-    #                         'description': move_line.name or move_line.move_id.ref or 'No Description',
-    #                         'partner': move_line.partner_id.name if move_line.partner_id else '',
-    #                         'debit': move_line.debit,
-    #                         'credit': move_line.credit,
-    #                         'balance': move_line.credit if self.account_head_type == 'Revenue' else move_line.debit,
-    #                         'level': 1,
-    #                         'is_account': False,
-    #                         'is_move_line': True,
-    #                     }
-    #                     consolidated_data[account_key]['move_details'][branch.code].append(move_data)
-                    
-    #                 consolidated_data[account_key]['move_details'][branch.code].sort(
-    #                     key=lambda x: x['date'], reverse=True
-    #                 )
-
-    #     report_lines = []
-    #     for key, data in consolidated_data.items():
-    #         data['balance'] = data['total_revenue'] - data['total_expenditure']
-    #         if data['total_revenue'] > 0 or data['total_expenditure'] > 0:
-    #             report_lines.append(data)
-        
-    #     report_lines.sort(key=lambda x: x.get('code', ''))
-        
-    #     return report_lines, district_headers, district_codes
+   
     
     def _get_consolidated_district_data(self, start_date, end_date, month_headers, company):
         """
@@ -529,20 +433,19 @@ class AccountDynamicReport(models.Model):
         self.ensure_one()
         branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
         if not branches_to_process:
-            raise ValidationError("No districts selected or available for the selected company.")
+            # raise ValidationError("No districts selected or available for the selected company.")
+            return [], [], []
 
-        # Determine all_accounts: prefer explicit selection, then tags mapping, then fallback to company accounts
         if self.account_ids:
             all_accounts = self.account_ids
         else:
-            tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
-            all_accounts = tags.mapped('account_ids') if tags else self.env['account.account'].browse()
-
-        # Only fallback to searching company accounts when we still have nothing
-        if not all_accounts:
             all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+            # tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
+            # all_accounts = tags.mapped('account_ids') if tags else self.env['account.account'].browse()
 
-        # If still no accounts, return an empty 3-tuple (so callers won't crash)
+        # if not all_accounts:
+        #     all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+
         if not all_accounts:
             return [], [], []
 
@@ -559,7 +462,6 @@ class AccountDynamicReport(models.Model):
 
             branch_moves = self.env['account.move.line'].search(base_domain)
 
-            # sum_field is not used further, but kept if you plan to use it
             sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
 
             for account in all_accounts:
@@ -623,54 +525,6 @@ class AccountDynamicReport(models.Model):
 
         return report_lines, district_headers, district_codes
     
-    # def action_generate_consolidated_district_report(self):
-    #     """Generate consolidated district report for browser display"""
-    #     self.ensure_one()
-        
-    #     if self.report_type != 'consolidated_district':
-    #         return self.action_generate_report()
-        
-    #     company = self.company_id
-    #     # companies_to_process = self.company_ids or self.env['res.company'].search([])
-        
-    #     start_date, end_date, month_headers = self._get_date_range()
-        
-    #     report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
-        
-    #     if not report_lines:
-    #         raise ValidationError("No data could be generated for the selected criteria.")
-        
-    #     budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
-    #     period_string = self._get_period_string(start_date, end_date)
-        
-    #     company_name = self.company_id.name if self.company_id else self.env.company.name
-        
-    #     data = {
-    #         'doc_model': self._name,
-    #         'data': [{
-    #             'report_lines': report_lines,
-    #             'district_headers': district_headers,
-    #             'district_codes': district_codes,
-    #             'company_name': company_name,
-    #             'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
-    #             'account_head_type': self.account_head_type,
-    #         }],
-    #         'start_date': start_date,
-    #         'end_date': end_date,
-    #     }
-        
-    #     # report_action = self.env.ref('eedc_report.action_consolidated_district_report')
-    #     if self.format == 'html':
-    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report')
-    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-    #         report_obj.sudo().update({'report_type': 'qweb-html'})
-    #     else:
-    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
-    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-    #         report_obj.sudo().update({'report_type': 'qweb-pdf'})
-    #     return report_action.report_action(self, data=data)
-    
-    
     
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display - now supports multiple companies"""
@@ -704,11 +558,9 @@ class AccountDynamicReport(models.Model):
         if not all_company_reports:
             raise ValidationError("No data could be generated for the selected criteria.")
         
-        # Simplified data dictionary - only what the template needs
         data = {
             'doc_model': self._name,
             'company_reports': all_company_reports,
-            # Pass wizard info for form controls
             'wizard_id': self.id,
             'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
             'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
@@ -729,7 +581,6 @@ class AccountDynamicReport(models.Model):
 
     @api.model
     def update_report_params(self, wizard_id, **kwargs):
-        # accept wizard_id as int or string; resolve to recordset
         try:
             wid = int(wizard_id)
         except Exception:
@@ -739,7 +590,6 @@ class AccountDynamicReport(models.Model):
         if not wizard.exists():
             return {'error': 'Wizard not found'}
 
-        # prepare update values only with expected keys
         update_vals = {}
         if 'date_from' in kwargs and kwargs.get('date_from'):
             update_vals['date_from'] = kwargs.get('date_from')
