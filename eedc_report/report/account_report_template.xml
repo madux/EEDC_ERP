@@ -266,8 +266,8 @@
                             <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                         </div>
                         <div class="col-md-3">
-                            <label for="rpt_account_head_type">Account Type:</label>
-                            <select id="rpt_account_head_type" class="form-control form-control-sm">
+                            <label for="rpt_account_type">Account Type:</label>
+                            <select id="rpt_account_type" class="form-control form-control-sm">
                                 <t t-foreach="account_head_types or []" t-as="aht">
                                     <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
                                         <t t-esc="aht[1]"/>
@@ -347,7 +347,7 @@
                                 }
                                 var dateFrom = (document.getElementById('rpt_date_from') || {}).value || false;
                                 var dateTo = (document.getElementById('rpt_date_to') || {}).value || false;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || false;
+                                var accountHeadType = (document.getElementById('rpt_account_type') || {}).value || false;
 
                                 showLoading(true);
                                 jsonRpcCall('account.dynamic.report', 'update_report_params', [wizardId], {
@@ -385,7 +385,7 @@
 
                                 var df = document.getElementById('rpt_date_from');
                                 var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
+                                var sel = document.getElementById('rpt_account_type');
                                 var needLoad = !( (df &amp;&amp; df.value) || (dt &amp;&amp; dt.value) || (sel &amp;&amp; sel.value) );
 
                                 if (!needLoad) return;
@@ -421,7 +421,7 @@
                             });
                         }
                         
-                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        var selAccountType = document.getElementById('rpt_account_type');
                         if (selAccountType) {
                             selAccountType.addEventListener('change', function (ev) {
                                 applyFilters();
@@ -610,8 +610,8 @@
                                 <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <label for="rpt_account_head_type" class="form-label">Account Type:</label>
-                                <select id="rpt_account_head_type" class="form-control form-control-sm">
+                                <label for="rpt_account_type" class="form-label">Account Type:</label>
+                                <select id="rpt_account_type" class="form-control form-control-sm">
                                     <t t-foreach="account_head_types or []" t-as="aht">
                                         <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
                                             <t t-esc="aht[1]"/>
@@ -723,7 +723,7 @@
                                 
                                 var dateFrom = (document.getElementById('rpt_date_from') || {}).value || null;
                                 var dateTo = (document.getElementById('rpt_date_to') || {}).value || null;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || null;
+                                var accountHeadType = (document.getElementById('rpt_account_type') || {}).value || null;
 
                                 console.log('Filter values:', { dateFrom: dateFrom, dateTo: dateTo, accountHeadType: accountHeadType });
 
@@ -773,7 +773,7 @@
 
                                 var df = document.getElementById('rpt_date_from');
                                 var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
+                                var sel = document.getElementById('rpt_account_type');
                                 
                                 // Check if we need to load parameters
                                 var needLoad = !((df && df.value) || (dt && dt.value) || (sel && sel.value));
@@ -818,7 +818,7 @@
                             console.error('Apply button not found!');
                         }
                         
-                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        var selAccountType = document.getElementById('rpt_account_type');
                         if (selAccountType) {
                             selAccountType.addEventListener('change', function (ev) {
                                 applyFilters();
@@ -1014,14 +1014,22 @@
                                 <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <label for="rpt_account_head_type" class="form-label">Account Type:</label>
-                                <select id="rpt_account_head_type" class="form-control form-control-sm">
-                                    <t t-foreach="account_head_types or []" t-as="aht">
-                                        <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
+                                <label for="rpt_account_type" class="form-label">Account Type:</label>
+                                <select id="rpt_account_type" class="form-control form-control-sm">
+                                    <t t-foreach="account_types or []" t-as="aht">
+                                        <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_type and aht[0] == current_account_type) else None">
                                             <t t-esc="aht[1]"/>
                                         </option>
                                     </t>
                                 </select>
+                            </div>
+                            <!-- <div class="col-md-3 mb-2">
+                                <label for="rpt_date_to" class="form-label">Companies:</label>
+                                <input id="inputCompanies" class="form-control s_website_form_input" field_name="inputCompanies" name="inputCompanies"/>
+                            </div> -->
+                            <div class="col-md-3 mb-2">
+                                <label for="rpt_companies" class="form-label">Companies:</label>
+                                <input type="hidden" id="rpt_companies" class="form-control form-control-sm" name="company_ids" t-att-value="current_company_ids or ''"/>
                             </div>
                             <div class="col-md-3 mb-2 d-flex align-items-end">
                                 <button id="rpt_apply_btn" class="btn btn-primary btn-sm me-2" t-att-data-wizard-id="wizard_id or ''">Apply Filters</button>
@@ -1065,7 +1073,6 @@
                             }
                         };
 
-                        // Improved JSON-RPC function
                         function jsonRpcCall(model, method, args, kwargs) {
                             var payload = {
                                 jsonrpc: "2.0",
@@ -1127,16 +1134,17 @@
                                 
                                 var dateFrom = (document.getElementById('rpt_date_from') || {}).value || null;
                                 var dateTo = (document.getElementById('rpt_date_to') || {}).value || null;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || null;
+                                var accountType = (document.getElementById('rpt_account_type') || {}).value || null;
+                                var companies = (document.getElementById('inputCompanies') || {}).value || null;
 
-                                console.log('Filter values:', { dateFrom: dateFrom, dateTo: dateTo, accountHeadType: accountHeadType });
+                                console.log('Filter values:', { dateFrom: dateFrom, dateTo: dateTo, accountType: accountType });
 
                                 showLoading(true);
                                 
                                 jsonRpcCall('account.dynamic.report', 'update_report_params', [parseInt(wizardId, 10)], {
                                     date_from: dateFrom,
                                     date_to: dateTo,
-                                    account_head_type: accountHeadType
+                                    account_type: accountType
                                 })
                                 .then(function (resp) {
                                     console.log('RPC Response:', resp);
@@ -1177,7 +1185,7 @@
 
                                 var df = document.getElementById('rpt_date_from');
                                 var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
+                                var sel = document.getElementById('rpt_account_type');
                                 
                                 // Check if we need to load parameters
                                 var needLoad = !((df && df.value) || (dt && dt.value) || (sel && sel.value));
@@ -1188,7 +1196,7 @@
 
                                 console.log('Loading wizard parameters...');
                                 jsonRpcCall('account.dynamic.report', 'read', [[parseInt(wizardId, 10)]], {
-                                    fields: ['date_from', 'date_to', 'account_head_type']
+                                    fields: ['date_from', 'date_to', 'account_type']
                                 })
                                 .then(function(resp) {
                                     if (!resp || !resp.result || !resp.result.length) return;
@@ -1198,8 +1206,8 @@
 
                                     if (df && vals.date_from) df.value = vals.date_from;
                                     if (dt && vals.date_to) dt.value = vals.date_to;
-                                    if (sel && vals.account_head_type) {
-                                        sel.value = vals.account_head_type;
+                                    if (sel && vals.account_type) {
+                                        sel.value = vals.account_type;
                                     }
                                 })
                                 .catch(function(err) {
@@ -1222,7 +1230,7 @@
                             console.error('Apply button not found!');
                         }
                         
-                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        var selAccountType = document.getElementById('rpt_account_type');
                         if (selAccountType) {
                             selAccountType.addEventListener('change', function (ev) {
                                 applyFilters();
@@ -1517,7 +1525,7 @@
                                 <tr>
                                     <td style="width: 50%; vertical-align: top;">
                                         <strong>Report Period:</strong> <t t-esc="report.get('start_date', '')"/> to <t t-esc="report.get('end_date', '')"/><br/>
-                                        <strong>Account Type:</strong> <t t-esc="report.get('account_head_type', '')"/><br/>
+                                        <strong>Account Type:</strong> <t t-esc="report.get('account_type', '')"/><br/>
                                         <strong>Number of Districts:</strong> <t t-esc="len(report.get('district_headers', []))"/><br/>
                                         <strong>Number of Accounts:</strong> <t t-esc="len(report.get('report_lines', []))"/>
                                     </td>

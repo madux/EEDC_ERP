@@ -73,6 +73,30 @@ class AccountDynamicReport(models.Model):
     date_from = fields.Date(string='Date from')
     date_to = fields.Date(string='Date to')
     partner_id = fields.Many2one('res.partner', string='Partner')
+    account_type = fields.Selection(
+        [
+            ("asset_receivable", "Receivable"),
+            ("asset_cash", "Bank and Cash"),
+            ("asset_current", "Current Assets"),
+            ("asset_non_current", "Non-current Assets"),
+            ("asset_prepayments", "Prepayments"),
+            ("asset_fixed", "Fixed Assets"),
+            ("liability_payable", "Payable"),
+            ("liability_credit_card", "Credit Card"),
+            ("liability_current", "Current Liabilities"),
+            ("liability_non_current", "Non-current Liabilities"),
+            ("equity", "Equity"),
+            ("equity_unaffected", "Current Year Earnings"),
+            ("income", "Income"),
+            ("income_other", "Other Income"),
+            ("expense", "Expenses"),
+            ("expense_depreciation", "Depreciation"),
+            ("expense_direct_cost", "Cost of Revenue"),
+            ("off_balance", "Off-Balance Sheet"),
+        ],
+        default="expense",
+        string="Account Type",
+    )
     account_head_type = fields.Selection(
         [
         ("Revenue", "Revenue"), 
@@ -81,7 +105,7 @@ class AccountDynamicReport(models.Model):
         ("Expenditure", "Expenditure"), 
         ("Capital", "Capital Expenditure"),
         ("Other", "Others"),
-        ], default="Overhead", string="Account Type", 
+        ], default="Overhead", string="Account Head", 
     )
     excel_file = fields.Binary('Download Excel file', readonly=True)
     filename = fields.Char('Excel File')
@@ -137,23 +161,7 @@ class AccountDynamicReport(models.Model):
             #     report_obj.update({f'{tag.parent_id.id}': report_obj})
         _logger.info(f"MONTHLY REPORT {report_obj}")
         
-    # @api.model
-    # def default_get(self, fields_list):
-    #     """
-    #     Pre-populates the wizard with the user's default branches.
-    #     This version is robust against a user not having a default branch_id set.
-    #     """
-    #     res = super().default_get(fields_list)
-    #     user = self.env.user
-    #     if 'branch_ids' in fields_list:
-    #         branch_ids = user.branch_ids.ids
-    #         if user.branch_id:
-    #             branch_ids.append(user.branch_id.id)
-    #         unique_branch_ids = list(set(branch_ids))
-    #         res.update({'branch_ids': [(6, 0, unique_branch_ids)]})
-    #     if 'company_id' in fields_list and user.company_id:
-    #         res.update({'company_id': [(6, 0, user.company_id)]})
-    #     return res
+
     
     @api.model
     def default_get(self, fields_list):
@@ -439,7 +447,7 @@ class AccountDynamicReport(models.Model):
         if self.account_ids:
             all_accounts = self.account_ids
         else:
-            all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+            all_accounts = self.env['account.account'].search([('company_id', '=', company.id), ('account_type', '=', self.account_type)])
             # tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
             # all_accounts = tags.mapped('account_ids') if tags else self.env['account.account'].browse()
 
@@ -462,7 +470,7 @@ class AccountDynamicReport(models.Model):
 
             branch_moves = self.env['account.move.line'].search(base_domain)
 
-            sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
+            # sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
 
             for account in all_accounts:
                 account_key = f"{account.code}_{account.name}"
@@ -504,7 +512,7 @@ class AccountDynamicReport(models.Model):
                             'partner': move_line.partner_id.name if move_line.partner_id else '',
                             'debit': move_line.debit,
                             'credit': move_line.credit,
-                            'balance': move_line.credit if self.account_head_type == 'Revenue' else move_line.debit,
+                            'balance': (move_line.credit or 0.0) - (move_line.debit or 0.0),
                             'level': 1,
                             'is_account': False,
                             'is_move_line': True,
@@ -542,7 +550,7 @@ class AccountDynamicReport(models.Model):
             report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
             
             if report_lines:
-                budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
+                budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
                 period_string = self._get_period_string(start_date, end_date)
                 
                 all_company_reports.append({
@@ -551,7 +559,7 @@ class AccountDynamicReport(models.Model):
                     'district_codes': district_codes,
                     'company_name': company.name,
                     'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
-                    'account_head_type': self.account_head_type,
+                    'account_type': self.account_type,
                     'res_company': company,
                 })
         
@@ -564,8 +572,8 @@ class AccountDynamicReport(models.Model):
             'wizard_id': self.id,
             'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
             'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
-            'account_head_types': self._fields['account_head_type'].selection,
-            'current_account_head_type': self.account_head_type,
+            'account_types': self._fields['account_type'].selection,
+            'current_account_type': self.account_type,
         }
         
         if self.format == 'html':
@@ -595,8 +603,8 @@ class AccountDynamicReport(models.Model):
             update_vals['date_from'] = kwargs.get('date_from')
         if 'date_to' in kwargs and kwargs.get('date_to'):
             update_vals['date_to'] = kwargs.get('date_to')
-        if 'account_head_type' in kwargs and kwargs.get('account_head_type'):
-            update_vals['account_head_type'] = kwargs.get('account_head_type')
+        if 'account_type' in kwargs and kwargs.get('account_type'):
+            update_vals['account_type'] = kwargs.get('account_type')
 
         if update_vals:
             wizard.sudo().write(update_vals)
