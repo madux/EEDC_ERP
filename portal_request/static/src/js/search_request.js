@@ -9,6 +9,28 @@ odoo.define('portal_request.search_request', function (require) {
     var qweb = core.qweb;
     var _t = core._t;  
     
+    let setMode = function(isLight) {
+        const $dashboard = $('.dashboard');
+        const $btn = $('#switchModeBtn');
+        if (isLight) {
+            $dashboard.addClass('light-mode');
+            $btn.text('Switch to Dark Mode');
+            $('#back-icon').attr('fill', 'black');
+            $('#myProfile').attr('color', 'black');
+            $('#switchModeBtn1').attr('color', 'black');
+
+            localStorage.setItem('mode', 'light');
+        } else {
+            $dashboard.removeClass('light-mode');
+            $btn.text('Switch to Light Mode');
+            localStorage.setItem('mode', 'dark');
+            $('#back-icon').attr('fill', 'white');
+            $('#myprofile').attr('color', 'white');
+            $('#switchModeBtn1').attr('color', 'white');
+
+
+        }
+    }
 
     publicWidget.registry.SearchRequestWidgets = publicWidget.Widget.extend({
         selector: '#search_request_section',
@@ -53,6 +75,15 @@ odoo.define('portal_request.search_request', function (require) {
 				// document.getElementById("website-app-section").style.width = "0px";
 				// document.getElementById("website-app-section").style.height = "0px";
             },
+
+            'click #switchModeBtn': function(ev){
+                const savedMode = localStorage.getItem('mode');
+                setMode(savedMode === 'light');
+                const isLight = !$('.dashboard').hasClass('light-mode');
+				setMode(isLight);
+                console.log('Clicked dark mode', localStorage.getItem('mode'))
+            },
+
          }
 
     });

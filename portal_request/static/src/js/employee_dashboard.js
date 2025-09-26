@@ -20,6 +20,27 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
         $('#' + screenId).addClass('active'); // add to target
         }
 
+    let setMode = function(isLight) {
+        const $dashboard = $('.dashboard');
+        const $btn = $('#switchModeBtn');
+        if (isLight) {
+            $dashboard.addClass('light-mode');
+            $btn.text('Switch to Dark Mode');
+            localStorage.setItem('mode', 'light');
+            $('#back-icon').attr('fill', 'black');
+            $('#myProfile').attr('color', 'black');
+            $('#switchModeBtn1').attr('color', 'black');
+        } else {
+            $dashboard.removeClass('light-mode');
+            $btn.text('Switch to Light Mode');
+            localStorage.setItem('mode', 'dark');
+             $('#back-icon').attr('fill', 'white');
+            $('#myprofile').attr('color', 'white');
+            $('#switchModeBtn1').attr('color', 'white');
+
+        }
+    }
+
     publicWidget.registry.EmployeeDashboardWidgets = publicWidget.Widget.extend({
         selector: '#portal-dashboard-form',
         start: function(){
@@ -48,6 +69,14 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
                 navigateBack('portal-dashboard-content') 
                 document.getElementById("website-app-section").classList.remove("active");
 				
+            },
+
+            'click #switchModeBtn': function(ev){
+                const savedMode = localStorage.getItem('mode');
+                setMode(savedMode === 'light');
+                const isLight = !$('.dashboard').hasClass('light-mode');
+				setMode(isLight);
+                console.log('Clicked dark mode', localStorage.getItem('mode'))
             },
 
             // 'click .app-item': function(ev){

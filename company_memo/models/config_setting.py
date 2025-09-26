@@ -474,6 +474,7 @@ class MemoConfig(models.Model):
             duplicate = memo.search([('memo_type', '=', rec.memo_type.id),
                                       ('memo_key', '!=', 'helpdesk'), 
                                       ('branch_id', '=', rec.branch_id.id),
+                                      ('name', '!=', rec.name),
                                       ('id', '!=', rec.id),
                                       ], limit=1)
             if duplicate:

@@ -115,8 +115,11 @@
                                 </div>
                                 <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
                                     <div class="navbar-light  py-0 mb-2">
-                                        <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
+                                        <a id="myrequest" href="/my/requests" class="btn btn-secondary btn-sm">
                                             My requests
+                                        </a>
+                                        <a id="relieveBtn" class="btn btn-secondary btn-sm relieveBtn d-none" tooltip="Use this option to indicate that you are back from leave">
+                                            I Am Now Available
                                         </a>
                                     </div>
 
@@ -611,14 +614,19 @@
                                                                 <label>Unit Amount Used</label>
                                                             </th>
                                                             <!-- 8 -->
-                                                            <th id="note_label" width="10%">
+                                                            <th id="retirement_sub_total" width="10%">
+                                                                <label>Used Subtotal</label>
+                                                            </th>
+                                                            
+                                                            <!-- 9 -->
+                                                            <th id="note_label" width="20%">
                                                                 <label>Note</label>
                                                             </th>
-                                                            <!-- 9 -->
+                                                            <!-- 10 -->
                                                             <th class="d-none" id="distance_from" width="20%">
                                                                 <label>Distance From</label>
                                                             </th>
-                                                            <!-- 10 -->
+                                                            <!-- 11 -->
                                                             <th class="d-none" id="distance_to" width="20%">
                                                                 <label>Distance to</label>
                                                             </th>

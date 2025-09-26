@@ -9,13 +9,14 @@ from odoo import http, fields
 from odoo.exceptions import ValidationError
 from odoo.tools import consteq, plaintext2html
 from odoo.http import request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 import odoo
 import odoo.addons.web.controllers.home as main
 from odoo.addons.web.controllers.utils import ensure_db, _get_login_redirect_url, is_user_internal
 from odoo.tools.translate import _
+from odoo.tools.misc import format_date
 
 
 _logger = logging.getLogger(__name__)
@@ -29,6 +30,12 @@ def get_url(id):
     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
     base_url += "/my/request/view/%s" % (id)
     return "<a href={}> </b>Click<a/>. ".format(base_url)
+
+def get_model_url(id, model):
+    base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+    internal_path = "/web#id={}&model={}&view_type=form".format(id, model)
+    internal_url = internal_path #  base_url + internal_path
+    return internal_url
 
 def format_to_odoo_date(date_str: str) -> str:
     """Formats date format mm/dd/yyyy eg.07/01/1988 to %Y-%m-%d
@@ -127,8 +134,6 @@ class PortalRequest(http.Controller):
         # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
         vals = {
-            # "district_ids": request.env["multi.branch"].sudo().search([]),
-            # "district_ids": request.env["multi.branch"].sudo().search([]),
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
             "memo_key_ids": [{'id': 0, 'name': ''}],
             "config_type_ids": memo_configs, # self.get_user_configs ,
@@ -155,6 +160,16 @@ class PortalRequest(http.Controller):
                 ('active', '=', True),
                 ('user_id', '=', user.id)], limit=1)
             if employee:
+                if employee.leave_reliever:
+                    return {
+                        "status": False,
+                        "data": {
+                            'name': "",
+                            'phone': "",
+                            'work_email': "",
+                        },
+                        "message": " Are you back from Leave? if yes, kindly click the button 'I am Available Now'", 
+                    }
                 if employee.department_id:
                     
                     return {
@@ -188,6 +203,24 @@ class PortalRequest(http.Controller):
                     },
                     "message": "Employee with staff ID provided does not exist. Contact Admin", 
                 }
+                
+                
+    @http.route(['/relieve/reliever'], type='json', website=True, auth="user", csrf=False)
+    def reset_relieve_reliever(self, **post):
+        user = request.env.user
+        employee = request.env['hr.employee'].sudo().search(
+        [('active', '=', True), ('user_id', '=', user.id)], limit=1)
+        if employee:
+            employee.reset_leave_reliever()
+            return {
+                "status": True,
+                "message": "", 
+            }
+        else:
+            return {
+                "status": False,
+                "message": "You are not linked to any employee record.. Contact HR", 
+            } 
             
     # @http.route(
     # 		['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
@@ -403,7 +436,6 @@ class PortalRequest(http.Controller):
                 # .filtered(
                 # 	lambda partner: partner.id !=  employee_id.external_company_id.id): 
                     _logger.info('Employee not an external user')
-
                     return {
                         "status": False,
                         "message": '''
@@ -500,6 +532,8 @@ class PortalRequest(http.Controller):
                 if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
                     return {
                     "status": False,
+                    "link": False,
+                    
                     "data": {
                         'name': "",
                         'phone': "",
@@ -511,9 +545,28 @@ class PortalRequest(http.Controller):
                     },
                     "message": 'You cannot process with retirement as All cash advance lines has been retired' 
                     }
-                    
+                existing_soe_inprogress = request.env['memo.model'].sudo().search([
+                    ('cash_advance_reference.code', '=', existing_order.upper()), 
+                    ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])], limit=1) 
+                is_internal_user = request.env.user.has_group('base.group_user')
+                if request_type == "soe" and existing_soe_inprogress:
+                    return {
+                    "status": False,
+                    "link": get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}',
+                    "data": {
+                        'name': "",
+                        'phone': "",
+                        'work_email': "",
+                        'subject': "",
+                        'description': "",
+                        'request_date': "",
+                        'product_ids': "",
+                    },
+                    "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed" 
+                    }
                 return {
                     "status": True,
+                    "link": False,
                     "data": {
                         'name': memo_request.employee_id.name,
                         'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
@@ -549,6 +602,8 @@ class PortalRequest(http.Controller):
                 if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
                 return {
                     "status": False,
+                    "link": False,
+                    
                     "data": {
                         'name': "",
                         'phone': "",
@@ -1197,28 +1252,32 @@ class PortalRequest(http.Controller):
             e = 10
         return s, e
     
-    def get_request_info(self, request):
-        """
-        Returns context data extracted from :param:`request`.
+    # def get_request_info(self, request):
+    #     """
+    #     Returns context data extracted from :param:`request`.
 
-        Heavily based on flask integration for Sentry: https://git.io/vP4i9.
-        """
-        urlparts = urllib.parse.urlsplit(request.url)
-        query_string = urlparts.query
-        _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
+    #     Heavily based on flask integration for Sentry: https://git.io/vP4i9.
+    #     """
+    #     urlparts = urllib.parse.urlsplit(request.url)
+    #     query_string = urlparts.query
+    #     _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
-    @http.route(['/my/requests', '/my/requests/<string:type>', '/my/requests/param/<string:search_param>', '/my/requests/page/<string:page>'], type='http', auth="user", website=True)
-    def my_requests(self, type=False, page=False, search_param=False):
+    # @http.route(['/my/requests', '/my/requests/<string:type>', '/my/requests/param/<string:search_param>', '/my/requests/param/<string:search_param>', '/my/requests/page/<string:page>'], type='http', auth="user", website=True)
+    @http.route(['/my/requests', '/my/requests/<string:type>', '/my/requests/param/<string:search_param>','/my/requests/<string:type>?search=<string:search_input_query>' '/my/requests/param/<string:search_param>', '/my/requests/page/<string:page>'], type='http', auth="user", website=True)
+    def my_requests(self, type=False, page=False, search_param=False, search_input_query=False):
         """This route is used to call the requesters or user records for display
         page: the pagination index: prev or next
         type: material_request
         """
         user = request.env.user
         sessions = request.session
+        # self.get_request_info(request)
         if not page: 
             sessions['start'] = 0 
             sessions['end'] = 10
-        
+        search_input_query2 = request.params.get('search')
+        _logger.info(f"Search sest {search_input_query2} {search_input_query}")
+
         all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].sudo().search([])]
         
         memo_type = ['Payment', 'Loan'] if type in ['Payment', 'Loan'] \
@@ -1228,6 +1287,17 @@ class PortalRequest(http.Controller):
                         else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
                             if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
                                 else all_memo_type_keys
+                                
+        def get_date_query(date_query):
+            date_val = None
+            for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    date_val = datetime.strptime(date_query, fmt).date()
+                    break
+                except ValueError:
+                    pass 
+            return date_val 
+        
         request_id = request.env['memo.model'].sudo()
         domain = [
                 ('active', '=', True),
@@ -1240,8 +1310,18 @@ class PortalRequest(http.Controller):
         domain += [
             ('memo_type_key', 'in', memo_type),
         ]
+        if search_input_query:
+            requests = request.httprequest 
+            domain += [
+                '|','|', '|', ('name', 'ilike', search_param),
+                ('code', 'ilike', search_param),
+                ('employee_id.id', 'ilike', search_param),
+                ('employee_id.employee_number', 'ilike', search_input_query),
+            ]
+            date_search = get_date_query(search_input_query)
+            if date_search:
+                domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
         if search_param:
-            # if request.httprequest:
             requests = request.httprequest 
             # url_obj = self.get_request_info()
             # self.get_request_info(requests)
@@ -1249,6 +1329,9 @@ class PortalRequest(http.Controller):
                 '|', ('name', 'ilike', search_param),
                 ('code', 'ilike', search_param),
             ]
+            date_search = get_date_query(search_param)
+            if date_search:
+                domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
             
         start, end = self.get_pagination(page)# if page else False, False
         _logger.info(f"Session storage is {sessions.get('start')} {sessions.get('end')}")
@@ -1262,10 +1345,27 @@ class PortalRequest(http.Controller):
         values = {'requests': requests}
         return request.render("portal_request.my_portal_request", values)
     
+    # def get_leave_days_taken(self, record):
+    #     if record and record.leave_end_date and record.leave_start_date:
+    #         duration = record.leave_end_date - record.leave_start_date
+    #         return duration.days if duration else 0
+    #     else:
+    #         return 0
     def get_leave_days_taken(self, record):
         if record and record.leave_end_date and record.leave_start_date:
-            duration = record.leave_end_date - record.leave_start_date
-            return duration.days if duration else 0
+            start = record.leave_start_date
+            end = record.leave_end_date
+
+            day_count = 0
+            current = start
+
+            while current <= end:
+                # Monday = 0 ... Sunday = 6
+                if current.weekday() < 5:  # exclude Saturday(5) and Sunday(6)
+                    day_count += 1
+                current += timedelta(days=1)
+
+            return day_count
         else:
             return 0
 
@@ -1354,6 +1454,7 @@ class PortalRequest(http.Controller):
                     ], limit=1)
         values = {
             'req': requests,
+            # 'format_date': lambda date, fmt='%m/%d/%Y': format_date(request.env, date, date_format=fmt),
             'is_edit_mode': 'on' if requests.state in ['draft', 'submit', 'refuse', 'cancel'] else 'off',
                'leave_taken': self.get_leave_days_taken(requests),
             'current_user': user.id,
@@ -1361,8 +1462,8 @@ class PortalRequest(http.Controller):
                'employee_ids': request.env['hr.employee'].sudo().search([('active', '=', True)]),
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
             'record_attachment_ids': memo_attachment_ids,
-            "number_of_days_display": leave_allocation_id.number_of_days_display,
-               "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
+            "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
         }
         return request.render("portal_request.request_form_template", values) 
     
@@ -1374,22 +1475,35 @@ class PortalRequest(http.Controller):
         # request_id = request.env['memo.model'].sudo()
         rec = request.env['memo.model'].sudo().browse([int(post.get('memo_id'))])
         if rec:
+            manager_approve = []
             approver_ids = [r.user_id.id for r in rec.sudo().stage_id.approver_ids]
-            manager_approve = [rec.employee_id.administrative_supervisor_id.user_id.id, rec.employee_id.parent_id.user_id.id]
+            
+            if rec.sudo().state == 'Refuse':
+                return {
+                    "status": True,
+                    "warning": True, 
+                    "message": "The record is already in refuse state. Kindly cancel, resend or approve", 
+                    }
+            if rec.sudo().stage_id.id in rec.memo_setting_id.stage_ids.ids:
+                if rec.memo_setting_id.stage_ids.ids.index(rec.sudo().stage_id.id) in [0, 1]:
+                    manager_approve = [rec.employee_id.administrative_supervisor_id.user_id.id, rec.employee_id.parent_id.user_id.id]
             approver_ids = manager_approve + approver_ids
             if rec.stage_id and user.id not in approver_ids: 
                 return {
-                    "status": False, 
+                    "status": True, 
+                    "warning": True, 
                     "message": "You are not authorized to refuse this request", 
                     }
             else:
                 return {
                     "status": True, 
+                    "warning": False, 
                     "message": "", 
                     }
         else:
             return {
                     "status": False, 
+                    "warning": False, 
                     "message": "No reference record couls be found to refuse this request", 
                     }
 
@@ -1423,6 +1537,7 @@ class PortalRequest(http.Controller):
                     })
                 return {
                     "status": True, 
+                    "link": False, 
                     "message": "Record updated successfully", 
                     }
             elif status == "Sent":
@@ -1432,6 +1547,7 @@ class PortalRequest(http.Controller):
                 request_record.sudo().write({'state': 'Sent', 'stage_id': stage_id})
                 return {
                     "status": True, 
+                    "link": False, 
                     "message": "Record updated successfully", 
                     }
             elif status in ["Resend"]:
@@ -1441,6 +1557,7 @@ class PortalRequest(http.Controller):
                 if not request.env.user.id == request_record.employee_id.user_id.id:
                     return {
                         "status": False, 
+                        "link": False, 
                         "message": "Only initiator can resend this request", 
                         }
                 
@@ -1450,52 +1567,68 @@ class PortalRequest(http.Controller):
                     request_record.write({'state': 'Sent', 'stage_id': stage_id})
                     return {
                         "status": True, 
+                        "link": False,
                         "message": "Record updated successfully", 
                         }
                 else:
                     return {
                     "status": False, 
+                    "link": False, 
                     "message": "No stage configured or found for this request. Contact admin", 
                     }
             elif status in ["Approve"]:
-                """First check if the server """
-                # ensure that current stage is not the main approval stage. Only internal users
-                # can go into office memo to approve
-                if request_record.sudo().stage_id.is_approved_stage:
-                    return {
-                            "status": False, 
-                            "message": """Final Approval of this record requires Paid user license. \n \
-           Please go into office memo application to Approve this record""", 
-                            }
+                
                 # approver_ids, stage = request_record.get_next_stage_artifact()
                 current_stage_approvers = request_record.sudo().stage_id.approver_ids
                 manager_approvals = []
                 if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
                     manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
                 # user_employeeid = request.env.user.employee_id.id
-                stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
                             "status": False, 
-                            "message": "Please Ensure to provide manager's or supervisor's comment", 
+                            "link": False,
+                            "message": "Please Scroll down to the ending of the form to provide manager's or supervisor's comment", 
                             }
-            
+                    else:
+                        return {
+                            "status": False, 
+                            "link": False,
+                            "message": "You are not assigned to approve this record", 
+                            }
+                """First check if the server """
+                # ensure that current stage is not the main approval stage. Only internal users
+                # can go into office memo to approve
+                if request_record.sudo().stage_id.is_approved_stage:
+                    url_link = get_model_url(request_record.id, 'memo.model')
+                    is_internal_user = request.env.user.has_group('base.group_user')
+                    _logger.info(f"LINKAGE {url_link} Internal user found {is_internal_user}")
+                    return {
+                            "status": False, 
+                            "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
+                            "message": """
+                            Final Approval of this record requires Paid user license. \n \
+                            Please go into office memo application to Approve this record - 
+                            Contact system admin to give you license""", 
+                            }
+                current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
                     filtered(lambda appr: appr.is_approved_stage == True) 
                 if is_approved_stage:
                     stage_id = is_approved_stage[0] 
                     # is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
                     # filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-                    if request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
+                    if request.env.user.id in current_stage_approvers:
                         request_record.sudo().update_final_state_and_approver()
                         request_record.sudo().write({
                             'res_users': [(4, request.env.user.id)]
                             })
                     else:
                         return {
-                        "status": True,
-                        "message": "You are not allowed to approve this document", 
+                            "status": True,
+                            "link": False,
+                            "message": "You are not allowed to approve this document", 
                         }
                         # request_record.write({'state': 'Sent', 'stage_id': stage_id})
                     body_msg = f"""
@@ -1506,21 +1639,25 @@ class PortalRequest(http.Controller):
                     request_record.mail_sending_direct(body_msg)
                     return {
                         "status": True,
+                        "link": False,
                         "message": "Record updated successfully", 
                         }
                 else:
                     return {
                     "status": False, 
+                    "link": False,
                     "message": "No stage configured as approved stage. Contact admin", 
                     }
             else:
                 return {
-                        "status": False, 
+                        "status": False,
+                        "link": False, 
                         "message": "Request must have a status", 
                         }
         else:
             return {
                     "status": False, 
+                    "link": False,
                     "message": "No matching record found", 
                     }
         # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))

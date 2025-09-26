@@ -13,7 +13,9 @@
                     <field name="maximum_cash_advance_limit" groups="base.group_system,hr.group_hr_manager"/>
                     <field name="leave_reliever_memo_stage_ids" readonly="1"/>
                     <field name="leave_reliever" readonly="0"/>
-                    <button name="reset_leave_reliever" string="Reliever Reset" class="oe_highlight btn-sm" type="object" 
+                    <button name="reset_leave_reliever" string="Reset Reliever" class="oe_highlight btn-sm" type="object" 
+					groups="base.group_system,hr.group_hr_manager"/>
+                    <button name="update_leave_reliever" string="Update Reliever" class="oe_highlight btn-sm" type="object" 
 					groups="base.group_system,hr.group_hr_manager"/>
                 </field> 
             </field>

@@ -100,6 +100,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                     config_exist = self.env['memo.config'].search([
                         ('branch_id', '=', cob.id), 
                         ('company_id', '=', comp.id),
+                        ('name', '=', memo_config.name),
                         ('memo_type', '=', memo_config.memo_type.id)], limit=1)
                     if config_exist:
                         raise ValidationError(f'Configuration for type {memo_config.memo_type.name} exist in company - {comp.name} and department {cob.name}')

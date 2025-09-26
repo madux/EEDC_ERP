@@ -110,7 +110,7 @@
 								<field name="memo_bagde_status" invisible="1"/>
 								<field name="memo_bagde_undone" invisible="1"/>
 								<field name="user_owned_cash_advance_ids" invisible="1" widget="many2many_tags"/>
-								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" attrs="{'readonly':[('state','=', 'Done')], 'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"
+								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" help="Only displays posted cash advance, the ones you created and memo type is cash advance" attrs="{'readonly':[('state','=', 'Done')], 'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 								
 								<field name="payment_reference" attrs="{'readonly':[('state','!=', 'submit')], 'invisible':[('memo_type_key','!=', 'Payment')]}"/>
@@ -137,6 +137,7 @@
 								<field name="start_date" attrs="{'invisible':[('memo_type_key','!=', 'loan')],'required':[('memo_type_key','=','loan')]}"/>
 								<!-- <field name="cash_advance_reference" domain="[('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/>
 								<field name="soe_advance_reference" attrs="{'invisible':[('memo_type_key','!=', 'cash_advance')]}"/> -->
+								<field name="company_id" invisible="0"/>
 								<field name="currency_id" invisible="1"/>
 								<field name="move_id" invisible="1"/>
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
@@ -218,8 +219,9 @@
 										<!-- <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['Payment','recruitment_request','employee_update', 'material_request'])]}"/> -->
 										<field name="sub_total_amount" optional="hide" readonly="1" force_save="1" string="Subtotal" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request','material_request'])], 'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'procurement_request'])]}"/>
                                         <field name="used_qty" string="Used Qty" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
-                                        <field name="used_amount" string="Used Amount" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="used_amount" string="Used Amount(Per unit)" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
                                         <field name="retire_sub_total_amount" optional="hide" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+                                        <field name="difference_in_amount" optional="hide" force_save="1" sum="Difference" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="note" string="Note" invisible="1" force_save="1"/>  
 										<field name="driver_assigned" string="Driver" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'column_invisible': [('memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/> 
@@ -228,7 +230,7 @@
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
-										<field name="retired" string="Retired" force_save="1" readonly="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/>
+										<field name="retired" string="Retired" force_save="1" readonly="1" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['cash_advance'])], 'invisible': [('memo_type_key', 'not in', ['cash_advance'])]}"/>
 									</tree>
 								</field>
 								<group name="note_group" col="6" class="mt-2 mt-md-0">
