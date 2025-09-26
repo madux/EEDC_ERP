@@ -115,8 +115,11 @@
                                 </div>
                                 <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
                                     <div class="navbar-light  py-0 mb-2">
-                                        <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
+                                        <a id="myrequest" href="/my/requests" class="btn btn-secondary btn-sm">
                                             My requests
+                                        </a>
+                                        <a id="relieveBtn" class="btn btn-secondary btn-sm relieveBtn d-none" tooltip="Use this option to indicate that you are back from leave">
+                                            I Am Now Available
                                         </a>
                                     </div>
 

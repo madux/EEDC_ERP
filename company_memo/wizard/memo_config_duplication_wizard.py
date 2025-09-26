@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 class MemoConfigDuplicationWizard(models.TransientModel):
     _name = 'memo.config.duplication.wizard'
 
-    name = fields.Char(string="Memo Type")
+    name = fields.Char(string="Memo Name")
     dept_ids = fields.Many2many('hr.department', string="Departments")
     dummy_memo_stage_ids = fields.Many2many('dummy.memo.stage', 'duplication_wizard_id')
     employees_follow_up_ids = fields.Many2many('hr.employee',
@@ -100,12 +100,13 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                     config_exist = self.env['memo.config'].search([
                         ('branch_id', '=', cob.id), 
                         ('company_id', '=', comp.id),
+                        ('name', '=', memo_config.name),
                         ('memo_type', '=', memo_config.memo_type.id)], limit=1)
                     if config_exist:
                         raise ValidationError(f'Configuration for type {memo_config.memo_type.name} exist in company - {comp.name} and department {cob.name}')
                     stage_ids = []
                     new_config = self.env['memo.config'].create({
-                    'name': f"{memo_config.memo_type.name} - [{cob.name}]",
+                    'name': f"{self.name} {memo_config.memo_type.name} - [{cob.name}]",
                     'branch_id': cob.id,
                     'memo_type': memo_config.memo_type.id,
                     'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],

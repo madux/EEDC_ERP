@@ -11,6 +11,7 @@
         'static/templates/menu.xml',
         'static/templates/website_apps_page.xml',
         'static/templates/website_homepage.xml',
+        'static/templates/website_my_page.xml',
         'static/templates/request.xml',
         'static/templates/request_tree.xml',
         'static/templates/request_form.xml',
@@ -34,5 +35,6 @@
         '/portal_request/static/src/css/portal_css.css',
         '/portal_request/static/src/css/employee_dashboard.css',
         '/portal_request/static/src/css/apps_page.css',
+        '/portal_request/static/src/js/homepage.js',
     ]},
 }

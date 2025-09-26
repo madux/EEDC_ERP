@@ -467,28 +467,29 @@ class MemoConfig(models.Model):
                 if len(mc.stage_ids) > 2:
                     mc.stage_ids[-2].is_approved_stage = True
 
-    @api.constrains('memo_type')
-    def _check_duplicate_memo_type(self):
-        memo = self.env['memo.config'].sudo()
-        for rec in self:
-            duplicate = memo.search([('memo_type', '=', rec.memo_type.id),
-                                      ('memo_key', '!=', 'helpdesk'), 
-                                      ('branch_id', '=', rec.branch_id.id),
-                                      ('id', '!=', rec.id),
-                                      ], limit=1)
-            if duplicate:
-                company_found = [
-                        result for result in rec.company_ids.ids if result in duplicate.company_ids.ids 
-                        ]
+    # @api.constrains('memo_type')
+    # def _check_duplicate_memo_type(self):
+    #     memo = self.env['memo.config'].sudo()
+    #     for rec in self:
+    #         duplicate = memo.search([('memo_type', '=', rec.memo_type.id),
+    #                                   ('memo_key', '!=', 'helpdesk'), 
+    #                                   ('branch_id', '=', rec.branch_id.id),
+    #                                   ('name', '!=', rec.name),
+    #                                   ('id', '!=', rec.id),
+    #                                   ], limit=1)
+    #         if duplicate:
+    #             company_found = [
+    #                     result for result in rec.company_ids.ids if result in duplicate.company_ids.ids 
+    #                     ]
                 
-                if company_found:
-                    #  if len([r for r in duplicate]) > 1:
-                    raise ValidationError(
-                    f"""A memo config with type {rec.memo_type.name}
-                    and department: {rec.department_id.name}
-                    has already been configured for this companies 
-                    {','.join([self.env['res.company'].sudo().browse([r]).name for r in company_found])}, 
-                    kindly discard locate it and select the approvers""")
+    #             if company_found:
+    #                 #  if len([r for r in duplicate]) > 1:
+    #                 raise ValidationError(
+    #                 f"""A memo config with type {rec.memo_type.name}
+    #                 and department: {[]}
+    #                 has already been configured for this companies 
+    #                 {','.join([self.env['res.company'].sudo().browse([r]).name for r in company_found])}, 
+    #                 kindly discard locate it and select the approvers""") ####
 
     @api.onchange('active')
     def onchange_active(self):

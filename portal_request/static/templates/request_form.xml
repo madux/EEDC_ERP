@@ -123,7 +123,7 @@
 
                                         <li t-if="req.approver_ids" class="list-group-item flex-grow-1">
                                             <div class="col-12 col-md-12 pb-2">
-                                                <strong>To be Approved by:</strong>
+                                                <strong>Approvers:</strong>
                                                 <t t-foreach="req.approver_ids" t-as="appr">
                                                     <t t-if="appr.user_id">
                                                         <div class="d-flex ps-3 flex-nowrap">
@@ -234,20 +234,20 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Start date</strong>: 
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_start_date" id="leave_start_datex" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_start_date" id="leave_start_datex" date_field="1" name="leave_start_datex" required="true" readonly="true" disabled="true" labelfor="Leave start date" t-attf-value="{{req.leave_start_date.strftime('%m/%d/%Y')}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave End date</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_end" id="leave_end_datex" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date}}"/>
+                                                    <input type="text" class="form-control datepicker s_website_form_input" field_name="leave_end" id="leave_end_datex" date_field="1" name="leave_end_datex" required="required" readonly="true" disabled="true" labelfor="Leave End date" t-attf-value="{{req.leave_end_date.strftime('%m/%d/%Y')}}"/>
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Leave Remaining</strong>: 
                                                 <span class="col-md-6">
                                                     <input type="hidden" class="form-control s_website_form_input" field_name= "leave_remaining" name="leave_remaining" id="leave_remaining" t-attf-value="{{number_of_days_display}}"/>
-                                                    <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
+                                                    <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;"><t t-esc="number_of_days_display"/></span> Days
                                                 </span>
                                             </div>
                                             <div class="row mb-4">
@@ -380,18 +380,18 @@
                                                             <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" disable="true" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
                                                         <th width="20%">
-                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
                                                         </th>
                                                         <th width="20%">
-                                                            <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="'{0:,}'.format(float(prod.sub_total_amount))"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                            <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
                                                         </th>
                                                         <t t-if="req.memo_type.memo_key in ['soe']">
                                                             <th width="10%">
                                                                 <input type="text" main_name = "used_qty" field_name= "used_qty" t-att-name="prod.used_qty" t-att-id="prod.id" required="required" t-att-value="prod.used_qty" t-att-class="'productinput form-control USEDQTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             </th>
                                                             <th width="10%">
-                                                                <input type="text" main_name = "used_amount" field_name= "used_amount" t-att-name="prod.used_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.used_amount))" required="required" t-att-class="'productinput form-control UsedAmountTots USEDAMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                                <input type="text" main_name = "used_amount" field_name= "used_amount" t-att-name="prod.used_amount" t-att-id="prod.id" t-att-value="prod.used_amount" required="required" t-att-class="'productinput form-control UsedAmountTots USEDAMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                             </th>
                                                             <th width="10%">
                                                                 <input type="text" main_name = "retire_sub_total_amount" disable="true" field_name= "retire_sub_total_amount" t-att-name="prod.retire_sub_total_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.retire_sub_total_amount))" required="required" t-att-class="'productinput form-control RTOTAL RTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
@@ -466,7 +466,6 @@
                                 </div>
                             </t>
                             <t t-else="">
-                            x..
                             </t> 
                             <t t-if="req.memo_type.memo_key == 'employee_update'">
                                 <div class="form-row" id="emp_item_form_div">

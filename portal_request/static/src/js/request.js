@@ -89,6 +89,22 @@ odoo.define('portal_request.portal_request', function (require) {
         }
     }
 
+    function workingDaysBetweenDates(startDate, endDate) {
+        let count = 0;
+        let curDate = new Date(startDate);
+
+        while (curDate <= endDate) {
+            const dayOfWeek = curDate.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {  
+                // 0 = Sunday, 6 = Saturday
+                count++;
+            }
+            curDate.setDate(curDate.getDate() + 1); // move to next day
+        }
+
+        return count;
+    }
+
     // var FormateDateToMMDDYYYY = function(dateObject) {
     //     var d = new Date(dateObject);
     //     var day = d.getDate();
@@ -822,7 +838,7 @@ odoo.define('portal_request.portal_request', function (require) {
         dateFormat: 'mm/dd/yy',
         changeMonth: true,
         changeYear: true,
-        yearRange: '2023:2050',
+        yearRange: '2024:2050',
         maxDate: null,
         minDate: new Date(),
         // Disable Saturday (6) & Sunday (0)
@@ -840,8 +856,8 @@ odoo.define('portal_request.portal_request', function (require) {
             dateFormat: 'mm/dd/yy',
             changeMonth: true,
             changeYear: true,
-            yearRange: '2023:2050',
-            maxDate: maxDate,
+            yearRange: '2024:2050',
+            maxDate: null, // removed maxDate because users can extend the month of their leave
             minDate: minDate, //new Date()
             // Disable Saturday (6) & Sunday (0)
             beforeShowDay: function (date) {
@@ -1036,8 +1052,10 @@ odoo.define('portal_request.portal_request', function (require) {
                             $("#employed_id").val('')
                             $("#phone_number").val('')
                             $("#email_from").val('')
-                            alert(`Validation Error! ${data.message}`)
+                            $('#relieveBtn').removeClass('d-none')
+                            alert(`[[]] ${data.message}`)
                         }else{
+                            $('#relieveBtn').addClass('d-none')
                             var employee_name = data.data.name;
                             var email = data.data.work_email;
                             var phone = data.data.phone; 
@@ -1101,8 +1119,18 @@ odoo.define('portal_request.portal_request', function (require) {
                 var selectStartLeaveDate = new Date(start_date.val());
                 var endDate = new Date($('#leave_start_date').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
                 var maxDate = endDate + (21 * 24 * 60 * 60 * 1000)
-                var st = `0${new Date(endDate).getMonth() + 1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
-                var end = `0${new Date(maxDate).getMonth() + 1}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
+                var prefixendDate = new Date(endDate).getMonth() + 1 
+                var prefixmaxDate = new Date(maxDate).getMonth() + 1
+                // please leave or refactor this code so that it wont break for jan, --- september
+                var join1 = prefixendDate.length == 1 ? `0${prefixendDate}` : prefixendDate;
+                var join2 = prefixmaxDate.length == 1 ? `0${prefixmaxDate}` : prefixmaxDate;
+                var st = `${join1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
+                var end = `${join2}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
+
+                // we added 0 prefix for jan - september 
+
+                // var st = `${new Date(endDate).getMonth() + 1}/${new Date(endDate).getDate()}/${new Date(endDate).getFullYear()}`
+                // var end = `${new Date(maxDate).getMonth() + 1}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
                 triggerEndDate(st, end) 
             },
             'blur input[name=leave_end_datex]': function(ev){
@@ -1112,22 +1140,31 @@ odoo.define('portal_request.portal_request', function (require) {
                 let endDate = $(ev.target);
                 var date1 = new Date(start_date.val());
                 var date2 = new Date(endDate.val());
-                var Difference_In_Time = date2.getTime() - date1.getTime();
-                var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
-                console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
-                if (Difference_In_Days > parseInt(leaveRemaining)){
+                // var Difference_In_Time = date2.getTime() - date1.getTime();
+                // var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                // console.log(`Difference_In_Days IS : ${Difference_In_Days}`)
+                // if (Difference_In_Days > parseInt(leaveRemaining)){
+                //     $('#leave_end_datex').val("");
+                //     $('#leave_end_datex').attr('required', true);
+                //     alert(`You only have ${leaveRemaining} number of leave remaining 
+                //         for this leave type. Please Ensure the date range is within the available 
+                //         day allocated for you.`)
+                //     return true
+                // }
+                let workingDays = workingDaysBetweenDates(date1, date2);
+                console.log(`leaveRemaining IS : ${leaveRemaining} workingDays ${workingDays}`)
+
+                if (workingDays > parseInt(leaveRemaining)) {
                     $('#leave_end_datex').val("");
                     $('#leave_end_datex').attr('required', true);
-                    alert(`You only have ${leaveRemaining} number of leave remaining 
-                        for this leave type. Please Ensure the date range is within the available 
-                        day allocated for you.`)
-                    return true
+                    alert(`You only have ${leaveRemaining} number of leave remaining for this leave type. Please Ensure the date range is within the available day allocated for you.`)
+                    return true;
                 }
                 else{
                     $('#leave_end_datex').attr('required', false);
                     $('#leave_end_datex').attr('required', false);
                     endDate.removeClass('is-invalid').addClass('is-valid');
-                    $('#leave_taken').text(Difference_In_Days)
+                    $('#leave_taken').text(workingDays)
                 }
                 checkOverlappingLeaveDate(this)
             }, 
@@ -1583,6 +1620,42 @@ odoo.define('portal_request.portal_request', function (require) {
                 }else{
                     alert("[Staff ID, Request option, Existing Ref # ] Must all be provideds")
                 }
+            },
+
+            'click .relieveBtn': function(ev){
+                let targetElement = $(ev.target).attr('id');
+                let $btn = $('.relieveBtn');
+                let $btnHtml = $btn.html()
+                $btn.attr('disabled', 'disabled');
+                $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({
+                    'message': '<h2 class="card-name">Resetting ...</h2>'
+                });
+                this._rpc({
+                    route: `/relieve/reliever`,
+                    params: {
+                        'user_id': 0, ///$('.record_id').attr('id'),
+                    },
+                }).then(function (data) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
+                    console.log('updating manager comment record dataState reliever => '+ JSON.stringify(data))
+                    if(!data.status){
+                        $('#relieveBtn').removeClass('d-none')
+                        modal_message.text(data.message)
+                        alert_modal.modal('show');
+                    }else{
+                        $('#relieveBtn').addClass('d-none')
+                        console.log('reliever reset')
+                    }
+                }).guardedCatch(function (error) {
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml)
+                    $.unblockUI()
+                    let msg = error.message.message
+                    alert(`Unknown Error! ${msg}`)
+                });
             },
             'change select[name=selectTypeRequest]': function(){
                 // if new request type; hide existing order else reveal it
