@@ -707,7 +707,7 @@ class AccountDynamicReport(models.Model):
         # Simplified data dictionary - only what the template needs
         data = {
             'doc_model': self._name,
-            'data': all_company_reports,
+            'company_reports': all_company_reports,
             # Pass wizard info for form controls
             'wizard_id': self.id,
             'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',

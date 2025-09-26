@@ -250,8 +250,7 @@
         </t>
     </template>
 
-    
-    
+
     <template id="consolidated_district_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
@@ -282,9 +281,173 @@
                         </div>
                     </div>
                 </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        window.toggleAccountDetails = function(accountCode) {
+                            try {
+                                var detailRows = document.querySelectorAll('.moves-' + accountCode);
+                                var icon = document.getElementById('icon-' + accountCode);
+                                if (!detailRows.length || !icon) return;
+                                var isVisible = detailRows[0].classList.contains('show');
+                                detailRows.forEach(function(row) {
+                                    if (isVisible) { row.classList.remove('show'); }
+                                    else { row.classList.add('show'); }
+                                });
+                                if (isVisible) { icon.classList.remove('expanded'); }
+                                else { icon.classList.add('expanded'); }
+                            } catch (err) {
+                                console.error('toggleAccountDetails error', err);
+                            }
+                        };
 
-                <t t-foreach="data or []" t-as="report">
-                    <div class="page" style="margin-bottom: 20px;">
+                        function jsonRpcCall(model, method, args, kwargs) {
+                            var payload = {
+                                jsonrpc: "2.0",
+                                method: "call",
+                                params: {
+                                    model: model,
+                                    method: method,
+                                    args: args || [],
+                                    kwargs: kwargs || {}
+                                },
+                                id: new Date().getTime()
+                            };
+                            return fetch('/web/dataset/call_kw/' + model + '/' + method, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(payload)
+                            }).then(function (r) { return r.json(); });
+                        }
+
+                        function showLoading(flag) {
+                            var spinner = document.getElementById('rpt_loading');
+                            var btn = document.getElementById('rpt_apply_btn');
+                            if (!spinner || !btn) return;
+                            if (flag) {
+                                spinner.style.display = '';
+                                btn.disabled = true;
+                            } else {
+                                spinner.style.display = 'none';
+                                btn.disabled = false;
+                            }
+                        }
+
+                        function applyFilters() {
+                            try {
+                                var btn = document.getElementById('rpt_apply_btn');
+                                if (!btn) return;
+                                var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
+                                if (!wizardId) {
+                                    console.warn('No wizard id found on Apply button');
+                                    return;
+                                }
+                                var dateFrom = (document.getElementById('rpt_date_from') || {}).value || false;
+                                var dateTo = (document.getElementById('rpt_date_to') || {}).value || false;
+                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || false;
+
+                                showLoading(true);
+                                jsonRpcCall('account.dynamic.report', 'update_report_params', [wizardId], {
+                                    date_from: dateFrom || false,
+                                    date_to: dateTo || false,
+                                    account_head_type: accountHeadType || false
+                                })
+                                .then(function (resp) {
+                                    showLoading(false);
+                                    if (resp &amp;&amp; resp.result &amp;&amp; resp.result.success) {
+                                        window.location.reload();
+                                    } else {
+                                        var err = (resp &amp;&amp; resp.error &amp;&amp; resp.error.message) ? resp.error.message : 'Failed to update report parameters';
+                                        console.error('update_report_params error:', resp);
+                                        alert('Could not update report parameters');
+                                    }
+                                })
+                                .catch(function (err) {
+                                    showLoading(false);
+                                    console.error('RPC error', err);
+                                    alert('Could not update report parameters due to network error');
+                                });
+                            } catch (err) {
+                                console.error('applyFilters error', err);
+                            }
+                        }
+
+                        // The logic to load initial parameters if not set by the template
+                        function loadWizardParams() {
+                            try {
+                                var btn = document.getElementById('rpt_apply_btn');
+                                if (!btn) return;
+                                var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
+                                if (!wizardId) return;
+
+                                var df = document.getElementById('rpt_date_from');
+                                var dt = document.getElementById('rpt_date_to');
+                                var sel = document.getElementById('rpt_account_head_type');
+                                var needLoad = !( (df &amp;&amp; df.value) || (dt &amp;&amp; dt.value) || (sel &amp;&amp; sel.value) );
+
+                                if (!needLoad) return;
+
+                                jsonRpcCall('account.dynamic.report', 'read', [[parseInt(wizardId, 10)], ['date_from','date_to','account_head_type']], {})
+                                    .then(function(resp){
+                                        if (!resp || !resp.result) return;
+                                        var rows = resp.result;
+                                        if (!rows || !rows.length) return;
+                                        var vals = rows[0] || {};
+
+                                        if (df &amp;&amp; vals.date_from) df.value = vals.date_from;
+                                        if (dt &amp;&amp; vals.date_to) dt.value = vals.date_to;
+
+                                        if (sel &amp;&amp; vals.account_head_type) {
+                                            var opt = Array.prototype.slice.call(sel.options).find(function(o){ return o.value == vals.account_head_type; });
+                                            if (opt) sel.value = opt.value;
+                                        }
+                                    })
+                                    .catch(function(err){
+                                        console.warn('Could not load wizard params', err);
+                                    });
+                            } catch (e) {
+                                console.error('loadWizardParams error', e);
+                            }
+                        }
+
+                        var applyBtn = document.getElementById('rpt_apply_btn');
+                        if (applyBtn) {
+                            applyBtn.addEventListener('click', function (ev) {
+                                ev.preventDefault();
+                                applyFilters();
+                            });
+                        }
+                        
+                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        if (selAccountType) {
+                            selAccountType.addEventListener('change', function (ev) {
+                                applyFilters();
+                            });
+                        }
+
+                        var dfrom = document.getElementById('rpt_date_from');
+                        var dto = document.getElementById('rpt_date_to');
+                        [dfrom, dto].forEach(function(el) {
+                            if (!el) return;
+                            el.addEventListener('keydown', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    applyFilters();
+                                }
+                            });
+                        });
+
+                        loadWizardParams();
+
+                        var spinner = document.getElementById('rpt_loading');
+                        if (spinner) spinner.style.display = 'none';
+                    });
+                </script>
+                <t t-foreach="company_reports or []" t-as="report">
+                    <div class="page company-section" style="margin-bottom: 20px;">
 
                         <div class="text-center mb-4">
                             <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
@@ -315,180 +478,6 @@
                             .account-code { font-family: 'Courier New', monospace; font-weight: bold; }
                             .move-reference { font-size: 8px; color: #666; }
                         </style>
-
-                        <script type="text/javascript"><![CDATA[
-                            document.addEventListener('DOMContentLoaded', function() {
-                                // existing toggle function (keeps current behaviour)
-                                window.toggleAccountDetails = function(accountCode) {
-                                    try {
-                                        var detailRows = document.querySelectorAll('.moves-' + accountCode);
-                                        var icon = document.getElementById('icon-' + accountCode);
-                                        if (!detailRows.length || !icon) return;
-                                        var isVisible = detailRows[0].classList.contains('show');
-                                        detailRows.forEach(function(row) {
-                                            if (isVisible) { row.classList.remove('show'); }
-                                            else { row.classList.add('show'); }
-                                        });
-                                        if (isVisible) { icon.classList.remove('expanded'); }
-                                        else { icon.classList.add('expanded'); }
-                                    } catch (err) {
-                                        console.error('toggleAccountDetails error', err);
-                                    }
-                                };
-
-                                // --------------------------
-                                // Date-range shortcut logic
-                                // --------------------------
-                                function jsonRpcCall(model, method, args, kwargs) {
-                                    var payload = {
-                                        jsonrpc: "2.0",
-                                        method: "call",
-                                        params: {
-                                            model: model,
-                                            method: method,
-                                            args: args || [],
-                                            kwargs: kwargs || {}
-                                        },
-                                        id: new Date().getTime()
-                                    };
-                                    return fetch('/web/dataset/call_kw/' + model + '/' + method, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-Requested-With': 'XMLHttpRequest'
-                                        },
-                                        credentials: 'same-origin',
-                                        body: JSON.stringify(payload)
-                                    }).then(function (r) { return r.json(); });
-                                }
-
-                                function showLoading(flag) {
-                                    var spinner = document.getElementById('rpt_loading');
-                                    var btn = document.getElementById('rpt_apply_btn');
-                                    if (!spinner || !btn) return;
-                                    if (flag) {
-                                        spinner.style.display = '';
-                                        btn.disabled = true;
-                                    } else {
-                                        spinner.style.display = 'none';
-                                        btn.disabled = false;
-                                    }
-                                }
-
-                                function applyDateFilters() {
-                                    try {
-                                        var btn = document.getElementById('rpt_apply_btn');
-                                        if (!btn) return;
-                                        var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
-                                        if (!wizardId) {
-                                            console.warn('No wizard id found on Apply button - cannot update params.');
-                                            return;
-                                        }
-                                        var dateFrom = (document.getElementById('rpt_date_from') || {}).value || false;
-                                        var dateTo = (document.getElementById('rpt_date_to') || {}).value || false;
-
-                                        // nothing to do if both empty
-                                        if (!dateFrom && !dateTo) {
-                                            // still reload to reflect possible other changes (optional)
-                                            return;
-                                        }
-
-                                        showLoading(true);
-                                        // call model method: update_report_params(wizard_id, **kwargs)
-                                        jsonRpcCall('account.dynamic.report', 'update_report_params', [wizardId], {date_from: dateFrom || false, date_to: dateTo || false})
-                                            .then(function (resp) {
-                                                showLoading(false);
-                                                if (resp && resp.result && resp.result.success) {
-                                                    // reload page so report re-renders with new wizard params
-                                                    window.location.reload();
-                                                } else {
-                                                    // graceful error display
-                                                    var err = (resp && resp.error && resp.error.message) ? resp.error.message : 'Failed to update report parameters';
-                                                    console.error('update_report_params error:', resp);
-                                                    alert('Could not update report parameters:\\n' + err);
-                                                }
-                                            })
-                                            .catch(function (err) {
-                                                showLoading(false);
-                                                console.error('RPC error', err);
-                                                alert('Could not update report parameters (network or server error). See console for details.');
-                                            });
-                                            
-                                            // --- populate inputs from wizard record if empty ---
-                                            function loadWizardParamsIntoForm() {
-                                                try {
-                                                    var btn = document.getElementById('rpt_apply_btn');
-                                                    if (!btn) return;
-                                                    var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
-                                                    if (!wizardId) return;
-
-                                                    // If fields are already non-empty, skip (prevents overwriting)
-                                                    var df = document.getElementById('rpt_date_from');
-                                                    var dt = document.getElementById('rpt_date_to');
-                                                    var sel = document.getElementById('rpt_account_head_type');
-                                                    var needLoad = !( (df && df.value) || (dt && dt.value) || (sel && sel.value) );
-
-                                                    if (!needLoad) return;
-
-                                                    // Read the wizard record (returns list of dicts)
-                                                    jsonRpcCall('account.dynamic.report', 'read', [[parseInt(wizardId, 10)], ['date_from','date_to','account_head_type']], {})
-                                                        .then(function(resp){
-                                                            if (!resp || !resp.result) return;
-                                                            var rows = resp.result;
-                                                            if (!rows || !rows.length) return;
-                                                            var vals = rows[0] || {};
-
-                                                            if (df && vals.date_from) df.value = vals.date_from;
-                                                            if (dt && vals.date_to) dt.value = vals.date_to;
-
-                                                            if (sel && vals.account_head_type) {
-                                                                // attempt to select matching option value
-                                                                var opt = Array.prototype.slice.call(sel.options).find(function(o){ return o.value == vals.account_head_type; });
-                                                                if (opt) sel.value = opt.value;
-                                                            }
-                                                        })
-                                                        .catch(function(err){
-                                                            // non-fatal: leave inputs blank and let user type
-                                                            console.warn('Could not load wizard params for report filters', err);
-                                                        });
-                                                } catch (e) {
-                                                    console.error('loadWizardParamsIntoForm error', e);
-                                                }
-                                            }
-
-                                            // call it once on load (after jsonRpcCall defined)
-                                            loadWizardParamsIntoForm();
-
-                                    } catch (err) {
-                                        console.error('applyDateFilters error', err);
-                                    }
-                                }
-
-                                // wire up Apply button and Enter key on inputs
-                                var applyBtn = document.getElementById('rpt_apply_btn');
-                                if (applyBtn) {
-                                    applyBtn.addEventListener('click', function (ev) {
-                                        ev.preventDefault();
-                                        applyDateFilters();
-                                    });
-                                }
-                                // allow pressing Enter in either date box to apply quickly
-                                var dfrom = document.getElementById('rpt_date_from');
-                                var dto = document.getElementById('rpt_date_to');
-                                [dfrom, dto].forEach(function(el) {
-                                    if (!el) return;
-                                    el.addEventListener('keydown', function(e) {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            applyDateFilters();
-                                        }
-                                    });
-                                });
-
-                                // hide spinner initially (in case not already hidden)
-                                (function(){ var s = document.getElementById('rpt_loading'); if (s) s.style.display = 'none'; })();
-                            });
-                            ]]></script>
 
                         <table class="consolidated-table">
                             <thead>
@@ -541,7 +530,7 @@
                                                 <tr t-attf-class="move-detail-row moves-#{safe_account_code}">
                                                     <td class="indent-move"><span class="move-reference"><t t-esc="move.get('date','')"/></span></td>
                                                     <td class="indent-move">
-                                                        <div><strong><t t-esc="move.get('description','')[:50]"/><t t-if="len(move.get('description','')) &gt; 50">...</t></strong></div>
+                                                        <div><strong><t t-esc="move.get('description','')[:50]"/></strong></div>
                                                         <div class="move-reference">Ref: <t t-esc="move.get('reference','')"/><t t-if="move.get('partner')"> | Partner: <t t-esc="move.get('partner')"/></t></div>
                                                     </td>
                                                     <t t-foreach="report.get('district_codes', [])" t-as="other_district_code">
@@ -587,26 +576,24 @@
                         <div style="margin-top: 20px; font-size: 9px; color: #666;">
                             <p><strong>Instructions:</strong></p>
                             <ul>
-                                <li>Click on any account row (with ▶ arrow) to expand/collapse detailed transactions</li>
-                                <li>Each district's transactions are grouped separately when expanded</li>
-                                <li>Transaction details include date, description, reference, and partner information</li>
+                                <li>Click on any account row (with ▶ arrow) to expand/collapse detailed transactions.</li>
+                                <li>Each district's transactions are grouped separately when expanded.</li>
+                                <li>Transaction details include date, description, reference, and partner information.</li>
                             </ul>
                         </div>
                     </div>
                 </t>
-
                 <style>
                     .company-section { page-break-after: always; }
                     .company-section:last-child { page-break-after: auto; }
-                    .tag-line { font-weight:600; background:#f8f9fa; }
-                    .account-line { background:#ffffff; }
                     @media print { .d-print-none { display:none !important; } }
                 </style>
 
             </t>
         </t>
     </template>
-
+    
+    
 
     <template id="consolidated_district_report_pdf_template">
         <t t-call="web.html_container">
