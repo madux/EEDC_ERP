@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_account_dynamic_report_id,account_account_dynamic_report_name,model_account_dynamic_report,,1,1,1,1
 access_economic_tag_id,economic_tag_name,model_economic_tag,,1,1,1,1
+access_import_account_data_id,account_import_account_data_name,model_import_account_data,,1,1,1,1
