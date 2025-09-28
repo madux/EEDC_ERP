@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 import base64
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import json
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +29,8 @@ class AccountDynamicReport(models.Model):
         default=lambda self: [(6, 0, [])]
         )
     name = fields.Char(
-        string='Report Name'
+        string='Report Name',
+        default="Financial Report"
         )
     account_analytics_ids = fields.Many2many(
         'account.analytic.account',
@@ -48,7 +50,7 @@ class AccountDynamicReport(models.Model):
             ("cash", "General Ledger"),
         ],
         string="Report Type",
-        required=False, default="monthly_expenditure"
+        required=False, default="consolidated_district"
     )
     format = fields.Selection(
         selection=[
@@ -60,8 +62,8 @@ class AccountDynamicReport(models.Model):
             ("powerBi", "Power BI"),
             ("dashboard", "Dashboard"),
         ],
-        string="Format", tracking=True,
-        required=False, default="pdf"
+        string="Format",
+        required=False, default="html"
     )
     
     branch_ids = fields.Many2many('multi.branch', string='District')
@@ -70,8 +72,8 @@ class AccountDynamicReport(models.Model):
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
-    date_from = fields.Date(string='Date from')
-    date_to = fields.Date(string='Date to')
+    date_from = fields.Date(string='Date from', default="2025-01-01")
+    date_to = fields.Date(string='Date to', default=fields.Date.today)
     partner_id = fields.Many2one('res.partner', string='Partner')
     account_type = fields.Selection(
         [
@@ -534,6 +536,62 @@ class AccountDynamicReport(models.Model):
         return report_lines, district_headers, district_codes
     
     
+    # def action_generate_consolidated_district_report(self):
+    #     """Generate consolidated district report for browser display - now supports multiple companies"""
+    #     self.ensure_one()
+        
+    #     if self.report_type != 'consolidated_district':
+    #         return self.action_generate_report()
+        
+    #     companies_to_process = self.company_ids or self.env['res.company'].search([])
+    #     start_date, end_date, month_headers = self._get_date_range()
+        
+    #     all_company_reports = []
+        
+    #     for company in companies_to_process:
+    #         report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+            
+    #         if report_lines:
+    #             budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
+    #             period_string = self._get_period_string(start_date, end_date)
+                
+    #             all_company_reports.append({
+    #                 'report_lines': report_lines,
+    #                 'district_headers': district_headers,
+    #                 'district_codes': district_codes,
+    #                 'company_name': company.name,
+    #                 'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
+    #                 'account_type': self.account_type,
+    #                 'res_company': company,
+    #             })
+        
+    #     if not all_company_reports:
+    #         raise ValidationError("No data could be generated for the selected criteria.")
+        
+    #     data = {
+    #         'doc_model': self._name,
+    #         'company_reports': all_company_reports,
+    #         'wizard_id': self.id,
+    #         'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
+    #         'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
+    #         'account_types': self._fields['account_type'].selection,
+    #         'current_account_type': self.account_type,
+    #         'current_company_ids': self.company_ids.ids,
+    #         'current_company_ids_json': json.dumps(self.company_ids.ids),
+    #     }
+    #     _logger.info(f"Current company_ids in json..............................................................:  {json.dumps(self.company_ids.ids or [])}")
+        
+    #     if self.format == 'html':
+    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+    #         report_obj.sudo().update({'report_type': 'qweb-html'})
+    #     else:
+    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
+    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+    #         report_obj.sudo().update({'report_type': 'qweb-pdf'})
+        
+    #     return report_action.report_action(self, data=data)
+    
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display - now supports multiple companies"""
         self.ensure_one()
@@ -566,6 +624,9 @@ class AccountDynamicReport(models.Model):
         if not all_company_reports:
             raise ValidationError("No data could be generated for the selected criteria.")
         
+        # Fix the JSON encoding issue
+        company_ids_list = self.company_ids.ids if self.company_ids else []
+        
         data = {
             'doc_model': self._name,
             'company_reports': all_company_reports,
@@ -574,7 +635,13 @@ class AccountDynamicReport(models.Model):
             'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
             'account_types': self._fields['account_type'].selection,
             'current_account_type': self.account_type,
+            'current_company_ids': company_ids_list,
+            'current_company_ids_json': json.dumps(company_ids_list),  # This should be clean JSON
         }
+        
+        # Debug logging
+        _logger.info(f"Company IDs for template: {company_ids_list}")
+        _logger.info(f"Company IDs JSON: {json.dumps(company_ids_list)}")
         
         if self.format == 'html':
             report_action = self.env.ref('eedc_report.action_consolidated_district_report')
@@ -605,6 +672,9 @@ class AccountDynamicReport(models.Model):
             update_vals['date_to'] = kwargs.get('date_to')
         if 'account_type' in kwargs and kwargs.get('account_type'):
             update_vals['account_type'] = kwargs.get('account_type')
+        if 'company_ids' in kwargs and kwargs.get('company_ids'):
+            update_vals['company_ids'] = [(6, 0, kwargs.get('company_ids') or [])]
+
 
         if update_vals:
             wizard.sudo().write(update_vals)
