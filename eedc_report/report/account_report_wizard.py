@@ -42,11 +42,12 @@ class AccountDynamicReport(models.Model):
             ("second_quarterly", "Second Quarterly Expenditures"),
             ("third_quarterly", "Third Quarterly Expenditures"),
             ("fourth_quarterly", "Fourth Quarterly Expenditures"),
+            ("consolidated_district", "Consolidated District Report"),
             ("cf", "CashFlow Statement"),
             ("bank", "Trial Balance"),
             ("cash", "General Ledger"),
         ],
-        string="Report Type", tracking=True,
+        string="Report Type",
         required=False, default="monthly_expenditure"
     )
     format = fields.Selection(
@@ -64,6 +65,8 @@ class AccountDynamicReport(models.Model):
     )
     
     branch_ids = fields.Many2many('multi.branch', string='District')
+    company_id = fields.Many2one('res.company')
+    company_ids = fields.Many2many('res.company', string='Companies')
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
@@ -134,20 +137,44 @@ class AccountDynamicReport(models.Model):
             #     report_obj.update({f'{tag.parent_id.id}': report_obj})
         _logger.info(f"MONTHLY REPORT {report_obj}")
         
+    # @api.model
+    # def default_get(self, fields_list):
+    #     """
+    #     Pre-populates the wizard with the user's default branches.
+    #     This version is robust against a user not having a default branch_id set.
+    #     """
+    #     res = super().default_get(fields_list)
+    #     user = self.env.user
+    #     if 'branch_ids' in fields_list:
+    #         branch_ids = user.branch_ids.ids
+    #         if user.branch_id:
+    #             branch_ids.append(user.branch_id.id)
+    #         unique_branch_ids = list(set(branch_ids))
+    #         res.update({'branch_ids': [(6, 0, unique_branch_ids)]})
+    #     if 'company_id' in fields_list and user.company_id:
+    #         res.update({'company_id': [(6, 0, user.company_id)]})
+    #     return res
+    
     @api.model
     def default_get(self, fields_list):
-        """
-        Pre-populates the wizard with the user's default branches.
-        This version is robust against a user not having a default branch_id set.
-        """
         res = super().default_get(fields_list)
         user = self.env.user
+
         if 'branch_ids' in fields_list:
-            branch_ids = user.branch_ids.ids
+            branch_ids = user.branch_ids.ids or []
             if user.branch_id:
-                branch_ids.append(user.branch_id.id)
-            unique_branch_ids = list(set(branch_ids))
-            res.update({'branch_ids': [(6, 0, unique_branch_ids)]})
+                branch_ids = list(set(branch_ids + [user.branch_id.id]))
+            res.update({'branch_ids': [(6, 0, branch_ids)]})
+
+        # default multiple companies (company_ids is many2many)
+        if 'company_ids' in fields_list:
+            comp_ids = user.company_ids.ids or ([user.company_id.id] if user.company_id else [])
+            res.update({'company_ids': [(6, 0, comp_ids)]})
+
+        # if code still expects company_id (many2one), set the id not a record
+        if 'company_id' in fields_list and user.company_id:
+            res.update({'company_id': user.company_id.id})
+
         return res
     
     
@@ -197,7 +224,7 @@ class AccountDynamicReport(models.Model):
             
         return start_date, end_date, list(dict.fromkeys(month_headers))
 
-    def _build_base_domain(self, date_from, date_to, branch_id):
+    def _build_base_domain(self, date_from, date_to, branch_id, company_id):
         """Builds a dynamic search domain based on wizard selections."""
         domain = [
             # ('move_id.branch_id', 'in', self.branch_ids.ids),
@@ -205,6 +232,7 @@ class AccountDynamicReport(models.Model):
             ('date', '>=', date_from), ('date', '<=', date_to),
             ('move_id.state', '=', 'posted'),
         ]
+        if company_id: domain.append(('move_id.company_id', '=', company_id))
         if self.journal_ids: domain.append(('journal_id', 'in', self.journal_ids.ids))
         if self.account_ids: domain.append(('account_id', 'in', self.account_ids.ids))
         if self.partner_id: domain.append(('partner_id', '=', self.partner_id.id))
@@ -214,6 +242,10 @@ class AccountDynamicReport(models.Model):
     
     def action_generate_report(self):
         self.ensure_one()
+        
+        if self.report_type == 'consolidated_district':
+            return self.action_generate_consolidated_district_report()
+    
         if self.format in ['pdf', 'html']:
             return self.action_print_report()
         elif self.format == 'xls':
@@ -228,13 +260,15 @@ class AccountDynamicReport(models.Model):
         if not branches_to_process:
             raise ValidationError("No district selected or configured for the current user.")
         
+        company = self.company_id
+        
         start_date, end_date, month_headers = self._get_date_range()
         
         is_quarterly = True if 'quarterly' in self.report_type else False
         
         all_branch_reports = []
         for branch in branches_to_process:
-            report_lines = self._get_hierarchical_report_data(start_date, end_date, month_headers, branch, is_quarterly=is_quarterly)
+            report_lines = self._get_hierarchical_report_data(start_date, end_date, month_headers, branch, company, is_quarterly=is_quarterly)
             if report_lines:
                 all_branch_reports.append({
                     'title': f'HEAD: {branch.code} - {branch.name}',
@@ -277,7 +311,7 @@ class AccountDynamicReport(models.Model):
         return report_action.report_action(self, data=data)
     
     
-    def _get_hierarchical_report_data(self, start_date, end_date, month_headers, branch, is_quarterly=False):
+    def _get_hierarchical_report_data(self, start_date, end_date, month_headers, branch, company, is_quarterly=False):
         year_start = end_date.replace(day=1, month=1)
         domain_end_date = end_date
         
@@ -285,7 +319,7 @@ class AccountDynamicReport(models.Model):
         all_accounts = tags.mapped('account_ids')
         if not all_accounts: return []
 
-        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id)
+        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company.id)
         base_domain.append(('account_id', 'in', all_accounts.ids))
         all_moves = self.env['account.move.line'].search(base_domain)
 
@@ -387,70 +421,194 @@ class AccountDynamicReport(models.Model):
         for tag in tags.filtered(lambda t: not t.parent_tag_id).sorted(key=lambda t: t.code):
             build_recursive(tag, 0)
         return final_report_data
-
     
+   
+    
+    def _get_consolidated_district_data(self, start_date, end_date, month_headers, company):
+        """
+        Generates consolidated data across all selected districts for the same period.
+        Shows individual accounts instead of tags, with expandable move lines.
+        Returns: (report_lines, district_headers, district_codes)
+        """
+        self.ensure_one()
+        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
+        if not branches_to_process:
+            # raise ValidationError("No districts selected or available for the selected company.")
+            return [], [], []
 
-    def _get_capital_report_data(self, start_date, end_date, month_headers, branch, is_quarterly=False):
+        if self.account_ids:
+            all_accounts = self.account_ids
+        else:
+            all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+            # tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
+            # all_accounts = tags.mapped('account_ids') if tags else self.env['account.account'].browse()
+
+        # if not all_accounts:
+        #     all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+
+        if not all_accounts:
+            return [], [], []
+
+        consolidated_data = {}
+        district_headers = []
+        district_codes = []
+
+        for branch in branches_to_process:
+            district_headers.append(branch.name.upper())
+            district_codes.append(branch.code.upper())
+
+            base_domain = self._build_base_domain(start_date, end_date, branch.id, company.id)
+            base_domain.append(('account_id', 'in', all_accounts.ids))
+
+            branch_moves = self.env['account.move.line'].search(base_domain)
+
+            sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
+
+            for account in all_accounts:
+                account_key = f"{account.code}_{account.name}"
+                if account_key not in consolidated_data:
+                    consolidated_data[account_key] = {
+                        'code': account.code,
+                        'description': account.name,
+                        'level': 0,
+                        'is_account': True,
+                        'is_expandable': True,
+                        'district_values': {},
+                        'move_details': {},
+                        'total_revenue': 0.0,
+                        'total_expenditure': 0.0,
+                    }
+
+                account_moves = branch_moves.filtered(lambda m: m.account_id == account)
+
+                if account_moves:
+                    revenue_total = sum(account_moves.mapped('credit'))
+                    expenditure_total = sum(account_moves.mapped('debit'))
+
+                    if self.account_head_type == 'Revenue':
+                        consolidated_data[account_key]['district_values'][branch.code] = revenue_total
+                        consolidated_data[account_key]['total_revenue'] += revenue_total
+                    else:
+                        consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
+                        consolidated_data[account_key]['total_expenditure'] += expenditure_total
+
+                    if branch.code not in consolidated_data[account_key]['move_details']:
+                        consolidated_data[account_key]['move_details'][branch.code] = []
+
+                    for move_line in account_moves:
+                        move_data = {
+                            'id': move_line.id,
+                            'date': move_line.date.strftime('%Y-%m-%d') if move_line.date else '',
+                            'reference': move_line.move_id.name or move_line.name,
+                            'description': move_line.name or (move_line.move_id.ref if hasattr(move_line.move_id, 'ref') else '') or 'No Description',
+                            'partner': move_line.partner_id.name if move_line.partner_id else '',
+                            'debit': move_line.debit,
+                            'credit': move_line.credit,
+                            'balance': move_line.credit if self.account_head_type == 'Revenue' else move_line.debit,
+                            'level': 1,
+                            'is_account': False,
+                            'is_move_line': True,
+                        }
+                        consolidated_data[account_key]['move_details'][branch.code].append(move_data)
+
+                    consolidated_data[account_key]['move_details'][branch.code].sort(
+                        key=lambda x: x.get('date', ''), reverse=True
+                    )
+
+        report_lines = []
+        for key, data in consolidated_data.items():
+            data['balance'] = data.get('total_revenue', 0.0) - data.get('total_expenditure', 0.0)
+            if data.get('total_revenue', 0.0) > 0 or data.get('total_expenditure', 0.0) > 0:
+                report_lines.append(data)
+
+        report_lines.sort(key=lambda x: x.get('code', ''))
+
+        return report_lines, district_headers, district_codes
+    
+    
+    def action_generate_consolidated_district_report(self):
+        """Generate consolidated district report for browser display - now supports multiple companies"""
+        self.ensure_one()
         
-        domain = self._build_base_domain(start_date, end_date, branch)
-        # domain.extend([
-        #     ('ng_budget_line_id.budget_type', '=', self.account_head_type),
-        #     ('display_type', '=', 'product'), 
-        #     ('debit', '>', 0)
-        #     ])
+        if self.report_type != 'consolidated_district':
+            return self.action_generate_report()
         
-        all_invoice_lines = self.env['account.move.line'].search(domain)
-
-        if not all_invoice_lines:
-            _logger.warning(f"No invoice lines found for selected branches '{branch.name}'.")
-            return []
-
-        districts_data = []
-        for line in all_invoice_lines:
-            budget_line = line.ng_budget_line_id
-            # approved_budget = budget_line.allocated_amount if budget_line else 0.0
-            approved_budget = 0.0
+        companies_to_process = self.company_ids or self.env['res.company'].search([])
+        start_date, end_date, month_headers = self._get_date_range()
+        
+        all_company_reports = []
+        
+        for company in companies_to_process:
+            report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
             
-            total_utilized = 0.0
-            if budget_line:
-                all_budget_moves = self.env['account.move.line'].search([
-                    ('ng_budget_line_id', '=', budget_line.id),
-                    ('move_id.state', '=', 'posted'),
-                ])
-                total_utilized = sum(all_budget_moves.mapped('debit'))
-
-            monthly_values = {month: 0.0 for month in month_headers}
-            if start_date <= line.date <= end_date:
-                month_key = line.date.strftime('%b').upper()
-                if month_key in monthly_values:
-                    monthly_values[month_key] = line.debit
-
-            line_data = {
-                'description': line.name, 
-                'code': line.account_id.code,
-                'economic_code_and_desc': f'{line.account_id.code} - {line.account_id.name}',
-                'approved_budget': approved_budget,
-                'monthly_values': monthly_values
-            }
-
-            if is_quarterly:
-                line_data.update({
-                    'quarterly_total': total_utilized,
-                    'balance': approved_budget - total_utilized,
-                    'percentage_perf': (total_utilized / approved_budget) * 100 if approved_budget else 0.0,
+            if report_lines:
+                budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
+                period_string = self._get_period_string(start_date, end_date)
+                
+                all_company_reports.append({
+                    'report_lines': report_lines,
+                    'district_headers': district_headers,
+                    'district_codes': district_codes,
+                    'company_name': company.name,
+                    'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
+                    'account_head_type': self.account_head_type,
+                    'res_company': company,
                 })
-            else:
-                previous_actual = total_utilized - line.debit
-                line_data.update({
-                    'previous_actual': previous_actual,
-                    'total_exp_to_date': total_utilized,
-                    'balance': approved_budget - total_utilized,
-                })
-            
-            if start_date <= line.date <= end_date:
-                capital_data.append(line_data)
-            
-        return sorted(capital_data, key=lambda x: x.get('code', ''))
+        
+        if not all_company_reports:
+            raise ValidationError("No data could be generated for the selected criteria.")
+        
+        data = {
+            'doc_model': self._name,
+            'company_reports': all_company_reports,
+            'wizard_id': self.id,
+            'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
+            'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
+            'account_head_types': self._fields['account_head_type'].selection,
+            'current_account_head_type': self.account_head_type,
+        }
+        
+        if self.format == 'html':
+            report_action = self.env.ref('eedc_report.action_consolidated_district_report')
+            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+            report_obj.sudo().update({'report_type': 'qweb-html'})
+        else:
+            report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
+            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
+            report_obj.sudo().update({'report_type': 'qweb-pdf'})
+        
+        return report_action.report_action(self, data=data)
+
+    @api.model
+    def update_report_params(self, wizard_id, **kwargs):
+        try:
+            wid = int(wizard_id)
+        except Exception:
+            return {'error': 'Invalid wizard id'}
+
+        wizard = self.sudo().browse(wid)
+        if not wizard.exists():
+            return {'error': 'Wizard not found'}
+
+        update_vals = {}
+        if 'date_from' in kwargs and kwargs.get('date_from'):
+            update_vals['date_from'] = kwargs.get('date_from')
+        if 'date_to' in kwargs and kwargs.get('date_to'):
+            update_vals['date_to'] = kwargs.get('date_to')
+        if 'account_head_type' in kwargs and kwargs.get('account_head_type'):
+            update_vals['account_head_type'] = kwargs.get('account_head_type')
+
+        if update_vals:
+            wizard.sudo().write(update_vals)
+
+        return {'success': True}
+        
+    def _get_period_string(self, start_date, end_date):
+        """Helper to generate period string for report subtitle"""
+        if start_date.year == end_date.year and start_date.month == end_date.month:
+            return f"MONTHLY RETURNS {start_date.strftime('%B %Y')}"
+        else:
+            return f"CONSOLIDATED RETURNS {start_date.strftime('%B %Y')} - {end_date.strftime('%B %Y')}"
     
     
     def get_account_and_journal_budget(self, account_id, fiscal_year=False):

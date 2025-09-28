@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="memo_config_form_inherit_role" model="ir.ui.view">
+        <field name="name">memo.config.form.inherit.role</field>
+        <field name="model">memo.config</field>
+        <field name="inherit_id" ref="company_memo.memo_config_form"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='stage_ids']/tree//field[@name='user_role_ids']" position="replace">
+                <field name="approval_role_ids" 
+                       string="Approval Roles" 
+                       widget="many2many_tags" 
+                       options="{'no_create': True, 'no_open': True}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="memo_stage_form_inherit" model="ir.ui.view">
+    <field name="name">memo.stage.form.inherit</field>
+    <field name="model">memo.stage</field>
+    <field name="inherit_id" ref="company_memo.memo_stage_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='require_po_confirmation']" position="after">
+        <field name="approval_role_ids"
+               string="Approval Roles"
+               widget="many2many_tags"
+               options="{'no_create': True, 'no_open': True}"/>
+      </xpath>
+    </field>
+  </record>
+
+</odoo>
