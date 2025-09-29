@@ -1652,7 +1652,7 @@
 
                 });
 
-                // Global function for toggling account details - FROM FIRST TEMPLATE
+                // Global function for toggling account details
                 window.toggleAccountDetails = function(accountCode) {
                 try {
                     var detailRows = document.querySelectorAll('.moves-' + accountCode);
