@@ -16,6 +16,7 @@ class AccountAccount(models.Model):
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
     active = fields.Boolean(string="Active", default=True)
+    
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
