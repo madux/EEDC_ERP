@@ -444,7 +444,7 @@ class AccountDynamicReport(models.Model):
         branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
         if not branches_to_process:
             # raise ValidationError("No districts selected or available for the selected company.")
-            return [], [], []
+            return [], [], [], []
 
         if self.account_ids:
             all_accounts = self.account_ids
@@ -457,7 +457,7 @@ class AccountDynamicReport(models.Model):
         #     all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
 
         if not all_accounts:
-            return [], [], []
+            return [], [], [], []
 
         consolidated_data = {}
         district_headers = []
@@ -533,64 +533,9 @@ class AccountDynamicReport(models.Model):
 
         report_lines.sort(key=lambda x: x.get('code', ''))
 
-        return report_lines, district_headers, district_codes
+        return report_lines, district_headers, district_codes, company.id
     
     
-    # def action_generate_consolidated_district_report(self):
-    #     """Generate consolidated district report for browser display - now supports multiple companies"""
-    #     self.ensure_one()
-        
-    #     if self.report_type != 'consolidated_district':
-    #         return self.action_generate_report()
-        
-    #     companies_to_process = self.company_ids or self.env['res.company'].search([])
-    #     start_date, end_date, month_headers = self._get_date_range()
-        
-    #     all_company_reports = []
-        
-    #     for company in companies_to_process:
-    #         report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
-            
-    #         if report_lines:
-    #             budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
-    #             period_string = self._get_period_string(start_date, end_date)
-                
-    #             all_company_reports.append({
-    #                 'report_lines': report_lines,
-    #                 'district_headers': district_headers,
-    #                 'district_codes': district_codes,
-    #                 'company_name': company.name,
-    #                 'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
-    #                 'account_type': self.account_type,
-    #                 'res_company': company,
-    #             })
-        
-    #     if not all_company_reports:
-    #         raise ValidationError("No data could be generated for the selected criteria.")
-        
-    #     data = {
-    #         'doc_model': self._name,
-    #         'company_reports': all_company_reports,
-    #         'wizard_id': self.id,
-    #         'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
-    #         'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
-    #         'account_types': self._fields['account_type'].selection,
-    #         'current_account_type': self.account_type,
-    #         'current_company_ids': self.company_ids.ids,
-    #         'current_company_ids_json': json.dumps(self.company_ids.ids),
-    #     }
-    #     _logger.info(f"Current company_ids in json..............................................................:  {json.dumps(self.company_ids.ids or [])}")
-        
-    #     if self.format == 'html':
-    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report')
-    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-    #         report_obj.sudo().update({'report_type': 'qweb-html'})
-    #     else:
-    #         report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
-    #         report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-    #         report_obj.sudo().update({'report_type': 'qweb-pdf'})
-        
-    #     return report_action.report_action(self, data=data)
     
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display - now supports multiple companies"""
@@ -603,9 +548,10 @@ class AccountDynamicReport(models.Model):
         start_date, end_date, month_headers = self._get_date_range()
         
         all_company_reports = []
+        company_ids_list = []
         
         for company in companies_to_process:
-            report_lines, district_headers, district_codes = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+            report_lines, district_headers, district_codes, company_id = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
             
             if report_lines:
                 budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
@@ -620,12 +566,12 @@ class AccountDynamicReport(models.Model):
                     'account_type': self.account_type,
                     'res_company': company,
                 })
+                company_ids_list.append(company_id)
         
         if not all_company_reports:
             raise ValidationError("No data could be generated for the selected criteria.")
         
-        # Fix the JSON encoding issue
-        company_ids_list = self.company_ids.ids if self.company_ids else []
+        # company_ids_list = self.company_ids.ids if self.company_ids else []
         
         data = {
             'doc_model': self._name,
@@ -636,7 +582,7 @@ class AccountDynamicReport(models.Model):
             'account_types': self._fields['account_type'].selection,
             'current_account_type': self.account_type,
             'current_company_ids': company_ids_list,
-            'current_company_ids_json': json.dumps(company_ids_list),  # This should be clean JSON
+            'current_company_ids_json': json.dumps(company_ids_list),
         }
         
         # Debug logging
@@ -680,6 +626,66 @@ class AccountDynamicReport(models.Model):
             wizard.sudo().write(update_vals)
 
         return {'success': True}
+    
+    # @api.model
+    # def update_report_params(self, wizard_id, **kwargs):
+    #     """Write incoming params to wizard and return the report URL to load.
+
+    #     Expects wizard_id as first arg. Accepts kwargs:
+    #       - date_from, date_to, account_type (or account_head_type), company_ids (list of ints)
+    #     Returns: {'success': True, 'report_url': '/report/html/<report_name>/<id>'}
+    #     """
+    #     try:
+    #         wiz = self.sudo().browse(int(wizard_id))
+    #     except Exception:
+    #         _logger.exception("Invalid wizard id: %s", wizard_id)
+    #         return {'success': False, 'error': 'Invalid wizard id'}
+
+    #     if not wiz.exists():
+    #         return {'success': False, 'error': 'Wizard not found'}
+
+    #     vals = {}
+    #     if 'date_from' in kwargs:
+    #         vals['date_from'] = kwargs.get('date_from') or False
+    #     if 'date_to' in kwargs:
+    #         vals['date_to'] = kwargs.get('date_to') or False
+    #     if 'account_type' in kwargs:
+    #         vals['account_type'] = kwargs.get('account_type') or False
+    #     if 'account_head_type' in kwargs:
+    #         vals['account_head_type'] = kwargs.get('account_head_type') or False
+
+    #     if 'company_ids' in kwargs:
+    #         incoming = kwargs.get('company_ids') or []
+    #         try:
+    #             incoming_ids = [int(x) for x in incoming if str(x).strip() != '']
+    #         except Exception:
+    #             incoming_ids = []
+    #         vals['company_ids'] = [(6, 0, incoming_ids)]
+
+    #     if vals:
+    #         try:
+    #             wiz.sudo().write(vals)
+    #             _logger.info("Wizard %s updated with %s", wiz.id, vals)
+    #         except Exception as e:
+    #             _logger.exception("Failed to write wizard %s: %s", wiz.id, e)
+    #             return {'success': False, 'error': 'Failed to save wizard values: %s' % e}
+
+    
+        try:
+            report_action_xmlid = 'eedc_report.action_consolidated_district_report'
+            report_rec = self.env.ref(report_action_xmlid)
+            report_name = getattr(report_rec, 'report_name', None)
+            if not report_name:
+                report_name = "account_report"
+
+            
+            url = '/report/html/%s/%s' % (report_name, wiz.id)
+
+            _logger.info("Returning report URL %s for wizard %s", url, wiz.id)
+            return {'success': True, 'report_url': url}
+        except Exception as e:
+            _logger.exception("Failed to create report URL: %s", e)
+            return {'success': True, 'report_url': None}
         
     def _get_period_string(self, start_date, end_date):
         """Helper to generate period string for report subtitle"""
