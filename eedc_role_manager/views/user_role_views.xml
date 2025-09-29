@@ -1,0 +1,124 @@
+<odoo>
+    <record id="view_user_role_tree" model="ir.ui.view">
+        <field name="name">user.role.tree</field>
+        <field name="model">user.role</field>
+        <field name="arch" type="xml">
+            <tree string="User Roles">
+                <field name="name"/>
+                <field name="description" optional="hide"/>
+                <field name="is_request_approver" widget="boolean_toggle"/>
+                <field name="users_count" string="Active Users"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_user_role_form" model="ir.ui.view">
+        <field name="name">user.role.form</field>
+        <field name="model">user.role</field>
+        <field name="arch" type="xml">
+            <form string="User Role">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_users" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="users_count" widget="statinfo" string="Users"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Finance Manager"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="description" placeholder="Describe the purpose of this role..."/>
+                            <field name="limit_to_user_context"/>
+                            <!-- <field name="active"/> -->
+                        </group>
+                        <group>
+                            <field name="is_request_approver"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Permissions">
+                            <group>
+                                <field name="group_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Add security groups..."/>
+                                <!-- <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Add companies..."/> -->
+                            </group>
+                            <separator string="Location"/>
+                            <group string="Company Context">
+                                <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all companies"/>
+                            </group>
+                            <group string="Branch Context">
+                                <field name="branch_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all branches"/>
+                            </group>
+                        </page>
+                        
+                        <!-- <page string="Memo Approvals" attrs="{'invisible': [('is_request_approver', '=', False)]}">
+                            <group string="Company Context">
+                                <field name="company_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all companies"/>
+                            </group>
+                            <group string="Branch Context">
+                                <field name="branch_ids" widget="many2many_tags" 
+                                       options="{'no_create': True}" 
+                                       placeholder="Leave empty for all branches"/>
+                            </group>
+                            <separator string="How it Works"/>
+                            <div class="alert alert-info" style="margin: 10px;">
+                                <p><strong>Automatic Approval Assignment:</strong></p>
+                                <ul>
+                                    <li>When you assign this role to a user, they will be automatically added as approvers to memo stages that require this role.</li>
+                                    <li><strong>Company Filter:</strong> If companies are specified, the user will only be added to stages for memo configs in those companies.</li>
+                                    <li><strong>Branch Filter:</strong> If branches are specified, users will only be added to stages where their assigned branches intersect with the role's allowed branches.</li>
+                                    <li><strong>User Branch Matching:</strong> Users must have at least one branch that matches both the role's branch restrictions and the memo stage's branch requirement.</li>
+                                    <li>When you remove this role from a user, they will be automatically removed from the corresponding approvals.</li>
+                                </ul>
+                            </div>
+                        </page> -->
+                        
+                        <page string="Assigned Users">
+                            <field name="user_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="login"/>
+                                    <field name="branch_ids" widget="many2many_tags"/>
+                                    <field name="employee_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_user_role" model="ir.actions.act_window">
+        <field name="name">User Roles</field>
+        <field name="res_model">user.role</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new User Role
+            </p><p>
+                Define logical roles like "Accountant" or "Sales Manager" and assign a set of permissions. When you assign this role to a user, they will automatically get all the associated security groups and memo approvals.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_user_role"
+              name="Roles"
+              parent="base.menu_users"
+              action="action_user_role"
+              sequence="15"/>
+</odoo>
