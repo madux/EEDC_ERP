@@ -585,7 +585,6 @@ class AccountDynamicReport(models.Model):
             'current_company_ids_json': json.dumps(company_ids_list),
         }
         
-        # Debug logging
         _logger.info(f"Company IDs for template: {company_ids_list}")
         _logger.info(f"Company IDs JSON: {json.dumps(company_ids_list)}")
         

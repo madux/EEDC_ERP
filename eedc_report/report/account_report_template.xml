@@ -1101,7 +1101,6 @@
                         });
 
                         // =================================================================
-                        // *** REMOVED JS: The 'select2:open' handler that forces 'position: fixed' ***
                         // Select2's internal logic should handle 'position: absolute' relative to body
                         // =================================================================
 
@@ -1750,7 +1749,7 @@
                 box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.1) !important;
                 }
 
-                /* ========== FIXED APPLY BUTTON ========== */
+                /* ==========  BUTTON ========== */
                 .apply-section {
                 position: relative !important;
                 display: flex !important;
@@ -1993,7 +1992,7 @@
                     display: none !important;
                 }
 
-                /* ========== ORIGINAL REPORT TABLE STYLES FROM FIRST TEMPLATE ========== */
+                /* ========== REPORT TABLE ========== */
                 .consolidated-table { 
                 border-collapse: collapse; 
                 width: 100%; 
