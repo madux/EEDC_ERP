@@ -781,12 +781,8 @@ odoo.define('portal_request.portal_request', function (require) {
                         $('#leave_start_date').attr('required', true);
                         $('#leave_start_date').addClass('is-invalid', true);
                         let message = `Validation Error! ${data.message}`
-                        // console.log("not Passed for leave, ", message)
-                        // alert(message); 
-                        // return false
                         modal_message.text(message)
                         alert_modal.modal('show');
-
                     }else{
                         console.log("--")
                     }

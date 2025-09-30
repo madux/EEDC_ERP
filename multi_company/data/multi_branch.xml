@@ -8,7 +8,7 @@
             <field name="company_id" ref="base.main_company"/>
         </record>
         <record model="multi.branch" id="branch0002">
-            <field name="name">MAINPOWER HQ</field>
+            <field name="name">MAINPOWER CHQ</field>
             <field name="code">BR0002</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
@@ -52,18 +52,16 @@
             <field name="name">UMUAHIA DISTRICT</field>
             <field name="code">BR0009</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
-
         </record>
         <record model="multi.branch" id="branch0010">
             <field name="name">ARIARIA DISTRICT</field>
             <field name="code">BR0010</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
-
         </record>
 
 
         <record model="multi.branch" id="branch0011">
-            <field name="name">ABA DISTRICT</field>
+            <field name="name">ABA / ISIUKWUATO DISTRICT</field>
             <field name="code">BR0011</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
         </record>
@@ -121,5 +119,46 @@
             <field name="code">BR0022</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
+        <record model="multi.branch" id="branch023">
+            <field name="name">ABAGANA</field>
+            <field name="code">BR0023</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+        </record>
+        <record model="multi.branch" id="branch024">
+            <field name="name">AFIKPO</field>
+            <field name="code">BR0024</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+        </record>
+
+        <record model="multi.branch" id="branch025">
+            <field name="name">OBOSI</field>
+            <field name="code">BR0025</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+        </record>
+
+        <record model="multi.branch" id="branch026">
+            <field name="name">TRANSPOWER CHQ</field>
+            <field name="code">BR0026</field>
+            <field name="company_id" ref="multi_company.company_transpower"/>
+        </record>
+
+        <record model="multi.branch" id="branch027">
+            <field name="name">FIRSPOWER CHQ</field>
+            <field name="code">BR0027</field>
+            <field name="company_id" ref="multi_company.company_firstpower"/>
+        </record>
+
+        <record model="multi.branch" id="branch028">
+            <field name="name">NEWERA CHQ</field>
+            <field name="code">BR0028</field>
+            <field name="company_id" ref="multi_company.company_new_era"/>
+        </record>
+        <record model="multi.branch" id="branch029">
+            <field name="name">EASTLAND CHQ</field>
+            <field name="code">BR0029</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+        </record>
+
+        
     </data>
 </odoo>
