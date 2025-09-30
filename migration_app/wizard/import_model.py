@@ -456,6 +456,7 @@ class ImportRecords(models.TransientModel):
                 if employee:
                     employee_id = employee.id
                     self.unarchive_employee_if_needed(employee)
+                            
                 else:
                     employee_id = False 
             return employee_id
@@ -681,6 +682,7 @@ class ImportRecords(models.TransientModel):
                 employee_vals = {k: v for k, v in employee_vals.items() if v is not None}
 
                 Employee = self.env['hr.employee'].sudo()
+                
                 employee_rec = Employee.create(employee_vals)
                 _logger.info("Created employee: %s with ID: %s", getattr(employee_rec, 'name', '?'), getattr(employee_rec, 'id', '?'))
 
@@ -760,20 +762,20 @@ class ImportRecords(models.TransientModel):
             login = str(login).strip()
 
             User = self.env['res.users'].sudo()
-            # existing = User.search([('login', '=', login)], limit=1)
-            existing_staff_id = User.search([('login', '=', staff_number)], limit=1)
-            existing_email = User.search([('login', '=', email)])
-            if existing_email and existing_staff_id:
-                existing_email.write({'active': False})
-                existing = existing_staff_id
-                existing.write({'login': login})
-            elif existing_staff_id and not existing_email:
-                existing = existing_staff_id
-                existing.write({'login': login})
-            elif existing_email and not existing_staff_id:
-                existing = existing_email
-            else:
-                return False, False
+            existing = User.search(['|', ('login', '=', email), ('login', '=', staff_number)], limit=1)
+            # existing_staff_id = User.search(['|', ('login', '=', staff_number), ('login', '=', staff_number)], limit=1)
+            # existing_email = User.search([('login', '=', email)])
+            # if existing_email and existing_staff_id:
+            #     existing_email.write({'active': False})
+            #     existing = existing_staff_id
+            #     existing.write({'login': login})
+            # elif existing_staff_id and not existing_email:
+            #     existing = existing_staff_id
+            #     existing.write({'login': login})
+            # elif existing_email and not existing_staff_id:
+            #     existing = existing_email
+            # else:
+            #     return False, False
             if existing:
                 _logger.info("Existing user found for login %s (id=%s). Reusing.", login, existing.id)
                 try:
@@ -1015,7 +1017,20 @@ class ImportRecords(models.TransientModel):
                             
                             if employee_id:
                                 self.unarchive_employee_if_needed(employee_id)
-                                
+                                '''check if employee record has related user
+                                    find user that has exist with the email address of current user 
+                                    when the login of the current is employee_number and archive the user'''
+                                def function_merge_existing_user(employee, val_dict):
+                                    work_email = val_dict.get('email')
+                                    staff_number = val_dict.get('staff_number')
+                                    old_employee_user = employee.user_id
+                                    existing_user_with_email = self.env['res.users'].search([('login', '=ilike', work_email)], limit=1)
+                                    if existing_user_with_email:
+                                        for ex in existing_user_with_email:
+                                            employee.user_id = ex.existing_user_with_email.id
+                                            ex.employee_id.active = False
+                                        '''Archive the old records'''
+                                        old_employee_user.active = False
                                 if employee_id.user_id and company_id:
                                     try:
                                         self.unarchive_user_if_needed(employee_id.user_id)
@@ -1029,6 +1044,11 @@ class ImportRecords(models.TransientModel):
                                 employee_id.sudo().update(employee_vals)
                                 _logger.info("Updated Employee......")
                                 
+                                values = {
+                                    'email': user_vals.get('email'),
+                                    'staff_number': user_vals.get('staff_number'),
+                                    }
+                                function_merge_existing_user(employee_id, values)
                                 if not employee_id.user_id:
                                     _logger.info("No user.....")
                                     try:
@@ -1060,6 +1080,7 @@ class ImportRecords(models.TransientModel):
                                             _logger.info("Guard 2")
                                         except Exception as e:
                                             _logger.error(f"Failed to ensure company access for existing user: {e}")
+                                 
                                                 
                                 _logger.info(f'Updated records for {employee_id.employee_number} at line {row[0]}')
                                 count += 1

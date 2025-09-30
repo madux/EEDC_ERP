@@ -1,4 +1,4 @@
-from odoo import models, fields, api, _
+from odoo import models, fields, api, _, SUPERUSER_ID
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -83,20 +83,91 @@ class UserRole(models.Model):
             'domain': [('id', 'in', self.user_ids.ids)],
             'context': {'create': False}
         }
+        
+    def action_sync_role_users(self):
+        role_ids = self.env.context.get('active_ids', [])
+        roles = self.browse(role_ids)
+        for role in roles:
+            users = role.user_ids.filtered(lambda u: u.id != SUPERUSER_ID)
+            if not users:
+                _logger.info("action_sync_role_users: role %s has no assigned users", self.name)
+                return {'warning': _('No users assigned to this role.')}
+            _logger.info("action_sync_role_users: syncing %d users for role %s", len(users), self.name)
+            for user in users:
+                try:
+                    user.sudo()._sync_permissions_from_roles()
+                    user.sudo()._sync_approvals_from_roles()
+                    _logger.info("action_sync_role_users: synced user %s (id=%s) for role %s", user.login, user.id, self.name)
+                except Exception:
+                    _logger.exception("action_sync_role_users: failed to sync user %s (id=%s) for role %s", user.login, user.id, self.name)
+       
+        return {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': _('Success'),
+            'message': _('Role users synchronized successfully.'),
+            'type': 'success',
+            'sticky': False,
+        }
+    }
 
+    # def write(self, vals):
+    #     """When role definition changes, sync all users who have this role."""
+    #     res = super().write(vals)
+        
+    #     if 'group_ids' in vals or 'company_ids' in vals:
+    #         _logger.info("Role definition changed for %s. Syncing %d users.", 
+    #                     self.mapped('name'), len(self.user_ids))
+    #         self.user_ids._sync_permissions_from_roles()
+        
+    #     if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context']):
+    #         _logger.info("Role approval settings changed for %s. Syncing approvals for %d users.", 
+    #                     self.mapped('name'), len(self.user_ids))
+    #         self.user_ids._sync_approvals_from_roles()
+            
+    #     return res
+    
     def write(self, vals):
         """When role definition changes, sync all users who have this role."""
-        res = super().write(vals)
+        # Capture users BEFORE the write operation
+        users_to_sync_permissions = self.env['res.users']
+        users_to_sync_approvals = self.env['res.users']
         
         if 'group_ids' in vals or 'company_ids' in vals:
-            _logger.info("Role definition changed for %s. Syncing %d users.", 
-                        self.mapped('name'), len(self.user_ids))
-            self.user_ids._sync_permissions_from_roles()
+            users_to_sync_permissions = self.user_ids
+            
+        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context', 'user_ids']):
+            # Include current users
+            users_to_sync_approvals = self.user_ids
+            
+            if 'user_ids' in vals:
+                # Handle user additions and removals
+                for command in vals['user_ids']:
+                    if command[0] == 3:  # (3, id) - remove single user
+                        users_to_sync_approvals |= self.env['res.users'].browse(command[1])
+                    elif command[0] == 4:  # (4, id) - add single user
+                        users_to_sync_approvals |= self.env['res.users'].browse(command[1])
+                    elif command[0] == 6:  # (6, 0, [ids]) - replace all
+                        # Get users that will be removed (current - new)
+                        new_user_ids = set(command[2])
+                        current_user_ids = set(self.user_ids.ids)
+                        removed_user_ids = current_user_ids - new_user_ids
+                        added_user_ids = new_user_ids - current_user_ids
+                        users_to_sync_approvals |= self.env['res.users'].browse(list(removed_user_ids))
+                        users_to_sync_approvals |= self.env['res.users'].browse(list(added_user_ids))
         
-        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context']):
+        res = super().write(vals)
+        
+        if users_to_sync_permissions:
+            _logger.info("Role definition changed for %s. Syncing %d users.", 
+                        self.mapped('name'), len(users_to_sync_permissions))
+            users_to_sync_permissions._sync_permissions_from_roles()
+        
+        if users_to_sync_approvals:
             _logger.info("Role approval settings changed for %s. Syncing approvals for %d users.", 
-                        self.mapped('name'), len(self.user_ids))
-            self.user_ids._sync_approvals_from_roles()
+                        self.mapped('name'), len(users_to_sync_approvals))
+            users_to_sync_approvals._sync_approvals_from_roles()
             
         return res
 

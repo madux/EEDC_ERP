@@ -7,10 +7,14 @@
         <field name="arch" type="xml">
             <form string="Import-">
                 <header>
-                    Import
+                    <button name="import_button" string="Import Record" type="object"  class="oe_highlight"/>
                 </header>
                 <div class="oe_edit_only alert alert-info" role="alert">
-                    Select chat of account to upload <a href="https://docs.google.com/spreadsheets/d/1gVBoI7TlBUWcfiKu3r_ZHf10oxvdrGJ96llNlr_NqYA/edit?gid=0#gid=0" target="_blank">See template </a><br/>
+                    Click to <a href="https://docs.google.com/spreadsheets/d/1gVBoI7TlBUWcfiKu3r_ZHf10oxvdrGJ96llNlr_NqYA/edit?gid=0#gid=0" target="_blank">See template </a><br/>
+                    1. Upload the template 2. Select the import type account transaction 3. Select the company <br/>
+                    4. Set the company account code <br/>
+                    5. Select the balance account <br/>
+                    6. Select the target journal of the company selected <br/>
                     <br/>
                 </div>
                 <group>
