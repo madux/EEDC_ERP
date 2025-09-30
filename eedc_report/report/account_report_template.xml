@@ -1367,25 +1367,30 @@
     <template id="consolidated_district_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
+            <t t-set="wizard" t-value="env['account.dynamic.report'].browse(wizard_id)"/>
+            <t t-set="fresh_company_reports" t-value="wizard._generate_report_data()"/>
 
             <div class="report-filter-section">
                 <div class="container-fluid">
                 <div class="row align-items-end">
                     <div class="col-md-2 mb-1">
                     <label for="rpt_date_from" class="form-label-small">Date From:</label>
-                    <input type="date" id="rpt_date_from" class="form-control-tiny" t-att-value="current_date_from or ''"/>
+                    <input type="date" id="rpt_date_from" class="form-control-tiny" 
+                        t-att-value="wizard.date_from.strftime('%Y-%m-%d') if wizard.date_from else ''"/>
                     </div>
 
                     <div class="col-md-2 mb-1">
                     <label for="rpt_date_to" class="form-label-small">Date To:</label>
-                    <input type="date" id="rpt_date_to" class="form-control-tiny" t-att-value="current_date_to or ''"/>
+                    <input type="date" id="rpt_date_to" class="form-control-tiny" 
+                        t-att-value="wizard.date_to.strftime('%Y-%m-%d') if wizard.date_to else ''"/>
                     </div>
 
                     <div class="col-md-2 mb-1">
                     <label for="rpt_account_type" class="form-label-small">Account Type:</label>
                     <select id="rpt_account_type" class="form-control-tiny">
                         <t t-foreach="account_types or []" t-as="aht">
-                        <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_type and aht[0] == current_account_type) else None">
+                        <option t-att-value="aht[0]" 
+                                t-att-selected="'selected' if (wizard.account_type and aht[0] == wizard.account_type) else None">
                             <t t-esc="aht[1]"/>
                         </option>
                         </t>
@@ -1395,8 +1400,8 @@
                     <div class="col-md-4 mb-1 companies-section">
                     <label for="inputCompanies" class="form-label-small">Companies:</label>
                     <input id="inputCompanies" class="form-control-tiny" name="inputCompanies"
-                            placeholder="Type 3+ chars to search"
-                            t-att-data-initial-ids="current_company_ids_json or '[]'"/>
+                        placeholder="Type 3+ chars to search"
+                        t-att-data-initial-ids="wizard.company_ids.ids"/>
                     </div>
 
                     <div class="col-md-2 mb-1 apply-section">
@@ -1416,259 +1421,267 @@
             <script type="text/javascript">
                 <![CDATA[
                 document.addEventListener('DOMContentLoaded', function () {
-                var $ = window.jQuery;
-                if (!$ || !$.fn.select2) {
-                    console.warn('jQuery or Select2 not available');
-                    return;
-                }
-
-                var $input = $('#inputCompanies');
-                var $apply = $('#rpt_apply_btn');
-                var $loading = $('#rpt_loading');
-
-                if (!$input.length) {
-                    console.warn('Companies input not found');
-                    return;
-                }
-
-                // Prevent double initialization
-                if ($input.data('select2-initialized')) {
-                    return;
-                }
-                $input.data('select2-initialized', true);
-
-                // Initialize Select2 v3.x with compact settings
-                $input.select2({
-                    placeholder: 'Type 3+ chars to search',
-                    minimumInputLength: 3,
-                    multiple: true,
-                    allowClear: true,
-                    width: '100%',
-                    dropdownCssClass: 'compact-dropdown',
-                    ajax: {
-                    url: '/web/dataset/autocomplete_companies',
-                    type: 'POST',
-                    dataType: 'json',
-                    cache: true,
-                    delay: 250,
-                    data: function (term, page) {
-                        return {
-                        q: term || '',
-                        page_limit: 15,
-                        page: page || 1
-                        };
-                    },
-                    results: function (data, page) {
-                        var res = data && data.results ? data.results : [];
-                        var more = !!(data && data.pagination && data.pagination.more);
-                        return { results: res, more: more };
+                    var $ = window.jQuery;
+                    if (!$ || !$.fn.select2) {
+                        console.warn('jQuery or Select2 not available');
+                        return;
                     }
-                    }
-                });
 
-                // Enhanced dropdown positioning - move message below input area
-                $input.on('select2-open', function () {
-                    var $drop = $('.select2-drop');
-                    var $section = $input.closest('.companies-section');
-                    
-                    if ($drop.length && $section.length) {
-                    setTimeout(function() {
-                        // Detach and append to body to avoid clipping
-                        $drop.detach().appendTo(document.body);
-                        
-                        // Get precise positioning relative to the companies section
-                        var sectionOffset = $section.offset();
-                        var sectionHeight = $section.outerHeight();
-                        var sectionWidth = $section.outerWidth();
-                        
-                        // Position dropdown with additional clearance below the input area
-                        var topPosition = sectionOffset.top + sectionHeight + 4; // Added 3px more clearance
-                        
-                        $drop.css({
-                        'position': 'absolute',
-                        'left': sectionOffset.left + 'px',
-                        'top': topPosition + 'px',
-                        'z-index': '999999',
-                        'width': Math.max(sectionWidth, 200) + 'px',
-                        'max-height': '150px',
-                        'overflow-y': 'auto',
-                        'margin-top': '2px' // Additional margin to separate from input
-                        });
-                        
-                        // Viewport boundary checking
-                        var windowWidth = $(window).width();
-                        var windowHeight = $(window).height();
-                        var scrollTop = $(window).scrollTop();
-                        
-                        var dropRight = sectionOffset.left + $drop.outerWidth();
-                        if (dropRight > windowWidth - 5) {
-                        var shift = dropRight - windowWidth + 15;
-                        $drop.css('left', Math.max(5, sectionOffset.left - shift) + 'px');
+                    var $input = $('#inputCompanies');
+                    var $apply = $('#rpt_apply_btn');
+                    var $loading = $('#rpt_loading');
+
+                    if (!$input.length) {
+                        console.warn('Companies input not found');
+                        return;
+                    }
+
+                    // Prevent double initialization
+                    if ($input.data('select2-initialized')) {
+                        return;
+                    }
+                    $input.data('select2-initialized', true);
+
+                    // Initialize Select2 v3.x with compact settings
+                    $input.select2({
+                        placeholder: 'Type 3+ chars to search',
+                        minimumInputLength: 3,
+                        multiple: true,
+                        allowClear: true,
+                        width: '100%',
+                        dropdownCssClass: 'compact-dropdown',
+                        ajax: {
+                            url: '/web/dataset/autocomplete_companies',
+                            type: 'POST',
+                            dataType: 'json',
+                            cache: true,
+                            delay: 250,
+                            data: function (term, page) {
+                                return {
+                                q: term || '',
+                                page_limit: 15,
+                                page: page || 1
+                                };
+                            },
+                            results: function (data, page) {
+                                var res = data && data.results ? data.results : [];
+                                var more = !!(data && data.pagination && data.pagination.more);
+                                return { results: res, more: more };
+                            }
                         }
+                    });
+
+                    // Enhanced dropdown positioning - move message below input area
+                    $input.on('select2-open', function () {
+                        var $drop = $('.select2-drop');
+                        var $section = $input.closest('.companies-section');
                         
-                        var dropBottom = topPosition + $drop.outerHeight();
-                        if (dropBottom > scrollTop + windowHeight - 5) {
-                        // Position above input instead, with clearance
-                        var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
-                        if (abovePos > scrollTop + 5) {
-                            $drop.css({
-                            'top': abovePos + 'px',
-                            'margin-top': '-2px'
+                        if ($drop.length && $section.length) {
+                            setTimeout(function() {
+                                // Detach and append to body to avoid clipping
+                                $drop.detach().appendTo(document.body);
+                                
+                                // Get precise positioning relative to the companies section
+                                var sectionOffset = $section.offset();
+                                var sectionHeight = $section.outerHeight();
+                                var sectionWidth = $section.outerWidth();
+                                
+                                // Position dropdown with additional clearance below the input area
+                                var topPosition = sectionOffset.top + sectionHeight + 4; // Added 3px more clearance
+                                
+                                $drop.css({
+                                    'position': 'absolute',
+                                    'left': sectionOffset.left + 'px',
+                                    'top': topPosition + 'px',
+                                    'z-index': '999999',
+                                    'width': Math.max(sectionWidth, 200) + 'px',
+                                    'max-height': '150px',
+                                    'overflow-y': 'auto',
+                                    'margin-top': '2px' // Additional margin to separate from input
+                                });
+                                
+                                // Viewport boundary checking
+                                var windowWidth = $(window).width();
+                                var windowHeight = $(window).height();
+                                var scrollTop = $(window).scrollTop();
+                                
+                                var dropRight = sectionOffset.left + $drop.outerWidth();
+                                if (dropRight > windowWidth - 5) {
+                                    var shift = dropRight - windowWidth + 15;
+                                    $drop.css('left', Math.max(5, sectionOffset.left - shift) + 'px');
+                                }
+                                
+                                var dropBottom = topPosition + $drop.outerHeight();
+                                if (dropBottom > scrollTop + windowHeight - 5) {
+                                    // Position above input instead, with clearance
+                                    var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
+                                    if (abovePos > scrollTop + 5) {
+                                        $drop.css({
+                                        'top': abovePos + 'px',
+                                        'margin-top': '-2px'
+                                        });
+                                    }
+                                }
+
+                            }, 5);
+                        }
+                    });
+
+                    // Position the status message above the companies field
+                    function positionStatusMessage() {
+                        var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
+                        var $section = $('.companies-section');
+                        
+                        if ($status.length && $section.length) {
+                            var sectionOffset = $section.offset();
+                            $status.css({
+                                'top': (sectionOffset.top - 25) + 'px',
+                                'left': sectionOffset.left + 'px'
                             });
                         }
-                        }
-
-                    }, 5);
                     }
-                });
 
-                // Position the status message above the companies field
-                function positionStatusMessage() {
-                    var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
-                    var $section = $('.companies-section');
+                    // Position initially and on window resize
+                    setTimeout(positionStatusMessage, 150);
+                    $(window).on('resize', positionStatusMessage);
                     
-                    if ($status.length && $section.length) {
-                        var sectionOffset = $section.offset();
-                        $status.css({
-                            'top': (sectionOffset.top - 25) + 'px',
-                            'left': sectionOffset.left + 'px'
+                
+                    // Update hidden field when selection changes
+                    $input.on('change', function () {
+                        // No need to manually update hidden field - Select2 handles this internally
+                        var data = $input.select2('data') || [];
+                        console.log('Selected companies:', data);
+                    });
+
+                    // Load initial companies
+                    function loadInitialCompanies() {
+                        var initialIdsJson = $input.attr('data-initial-ids') || '[]';
+                        var initialIds = [];
+                        
+                        try {
+                            initialIds = JSON.parse(initialIdsJson);
+                            if (!Array.isArray(initialIds)) initialIds = [];
+                            } catch (e) {
+                            console.warn('Failed to parse initial company IDs');
+                            initialIds = [];
+                        }
+                        
+                        if (initialIds.length === 0) return;
+                        
+                        $.ajax({
+                            url: '/web/dataset/call_kw/res.company/name_get',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            data: JSON.stringify({
+                                jsonrpc: "2.0",
+                                method: "call",
+                                params: {
+                                model: 'res.company',
+                                method: 'name_get',
+                                args: [initialIds],
+                                kwargs: {}
+                                },
+                                id: new Date().getTime()
+                            }),
+                            success: function (resp) {
+                                if (resp && resp.result && Array.isArray(resp.result)) {
+                                    var initialData = [];
+                                    resp.result.forEach(function(item) {
+                                        var option = new Option(item[1], item[0], true, true);
+                                        $input.append(option);
+                                        initialData.push({
+                                            id: item[0],
+                                            text: item[1]
+                                        });
+                                    });
+                                    
+                                    try {
+                                        $input.select2('data', initialData);
+                                    } catch (err) {
+                                        $input.trigger('change');
+                                    }
+                                }
+                            }
                         });
                     }
-                }
 
-                // Position initially and on window resize
-                setTimeout(positionStatusMessage, 150);
-                $(window).on('resize', positionStatusMessage);
-                
-            
-                // Update hidden field when selection changes
-                $input.on('change', function () {
-                    // No need to manually update hidden field - Select2 handles this internally
-                    var data = $input.select2('data') || [];
-                    console.log('Selected companies:', data);
-                });
+                    setTimeout(loadInitialCompanies, 50);
 
-                // Load initial companies
-                function loadInitialCompanies() {
-                    var initialIdsJson = $input.attr('data-initial-ids') || '[]';
-                    var initialIds = [];
-                    
-                    try {
-                    initialIds = JSON.parse(initialIdsJson);
-                    if (!Array.isArray(initialIds)) initialIds = [];
-                    } catch (e) {
-                    console.warn('Failed to parse initial company IDs');
-                    initialIds = [];
-                    }
-                    
-                    if (initialIds.length === 0) return;
-                    
-                    $.ajax({
-                    url: '/web/dataset/call_kw/res.company/name_get',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    dataType: 'json',
-                    data: JSON.stringify({
+                    // Apply filters with correct model name
+                    $apply.on('click', function (e) {
+                        e.preventDefault();
+                        
+                        var wizardId = $apply.data('wizard-id') || $apply.attr('data-wizard-id');
+                        if (!wizardId) {
+                            alert('Error: No wizard ID found. Please refresh and try again.');
+                            return;
+                        }
+
+                        var dateFrom = $('#rpt_date_from').val() || null;
+                        var dateTo = $('#rpt_date_to').val() || null;
+                        var accountType = $('#rpt_account_type').val() || null;
+                        
+                        // Get selected companies directly from Select2
+                        var companiesData = $input.select2('data') || [];
+                        var companyIds = companiesData.map(function(item) {
+                            return parseInt(item.id, 10);
+                        }).filter(function(id) {
+                        return !isNaN(id);
+                        });
+
+                        $loading.addClass('show');
+                        $apply.prop('disabled', true);
+
+                        var payload = {
                         jsonrpc: "2.0",
                         method: "call",
                         params: {
-                        model: 'res.company',
-                        method: 'name_get',
-                        args: [initialIds],
-                        kwargs: {}
+                            model: 'account.dynamic.report',
+                            method: 'update_report_params',
+                            args: [parseInt(wizardId, 10)],
+                            kwargs: {
+                            date_from: dateFrom,
+                            date_to: dateTo,
+                            account_type: accountType,
+                            company_ids: companyIds
+                            }
                         },
                         id: new Date().getTime()
-                    }),
-                    success: function (resp) {
-                        if (resp && resp.result && Array.isArray(resp.result)) {
-                        var initialData = [];
-                        resp.result.forEach(function(item) {
-                            var option = new Option(item[1], item[0], true, true);
-                            $input.append(option);
-                            initialData.push({
-                            id: item[0],
-                            text: item[1]
-                            });
-                        });
-                        
-                        try {
-                            $input.select2('data', initialData);
-                        } catch (err) {
-                            $input.trigger('change');
-                        }
-                        }
-                    }
-                    });
-                }
+                        };
 
-                setTimeout(loadInitialCompanies, 50);
-
-                // Apply filters with correct model name
-                $apply.on('click', function (e) {
-                    e.preventDefault();
-                    
-                    var wizardId = $apply.data('wizard-id') || $apply.attr('data-wizard-id');
-                    if (!wizardId) {
-                    alert('Error: No wizard ID found. Please refresh and try again.');
-                    return;
-                    }
-
-                    var dateFrom = $('#rpt_date_from').val() || null;
-                    var dateTo = $('#rpt_date_to').val() || null;
-                    var accountType = $('#rpt_account_type').val() || null;
-                    
-                    // Get selected companies directly from Select2
-                    var companiesData = $input.select2('data') || [];
-                    var companyIds = companiesData.map(function(item) {
-                    return parseInt(item.id, 10);
-                    }).filter(function(id) {
-                    return !isNaN(id);
-                    });
-
-                    $loading.addClass('show');
-                    $apply.prop('disabled', true);
-
-                    var payload = {
-                    jsonrpc: "2.0",
-                    method: "call",
-                    params: {
-                        model: 'account.dynamic.report',
-                        method: 'update_report_params',
-                        args: [parseInt(wizardId, 10)],
-                        kwargs: {
-                        date_from: dateFrom,
-                        date_to: dateTo,
-                        account_type: accountType,
-                        company_ids: companyIds
-                        }
-                    },
-                    id: new Date().getTime()
-                    };
-
-                    $.ajax({
-                    url: '/web/dataset/call_kw/account.dynamic.report/update_report_params',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    dataType: 'json',
-                    data: JSON.stringify(payload),
-                    success: function (resp) {
-                        if (resp && resp.result && resp.result.success) {
-                        window.location.reload();
+                        $.ajax({
+                        url: '/web/dataset/call_kw/account.dynamic.report/update_report_params',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        data: JSON.stringify(payload),
+                        success: function (resp) {
+                        if (resp && resp.result) {
+                            if (resp.result.error) {
+                                alert('Error: ' + resp.result.error);
+                                return;
+                            }
+                            
+                            if (resp.result.success) {
+                                // Just reload the current page - it will regenerate with new params
+                                window.location.reload(true); // true forces reload from server
+                            } else {
+                                alert('Error: Failed to update parameters');
+                            }
                         } else {
-                        var errorMsg = (resp && resp.result && resp.result.error) ? 
-                                        resp.result.error : 'Failed to update report parameters';
-                        alert('Error: ' + errorMsg);
+                            alert('Error: Invalid response');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        alert('Network error: ' + error);
-                    },
-                    complete: function() {
-                        $loading.removeClass('show');
-                        $apply.prop('disabled', false);
-                    }
+                        error: function(xhr, status, error) {
+                            alert('Network error: ' + error);
+                        },
+                        complete: function() {
+                            $loading.removeClass('show');
+                            $apply.prop('disabled', false);
+                        }
+                        });
                     });
-                });
 
                 });
 
@@ -2066,7 +2079,7 @@
                 .company-section:last-child { page-break-after: auto; }
             </style>
 
-            <t t-foreach="company_reports or []" t-as="report">
+            <t t-foreach="fresh_company_reports or []" t-as="report">
                 <div class="page company-section" style="margin-bottom: 20px;">
 
                 <div class="text-center mb-4">

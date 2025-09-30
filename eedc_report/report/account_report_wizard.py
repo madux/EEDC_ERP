@@ -599,7 +599,37 @@ class AccountDynamicReport(models.Model):
             report_obj.sudo().update({'report_type': 'qweb-pdf'})
         
         return report_action.report_action(self, data=data)
+    
+    def _generate_report_data(self):
+        """Generate fresh report data from current wizard state"""
+        self.ensure_one()
+        
+        companies_to_process = self.company_ids or self.env['res.company'].search([])
+        start_date, end_date, month_headers = self._get_date_range()
+        
+        all_company_reports = []
+        
+        for company in companies_to_process:
+            report_lines, district_headers, district_codes, company_id = \
+                self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+            
+            if report_lines:
+                budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
+                period_string = self._get_period_string(start_date, end_date)
+                
+                all_company_reports.append({
+                    'report_lines': report_lines,
+                    'district_headers': district_headers,
+                    'district_codes': district_codes,
+                    'company_name': company.name,
+                    'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
+                    'account_type': self.account_type,
+                    'res_company': company,
+                })
+        
+        return all_company_reports
 
+    
     @api.model
     def update_report_params(self, wizard_id, **kwargs):
         try:
@@ -621,71 +651,11 @@ class AccountDynamicReport(models.Model):
         if 'company_ids' in kwargs and kwargs.get('company_ids'):
             update_vals['company_ids'] = [(6, 0, kwargs.get('company_ids') or [])]
 
-
         if update_vals:
             wizard.sudo().write(update_vals)
-
+        
         return {'success': True}
     
-    # @api.model
-    # def update_report_params(self, wizard_id, **kwargs):
-    #     """Write incoming params to wizard and return the report URL to load.
-
-    #     Expects wizard_id as first arg. Accepts kwargs:
-    #       - date_from, date_to, account_type (or account_head_type), company_ids (list of ints)
-    #     Returns: {'success': True, 'report_url': '/report/html/<report_name>/<id>'}
-    #     """
-    #     try:
-    #         wiz = self.sudo().browse(int(wizard_id))
-    #     except Exception:
-    #         _logger.exception("Invalid wizard id: %s", wizard_id)
-    #         return {'success': False, 'error': 'Invalid wizard id'}
-
-    #     if not wiz.exists():
-    #         return {'success': False, 'error': 'Wizard not found'}
-
-    #     vals = {}
-    #     if 'date_from' in kwargs:
-    #         vals['date_from'] = kwargs.get('date_from') or False
-    #     if 'date_to' in kwargs:
-    #         vals['date_to'] = kwargs.get('date_to') or False
-    #     if 'account_type' in kwargs:
-    #         vals['account_type'] = kwargs.get('account_type') or False
-    #     if 'account_head_type' in kwargs:
-    #         vals['account_head_type'] = kwargs.get('account_head_type') or False
-
-    #     if 'company_ids' in kwargs:
-    #         incoming = kwargs.get('company_ids') or []
-    #         try:
-    #             incoming_ids = [int(x) for x in incoming if str(x).strip() != '']
-    #         except Exception:
-    #             incoming_ids = []
-    #         vals['company_ids'] = [(6, 0, incoming_ids)]
-
-    #     if vals:
-    #         try:
-    #             wiz.sudo().write(vals)
-    #             _logger.info("Wizard %s updated with %s", wiz.id, vals)
-    #         except Exception as e:
-    #             _logger.exception("Failed to write wizard %s: %s", wiz.id, e)
-    #             return {'success': False, 'error': 'Failed to save wizard values: %s' % e}
-
-    
-        # try:
-        #     report_action_xmlid = 'eedc_report.action_consolidated_district_report'
-        #     report_rec = self.env.ref(report_action_xmlid)
-        #     report_name = getattr(report_rec, 'report_name', None)
-        #     if not report_name:
-        #         report_name = "account_report"
-
-            
-        #     url = '/report/html/%s/%s' % (report_name, wiz.id)
-
-        #     _logger.info("Returning report URL %s for wizard %s", url, wiz.id)
-        #     return {'success': True, 'report_url': url}
-        # except Exception as e:
-        #     _logger.exception("Failed to create report URL: %s", e)
-        #     return {'success': True, 'report_url': None}
         
     def _get_period_string(self, start_date, end_date):
         """Helper to generate period string for report subtitle"""
