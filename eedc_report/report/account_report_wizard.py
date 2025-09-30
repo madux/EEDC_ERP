@@ -671,21 +671,21 @@ class AccountDynamicReport(models.Model):
     #             return {'success': False, 'error': 'Failed to save wizard values: %s' % e}
 
     
-        try:
-            report_action_xmlid = 'eedc_report.action_consolidated_district_report'
-            report_rec = self.env.ref(report_action_xmlid)
-            report_name = getattr(report_rec, 'report_name', None)
-            if not report_name:
-                report_name = "account_report"
+        # try:
+        #     report_action_xmlid = 'eedc_report.action_consolidated_district_report'
+        #     report_rec = self.env.ref(report_action_xmlid)
+        #     report_name = getattr(report_rec, 'report_name', None)
+        #     if not report_name:
+        #         report_name = "account_report"
 
             
-            url = '/report/html/%s/%s' % (report_name, wiz.id)
+        #     url = '/report/html/%s/%s' % (report_name, wiz.id)
 
-            _logger.info("Returning report URL %s for wizard %s", url, wiz.id)
-            return {'success': True, 'report_url': url}
-        except Exception as e:
-            _logger.exception("Failed to create report URL: %s", e)
-            return {'success': True, 'report_url': None}
+        #     _logger.info("Returning report URL %s for wizard %s", url, wiz.id)
+        #     return {'success': True, 'report_url': url}
+        # except Exception as e:
+        #     _logger.exception("Failed to create report URL: %s", e)
+        #     return {'success': True, 'report_url': None}
         
     def _get_period_string(self, start_date, end_date):
         """Helper to generate period string for report subtitle"""
