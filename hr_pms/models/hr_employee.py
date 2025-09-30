@@ -84,6 +84,13 @@ class HRDistrict(models.Model):
         string="Name", 
         required=True
         )
+    code = fields.Char(
+        string="Code", 
+        )
+    company_id = fields.Many2one(
+        'res.company',
+        string="compnay", 
+        )
     # country_id = fields.Many2one(
     #     'res.country.state',
     #     string="Country", 
@@ -98,6 +105,9 @@ class HRLevel(models.Model):
         string="Name", 
         required=True
         )
+    code = fields.Char(
+        string="Code", 
+        )
     
 class HRUNIT(models.Model):
     _name = "hr.unit"
@@ -107,6 +117,9 @@ class HRUNIT(models.Model):
         string="Name", 
         required=True
         )
+    code = fields.Char(
+        string="Code", 
+        )
     
 class HRgrade(models.Model):
     _name = "hr.grade"
@@ -115,6 +128,9 @@ class HRgrade(models.Model):
     name = fields.Char(
         string="Name", 
         required=True
+        )
+    code = fields.Char(
+        string="Code", 
         )
 
 # class HrEmployeePublicInherit(models.Model):
