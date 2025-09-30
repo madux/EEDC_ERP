@@ -266,8 +266,8 @@
                             <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                         </div>
                         <div class="col-md-3">
-                            <label for="rpt_account_head_type">Account Type:</label>
-                            <select id="rpt_account_head_type" class="form-control form-control-sm">
+                            <label for="rpt_account_type">Account Type:</label>
+                            <select id="rpt_account_type" class="form-control form-control-sm">
                                 <t t-foreach="account_head_types or []" t-as="aht">
                                     <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
                                         <t t-esc="aht[1]"/>
@@ -347,7 +347,7 @@
                                 }
                                 var dateFrom = (document.getElementById('rpt_date_from') || {}).value || false;
                                 var dateTo = (document.getElementById('rpt_date_to') || {}).value || false;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || false;
+                                var accountHeadType = (document.getElementById('rpt_account_type') || {}).value || false;
 
                                 showLoading(true);
                                 jsonRpcCall('account.dynamic.report', 'update_report_params', [wizardId], {
@@ -385,7 +385,7 @@
 
                                 var df = document.getElementById('rpt_date_from');
                                 var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
+                                var sel = document.getElementById('rpt_account_type');
                                 var needLoad = !( (df &amp;&amp; df.value) || (dt &amp;&amp; dt.value) || (sel &amp;&amp; sel.value) );
 
                                 if (!needLoad) return;
@@ -421,7 +421,7 @@
                             });
                         }
                         
-                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        var selAccountType = document.getElementById('rpt_account_type');
                         if (selAccountType) {
                             selAccountType.addEventListener('change', function (ev) {
                                 applyFilters();
@@ -594,7 +594,7 @@
     </template>
      -->
 
-     <!-- <template id="consolidated_district_report_template">
+    <!-- <template id="consolidated_district_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
                 
@@ -610,8 +610,8 @@
                                 <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <label for="rpt_account_head_type" class="form-label">Account Type:</label>
-                                <select id="rpt_account_head_type" class="form-control form-control-sm">
+                                <label for="rpt_account_type" class="form-label">Account Type:</label>
+                                <select id="rpt_account_type" class="form-control form-control-sm">
                                     <t t-foreach="account_head_types or []" t-as="aht">
                                         <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
                                             <t t-esc="aht[1]"/>
@@ -723,7 +723,7 @@
                                 
                                 var dateFrom = (document.getElementById('rpt_date_from') || {}).value || null;
                                 var dateTo = (document.getElementById('rpt_date_to') || {}).value || null;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || null;
+                                var accountHeadType = (document.getElementById('rpt_account_type') || {}).value || null;
 
                                 console.log('Filter values:', { dateFrom: dateFrom, dateTo: dateTo, accountHeadType: accountHeadType });
 
@@ -773,7 +773,7 @@
 
                                 var df = document.getElementById('rpt_date_from');
                                 var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
+                                var sel = document.getElementById('rpt_account_type');
                                 
                                 // Check if we need to load parameters
                                 var needLoad = !((df && df.value) || (dt && dt.value) || (sel && sel.value));
@@ -818,7 +818,7 @@
                             console.error('Apply button not found!');
                         }
                         
-                        var selAccountType = document.getElementById('rpt_account_head_type');
+                        var selAccountType = document.getElementById('rpt_account_type');
                         if (selAccountType) {
                             selAccountType.addEventListener('change', function (ev) {
                                 applyFilters();
@@ -998,7 +998,9 @@
         </t>
     </template> -->
     
-    <template id="consolidated_district_report_template">
+
+
+    <template id="consolidated_district_report_template22">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
                 
@@ -1014,14 +1016,23 @@
                                 <input type="date" id="rpt_date_to" class="form-control form-control-sm" t-att-value="current_date_to or ''"/>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <label for="rpt_account_head_type" class="form-label">Account Type:</label>
-                                <select id="rpt_account_head_type" class="form-control form-control-sm">
-                                    <t t-foreach="account_head_types or []" t-as="aht">
-                                        <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_head_type and aht[0] == current_account_head_type) else None">
+                                <label for="rpt_account_type" class="form-label">Account Type:</label>
+                                <select id="rpt_account_type" class="form-control form-control-sm">
+                                    <t t-foreach="account_types or []" t-as="aht">
+                                        <option t-att-value="aht[0]" t-att-selected="'selected' if (current_account_type and aht[0] == current_account_type) else None">
                                             <t t-esc="aht[1]"/>
                                         </option>
                                     </t>
                                 </select>
+                            </div>
+                            <div class="col-md-3 mb-2 rpt-companies-wrapper">
+                                <label for="inputCompanies" class="form-label">Companies:</label>
+                                <input id="inputCompanies" class="form-control form-control-sm"
+                                    name="inputCompanies"
+                                    placeholder="Type 3+ chars to search"
+                                    t-att-data-initial-ids="current_company_ids_json or '[]'"/>
+                                <input type="hidden" id="rpt_companies_hidden" name="company_ids"
+                                    t-att-value="','.join(map(str, current_company_ids)) if current_company_ids else ''"/>
                             </div>
                             <div class="col-md-3 mb-2 d-flex align-items-end">
                                 <button id="rpt_apply_btn" class="btn btn-primary btn-sm me-2" t-att-data-wizard-id="wizard_id or ''">Apply Filters</button>
@@ -1036,220 +1047,135 @@
 
                 <script type="text/javascript">
                     <![CDATA[
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         console.log('DOM Content Loaded - Initializing filters');
+                        var $ = window.jQuery;
+                        if (!$) { console.warn('jQuery not present'); return; }
+                        if (!$.fn.select2) { console.warn('Select2 not loaded'); return; }
+
+                        var $input = $('#inputCompanies');
+                        var $hidden = $('#rpt_companies_hidden');
+
+                        if (!$input.length || !$hidden.length) { console.warn('Companies inputs not found'); return; }
                         
-                        // Global function for toggling account details
-                        window.toggleAccountDetails = function(accountCode) {
-                            try {
-                                var detailRows = document.querySelectorAll('.moves-' + accountCode);
-                                var icon = document.getElementById('icon-' + accountCode);
-                                if (!detailRows.length || !icon) return;
-                                
-                                var isVisible = detailRows[0].classList.contains('show');
-                                detailRows.forEach(function(row) {
-                                    if (isVisible) { 
-                                        row.classList.remove('show'); 
-                                    } else { 
-                                        row.classList.add('show'); 
-                                    }
-                                });
-                                
-                                if (isVisible) { 
-                                    icon.classList.remove('expanded'); 
-                                } else { 
-                                    icon.classList.add('expanded'); 
-                                }
-                            } catch (err) {
-                                console.error('toggleAccountDetails error', err);
-                            }
-                        };
+                        // Avoid double-init check
+                        if ($input.data('select2-initialized')) {
+                            console.log('Companies select2 already initialized');
+                            return;
+                        }
+                        $input.data('select2-initialized', true);
 
-                        // Improved JSON-RPC function
-                        function jsonRpcCall(model, method, args, kwargs) {
-                            var payload = {
-                                jsonrpc: "2.0",
-                                method: "call",
-                                params: {
-                                    model: model,
-                                    method: method,
-                                    args: args || [],
-                                    kwargs: kwargs || {}
-                                },
-                                id: new Date().getTime()
-                            };
+                        // --- 1. Select2 Initialization (CRITICAL: Use $('body') for placement) ---
+                        $input.select2({
+                            minimumInputLength: 3,
+                            placeholder: 'Type 3+ chars to search',
+                            allowClear: true,
+                            multiple: true,
+                            width: '100%', 
+
+                            // CRITICAL POSITIONING FIX: Use $('body') for attachment.
+                            // Select2 will internally position the dropdown absolutely relative to the body
+                            // This is the core reason the previous code worked for *visibility*.
+                            dropdownParent: $('body'), 
+                            dropdownCssClass: 'select2-companies-dropdown',
                             
-                            return fetch('/web/dataset/call_kw/' + model + '/' + method, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest'
+                            ajax: {
+                                url: '/web/dataset/autocomplete_companies',
+                                type: 'POST',
+                                dataType: 'json',
+                                delay: 250,
+                                data: function (params) {
+                                    return {
+                                        q: params.term || '', 
+                                        page_limit: 20
+                                    };
                                 },
-                                credentials: 'same-origin',
-                                body: JSON.stringify(payload)
-                            }).then(function (response) { 
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json(); 
-                            });
-                        }
-
-                        function showLoading(flag) {
-                            var spinner = document.getElementById('rpt_loading');
-                            var btn = document.getElementById('rpt_apply_btn');
-                            if (!spinner || !btn) return;
-                            
-                            if (flag) {
-                                spinner.style.display = 'inline-block';
-                                btn.disabled = true;
-                            } else {
-                                spinner.style.display = 'none';
-                                btn.disabled = false;
+                                processResults: function (data) {
+                                    return {
+                                        results: (data && data.results) ? data.results : [],
+                                        pagination: { more: !!(data && data.pagination && data.pagination.more) }
+                                    };
+                                },
+                                cache: true
                             }
-                        }
-
-                        function applyFilters() {
-                            try {
-                                console.log('Applying filters...');
-                                var btn = document.getElementById('rpt_apply_btn');
-                                if (!btn) {
-                                    console.error('Apply button not found');
-                                    return;
-                                }
-                                
-                                var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
-                                if (!wizardId) {
-                                    console.warn('No wizard id found on Apply button');
-                                    alert('Error: No wizard ID found. Please refresh the page and try again.');
-                                    return;
-                                }
-                                
-                                var dateFrom = (document.getElementById('rpt_date_from') || {}).value || null;
-                                var dateTo = (document.getElementById('rpt_date_to') || {}).value || null;
-                                var accountHeadType = (document.getElementById('rpt_account_head_type') || {}).value || null;
-
-                                console.log('Filter values:', { dateFrom: dateFrom, dateTo: dateTo, accountHeadType: accountHeadType });
-
-                                showLoading(true);
-                                
-                                jsonRpcCall('account.dynamic.report', 'update_report_params', [parseInt(wizardId, 10)], {
-                                    date_from: dateFrom,
-                                    date_to: dateTo,
-                                    account_head_type: accountHeadType
-                                })
-                                .then(function (resp) {
-                                    console.log('RPC Response:', resp);
-                                    showLoading(false);
-                                    
-                                    if (resp && resp.result && resp.result.success) {
-                                        console.log('Parameters updated successfully, reloading page...');
-                                        window.location.reload();
-                                    } else {
-                                        var errorMsg = 'Failed to update report parameters';
-                                        if (resp && resp.result && resp.result.error) {
-                                            errorMsg = resp.result.error;
-                                        }
-                                        console.error('update_report_params error:', resp);
-                                        alert('Error: ' + errorMsg);
-                                    }
-                                })
-                                .catch(function (err) {
-                                    showLoading(false);
-                                    console.error('RPC error', err);
-                                    alert('Could not update report parameters due to network error: ' + err.message);
-                                });
-                            } catch (err) {
-                                showLoading(false);
-                                console.error('applyFilters error', err);
-                                alert('An unexpected error occurred: ' + err.message);
-                            }
-                        }
-
-                        // Load wizard parameters if not already set
-                        function loadWizardParams() {
-                            try {
-                                var btn = document.getElementById('rpt_apply_btn');
-                                if (!btn) return;
-                                
-                                var wizardId = btn.dataset.wizardId || btn.getAttribute('data-wizard-id');
-                                if (!wizardId) return;
-
-                                var df = document.getElementById('rpt_date_from');
-                                var dt = document.getElementById('rpt_date_to');
-                                var sel = document.getElementById('rpt_account_head_type');
-                                
-                                // Check if we need to load parameters
-                                var needLoad = !((df && df.value) || (dt && dt.value) || (sel && sel.value));
-                                if (!needLoad) {
-                                    console.log('Parameters already loaded');
-                                    return;
-                                }
-
-                                console.log('Loading wizard parameters...');
-                                jsonRpcCall('account.dynamic.report', 'read', [[parseInt(wizardId, 10)]], {
-                                    fields: ['date_from', 'date_to', 'account_head_type']
-                                })
-                                .then(function(resp) {
-                                    if (!resp || !resp.result || !resp.result.length) return;
-                                    
-                                    var vals = resp.result[0] || {};
-                                    console.log('Loaded wizard values:', vals);
-
-                                    if (df && vals.date_from) df.value = vals.date_from;
-                                    if (dt && vals.date_to) dt.value = vals.date_to;
-                                    if (sel && vals.account_head_type) {
-                                        sel.value = vals.account_head_type;
-                                    }
-                                })
-                                .catch(function(err) {
-                                    console.warn('Could not load wizard params', err);
-                                });
-                            } catch (e) {
-                                console.error('loadWizardParams error', e);
-                            }
-                        }
-
-                        // Event Listeners
-                        var applyBtn = document.getElementById('rpt_apply_btn');
-                        if (applyBtn) {
-                            applyBtn.addEventListener('click', function (ev) {
-                                ev.preventDefault();
-                                applyFilters();
-                            });
-                            console.log('Apply button event listener attached');
-                        } else {
-                            console.error('Apply button not found!');
-                        }
-                        
-                        var selAccountType = document.getElementById('rpt_account_head_type');
-                        if (selAccountType) {
-                            selAccountType.addEventListener('change', function (ev) {
-                                applyFilters();
-                            });
-                        }
-
-                        // Date inputs with Enter key support
-                        var dfrom = document.getElementById('rpt_date_from');
-                        var dto = document.getElementById('rpt_date_to');
-                        [dfrom, dto].forEach(function(el) {
-                            if (!el) return;
-                            el.addEventListener('keydown', function(e) {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    applyFilters();
-                                }
-                            });
                         });
 
-                        // Initialize
-                        loadWizardParams();
-                        
-                        // Hide loading spinner initially
-                        var spinner = document.getElementById('rpt_loading');
-                        if (spinner) spinner.style.display = 'none';
-                        
-                        console.log('Filter initialization complete');
+                        // =================================================================
+                        // *** REMOVED JS: The 'select2:open' handler that forces 'position: fixed' ***
+                        // Select2's internal logic should handle 'position: absolute' relative to body
+                        // =================================================================
+
+                        // --- 2. Change Event Handler ---
+                        $input.on('change', function () {
+                            var selectedIds = $input.val(); 
+                            if (selectedIds === null || selectedIds === "") {
+                                selectedIds = [];
+                            } else if (!Array.isArray(selectedIds)) {
+                                selectedIds = [selectedIds]; 
+                            }
+                            
+                            $hidden.val(selectedIds.join(','));
+                            console.log('Companies changed -> hidden CSV =', $hidden.val());
+                        });
+
+                        // --- 3. Initial Value Loading (keep your existing code) ---
+                        //var initialRaw = $input.data('initial-ids') || '[]';
+                        var initialRaw = $input.attr('data-initial-ids') || $input.data('initialIds') || $input.data('initial-ids') || '[]';
+                        console.log('Raw initial data attribute value:', initialRaw);
+                        console.log('Direct attr check:', $input.attr('data-initial-ids'));
+                        console.log('jQuery data method:', $input.data('initial-ids'));
+                        console.log('jQuery data camelCase:', $input.data('initialIds'));
+                        var initialIds;
+                        try {
+                            initialIds = JSON.parse(initialRaw);
+                        } catch (e) {
+                            console.error("JSON Parse Error for Company IDs.");
+                            //initialIds = [35, 32, 2, 31, 33, 34, 1];
+                            initialIds = initialRaw; 
+                        }
+
+                        if (Array.isArray(initialIds) && initialIds.length) {
+                            $.ajax({
+                                url: '/web/dataset/call_kw/res.company/name_get',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                dataType: 'json',
+                                data: JSON.stringify({
+                                    jsonrpc: "2.0",
+                                    method: "call",
+                                    params: {
+                                        model: 'res.company',
+                                        method: 'name_get',
+                                        args: [initialIds],
+                                        kwargs: {}
+                                    },
+                                    id: new Date().getTime()
+                                }),
+                                success: function (resp) {
+                                    if (!resp || !resp.result) {
+                                        console.warn('name_get returned no result', resp);
+                                        return;
+                                    }
+                                    var loadedIds = [];
+                                    resp.result.forEach(function (item) {
+                                        var id = String(item[0]);
+                                        var text = String(item[1] || id);
+                                        var newOption = $('<option selected="selected"></option>')
+                                                        .val(id)
+                                                        .text(text);
+                                        $input.append(newOption);
+                                        loadedIds.push(id);
+                                    });
+                                    
+                                    $input.val(loadedIds).trigger('change');
+                                    $input.trigger('change.select2'); 
+                                    console.log('Initial companies loaded into Select2', loadedIds);
+                                },
+                                error: function (xhr, status, err) {
+                                    console.warn('Failed to load initial company names', err);
+                                }
+                            });
+                        }
                     });
                     ]]>
                 </script>
@@ -1270,21 +1196,52 @@
                         </div>
 
                         <style>
-                            .consolidated-table { border-collapse: collapse; width: 100%; font-size: 10px; margin-top: 20px; }
-                            .consolidated-table th, .consolidated-table td { border: 1px solid #000; padding: 6px; vertical-align: middle; }
-                            .consolidated-table th { background-color: #e6e6e6; font-weight: bold; text-align: center; font-size: 9px; }
-                            .text-right { text-align: right !important; }
-                            .text-center { text-align: center !important; }
-                            .expandable-row { cursor: pointer; background-color: #f8f9fa; font-weight: bold; }
-                            .expandable-row:hover { background-color: #e9ecef; }
-                            .move-detail-row { display: none; background-color: #fff; font-size: 9px; font-weight: normal; }
-                            .move-detail-row.show { display: table-row; }
-                            .expand-icon { font-weight: bold; font-size: 12px; margin-right: 5px; color: #007bff; display:inline-block; transition: transform 0.2s; }
-                            .expand-icon.expanded { transform: rotate(90deg); }
-                            .indent-move { padding-left: 30px; font-style: italic; color: #666; }
-                            .total-row { background-color: #d4edda; font-weight: bold; border-top: 2px solid #000; }
-                            .account-code { font-family: 'Courier New', monospace; font-weight: bold; }
-                            .move-reference { font-size: 8px; color: #666; }
+                            /* Your existing styles... keep them */
+
+                            /* ================= CRITICAL SELECT2 POSITIONING FIXES ================= */
+                            
+                            /* 1. Force maximum z-index and ABSOLUTE positioning */
+                            /* Select2 uses this to position the dropdown relative to the body, aligned with the input. */
+                            .select2-dropdown,
+                            .select2-companies-dropdown {
+                                z-index: 999999 !important;
+                                /* CRITICAL CHANGE: Use absolute, not fixed, for correct alignment */
+                                position: absolute !important; 
+                                box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+                                border: 1px solid #ccc !important;
+                                background: white !important;
+                            }
+
+                            /* 2. Remove overflow restrictions from ALL potential parent containers */
+                            /* This is what enabled the dropdown to hover (The LLM that gave you this was correct on this part) */
+                            .o_content,
+                            .o_report_html,
+                            .o_web_client, 
+                            .o_action_manager,
+                            .o_form_view,
+                            .o_main_content,
+                            .report-filter-section,
+                            .container-fluid,
+                            .row,
+                            .col-md-3,
+                            .rpt-companies-wrapper {
+                                overflow: visible !important;
+                                position: static; /* Use static or relative, but definitely not hidden/fixed */
+                                /* You can remove 'position: static !important;' on everything except the direct input wrapper */
+                            }
+
+                            /* Ensure body and html allow overflow */
+                            html, body {
+                                overflow-x: visible !important;
+                            }
+
+                            /* 3. Style the Select2 container (keep existing styles) */
+                            .select2-container {
+                                position: relative !important;
+                                z-index: 1 !important;
+                            }
+                            
+                            /* ... (All your other Select2 styling remains the same) ... */
                         </style>
 
                         <table class="consolidated-table">
@@ -1407,6 +1364,843 @@
         </t>
     </template>
 
+    <template id="consolidated_district_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+            <t t-set="wizard" t-value="env['account.dynamic.report'].browse(wizard_id)"/>
+            <t t-set="fresh_company_reports" t-value="wizard._generate_report_data()"/>
+
+            <div class="report-filter-section">
+                <div class="container-fluid">
+                <div class="row align-items-end">
+                    <div class="col-md-2 mb-1">
+                    <label for="rpt_date_from" class="form-label-small">Date From:</label>
+                    <input type="date" id="rpt_date_from" class="form-control-tiny" 
+                        t-att-value="wizard.date_from.strftime('%Y-%m-%d') if wizard.date_from else ''"/>
+                    </div>
+
+                    <div class="col-md-2 mb-1">
+                    <label for="rpt_date_to" class="form-label-small">Date To:</label>
+                    <input type="date" id="rpt_date_to" class="form-control-tiny" 
+                        t-att-value="wizard.date_to.strftime('%Y-%m-%d') if wizard.date_to else ''"/>
+                    </div>
+
+                    <div class="col-md-2 mb-1">
+                    <label for="rpt_account_type" class="form-label-small">Account Type:</label>
+                    <select id="rpt_account_type" class="form-control-tiny">
+                        <t t-foreach="account_types or []" t-as="aht">
+                        <option t-att-value="aht[0]" 
+                                t-att-selected="'selected' if (wizard.account_type and aht[0] == wizard.account_type) else None">
+                            <t t-esc="aht[1]"/>
+                        </option>
+                        </t>
+                    </select>
+                    </div>
+
+                    <div class="col-md-4 mb-1 companies-section">
+                    <label for="inputCompanies" class="form-label-small">Companies:</label>
+                    <input id="inputCompanies" class="form-control-tiny" name="inputCompanies"
+                        placeholder="Type 3+ chars to search"
+                        t-att-data-initial-ids="wizard.company_ids.ids"/>
+                    </div>
+
+                    <div class="col-md-2 mb-1 apply-section">
+                    <button id="rpt_apply_btn" class="btn-tiny btn-primary" t-att-data-wizard-id="wizard_id or ''">
+                        Apply Filters
+                    </button>
+                    <div id="rpt_loading" class="loading-tiny">
+                        <span class="spinner-tiny" role="status"></span>
+                        <span>Updating...</span>
+                    </div>
+                    </div>
+
+                </div>
+                </div>
+            </div>
+
+            <script type="text/javascript">
+                <![CDATA[
+                document.addEventListener('DOMContentLoaded', function () {
+                    var $ = window.jQuery;
+                    if (!$ || !$.fn.select2) {
+                        console.warn('jQuery or Select2 not available');
+                        return;
+                    }
+
+                    var $input = $('#inputCompanies');
+                    var $apply = $('#rpt_apply_btn');
+                    var $loading = $('#rpt_loading');
+
+                    if (!$input.length) {
+                        console.warn('Companies input not found');
+                        return;
+                    }
+
+                    // Prevent double initialization
+                    if ($input.data('select2-initialized')) {
+                        return;
+                    }
+                    $input.data('select2-initialized', true);
+
+                    // Initialize Select2 v3.x with compact settings
+                    $input.select2({
+                        placeholder: 'Type 3+ chars to search',
+                        minimumInputLength: 3,
+                        multiple: true,
+                        allowClear: true,
+                        width: '100%',
+                        dropdownCssClass: 'compact-dropdown',
+                        ajax: {
+                            url: '/web/dataset/autocomplete_companies',
+                            type: 'POST',
+                            dataType: 'json',
+                            cache: true,
+                            delay: 250,
+                            data: function (term, page) {
+                                return {
+                                q: term || '',
+                                page_limit: 15,
+                                page: page || 1
+                                };
+                            },
+                            results: function (data, page) {
+                                var res = data && data.results ? data.results : [];
+                                var more = !!(data && data.pagination && data.pagination.more);
+                                return { results: res, more: more };
+                            }
+                        }
+                    });
+
+                    // Enhanced dropdown positioning - move message below input area
+                    $input.on('select2-open', function () {
+                        var $drop = $('.select2-drop');
+                        var $section = $input.closest('.companies-section');
+                        
+                        if ($drop.length && $section.length) {
+                            setTimeout(function() {
+                                // Detach and append to body to avoid clipping
+                                $drop.detach().appendTo(document.body);
+                                
+                                // Get precise positioning relative to the companies section
+                                var sectionOffset = $section.offset();
+                                var sectionHeight = $section.outerHeight();
+                                var sectionWidth = $section.outerWidth();
+                                
+                                // Position dropdown with additional clearance below the input area
+                                var topPosition = sectionOffset.top + sectionHeight + 4; // Added 3px more clearance
+                                
+                                $drop.css({
+                                    'position': 'absolute',
+                                    'left': sectionOffset.left + 'px',
+                                    'top': topPosition + 'px',
+                                    'z-index': '999999',
+                                    'width': Math.max(sectionWidth, 200) + 'px',
+                                    'max-height': '150px',
+                                    'overflow-y': 'auto',
+                                    'margin-top': '2px' // Additional margin to separate from input
+                                });
+                                
+                                // Viewport boundary checking
+                                var windowWidth = $(window).width();
+                                var windowHeight = $(window).height();
+                                var scrollTop = $(window).scrollTop();
+                                
+                                var dropRight = sectionOffset.left + $drop.outerWidth();
+                                if (dropRight > windowWidth - 5) {
+                                    var shift = dropRight - windowWidth + 15;
+                                    $drop.css('left', Math.max(5, sectionOffset.left - shift) + 'px');
+                                }
+                                
+                                var dropBottom = topPosition + $drop.outerHeight();
+                                if (dropBottom > scrollTop + windowHeight - 5) {
+                                    // Position above input instead, with clearance
+                                    var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
+                                    if (abovePos > scrollTop + 5) {
+                                        $drop.css({
+                                        'top': abovePos + 'px',
+                                        'margin-top': '-2px'
+                                        });
+                                    }
+                                }
+
+                            }, 5);
+                        }
+                    });
+
+                    // Position the status message above the companies field
+                    function positionStatusMessage() {
+                        var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
+                        var $section = $('.companies-section');
+                        
+                        if ($status.length && $section.length) {
+                            var sectionOffset = $section.offset();
+                            $status.css({
+                                'top': (sectionOffset.top - 25) + 'px',
+                                'left': sectionOffset.left + 'px'
+                            });
+                        }
+                    }
+
+                    // Position initially and on window resize
+                    setTimeout(positionStatusMessage, 150);
+                    $(window).on('resize', positionStatusMessage);
+                    
+                
+                    // Update hidden field when selection changes
+                    $input.on('change', function () {
+                        // No need to manually update hidden field - Select2 handles this internally
+                        var data = $input.select2('data') || [];
+                        console.log('Selected companies:', data);
+                    });
+
+                    // Load initial companies
+                    function loadInitialCompanies() {
+                        var initialIdsJson = $input.attr('data-initial-ids') || '[]';
+                        var initialIds = [];
+                        
+                        try {
+                            initialIds = JSON.parse(initialIdsJson);
+                            if (!Array.isArray(initialIds)) initialIds = [];
+                            } catch (e) {
+                            console.warn('Failed to parse initial company IDs');
+                            initialIds = [];
+                        }
+                        
+                        if (initialIds.length === 0) return;
+                        
+                        $.ajax({
+                            url: '/web/dataset/call_kw/res.company/name_get',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            data: JSON.stringify({
+                                jsonrpc: "2.0",
+                                method: "call",
+                                params: {
+                                model: 'res.company',
+                                method: 'name_get',
+                                args: [initialIds],
+                                kwargs: {}
+                                },
+                                id: new Date().getTime()
+                            }),
+                            success: function (resp) {
+                                if (resp && resp.result && Array.isArray(resp.result)) {
+                                    var initialData = [];
+                                    resp.result.forEach(function(item) {
+                                        var option = new Option(item[1], item[0], true, true);
+                                        $input.append(option);
+                                        initialData.push({
+                                            id: item[0],
+                                            text: item[1]
+                                        });
+                                    });
+                                    
+                                    try {
+                                        $input.select2('data', initialData);
+                                    } catch (err) {
+                                        $input.trigger('change');
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    setTimeout(loadInitialCompanies, 50);
+
+                    // Apply filters with correct model name
+                    $apply.on('click', function (e) {
+                        e.preventDefault();
+                        
+                        var wizardId = $apply.data('wizard-id') || $apply.attr('data-wizard-id');
+                        if (!wizardId) {
+                            alert('Error: No wizard ID found. Please refresh and try again.');
+                            return;
+                        }
+
+                        var dateFrom = $('#rpt_date_from').val() || null;
+                        var dateTo = $('#rpt_date_to').val() || null;
+                        var accountType = $('#rpt_account_type').val() || null;
+                        
+                        // Get selected companies directly from Select2
+                        var companiesData = $input.select2('data') || [];
+                        var companyIds = companiesData.map(function(item) {
+                            return parseInt(item.id, 10);
+                        }).filter(function(id) {
+                        return !isNaN(id);
+                        });
+
+                        $loading.addClass('show');
+                        $apply.prop('disabled', true);
+
+                        var payload = {
+                        jsonrpc: "2.0",
+                        method: "call",
+                        params: {
+                            model: 'account.dynamic.report',
+                            method: 'update_report_params',
+                            args: [parseInt(wizardId, 10)],
+                            kwargs: {
+                            date_from: dateFrom,
+                            date_to: dateTo,
+                            account_type: accountType,
+                            company_ids: companyIds
+                            }
+                        },
+                        id: new Date().getTime()
+                        };
+
+                        $.ajax({
+                        url: '/web/dataset/call_kw/account.dynamic.report/update_report_params',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        data: JSON.stringify(payload),
+                        success: function (resp) {
+                        if (resp && resp.result) {
+                            if (resp.result.error) {
+                                alert('Error: ' + resp.result.error);
+                                return;
+                            }
+                            
+                            if (resp.result.success) {
+                                // Just reload the current page - it will regenerate with new params
+                                window.location.reload(true); // true forces reload from server
+                            } else {
+                                alert('Error: Failed to update parameters');
+                            }
+                        } else {
+                            alert('Error: Invalid response');
+                        }
+                    },
+                        error: function(xhr, status, error) {
+                            alert('Network error: ' + error);
+                        },
+                        complete: function() {
+                            $loading.removeClass('show');
+                            $apply.prop('disabled', false);
+                        }
+                        });
+                    });
+
+                });
+
+                // Global function for toggling account details
+                window.toggleAccountDetails = function(accountCode) {
+                try {
+                    var detailRows = document.querySelectorAll('.moves-' + accountCode);
+                    var icon = document.getElementById('icon-' + accountCode);
+                    if (!detailRows.length || !icon) return;
+                    
+                    var isVisible = detailRows[0].classList.contains('show');
+                    detailRows.forEach(function(row) {
+                    if (isVisible) { 
+                        row.classList.remove('show'); 
+                    } else { 
+                        row.classList.add('show'); 
+                    }
+                    });
+                    
+                    if (isVisible) { 
+                    icon.classList.remove('expanded'); 
+                    } else { 
+                    icon.classList.add('expanded'); 
+                    }
+                } catch (err) {
+                    console.error('toggleAccountDetails error', err);
+                }
+                };
+                ]]>
+            </script>
+
+            <style>
+                /* ========== ULTRA-COMPACT FILTER SECTION ========== */
+                .report-filter-section {
+                background: rgba(248,249,250,0.7) !important;
+                border: 1px solid rgba(222,226,230,0.5) !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                margin-bottom: 8px !important;
+                font-size: 9px !important;
+                line-height: 1.1 !important;
+                }
+
+                .form-label-small {
+                font-size: 8px !important;
+                font-weight: 600 !important;
+                margin-bottom: 1px !important;
+                color: #495057 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.3px !important;
+                display: block !important;
+                }
+
+                .form-control-tiny {
+                height: 24px !important;
+                padding: 0.1rem 0.3rem !important;
+                font-size: 9px !important;
+                border-radius: 3px !important;
+                border: 1px solid #ced4da !important;
+                background: rgba(255,255,255,0.95) !important;
+                width: 100% !important;
+                }
+
+                .form-control-tiny:focus {
+                border-color: #80bdff !important;
+                box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.1) !important;
+                }
+
+                /* ========== FIXED APPLY BUTTON ========== */
+                .apply-section {
+                position: relative !important;
+                display: flex !important;
+                align-items: flex-end !important;
+                justify-content: flex-start !important;
+                }
+
+                .btn-tiny {
+                height: 24px !important;
+                padding: 0.1rem 0.4rem !important;
+                font-size: 8px !important;
+                font-weight: 600 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.3px !important;
+                border-radius: 3px !important;
+                white-space: nowrap !important;
+                min-width: 70px !important;
+                border: 1px solid #0d6efd !important;
+                background-color: #0d6efd !important;
+                color: white !important;
+                cursor: pointer !important;
+                }
+
+                .btn-tiny:hover {
+                background-color: #0b5ed7 !important;
+                border-color: #0b5ed7 !important;
+                }
+
+                .loading-tiny {
+                display: none !important;
+                font-size: 8px !important;
+                color: #6c757d !important;
+                align-items: center !important;
+                margin-left: 6px !important;
+                }
+
+                .loading-tiny.show {
+                display: inline-flex !important;
+                }
+
+                .spinner-tiny {
+                display: inline-block !important;
+                width: 12px !important;
+                height: 12px !important;
+                border: 1px solid #f3f3f3 !important;
+                border-top: 1px solid #0d6efd !important;
+                border-radius: 50% !important;
+                animation: spin 1s linear infinite !important;
+                margin-right: 4px !important;
+                }
+
+                @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+                }
+
+                /* ========== ULTRA-COMPACT MULTI-SELECT TOKENS ========== */
+                .companies-section {
+                position: relative !important;
+                }
+
+                .select2-container-multi .select2-choices {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: flex-start !important;
+                gap: 2px !important;
+                padding: 0.1rem 0.2rem !important;
+                min-height: 26px !important;
+                border-radius: 3px !important;
+                border: 1px solid #ced4da !important;
+                background: rgba(255,255,255,0.95) !important;
+                font-size: 8px !important;
+                overflow: visible !important;
+                }
+
+                .select2-container-multi .select2-choices:focus-within {
+                border-color: #80bdff !important;
+                box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.1) !important;
+                }
+
+                /* Ultra-compact tokens */
+                .select2-container-multi .select2-choices .select2-search-choice {
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 2px !important;
+                padding: 0.05rem 0.25rem !important;
+                margin: 0 !important;
+                border-radius: 8px !important;
+                background-color: #0d6efd !important;
+                color: #fff !important;
+                border: 1px solid #0d6efd !important;
+                font-size: 7px !important;
+                font-weight: 500 !important;
+                max-height: 16px !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+                }
+
+                .select2-container-multi .select2-choices .select2-search-choice div {
+                color: #fff !important;
+                max-width: 80px !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+                }
+
+                .select2-container-multi .select2-search-choice-close {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 10px !important;
+                height: 10px !important;
+                margin-left: 2px !important;
+                background: transparent !important;
+                border: none !important;
+                color: rgba(255,255,255,0.9) !important;
+                font-size: 9px !important;
+                cursor: pointer !important;
+                border-radius: 50% !important;
+                }
+
+                .select2-container-multi .select2-search-choice-close:before {
+                content: "×" !important;
+                line-height: 1 !important;
+                }
+
+                /* Compact search field inside tokens */
+                .select2-container-multi .select2-choices .select2-search-field {
+                display: inline-flex !important;
+                align-items: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                min-width: 40px !important;
+                flex-grow: 1 !important;
+                }
+
+                .select2-container-multi .select2-choices .select2-search-field input {
+                background: transparent !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                padding: 0.05rem 0.1rem !important;
+                font-size: 8px !important;
+                min-width: 40px !important;
+                width: auto !important;
+                color: #495057 !important;
+                height: auto !important;
+                }
+
+                /* ========== COMPACT DROPDOWN STYLING ========== */
+                .compact-dropdown,
+                .select2-drop {
+                position: absolute !important;
+                z-index: 999999 !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+                border: 1px solid #dee2e6 !important;
+                border-radius: 4px !important;
+                background: #fff !important;
+                font-size: 8px !important;
+                max-height: 150px !important;
+                overflow-y: auto !important;
+                }
+
+                .select2-drop .select2-results,
+                .select2-results {
+                list-style: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-height: 130px !important;
+                overflow-y: auto !important;
+                }
+
+                .select2-drop .select2-results li,
+                .select2-results li {
+                padding: 4px 6px !important;
+                cursor: pointer !important;
+                border-bottom: 1px solid #f8f9fa !important;
+                font-size: 8px !important;
+                line-height: 1.2 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                }
+
+                .select2-drop .select2-results .select2-highlighted,
+                .select2-results .select2-highlighted {
+                background-color: #0d6efd !important;
+                color: white !important;
+                }
+
+                /*.select2-drop .select2-results .select2-no-results,*/
+                /*.select2-results .select2-no-results {*/
+                /*padding: 6px 6px !important;*/
+                /*font-style: italic !important;*/
+                /*color: #6c757d !important;*/
+                /*text-align: center !important;*/
+                /*font-size: 8px !important;*/
+                /*white-space: normal !important;*/
+                /*word-wrap: break-word !important;*/
+                /*}*/
+                .select2-drop .select2-results .select2-no-results,
+                .select2-results .select2-no-results {
+                    display: none !important;
+                }
+
+                /* Style the accessible status message */
+                span.select2-hidden-accessible[role="status"][aria-live="polite"] {
+                    /* Force visibility */
+                    position: fixed !important;
+                    clip: auto !important;
+                    clip-path: none !important;
+                    height: auto !important;
+                    width: auto !important;
+                    overflow: visible !important;
+                    white-space: normal !important;
+                    
+                    /* Positioning will be set by JavaScript */
+                    z-index: 10 !important;
+                    
+                    /* Make it visible */
+                    display: block !important;
+                    
+                    /* White background styling */
+                    background-color: #ffffff !important;
+                    border: 1px solid #dee2e6 !important;
+                    border-radius: 3px !important;
+                    color: #666 !important;
+                    font-size: 8px !important;
+                    line-height: 1.3 !important;
+                    padding: 3px 8px !important;
+                    margin: 0 !important;
+                    font-style: italic !important;
+                    text-align: center !important;
+                    max-width: 250px !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                }
+
+                /* Hide when empty */
+                span.select2-hidden-accessible[role="status"][aria-live="polite"]:empty {
+                    display: none !important;
+                }
+
+                /* ========== ORIGINAL REPORT TABLE STYLES FROM FIRST TEMPLATE ========== */
+                .consolidated-table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                font-size: 10px; 
+                margin-top: 20px; 
+                }
+                .consolidated-table th, .consolidated-table td { 
+                border: 1px solid #000; 
+                padding: 6px; 
+                vertical-align: middle; 
+                }
+                .consolidated-table th { 
+                background-color: #e6e6e6; 
+                font-weight: bold; 
+                text-align: center; 
+                font-size: 9px; 
+                }
+                .text-right { text-align: right !important; }
+                .text-center { text-align: center !important; }
+                .expandable-row { 
+                cursor: pointer; 
+                background-color: #f8f9fa; 
+                font-weight: bold; 
+                }
+                .expandable-row:hover { background-color: #e9ecef; }
+                .move-detail-row { 
+                display: none; 
+                background-color: #fff; 
+                font-size: 9px; 
+                font-weight: normal; 
+                }
+                .move-detail-row.show { display: table-row; }
+                .expand-icon { 
+                font-weight: bold; 
+                font-size: 12px; 
+                margin-right: 5px; 
+                color: #007bff; 
+                display:inline-block; 
+                transition: transform 0.2s; 
+                }
+                .expand-icon.expanded { transform: rotate(90deg); }
+                .indent-move { 
+                padding-left: 30px; 
+                font-style: italic; 
+                color: #666; 
+                }
+                .total-row { 
+                background-color: #d4edda; 
+                font-weight: bold; 
+                border-top: 2px solid #000; 
+                }
+                .account-code { 
+                font-family: 'Courier New', monospace; 
+                font-weight: bold; 
+                }
+                .move-reference { 
+                font-size: 8px; 
+                color: #666; 
+                }
+
+                /* ========== RESPONSIVE ========== */
+                @media (max-width: 768px) {
+                .report-filter-section .row {
+                    flex-direction: column !important;
+                }
+                
+                .report-filter-section .col-md-2,
+                .report-filter-section .col-md-4 {
+                    width: 100% !important;
+                    margin-bottom: 6px !important;
+                }
+                }
+
+                /* ========== PRINT STYLES ========== */
+                @media print {
+                .report-filter-section {
+                    display: none !important;
+                }
+                }
+
+                /* ========== PAGE BREAKS ========== */
+                .company-section { page-break-after: always; }
+                .company-section:last-child { page-break-after: auto; }
+            </style>
+
+            <t t-foreach="fresh_company_reports or []" t-as="report">
+                <div class="page company-section" style="margin-bottom: 20px;">
+
+                <div class="text-center mb-4">
+                    <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
+                    <t t-esc="report.get('company_name', 'EEDC')"/>
+                    </h2>
+                    <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">
+                    CONSOLIDATED DISTRICT REPORT
+                    </h3>
+                    <h4 style="font-size: 12px; font-weight: bold; margin-top: 0;">
+                    <t t-esc="report.get('subtitle','')"/>
+                    </h4>
+                </div>
+
+                <table class="consolidated-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 15%;">CHART OF ACCOUNT</th>
+                        <th style="width: 25%;">DESCRIPTION</th>
+                        <t t-foreach="report.get('district_headers', [])" t-as="district">
+                        <th style="width: 8%;" class="text-right"><t t-esc="district"/></th>
+                        </t>
+                        <th style="width: 10%;" class="text-right">TOTAL REV.</th>
+                        <th style="width: 10%;" class="text-right">TOTAL EXP.</th>
+                        <th style="width: 12%;" class="text-right">BALANCE</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <t t-foreach="report.get('report_lines', [])" t-as="line">
+                        <t t-set="safe_account_code" t-value="str(line.get('code','')).replace('.','_').replace('-','_').replace(' ','_')"/>
+                        
+                        <tr class="expandable-row" style="cursor: pointer;" t-attf-onclick="toggleAccountDetails('#{safe_account_code}')">
+                        <td>
+                            <span t-attf-id="icon-#{safe_account_code}" class="expand-icon">▶</span>
+                            <span class="account-code" t-esc="line.get('code','')"/>
+                        </td>
+                        <td><strong t-esc="line.get('description','')"/></td>
+                        <t t-foreach="range(len(report.get('district_codes', [])))" t-as="i">
+                            <t t-set="district_code" t-value="report['district_codes'][i]"/>
+                            <td class="text-right">
+                            <strong t-esc="'{:,.2f}'.format(line.get('district_values', {}).get(district_code, 0.0))"/>
+                            </td>
+                        </t>
+                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('total_revenue', 0.0))"/></td>
+                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('total_expenditure', 0.0))"/></td>
+                        <td class="text-right"><strong t-esc="'{:,.2f}'.format(line.get('balance', 0.0))"/></td>
+                        </tr>
+
+                        <t t-foreach="range(len(report.get('district_codes', [])))" t-as="i">
+                        <t t-set="district_code" t-value="report['district_codes'][i]"/>
+                        <t t-set="district_name" t-value="report['district_headers'][i]"/>
+                        <t t-set="district_moves" t-value="line.get('move_details', {}).get(district_code, [])"/>
+                        <t t-if="district_moves">
+                            <tr t-attf-class="move-detail-row moves-#{safe_account_code}" style="background-color: #e8f4f8;">
+                            <td class="indent-move" colspan="2"><strong>📍 <t t-esc="district_name"/> District Transactions:</strong></td>
+                            <td t-att-colspan="len(report.get('district_codes', [])) + 1" class="text-right">
+                                <strong>Count: <t t-esc="len(district_moves)"/> transactions</strong>
+                            </td>
+                            <td colspan="2"/> 
+                            </tr>
+
+                            <t t-foreach="district_moves" t-as="move">
+                            <tr t-attf-class="move-detail-row moves-#{safe_account_code}">
+                                <td class="indent-move"><span class="move-reference"><t t-esc="move.get('date','')"/></span></td>
+                                <td class="indent-move">
+                                <div><strong><t t-esc="move.get('description','')[:50]"/></strong></div>
+                                <div class="move-reference">Ref: <t t-esc="move.get('reference','')"/><t t-if="move.get('partner')"> | Partner: <t t-esc="move.get('partner')"/></t></div>
+                                </td>
+                                <t t-foreach="report.get('district_codes', [])" t-as="other_district_code">
+                                <td class="text-right">
+                                    <t t-if="other_district_code == district_code">
+                                    <span t-esc="'{:,.2f}'.format(move.get('balance',0.0))"/>
+                                    </t>
+                                    <t t-else="">-</t>
+                                </td>
+                                </t>
+                                <td class="text-right"><span t-esc="'{:,.2f}'.format(move.get('credit',0.0) - move.get('debit',0.0))"/></td>
+                            </tr>
+                            </t>
+                        </t>
+                        </t>
+                    </t>
+
+                    <tr class="total-row">
+                        <td colspan="2"><strong>GRAND TOTAL</strong></td>
+                        <t t-foreach="report.get('district_codes', [])" t-as="district_code">
+                        <td class="text-right"><strong>
+                            <t t-set="district_total" t-value="sum([line.get('district_values', {}).get(district_code, 0.0) for line in report.get('report_lines', [])])"/>
+                            <span t-esc="'{:,.2f}'.format(district_total)"/>
+                        </strong></td>
+                        </t>
+                        <td class="text-right"><strong>
+                        <t t-set="total_revenue" t-value="sum([line.get('total_revenue', 0.0) for line in report.get('report_lines', [])])"/>
+                        <span t-esc="'{:,.2f}'.format(total_revenue)"/>
+                        </strong></td>
+                        <td class="text-right"><strong>
+                        <t t-set="total_expenditure" t-value="sum([line.get('total_expenditure', 0.0) for line in report.get('report_lines', [])])"/>
+                        <span t-esc="'{:,.2f}'.format(total_expenditure)"/>
+                        </strong></td>
+                        <td class="text-right"><strong>
+                        <span t-esc="'{:,.2f}'.format(sum([line.get('balance', 0.0) for line in report.get('report_lines', [])]))"/>
+                        </strong></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px; font-size: 9px; color: #666;">
+                    <p><strong>Instructions:</strong></p>
+                    <ul>
+                    <li>Click on any account row (with ▶ arrow) to expand/collapse detailed transactions.</li>
+                    <li>Each district's transactions are grouped separately when expanded.</li>
+                    <li>Transaction details include date, description, reference, and partner information.</li>
+                    </ul>
+                </div>
+                </div>
+            </t>
+
+            </t>
+        </t>
+        </template>
+
     <template id="consolidated_district_report_pdf_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
@@ -1517,7 +2311,7 @@
                                 <tr>
                                     <td style="width: 50%; vertical-align: top;">
                                         <strong>Report Period:</strong> <t t-esc="report.get('start_date', '')"/> to <t t-esc="report.get('end_date', '')"/><br/>
-                                        <strong>Account Type:</strong> <t t-esc="report.get('account_head_type', '')"/><br/>
+                                        <strong>Account Type:</strong> <t t-esc="report.get('account_type', '')"/><br/>
                                         <strong>Number of Districts:</strong> <t t-esc="len(report.get('district_headers', []))"/><br/>
                                         <strong>Number of Accounts:</strong> <t t-esc="len(report.get('report_lines', []))"/>
                                     </td>
