@@ -72,7 +72,7 @@ class AccountDynamicReport(models.Model):
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
-    date_from = fields.Date(string='Date from', default="2025-01-01")
+    date_from = fields.Date(string='Date from', default=lambda self: fields.Date.context_today(self).replace(month=1, day=1))
     date_to = fields.Date(string='Date to', default=fields.Date.today)
     partner_id = fields.Many2one('res.partner', string='Partner')
     account_type = fields.Selection(
@@ -237,15 +237,29 @@ class AccountDynamicReport(models.Model):
     def _build_base_domain(self, date_from, date_to, branch_id, company_id):
         """Builds a dynamic search domain based on wizard selections."""
         domain = [
-            # ('move_id.branch_id', 'in', self.branch_ids.ids),
-            ('move_id.branch_id', '=', branch_id),
-            ('date', '>=', date_from), ('date', '<=', date_to),
+            ('date', '>=', date_from), 
+            ('date', '<=', date_to),
             ('move_id.state', '=', 'posted'),
         ]
-        if company_id: domain.append(('move_id.company_id', '=', company_id))
-        if self.journal_ids: domain.append(('journal_id', 'in', self.journal_ids.ids))
-        if self.account_ids: domain.append(('account_id', 'in', self.account_ids.ids))
-        if self.partner_id: domain.append(('partner_id', '=', self.partner_id.id))
+        
+        if company_id: 
+            domain.append(('move_id.company_id', '=', company_id))
+        
+        if branch_id:
+            domain.extend([
+                '|', '|',
+                ('move_id.branch_id', '=', branch_id),
+                ('journal_id.branch_id', '=', branch_id),
+                ('branch_id', '=', branch_id)
+            ])
+        
+        if self.journal_ids: 
+            domain.append(('journal_id', 'in', self.journal_ids.ids))
+        if self.account_ids: 
+            domain.append(('account_id', 'in', self.account_ids.ids))
+        if self.partner_id: 
+            domain.append(('partner_id', '=', self.partner_id.id))
+        
         return domain
 
         
@@ -432,98 +446,100 @@ class AccountDynamicReport(models.Model):
             build_recursive(tag, 0)
         return final_report_data
     
-   
+    
     
     def _get_consolidated_district_data(self, start_date, end_date, month_headers, company):
         """
         Generates consolidated data across all selected districts for the same period.
         Shows individual accounts instead of tags, with expandable move lines.
+        Includes "Unassigned District" column for entries without branch assignment.
         Returns: (report_lines, district_headers, district_codes)
         """
         self.ensure_one()
+        _logger.info(f"=== Starting _get_consolidated_district_data for company: {company.name} (ID: {company.id}) ===")
+        _logger.info(f"Date range: {start_date} to {end_date}")
+        
+        include_unassigned = not self.branch_ids
+        _logger.info(f"Include Unassigned District: {include_unassigned} (branch_ids set: {bool(self.branch_ids)})")
+        
         branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
-        if not branches_to_process:
-            # raise ValidationError("No districts selected or available for the selected company.")
+        _logger.info(f"Branches to process: {len(branches_to_process)} - {[b.name for b in branches_to_process]}")
+        
+        if not branches_to_process and not include_unassigned:
+            _logger.warning(f"No branches found for company {company.name}")
             return [], [], [], []
 
         if self.account_ids:
             all_accounts = self.account_ids
+            _logger.info(f"Using {len(all_accounts)} manually selected accounts")
         else:
-            all_accounts = self.env['account.account'].search([('company_id', '=', company.id), ('account_type', '=', self.account_type)])
-            # tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
-            # all_accounts = tags.mapped('account_ids') if tags else self.env['account.account'].browse()
-
-        # if not all_accounts:
-        #     all_accounts = self.env['account.account'].search([('company_id', '=', company.id)])
+            all_accounts = self.env['account.account'].search([
+                ('company_id', '=', company.id), 
+                ('account_type', '=', self.account_type)
+            ])
+            _logger.info(f"Found {len(all_accounts)} accounts with type '{self.account_type}' for company {company.name}")
 
         if not all_accounts:
+            _logger.warning(f"No accounts found for company {company.name} with type {self.account_type}")
             return [], [], [], []
+        
+        _logger.info(f"Processing accounts: {[(a.code, a.name) for a in all_accounts[:5]]}...")
 
         consolidated_data = {}
         district_headers = []
         district_codes = []
 
         for branch in branches_to_process:
+            _logger.info(f"\n--- Processing branch: {branch.name} (ID: {branch.id}) ---")
             district_headers.append(branch.name.upper())
             district_codes.append(branch.code.upper())
 
             base_domain = self._build_base_domain(start_date, end_date, branch.id, company.id)
             base_domain.append(('account_id', 'in', all_accounts.ids))
+            
+            _logger.info(f"Search domain: {base_domain}")
 
             branch_moves = self.env['account.move.line'].search(base_domain)
+            _logger.info(f"Found {len(branch_moves)} move lines for branch {branch.name}")
+            
+            if branch_moves:
+                _logger.info(f"Sample move lines: {[(m.account_id.code, m.date, m.debit, m.credit) for m in branch_moves[:3]]}")
 
-            # sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
+            self._process_branch_moves(branch_moves, branch, all_accounts, consolidated_data)
 
-            for account in all_accounts:
-                account_key = f"{account.code}_{account.name}"
-                if account_key not in consolidated_data:
-                    consolidated_data[account_key] = {
-                        'code': account.code,
-                        'description': account.name,
-                        'level': 0,
-                        'is_account': True,
-                        'is_expandable': True,
-                        'district_values': {},
-                        'move_details': {},
-                        'total_revenue': 0.0,
-                        'total_expenditure': 0.0,
-                    }
-
-                account_moves = branch_moves.filtered(lambda m: m.account_id == account)
-
-                if account_moves:
-                    revenue_total = sum(account_moves.mapped('credit'))
-                    expenditure_total = sum(account_moves.mapped('debit'))
-
-                    if self.account_head_type == 'Revenue':
-                        consolidated_data[account_key]['district_values'][branch.code] = revenue_total
-                        consolidated_data[account_key]['total_revenue'] += revenue_total
-                    else:
-                        consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
-                        consolidated_data[account_key]['total_expenditure'] += expenditure_total
-
-                    if branch.code not in consolidated_data[account_key]['move_details']:
-                        consolidated_data[account_key]['move_details'][branch.code] = []
-
-                    for move_line in account_moves:
-                        move_data = {
-                            'id': move_line.id,
-                            'date': move_line.date.strftime('%Y-%m-%d') if move_line.date else '',
-                            'reference': move_line.move_id.name or move_line.name,
-                            'description': move_line.name or (move_line.move_id.ref if hasattr(move_line.move_id, 'ref') else '') or 'No Description',
-                            'partner': move_line.partner_id.name if move_line.partner_id else '',
-                            'debit': move_line.debit,
-                            'credit': move_line.credit,
-                            'balance': (move_line.credit or 0.0) - (move_line.debit or 0.0),
-                            'level': 1,
-                            'is_account': False,
-                            'is_move_line': True,
-                        }
-                        consolidated_data[account_key]['move_details'][branch.code].append(move_data)
-
-                    consolidated_data[account_key]['move_details'][branch.code].sort(
-                        key=lambda x: x.get('date', ''), reverse=True
-                    )
+        if include_unassigned:
+            _logger.info(f"\n--- Processing UNASSIGNED entries (no branch) ---")
+            
+            unassigned_code = 'UNASSIGNED'
+            unassigned_name = 'UNASSIGNED DISTRICT'
+            district_headers.append(unassigned_name)
+            district_codes.append(unassigned_code)
+            
+            unassigned_domain = [
+                ('date', '>=', start_date),
+                ('date', '<=', end_date),
+                ('move_id.state', '=', 'posted'),
+                ('move_id.company_id', '=', company.id),
+                ('account_id', 'in', all_accounts.ids),
+                '&', '&',
+                ('branch_id', '=', False),
+                ('move_id.branch_id', '=', False),
+                ('journal_id.branch_id', '=', False),
+            ]
+            
+            _logger.info(f"Unassigned domain: {unassigned_domain}")
+            unassigned_moves = self.env['account.move.line'].search(unassigned_domain)
+            _logger.info(f"Found {len(unassigned_moves)} UNASSIGNED move lines")
+            
+            if unassigned_moves:
+                # Create a pseudo-branch object for unassigned entries
+                UnassignedBranch = type('UnassignedBranch', (), {
+                    'code': unassigned_code,
+                    'name': unassigned_name,
+                    'id': 0
+                })()
+                
+                self._process_branch_moves(unassigned_moves, UnassignedBranch, all_accounts, consolidated_data)
 
         report_lines = []
         for key, data in consolidated_data.items():
@@ -532,32 +548,118 @@ class AccountDynamicReport(models.Model):
                 report_lines.append(data)
 
         report_lines.sort(key=lambda x: x.get('code', ''))
+        
+        _logger.info(f"=== Summary for {company.name}: {len(report_lines)} accounts with data ===")
+        if report_lines:
+            _logger.info(f"First account: {report_lines[0].get('code')} - Rev: {report_lines[0].get('total_revenue')}, Exp: {report_lines[0].get('total_expenditure')}")
+        else:
+            _logger.warning("NO REPORT LINES GENERATED - Check if account_head_type matches your data!")
 
         return report_lines, district_headers, district_codes, company.id
-    
-    
-    
+
+
+    def _process_branch_moves(self, branch_moves, branch, all_accounts, consolidated_data):
+        """
+        Helper method to process move lines for a branch (or unassigned entries)
+        and update consolidated_data dictionary
+        """
+        for account in all_accounts:
+            account_key = f"{account.code}_{account.name}"
+            if account_key not in consolidated_data:
+                consolidated_data[account_key] = {
+                    'code': account.code,
+                    'description': account.name,
+                    'level': 0,
+                    'is_account': True,
+                    'is_expandable': True,
+                    'district_values': {},
+                    'move_details': {},
+                    'total_revenue': 0.0,
+                    'total_expenditure': 0.0,
+                }
+
+            account_moves = branch_moves.filtered(lambda m: m.account_id == account)
+
+            if account_moves:
+                revenue_total = sum(account_moves.mapped('credit'))
+                expenditure_total = sum(account_moves.mapped('debit'))
+
+                REVENUE_TYPES = ['income', 'income_other']
+                
+                if account.account_type in REVENUE_TYPES:
+                    consolidated_data[account_key]['district_values'][branch.code] = revenue_total
+                    consolidated_data[account_key]['total_revenue'] += revenue_total
+                else:  # expense, asset_*, liability_*, equity_*
+                    consolidated_data[account_key]['district_values'][branch.code] = expenditure_total
+                    consolidated_data[account_key]['total_expenditure'] += expenditure_total
+
+                if branch.code not in consolidated_data[account_key]['move_details']:
+                    consolidated_data[account_key]['move_details'][branch.code] = []
+
+                for move_line in account_moves:
+                    move_data = {
+                        'id': move_line.id,
+                        'date': move_line.date.strftime('%Y-%m-%d') if move_line.date else '',
+                        'reference': move_line.move_id.name or move_line.name,
+                        'description': move_line.name or (move_line.move_id.ref if hasattr(move_line.move_id, 'ref') else '') or 'No Description',
+                        'partner': move_line.partner_id.name if move_line.partner_id else '',
+                        'debit': move_line.debit,
+                        'credit': move_line.credit,
+                        'balance': (move_line.credit or 0.0) - (move_line.debit or 0.0),
+                        'level': 1,
+                        'is_account': False,
+                        'is_move_line': True,
+                    }
+                    consolidated_data[account_key]['move_details'][branch.code].append(move_data)
+
+                consolidated_data[account_key]['move_details'][branch.code].sort(
+                    key=lambda x: x.get('date', ''), reverse=True
+                )
+
+
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display - now supports multiple companies"""
         self.ensure_one()
         
+        _logger.info("="*80)
+        _logger.info("ACTION: action_generate_consolidated_district_report called")
+        _logger.info(f"Report Type: {self.report_type}")
+        _logger.info(f"Account Type: {self.account_type}")
+        _logger.info(f"Date Range: {self.date_from} to {self.date_to}")
+        _logger.info(f"Format: {self.format}")
+        _logger.info(f"Selected Companies: {[c.name for c in self.company_ids]}")
+        _logger.info(f"Selected Branches: {[b.name for b in self.branch_ids]}")
+        _logger.info(f"Selected Accounts: {len(self.account_ids)} - {[(a.code, a.name) for a in self.account_ids[:3]]}")
+        _logger.info("="*80)
+        
         if self.report_type != 'consolidated_district':
+            _logger.info("Wrong report type, delegating to action_generate_report()")
             return self.action_generate_report()
         
         companies_to_process = self.company_ids or self.env['res.company'].search([])
+        _logger.info(f"Companies to process: {[c.name for c in companies_to_process]}")
+        
         start_date, end_date, month_headers = self._get_date_range()
+        _logger.info(f"Computed date range: {start_date} to {end_date}")
         
         all_company_reports = []
         company_ids_list = []
         
         for company in companies_to_process:
-            report_lines, district_headers, district_codes, company_id = self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+            _logger.info(f"\n{'='*60}")
+            _logger.info(f"Processing company: {company.name}")
+            _logger.info(f"{'='*60}")
+            
+            report_lines, district_headers, district_codes, company_id = \
+                self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+            
+            _logger.info(f"Result for {company.name}: {len(report_lines)} report lines")
             
             if report_lines:
                 budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
                 period_string = self._get_period_string(start_date, end_date)
                 
-                all_company_reports.append({
+                report_data = {
                     'report_lines': report_lines,
                     'district_headers': district_headers,
                     'district_codes': district_codes,
@@ -565,13 +667,26 @@ class AccountDynamicReport(models.Model):
                     'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
                     'account_type': self.account_type,
                     'res_company': company,
-                })
+                }
+                all_company_reports.append(report_data)
                 company_ids_list.append(company_id)
+                _logger.info(f"✓ Added report for {company.name}")
+            else:
+                _logger.warning(f"✗ No data for {company.name} - SKIPPING")
+        
+        _logger.info(f"\n{'='*80}")
+        _logger.info(f"FINAL RESULT: {len(all_company_reports)} company reports generated")
+        _logger.info(f"{'='*80}\n")
         
         if not all_company_reports:
+            _logger.error("VALIDATION ERROR: No data could be generated!")
+            _logger.error("Troubleshooting checklist:")
+            _logger.error(f"1. Journal entries exist? Check account.move.line for date range {start_date} to {end_date}")
+            _logger.error(f"2. Account type correct? Current: '{self.account_type}'")
+            _logger.error(f"3. Account head type correct? Current: '{self.account_head_type}' (affects Revenue vs Expenditure)")
+            _logger.error(f"4. Branches configured? Current: {[b.name for b in self.branch_ids or []]}")
+            _logger.error(f"5. Company IDs correct? Current: {[c.id for c in self.company_ids or []]}")
             raise ValidationError("No data could be generated for the selected criteria.")
-        
-        # company_ids_list = self.company_ids.ids if self.company_ids else []
         
         data = {
             'doc_model': self._name,
@@ -585,8 +700,7 @@ class AccountDynamicReport(models.Model):
             'current_company_ids_json': json.dumps(company_ids_list),
         }
         
-        _logger.info(f"Company IDs for template: {company_ids_list}")
-        _logger.info(f"Company IDs JSON: {json.dumps(company_ids_list)}")
+        _logger.info(f"Generating report with format: {self.format}")
         
         if self.format == 'html':
             report_action = self.env.ref('eedc_report.action_consolidated_district_report')
@@ -597,8 +711,10 @@ class AccountDynamicReport(models.Model):
             report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
             report_obj.sudo().update({'report_type': 'qweb-pdf'})
         
+        _logger.info("✓ Report action prepared successfully")
         return report_action.report_action(self, data=data)
-    
+
+
     def _generate_report_data(self):
         """Generate fresh report data from current wizard state"""
         self.ensure_one()
