@@ -130,7 +130,6 @@ class UserRole(models.Model):
     
     def write(self, vals):
         """When role definition changes, sync all users who have this role."""
-        # Capture users BEFORE the write operation
         users_to_sync_permissions = self.env['res.users']
         users_to_sync_approvals = self.env['res.users']
         
@@ -138,18 +137,15 @@ class UserRole(models.Model):
             users_to_sync_permissions = self.user_ids
             
         if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context', 'user_ids']):
-            # Include current users
             users_to_sync_approvals = self.user_ids
             
             if 'user_ids' in vals:
-                # Handle user additions and removals
                 for command in vals['user_ids']:
                     if command[0] == 3:  # (3, id) - remove single user
                         users_to_sync_approvals |= self.env['res.users'].browse(command[1])
                     elif command[0] == 4:  # (4, id) - add single user
                         users_to_sync_approvals |= self.env['res.users'].browse(command[1])
                     elif command[0] == 6:  # (6, 0, [ids]) - replace all
-                        # Get users that will be removed (current - new)
                         new_user_ids = set(command[2])
                         current_user_ids = set(self.user_ids.ids)
                         removed_user_ids = current_user_ids - new_user_ids
