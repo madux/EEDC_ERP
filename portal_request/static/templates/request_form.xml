@@ -17,7 +17,7 @@
                         
                         <div class="navbar-light py-0 mb-2 pt-1 p-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
-                                Back
+                                Back...
                             </a>
                             <a t-if="req.state in ['submit', 'refuse', 'Refuse'] and current_user in [req.employee_id.user_id.id, req.create_uid.id]" id="editbtn" class="btn btn-secondary btn-sm editbtn">
                                 Edit
@@ -29,7 +29,7 @@
                                 Discard
                             </a>
                             <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
-                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
+                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve...</a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
                                 </a>
@@ -44,6 +44,9 @@
                                     Print invoice
                                 </a>
                             </t>
+                            <a t-att-href="req.get_internal_url(req.id)" class="btn btn-primary btn-sm" target="_blank">
+                                View as core User
+                            </a>
                         </div>
 
                         <div class="row mt16 o_project_portal_sidebar">
@@ -175,7 +178,7 @@
                                             <!--        <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>-->
                                             <!--    </t>-->
                                             <!--</div>-->
-
+                                    
                                             <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>

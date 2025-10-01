@@ -1211,11 +1211,32 @@ class Memo_Model(models.Model):
                 'stage_id': self.memo_setting_id.stage_ids[0].id,
                 }) 
             
+    def get_internal_url(self, id):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        user = self.env.user
+        
+        is_portal = user.has_group('base.group_portal')
+        
+        if is_portal:
+            path = "/my/request/view/{}".format(id)
+        else:
+            path = "/web#id={}&model=memo.model&view_type=form".format(id)
+        
+        url = base_url + path
+        return url
+            
     def get_url(self, id):
         base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        internal_path = "/web#id={}&model=memo.model&view_type=form".format(id)
-        internal_url = base_url + internal_path
-        return "<a href='{}'>Click</a>".format(internal_url)
+        user = self.env.user
+        
+        is_portal = user.has_group('base.group_portal')
+    
+        if is_portal:
+            path = "/my/request/view/{}".format(id)
+        else:
+            path = "/web#id={}&model=memo.model&view_type=form".format(id)
+        url = base_url + path
+        return "<a href='{}'>Click</a>".format(url)
     
     """line 4 - 7 checks if the current user is the initiator of the memo, 
     if true, raises warning error else: it opens the wizard"""
