@@ -30,9 +30,8 @@ class ImportProductWizard(models.TransientModel):
     company_id = fields.Many2one("res.company","Company", required=True)
     location_id = fields.Many2one("stock.location","Store Location", required=True)
     product_id = fields.Many2one("product.product","Product")
-    
+    reset_count = fields.Boolean("Reset Quantity to Zero")
     property_stock_inventory = fields.Many2one("stock.location","Adjustment Store Location", required=True)
-    
         
     def create_category(self, name):
         if not name:
@@ -222,7 +221,8 @@ class ImportProductWizard(models.TransientModel):
                         product = create_product(vals)
                         _logger.info(f"CREATED ODOO PRODUCT RECORD {self.env['product.product'].browse([product]).name} - {self.env['product.product'].browse([product]).qty_available}")
                         product_ref = self.env['product.product'].browse([product])
-                        quant = create_stock_quant(product_ref, self.location_id, qty)
+                        quant = self.update_product_quantity(product_ref,qty, self.location_id)
+                        create_stock_quant(product_ref, self.location_id, vals.get('qty_available'))
                         success_records.append(vals.get('name'))
                     else:
                         unsuccess_records.append(f'Product at {count} does not have any name or code values')
@@ -236,6 +236,7 @@ class ImportProductWizard(models.TransientModel):
 
         elif self.import_type == "update":
             for row in file_data:
+                stock_code = stock_code = str(row[6]).strip() if row[6] else ''
                 product = find_existing_product(stock_code)
                 if product:
                     name = row[1]
@@ -243,7 +244,6 @@ class ImportProductWizard(models.TransientModel):
                     unit_price = row[3]
                     qty = row[4]
                     categ_name = row[5]
-                    stock_code = row[6]
                     vals = {
                         'name': name,
                         'detailed_type': 'product',
@@ -257,7 +257,9 @@ class ImportProductWizard(models.TransientModel):
                         'company_id': self.company_id.id
                     }
                     product.update(vals)
+                    self.update_product_quantity(product, vals.get('qty_available'), self.location_id)
                     create_stock_quant(product, self.location_id, vals.get('qty_available'))
+                    # create_stock_quant(product, self.location_id, vals.get('qty_available'))
                     success_records.append(vals.get('name'))
                 else:
                     unsuccess_records.append(f'Product at {count} could not be found')
@@ -290,4 +292,53 @@ class ImportProductWizard(models.TransientModel):
                 'target':'new',
                 'context':context,
                 }
+        
+        
+    # Assuming you have a reference to the Odoo environment 'env'
+# This can be used in a server action, a custom model method, or an Odoo shell script.
+
+    def update_product_quantity(self, product_id, new_quantity, location_id):
+        """
+        Updates a product's stock quantity by creating and applying a stock quant.
+
+        :param product_id: The ID of the product.product record.
+        :param new_quantity: The target quantity to set.
+        :param location_id: The ID of the stock.location record. If not provided,
+                            the default stock location is used.
+        """
+        # 1. Find the product and location
+        domain = [
+            ('product_id', '=', product_id.id),
+            ('location_id', '=', location_id.id)
+        ]
+        quant = self.env['stock.quant'].search(domain, limit=1)
+        if self.import_type == 'product':
+            domain = [
+                ('product_id', '=', product_id.id),
+                ('location_id', '=', location_id.id)]
+            quant = self.env['stock.quant'].search(domain, limit=1)
+            quant.inventory_quantity = 0
+            quant.action_apply_inventory()
+            
+        if not quant:
+            # Create a new quant record if none exists for this product in the location
+            quant = self.env['stock.quant'].create({
+                'product_id': product_id.id,
+                'location_id': location_id.id,
+                'inventory_quantity': new_quantity,
+            })
+            
+        # else:
+        #     # Update the existing quant with the new inventory quantity
+        quant.action_apply_inventory()
+        
+        # quant.write({'inventory_quantity': new_quantity})
+        # quant.action_apply_inventory()
+
+        # Log the change
+        # self.env.cr.commit()  # Ensure the changes are committed if used outside a transaction
+        print(f"Product {product_id.name} quantity in {location_id.name} updated to {new_quantity}.")
+
+     
+
  

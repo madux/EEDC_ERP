@@ -21,7 +21,9 @@
                         <group>
                             <field name="data_file" filename="name"/>
                             <field name="filename" invisible="1"/> 
+                            <field name="reset_count"/> 
                             <field name="product_id"/> 
+
                         </group>
                     </group>
                 </form>
