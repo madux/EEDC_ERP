@@ -1457,9 +1457,9 @@
                             delay: 250,
                             data: function (term, page) {
                                 return {
-                                q: term || '',
-                                page_limit: 15,
-                                page: page || 1
+                                    q: term || '',
+                                    page_limit: 15,
+                                    page: page || 1
                                 };
                             },
                             results: function (data, page) {
@@ -1470,84 +1470,108 @@
                         }
                     });
 
-                    // Enhanced dropdown positioning - move message below input area
+                    // Enhanced dropdown positioning - SAFE FOR CROSS-ORIGIN
                     $input.on('select2-open', function () {
                         var $drop = $('.select2-drop');
                         var $section = $input.closest('.companies-section');
                         
                         if ($drop.length && $section.length) {
                             setTimeout(function() {
-                                // Detach and append to body to avoid clipping
-                                $drop.detach().appendTo(document.body);
-                                
-                                // Get precise positioning relative to the companies section
-                                var sectionOffset = $section.offset();
-                                var sectionHeight = $section.outerHeight();
-                                var sectionWidth = $section.outerWidth();
-                                
-                                // Position dropdown with additional clearance below the input area
-                                var topPosition = sectionOffset.top + sectionHeight + 4; // Added 3px more clearance
-                                
-                                $drop.css({
-                                    'position': 'absolute',
-                                    'left': sectionOffset.left + 'px',
-                                    'top': topPosition + 'px',
-                                    'z-index': '999999',
-                                    'width': Math.max(sectionWidth, 200) + 'px',
-                                    'max-height': '150px',
-                                    'overflow-y': 'auto',
-                                    'margin-top': '2px' // Additional margin to separate from input
-                                });
-                                
-                                // Viewport boundary checking
-                                var windowWidth = $(window).width();
-                                var windowHeight = $(window).height();
-                                var scrollTop = $(window).scrollTop();
-                                
-                                var dropRight = sectionOffset.left + $drop.outerWidth();
-                                if (dropRight > windowWidth - 5) {
-                                    var shift = dropRight - windowWidth + 15;
-                                    $drop.css('left', Math.max(5, sectionOffset.left - shift) + 'px');
-                                }
-                                
-                                var dropBottom = topPosition + $drop.outerHeight();
-                                if (dropBottom > scrollTop + windowHeight - 5) {
-                                    // Position above input instead, with clearance
-                                    var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
-                                    if (abovePos > scrollTop + 5) {
-                                        $drop.css({
-                                        'top': abovePos + 'px',
-                                        'margin-top': '-2px'
-                                        });
+                                try {
+                                    // Try to append to body for best positioning
+                                    // This will work in same-origin contexts
+                                    var targetContainer = document.body;
+                                    $drop.detach().appendTo(targetContainer);
+                                    
+                                    // Get precise positioning relative to the companies section
+                                    var sectionOffset = $section.offset();
+                                    var sectionHeight = $section.outerHeight();
+                                    var sectionWidth = $section.outerWidth();
+                                    
+                                    // Position dropdown with additional clearance below the input area
+                                    var topPosition = sectionOffset.top + sectionHeight + 4;
+                                    
+                                    $drop.css({
+                                        'position': 'absolute',
+                                        'left': sectionOffset.left + 'px',
+                                        'top': topPosition + 'px',
+                                        'z-index': '999999',
+                                        'width': Math.max(sectionWidth, 200) + 'px',
+                                        'max-height': '150px',
+                                        'overflow-y': 'auto',
+                                        'margin-top': '2px'
+                                    });
+                                    
+                                    // Viewport boundary checking
+                                    var windowWidth = $(window).width();
+                                    var windowHeight = $(window).height();
+                                    var scrollTop = $(window).scrollTop();
+                                    
+                                    var dropRight = sectionOffset.left + $drop.outerWidth();
+                                    if (dropRight > windowWidth - 5) {
+                                        var shift = dropRight - windowWidth + 15;
+                                        $drop.css('left', Math.max(5, sectionOffset.left - shift) + 'px');
                                     }
+                                    
+                                    var dropBottom = topPosition + $drop.outerHeight();
+                                    if (dropBottom > scrollTop + windowHeight - 5) {
+                                        // Position above input instead, with clearance
+                                        var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
+                                        if (abovePos > scrollTop + 5) {
+                                            $drop.css({
+                                                'top': abovePos + 'px',
+                                                'margin-top': '-2px'
+                                            });
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Cross-origin error - fallback to natural positioning
+                                    console.warn('Cross-origin restriction detected, using fallback positioning');
+                                    // Dropdown will position naturally within iframe
+                                    $drop.css({
+                                        'position': 'relative',
+                                        'z-index': '999',
+                                        'width': '100%',
+                                        'max-height': '150px',
+                                        'overflow-y': 'auto',
+                                        'margin-top': '2px'
+                                    });
                                 }
-
                             }, 5);
                         }
                     });
 
                     // Position the status message above the companies field
                     function positionStatusMessage() {
-                        var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
-                        var $section = $('.companies-section');
-                        
-                        if ($status.length && $section.length) {
-                            var sectionOffset = $section.offset();
-                            $status.css({
-                                'top': (sectionOffset.top - 25) + 'px',
-                                'left': sectionOffset.left + 'px'
-                            });
+                        try {
+                            var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
+                            var $section = $('.companies-section');
+                            
+                            if ($status.length && $section.length) {
+                                var sectionOffset = $section.offset();
+                                $status.css({
+                                    'top': (sectionOffset.top - 25) + 'px',
+                                    'left': sectionOffset.left + 'px'
+                                });
+                            }
+                        } catch (e) {
+                            // Silently fail on cross-origin access
+                            console.warn('Could not position status message (cross-origin)');
                         }
                     }
 
                     // Position initially and on window resize
                     setTimeout(positionStatusMessage, 150);
-                    $(window).on('resize', positionStatusMessage);
+                    
+                    try {
+                        $(window).on('resize', positionStatusMessage);
+                    } catch (e) {
+                        console.warn('Could not attach resize handler (cross-origin)');
+                    }
                     
                 
                     // Update hidden field when selection changes
                     $input.on('change', function () {
-                        // No need to manually update hidden field - Select2 handles this internally
                         var data = $input.select2('data') || [];
                         console.log('Selected companies:', data);
                     });
@@ -1560,7 +1584,7 @@
                         try {
                             initialIds = JSON.parse(initialIdsJson);
                             if (!Array.isArray(initialIds)) initialIds = [];
-                            } catch (e) {
+                        } catch (e) {
                             console.warn('Failed to parse initial company IDs');
                             initialIds = [];
                         }
@@ -1576,10 +1600,10 @@
                                 jsonrpc: "2.0",
                                 method: "call",
                                 params: {
-                                model: 'res.company',
-                                method: 'name_get',
-                                args: [initialIds],
-                                kwargs: {}
+                                    model: 'res.company',
+                                    method: 'name_get',
+                                    args: [initialIds],
+                                    kwargs: {}
                                 },
                                 id: new Date().getTime()
                             }),
@@ -1601,6 +1625,9 @@
                                         $input.trigger('change');
                                     }
                                 }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Failed to load initial companies:', error);
                             }
                         });
                     }
@@ -1626,59 +1653,59 @@
                         var companyIds = companiesData.map(function(item) {
                             return parseInt(item.id, 10);
                         }).filter(function(id) {
-                        return !isNaN(id);
+                            return !isNaN(id);
                         });
 
                         $loading.addClass('show');
                         $apply.prop('disabled', true);
 
                         var payload = {
-                        jsonrpc: "2.0",
-                        method: "call",
-                        params: {
-                            model: 'account.dynamic.report',
-                            method: 'update_report_params',
-                            args: [parseInt(wizardId, 10)],
-                            kwargs: {
-                            date_from: dateFrom,
-                            date_to: dateTo,
-                            account_type: accountType,
-                            company_ids: companyIds
-                            }
-                        },
-                        id: new Date().getTime()
+                            jsonrpc: "2.0",
+                            method: "call",
+                            params: {
+                                model: 'account.dynamic.report',
+                                method: 'update_report_params',
+                                args: [parseInt(wizardId, 10)],
+                                kwargs: {
+                                    date_from: dateFrom,
+                                    date_to: dateTo,
+                                    account_type: accountType,
+                                    company_ids: companyIds
+                                }
+                            },
+                            id: new Date().getTime()
                         };
 
                         $.ajax({
-                        url: '/web/dataset/call_kw/account.dynamic.report/update_report_params',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        dataType: 'json',
-                        data: JSON.stringify(payload),
-                        success: function (resp) {
-                        if (resp && resp.result) {
-                            if (resp.result.error) {
-                                alert('Error: ' + resp.result.error);
-                                return;
+                            url: '/web/dataset/call_kw/account.dynamic.report/update_report_params',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            data: JSON.stringify(payload),
+                            success: function (resp) {
+                                if (resp && resp.result) {
+                                    if (resp.result.error) {
+                                        alert('Error: ' + resp.result.error);
+                                        return;
+                                    }
+                                    
+                                    if (resp.result.success) {
+                                        // Just reload the current page - it will regenerate with new params
+                                        window.location.reload(true);
+                                    } else {
+                                        alert('Error: Failed to update parameters');
+                                    }
+                                } else {
+                                    alert('Error: Invalid response');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                alert('Network error: ' + error);
+                            },
+                            complete: function() {
+                                $loading.removeClass('show');
+                                $apply.prop('disabled', false);
                             }
-                            
-                            if (resp.result.success) {
-                                // Just reload the current page - it will regenerate with new params
-                                window.location.reload(true); // true forces reload from server
-                            } else {
-                                alert('Error: Failed to update parameters');
-                            }
-                        } else {
-                            alert('Error: Invalid response');
-                        }
-                    },
-                        error: function(xhr, status, error) {
-                            alert('Network error: ' + error);
-                        },
-                        complete: function() {
-                            $loading.removeClass('show');
-                            $apply.prop('disabled', false);
-                        }
                         });
                     });
 
@@ -1686,28 +1713,28 @@
 
                 // Global function for toggling account details
                 window.toggleAccountDetails = function(accountCode) {
-                try {
-                    var detailRows = document.querySelectorAll('.moves-' + accountCode);
-                    var icon = document.getElementById('icon-' + accountCode);
-                    if (!detailRows.length || !icon) return;
-                    
-                    var isVisible = detailRows[0].classList.contains('show');
-                    detailRows.forEach(function(row) {
-                    if (isVisible) { 
-                        row.classList.remove('show'); 
-                    } else { 
-                        row.classList.add('show'); 
+                    try {
+                        var detailRows = document.querySelectorAll('.moves-' + accountCode);
+                        var icon = document.getElementById('icon-' + accountCode);
+                        if (!detailRows.length || !icon) return;
+                        
+                        var isVisible = detailRows[0].classList.contains('show');
+                        detailRows.forEach(function(row) {
+                            if (isVisible) { 
+                                row.classList.remove('show'); 
+                            } else { 
+                                row.classList.add('show'); 
+                            }
+                        });
+                        
+                        if (isVisible) { 
+                            icon.classList.remove('expanded'); 
+                        } else { 
+                            icon.classList.add('expanded'); 
+                        }
+                    } catch (err) {
+                        console.error('toggleAccountDetails error', err);
                     }
-                    });
-                    
-                    if (isVisible) { 
-                    icon.classList.remove('expanded'); 
-                    } else { 
-                    icon.classList.add('expanded'); 
-                    }
-                } catch (err) {
-                    console.error('toggleAccountDetails error', err);
-                }
                 };
                 ]]>
             </script>
