@@ -13,7 +13,20 @@ import base64
 
 _logger = logging.getLogger(__name__)
 
-
+blacklist_emails = ['onitshacontrolcentre@enugudisco.com', 'nnewicontrolcentre@enugudisco.com', 
+                    'oguicontrolcentre@enugudisco.com', 'newowerricontrolcentre@enugudisco.com', 
+                    'mbaisecontrolcentre@enugudisco.com', 'mbaisecontrolcentre@enugudisco.com', 
+                    'abakalikicontrolcentre@enugudisco.com',
+                    'saguodili@enugudisco.com',
+                    
+                    'jogbonna@enugudisco.com',
+                    'cijoma@enugudisco.com',
+                    'abiribainjectionsub@enugudisco.com',
+                    'newowerriinjectionsub@enugudisco.com',
+                    'newowerriinjectionsub@enugudisco.com',
+                    'ihiteubomainjectionsub@enugudisco.com',
+                    'injectionsub@enugudisco.com',
+                    ]
 class ImportRecords(models.TransientModel):
     _name = 'hr.import_record.wizard'
 
@@ -314,10 +327,19 @@ class ImportRecords(models.TransientModel):
             user, password = False, False
             # email_configs = self.env['hr.import_config'].search([])
             # email_blacklist = [rec.email_to_exclude.strip() for rec in email_configs] # e.g ['injection@email.com','esss@gmail.com']
-            login = email if email and email.endswith('@enugudisco.com') else vals.get('staff_number')
+            login = email if email and email.endswith('@enugudisco.com') and \
+                email not in blacklist_emails else vals.get('staff_number')
             if login:
                 _logger.info('LOGGING FOUND')
+                # empdate = datetime.strftime(vals.get('employment_date'), '%d-%m-Y')
+                # employement_date = empdate.split('-') 
+                # emp_day, emp_month = employement_date[0], employement_date[1]
                 password = ''.join(random.choice('EdcpasHwodfo!xyzus$rs1234567') for _ in range(10))
+                # password = "{}{}{}".format(vals.get('staff_number'),emp_day,emp_month)
+                # _logger.info("DATE DATA IS {}  AND PASSWORD IS {}".format(employement_date, password))
+                
+                # ''.join(random.choice('eedcpasswodforxyzusers1234567') for _ in range(10))
+                # '{}-{}'.format(fullname[:2].upper(), str(uuid.uuid4())[:8]), # MA-2132ERER
                 user_vals = {
 				'name' : fullname,
 				'login' : login,
@@ -325,60 +347,37 @@ class ImportRecords(models.TransientModel):
                 }
                 _logger.info(f"Creating employee Rep User..with password {fullname} and {user_vals.get('password')}.")
                 User = self.env['res.users'].sudo()
-                users = User.search([('login', '=', login), ('active', '=', True)])
-                
-                '''do extra thing to wipe away duplicate user'''
-                original_user = []
-                user_with_staff_number = []
-                for us in users:
-                    if us.login.endswith('@enugudisco.com'):
-                        original_user.append(us.id)
-                    else:
-                        user_with_staff_number.append(us.id)
-                        
-                user_found = original_user[0] if original_user else user_with_staff_number[0] if user_with_staff_number else False
-                user = False
-                if user_found:
-                    user = User.browse([user_found])
-                    '''if user, then merge the A, B item and filter the user.id '''
-                    merge_user = original_user + user_with_staff_number
-                    duplicate_users = merge_user.remove(user_found)
-                    for dp in duplicate_users:
-                        duplicate_usr = User.browse([dp])
-                        duplicate_usr.active = False
+                user = User.search([('login', '=', login), ('active', '=', True)],limit=1)
+
+                if user:
                     _logger.info("User already exists...")
-                    # connected_user = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
-                    # if connected_user:
-                    #     _logger.info("Different Employee using this login detail...checking staffno")
-                    #     login = vals.get('staff_number')
-                    #     user = User.search([('login', '=', login),('active', '=', True)],limit=1) # Checks if staffno exist
-                    #     if not user:
-                    #         user_vals['login'] = login
-                    #         user = User.create(user_vals)
-                    #         _logger.info("Creating User record...")
-                    #     else:
-                    #         password = False
-                    #         user_vals['password'] = False
-                    # else:
-                    #     password = False
-                    #     user_vals['password'] = False
+                    connected_user = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+                    if connected_user:
+                        _logger.info("Different Employee using this login detail...checking staffno")
+                        login = vals.get('staff_number')
+                        user = User.search([('login', '=', login),('active', '=', True)],limit=1) # Checks if staffno exist
+                        if not user:
+                            user_vals['login'] = login
+                            user = User.create(user_vals)
+                            _logger.info("Creating User record...")
+                        else:
+                            password = False
+                            user_vals['password'] = False
+                    else:
+                        password = False
+                        user_vals['password'] = False
                 else:
                     user = User.create(user_vals)
                     _logger.info("Creating User record if not existing...")
                 _logger.info('Adding user to group ...')
-                admin_user = self.env.ref('base.user_admin')
-                '''dont remove role for admin user'''
-                if admin_user:
-                    pass 
-                else:
-                    user.sudo().write({'groups_id':group_list})
+                user.sudo().write({'groups_id':group_list})
                 return user, user_vals.get('password')
             return user, password
         
         if self.import_type == "employee":
             for data_batch in data_gen:
                 for row in data_batch:
-                    company_row = row[27]
+                    company_row = row[27].replace(' ', '') if row[27] else 'xxx'
                     company_obj = self.env.ref(f"{company_row}") or self.env['res.company'].sudo([('code', '=', company_row)], limit=1)
                     _logger.info(f"Row data: {row}")
                     # try:
@@ -460,7 +459,7 @@ class ImportRecords(models.TransientModel):
             # raise ValidationError("NEW DATA")
             for data_batch in data_gen:
                 for row in data_batch:
-                    company_row = row[27]
+                    company_row = row[27].strip() if row[27] else 'xx'
                     company_obj = self.env.ref(f"{company_row}") or self.env['res.company'].sudo([('code', '=', company_row)], limit=1)
                     
                     ########################### This is for update purposes:
@@ -600,12 +599,19 @@ class ImportRecords(models.TransientModel):
                                 if dp.id != user.id:
                                     dp.active = False
                                     _logger.info(f"Duuplicate User {dp.id} deactivated...")
+                        # connected_user = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
                         if user:
-                            employee_id.sudo().update({'user_id': user.id})   
-                            _logger.info('fuckingshit2')
-                        # employee_id.sudo().user_id.update({
-                        # })
-                        _logger.info('fuckingshit3')
+                            linked_employee_user = self.env['hr.employee'].sudo().search([
+                                ('id', '!=', employee_id.id), ('user_id', '=', user.id)], limit=1)
+                            _logger.info(f'fuckingshit10  ==EMPLOTEE ID = {employee_id.id} user {user and user.id} user company {user.company_id.name} the company found {company_obj.name}')
+                            if not linked_employee_user:
+                                employee_id.sudo().update({'user_id': user.id})   
+                                _logger.info(f'fuckingshit2  =={user.id}')
+                                # employee_id.sudo().user_id.update({
+                                # })
+                                _logger.info(f'fuckingshit3  ==EMPLOTEE ID = {employee_id.id} user {user.id} user company {user.company_id.name} the company found {company_obj.name}')
+                        # else:
+                        #     user_with_staff_number
                         employee_id.sudo().user_id.update({
                             'branch_id': employee_id.branch_id.id,
                             'branch_ids': [(4, employee_id.branch_id.id)],
