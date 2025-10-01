@@ -1,77 +1,87 @@
-from odoo import http, fields
-from odoo.exceptions import ValidationError
-from odoo.tools import consteq, plaintext2html
+from odoo import http
 from odoo.http import request
-from datetime import date, datetime
-from dateutil.relativedelta import relativedelta
-import base64
 import json
 import logging
-import random
 
 _logger = logging.getLogger(__name__)
 
 class EedcReport(http.Controller):
     
-    @http.route(['/web/dataset/autocomplete_companies'], type='http', auth="user", methods=['POST', 'OPTIONS'], csrf=False)
-    def autocomplete_companies(self, **post):
-        """Autocomplete endpoint for company selection with CORS support"""
-        
-        if request.httprequest.method == 'OPTIONS':
-            return self._build_cors_preflight_response()
-        
+    @http.route([
+        '/report/html/<string:report_name>/<int:wizard_id>',
+    ], type='http', auth="user", methods=['GET'], csrf=False)
+    def report_html_wizard(self, report_name, wizard_id, **kw):
+        """Custom route to handle report generation from wizard"""
         try:
-            query = post.get('q', '').strip()
-            limit = int(post.get('page_limit', 10))
+            wizard = request.env['account.dynamic.report'].sudo().browse(wizard_id)
+            if not wizard.exists():
+                return request.not_found("Wizard not found")
             
-            _logger.info(f"Company autocomplete - Query: '{query}', Limit: {limit}")
+            report_data = wizard._generate_report_data()
+            
+            data = {
+                'doc_model': 'account.dynamic.report',
+                'company_reports': report_data,
+                'wizard_id': wizard_id,
+                'wizard': wizard,
+                'account_types': wizard._fields['account_type'].selection,
+            }
+            
+            html = request.env['ir.qweb'].sudo()._render(
+                'eedc_report.consolidated_district_report_template', 
+                data
+            )
+            
+            return request.make_response(
+                html,
+                headers=[
+                    ('Content-Type', 'text/html; charset=utf-8'),
+                    ('X-Frame-Options', 'SAMEORIGIN'),
+                ]
+            )
+            
+        except Exception as e:
+            _logger.error(f"Report error: {str(e)}", exc_info=True)
+            return request.make_response(
+                f"<html><body><h3>Error generating report</h3><p>{str(e)}</p></body></html>",
+                headers=[('Content-Type', 'text/html')]
+            )
+    
+    @http.route(['/web/dataset/autocomplete_companies'], 
+                type='http', auth="user", methods=['POST'], csrf=False)
+    def autocomplete_companies(self, **kw):
+        """HTTP autocomplete for companies"""
+        _logger.info(f"Autocomplete KW: {kw}")
+        try:
+            q = kw.get('q', '').strip()
+            try:
+                page_limit = int(kw.get('page_limit', 15))
+            except ValueError:
+                page_limit = 15
             
             domain = [('active', '=', True)]
-            if query:
-                domain.append(('name', 'ilike', query))
+            if q:
+                domain.append(('name', 'ilike', q))
+                
+            _logger.info(f"Autocomplete Search Domain: {domain}")
             
-            companies = request.env['res.company'].search(domain, limit=limit)
+            companies = request.env['res.company'].search(domain, limit=page_limit)
+            results = [{"id": c.id, "text": c.name} for c in companies]
             
-            results = [{"id": company.id, "text": company.name} for company in companies]
+            _logger.info(f"Result of search: {results}")
             
             response_data = {
                 "results": results,
-                "pagination": {"more": len(companies) >= limit}
+                "pagination": {"more": len(companies) >= page_limit}
             }
             
-            _logger.info(f"Company autocomplete response: {len(results)} companies found")
-            
-            response = request.make_response(
-                json.dumps(response_data),
-                headers=self._get_cors_headers()
-            )
-            return response
-            
-        except Exception as e:
-            _logger.error(f"Company autocomplete error: {str(e)}", exc_info=True)
-            error_response = {
-                "results": [], 
-                "pagination": {"more": False}, 
-                "error": str(e)
-            }
             return request.make_response(
-                json.dumps(error_response),
-                headers=self._get_cors_headers()
+                json.dumps(response_data),
+                headers=[('Content-Type', 'application/json')]
             )
-    
-    def _get_cors_headers(self):
-        """Return CORS headers for cross-origin requests"""
-        return [
-            ('Content-Type', 'application/json'),
-            ('Access-Control-Allow-Origin', '*'),  # Or specify your domain: 'https://apps.myeedc.com'
-            ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-            ('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With'),
-            ('Access-Control-Max-Age', '3600'),
-            ('Cache-Control', 'no-cache, no-store, must-revalidate'),
-        ]
-    
-    def _build_cors_preflight_response(self):
-        """Build response for OPTIONS preflight request"""
-        response = request.make_response('', headers=self._get_cors_headers())
-        response.status_code = 204  # No Content
-        return response
+        except Exception as e:
+            _logger.error(f"Autocomplete error: {str(e)}")
+            return request.make_response(
+                json.dumps({"results": [], "pagination": {"more": False}}),
+                headers=[('Content-Type', 'application/json')]
+            )
