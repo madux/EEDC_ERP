@@ -66,9 +66,9 @@ class AccountDynamicReport(models.Model):
         required=False, default="html"
     )
     
-    branch_ids = fields.Many2many('multi.branch', string='District')
     company_id = fields.Many2one('res.company')
-    company_ids = fields.Many2many('res.company', string='Companies')
+    company_ids = fields.Many2many('res.company', string='Companies') #, domain=lambda self: [('id', 'in', self.env.companies.ids)]
+    branch_ids = fields.Many2many('multi.branch', string='District') #, domain=lambda self: [('company_id', 'in', self.company_ids)]
     moveline_ids = fields.Many2many('account.move.line', string='Dummy move lines')
     # budget_id = fields.Many2one('ng.account.budget.line', string='Budget')
     fiscal_year = fields.Date(string='Fiscal Year', default=fields.Date.today())
@@ -176,12 +176,10 @@ class AccountDynamicReport(models.Model):
                 branch_ids = list(set(branch_ids + [user.branch_id.id]))
             res.update({'branch_ids': [(6, 0, branch_ids)]})
 
-        # default multiple companies (company_ids is many2many)
         if 'company_ids' in fields_list:
             comp_ids = user.company_ids.ids or ([user.company_id.id] if user.company_id else [])
             res.update({'company_ids': [(6, 0, comp_ids)]})
 
-        # if code still expects company_id (many2one), set the id not a record
         if 'company_id' in fields_list and user.company_id:
             res.update({'company_id': user.company_id.id})
 
@@ -302,7 +300,7 @@ class AccountDynamicReport(models.Model):
         if not all_branch_reports:
             raise ValidationError("No data could be generated for the selected criteria.")
         
-        budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
+        budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
         period_string = ""
         if not is_quarterly:
             period_string = (
@@ -339,7 +337,7 @@ class AccountDynamicReport(models.Model):
         year_start = end_date.replace(day=1, month=1)
         domain_end_date = end_date
         
-        tags = self.env['economic.tag'].search([('account_head_type', '=', self.account_head_type)])
+        tags = self.env['economic.tag'].search([('account_type', '=', self.account_type)])
         all_accounts = tags.mapped('account_ids')
         if not all_accounts: return []
 
@@ -349,8 +347,9 @@ class AccountDynamicReport(models.Model):
 
         # budget_domain = [('budget_type', '=', self.account_head_type), ('account_id', 'in', all_accounts.ids), ('branch_id', '=', branch.id)]
         # all_budget_lines = self.env['ng.account.budget.line'].search(budget_domain)
+        REVENUE_TYPES = ['income', 'income_other']
         
-        sum_field = 'credit' if self.account_head_type == 'Revenue' else 'debit'
+        sum_field = 'credit' if self.account_type in REVENUE_TYPES else 'debit'
 
         account_data = {}
         for acc in all_accounts:
@@ -981,7 +980,7 @@ class AccountDynamicReport(models.Model):
             sheet_name = report['title'].split('-')[0].strip()[:31] # Max 31 chars for sheet name
             sheet = workbook.add_sheet(sheet_name, cell_overwrite_ok=True)
             
-            budget_type_name = dict(self._fields['account_head_type'].selection).get(self.account_head_type, '')
+            budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
             q_map = {'first': 'Q1', 'second': 'Q2', 'third': 'Q3', 'fourth': 'Q4'}
             q_name = next((v for k, v in q_map.items() if k in self.report_type), "QX")
             report_name_text = dict(self._fields['report_type'].selection).get(self.report_type, '')
@@ -994,8 +993,8 @@ class AccountDynamicReport(models.Model):
             sheet.write_merge(1, 1, 0, 8, subtitle, subtitle_style)
             
             headers = []
-            is_capital = self.account_head_type == 'Capital'
-            is_revenue = self.account_head_type == 'Revenue'
+            is_capital = self.account_type == 'Capital'
+            is_revenue = self.account_type == 'Revenue'
 
             headers.append(('CODE' if is_revenue or not is_capital else 'DESCRIPTION', 3000))
             headers.append(('ECONOMIC' if is_revenue or not is_capital else 'CODE', 10000 if not is_capital else 3000))
@@ -1048,7 +1047,7 @@ class AccountDynamicReport(models.Model):
         workbook.save(fp)
         fp.seek(0)
         
-        report_name = f"{self.account_head_type}_{self.report_type}_{fields.Date.today()}.xls"
+        report_name = f"{self.account_type}_{self.report_type}_{fields.Date.today()}.xls"
         self.filename = report_name
         self.excel_file = base64.encodebytes(fp.read())
         fp.close()
@@ -1086,7 +1085,7 @@ class AccountDynamicReport(models.Model):
         root = ET.Element('FinancialReport', attrib={
             'generated_on': fields.Date.today().isoformat(),
             'report_type': self.report_type,
-            'account_head_type': self.account_head_type,
+            'account_type': self.account_type,
         })
 
         for report_data in all_branch_reports:
@@ -1131,7 +1130,7 @@ class AccountDynamicReport(models.Model):
 
         fp = io.BytesIO(pretty_xml_string.encode('utf-8'))
         
-        report_name = f"{self.account_head_type}_{self.report_type}_{fields.Date.today()}.xml"
+        report_name = f"{self.account_type}_{self.report_type}_{fields.Date.today()}.xml"
         self.xml_filename = report_name
         self.xml_file = base64.encodebytes(fp.read())
         fp.close()
