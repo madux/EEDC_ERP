@@ -7,9 +7,9 @@
     'depends': [
         'base', 'purchase', 'stock', 'company_memo'],
     'description': "ODOO Base Extension to customize base modules ",
-    'external_dependencies': {
-        'python': ['pandas', 'openpyxl']
-    },
+    # 'external_dependencies': {
+    #     'python': ['pandas', 'openpyxl']
+    # },
     "data": [
         'security/ir.model.access.csv',
         'views/res_partner_views.xml',
