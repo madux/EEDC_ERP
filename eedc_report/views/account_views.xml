@@ -7,7 +7,7 @@
 				<tree string="">
 					<field name="name"/>
 					<field name="parent_tag_id" /> 
-					<field name="account_head_type"/>
+					<field name="account_type"/>
 				</tree>
 			</field>
 		</record>
@@ -25,7 +25,7 @@
 								<field name="parent_tag_id" /> 
 							</group>
 							<group>
-								<field name="account_head_type"/>
+								<field name="account_type"/>
 								<field name="account_ids" widget="many2many_tags"/>
 							</group>
 						</group>
@@ -39,7 +39,7 @@
 			<field name="res_model">economic.tag</field>
 			<field name="view_mode">tree,form</field>
 			<field name="domain">[]</field>
-			<field name="context">{'group_by': 'account_head_type'}</field>
+			<field name="context">{'group_by': 'account_type'}</field>
 			<field name="help" type="html">
 				<p> Click New to create </p>
 			</field>
