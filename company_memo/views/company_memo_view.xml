@@ -577,7 +577,7 @@
 			</field>
 		</record>
 		<record model="ir.ui.view" id="tree_memo_model_view2">
-			<field name="name">Internal Memo Tree</field>
+			<field name="name">ERP Requests Tree</field>
 			<field name="model">memo.model</field>
 			<field name="priority">50</field>
 			<field name="arch" type="xml">
@@ -596,7 +596,7 @@
 			</field>
 		</record>
 		<record model="ir.ui.view" id="main_memo_model_search_view">
-			<field name="name">Internal Memo Request Search</field>
+			<field name="name">ERP Requests Search</field>
 			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
 				<search string="Internal Memo Filter"> 
@@ -670,7 +670,7 @@
 		</record>
 
 		<record model="ir.actions.act_window" id="internal_memo_model_action">
-			<field name="name">Internal Memo Request</field>
+			<field name="name">Internal ERP Requests</field>
 			<field name="res_model">memo.model</field>
 			<field name="type">ir.actions.act_window</field>
 		   <field name="domain">[('memo_type_key','not in',['helpdesk'])]</field>
@@ -680,7 +680,7 @@
 		</record>
 		
 		<record model="ir.actions.act_window" id="internal_memo_action_sent">
-			<field name="name">Internal Memo Request</field>
+			<field name="name">Internal ERP Requests</field>
 			<field name="res_model">memo.model</field>
 			<field name="domain">[('state', '=', 'Sent')]</field>
 			<field name="type">ir.actions.act_window</field>
@@ -688,7 +688,7 @@
 		</record>
 
 		<record model="ir.actions.act_window" id="internal_memo_action_Approve">
-			<field name="name">Internal Memo Request</field>
+			<field name="name">Internal ERP Requests</field>
 			<field name="res_model">memo.model</field>
 			<field name="domain">[('state', '=', 'Approve')]</field>
 			<field name="type">ir.actions.act_window</field>
@@ -696,7 +696,7 @@
 		</record>
 
 		<record model="ir.actions.act_window" id="memo_model_refuse_action">
-			<field name="name">Internal Memo Request</field>
+			<field name="name">ERP Requests</field>
 			<field name="res_model">memo.model</field>
 			<field name="domain">[('state', '=', 'Refuse')]</field>
 			<field name="type">ir.actions.act_window</field>
@@ -704,7 +704,7 @@
 		</record>
 
 		<record model="ir.actions.act_window" id="internal_memo_action_done">
-			<field name="name">Internal Memo Request</field>
+			<field name="name">Internal ERP Requests</field>
 			<field name="res_model">memo.model</field>
 			<field name="domain">[('state', '=', 'Done')]</field>
 			<field name="type">ir.actions.act_window</field>

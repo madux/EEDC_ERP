@@ -334,7 +334,7 @@
 			</field>
 		</record>
 		<record model="ir.ui.view" id="memo_model_document_search_view">
-			<field name="name">Internal Memo Request Search</field>
+			<field name="name">ERP Requests Search</field>
 			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
 				<search string="Filter"> 
