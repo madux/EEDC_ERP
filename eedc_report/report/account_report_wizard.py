@@ -747,29 +747,73 @@ class AccountDynamicReport(models.Model):
     
     @api.model
     def update_report_params(self, wizard_id, **kwargs):
+        """Update report parameters - with enhanced error handling"""
         try:
             wid = int(wizard_id)
-        except Exception:
+        except (ValueError, TypeError) as e:
+            _logger.error(f"Invalid wizard id: {wizard_id} - {str(e)}")
             return {'error': 'Invalid wizard id'}
 
         wizard = self.sudo().browse(wid)
         if not wizard.exists():
+            _logger.error(f"Wizard not found: {wid}")
             return {'error': 'Wizard not found'}
 
         update_vals = {}
+        
+        # Date validation
         if 'date_from' in kwargs and kwargs.get('date_from'):
-            update_vals['date_from'] = kwargs.get('date_from')
+            try:
+                date_from = kwargs.get('date_from')
+                if isinstance(date_from, str):
+                    date_from = fields.Date.from_string(date_from)
+                update_vals['date_from'] = date_from
+            except Exception as e:
+                _logger.error(f"Invalid date_from: {kwargs.get('date_from')} - {str(e)}")
+                return {'error': f'Invalid date_from format: {str(e)}'}
+        
         if 'date_to' in kwargs and kwargs.get('date_to'):
-            update_vals['date_to'] = kwargs.get('date_to')
+            try:
+                date_to = kwargs.get('date_to')
+                if isinstance(date_to, str):
+                    date_to = fields.Date.from_string(date_to)
+                update_vals['date_to'] = date_to
+            except Exception as e:
+                _logger.error(f"Invalid date_to: {kwargs.get('date_to')} - {str(e)}")
+                return {'error': f'Invalid date_to format: {str(e)}'}
+        
         if 'account_type' in kwargs and kwargs.get('account_type'):
-            update_vals['account_type'] = kwargs.get('account_type')
-        if 'company_ids' in kwargs and kwargs.get('company_ids'):
-            update_vals['company_ids'] = [(6, 0, kwargs.get('company_ids') or [])]
+            account_type = kwargs.get('account_type')
+            # Validate account_type against selection field
+            valid_types = [t[0] for t in self._fields['account_type'].selection]
+            if account_type in valid_types:
+                update_vals['account_type'] = account_type
+            else:
+                _logger.error(f"Invalid account_type: {account_type}")
+                return {'error': f'Invalid account_type: {account_type}'}
+        
+        if 'company_ids' in kwargs:
+            company_ids = kwargs.get('company_ids')
+            if company_ids is None:
+                company_ids = []
+            
+            # Validate company IDs exist
+            if company_ids:
+                valid_companies = self.env['res.company'].sudo().browse(company_ids).exists()
+                if len(valid_companies) != len(company_ids):
+                    _logger.warning(f"Some company IDs don't exist: {company_ids}")
+            
+            update_vals['company_ids'] = [(6, 0, company_ids)]
 
         if update_vals:
-            wizard.sudo().write(update_vals)
+            try:
+                wizard.sudo().write(update_vals)
+                _logger.info(f"Successfully updated wizard {wid} with: {update_vals}")
+            except Exception as e:
+                _logger.error(f"Failed to update wizard {wid}: {str(e)}", exc_info=True)
+                return {'error': f'Failed to update parameters: {str(e)}'}
         
-        return {'success': True}
+        return {'success': True, 'updated_fields': list(update_vals.keys())}
     
         
     def _get_period_string(self, start_date, end_date):
