@@ -347,6 +347,23 @@ class ResUsers(models.Model):
             
             approval_roles = user.role_ids.filtered('is_request_approver')
             _logger.info(f"Approval roles: {approval_roles.mapped('name')} (IDs: {approval_roles.ids})")
+            
+            if not approval_roles:
+                _logger.info(f"User {user.name} has no approval roles - removing from all stages")
+                current_ownerships = ownership_model.search([
+                    ('user_id', '=', user.id),
+                    ('employee_id', '=', employee.id)
+                ])
+                stages_to_clean = current_ownerships.mapped('stage_id')
+                
+                for stage in stages_to_clean:
+                    if employee in stage.approver_ids:
+                        stage.write({'approver_ids': [(3, employee.id)]})
+                        _logger.info(f"Removed employee {employee.name} from stage {stage.name}")
+                
+                current_ownerships.unlink()
+                _logger.info(f"Deleted {len(current_ownerships)} ownership records for user {user.name}")
+                continue
 
             stages_user_should_approve = self.env['memo.stage']
             
@@ -372,10 +389,16 @@ class ResUsers(models.Model):
                             _logger.info(f"Skipping role {role.name} - user company {user.company_id.name} not in role's allowed companies")
                             continue
                     
-                    if hasattr(user, 'branch_id') and user.branch_id:
-                        domain.append(('memo_config_id.branch_id', '=', user.branch_id.id))
-                        if role.branch_ids and user.branch_id not in role.branch_ids:
-                            _logger.info(f"Skipping role {role.name} - user branch {user.branch_id.name} not in role's allowed branches")
+                    if role.branch_ids:
+                        if hasattr(user, 'branch_id') and user.branch_id:
+                            if user.branch_id not in role.branch_ids:
+                                _logger.info(f"Skipping role {role.name} - user branch {user.branch_id.name} not in role's allowed branches")
+                            domain.append(('memo_config_id.branch_id', '=', user.branch_id.id))
+                        # if role.branch_ids and user.branch_id not in role.branch_ids:
+                        #     _logger.info(f"Skipping role {role.name} - user branch {user.branch_id.name} not in role's allowed branches")
+                        #     continue
+                        else:
+                            _logger.info(f"Skipping role {role.name} - role has branch restrictions but user has no branch assigned")
                             continue
                     
                     _logger.info(f"Searching for stages with domain: {domain}")
@@ -443,10 +466,19 @@ class ResUsers(models.Model):
                 ('employee_id', '=', employee.id)
             ])
             current_stages = current_ownerships.mapped('stage_id')
-            _logger.info(f"Current stages user is approving: {current_stages.mapped('name')} (Total: {len(current_stages)})")
+            _logger.info(f"Current ownerships found: {len(current_ownerships)}")
+            _logger.info(f"Current stages user is approving: {current_stages.mapped('name')} (IDs: {current_stages.ids})")
+            
+            for stage in stages_user_should_approve:
+                _logger.info(f"Stage '{stage.name}' currently has approvers: {stage.approver_ids.mapped('name')} (IDs: {stage.approver_ids.ids})")
+                _logger.info(f"Employee {employee.name} (ID: {employee.id}) in approvers? {employee.id in stage.approver_ids.ids}")
+            
+            actual_current_stages = current_stages.filtered(lambda s: employee in s.approver_ids)
 
-            stages_to_add = stages_user_should_approve - current_stages
-            stages_to_remove = current_stages - stages_user_should_approve
+            # stages_to_add = stages_user_should_approve - current_stages
+            # stages_to_remove = current_stages - stages_user_should_approve
+            stages_to_add = stages_user_should_approve - actual_current_stages
+            stages_to_remove = actual_current_stages - stages_user_should_approve
             
             _logger.info(f"Stages to add: {stages_to_add.mapped('name')} (Total: {len(stages_to_add)})")
             _logger.info(f"Stages to remove: {stages_to_remove.mapped('name')} (Total: {len(stages_to_remove)})")

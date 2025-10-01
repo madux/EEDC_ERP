@@ -63,32 +63,8 @@
                             </group>
                         </page>
                         
-                        <!-- <page string="Memo Approvals" attrs="{'invisible': [('is_request_approver', '=', False)]}">
-                            <group string="Company Context">
-                                <field name="company_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Leave empty for all companies"/>
-                            </group>
-                            <group string="Branch Context">
-                                <field name="branch_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Leave empty for all branches"/>
-                            </group>
-                            <separator string="How it Works"/>
-                            <div class="alert alert-info" style="margin: 10px;">
-                                <p><strong>Automatic Approval Assignment:</strong></p>
-                                <ul>
-                                    <li>When you assign this role to a user, they will be automatically added as approvers to memo stages that require this role.</li>
-                                    <li><strong>Company Filter:</strong> If companies are specified, the user will only be added to stages for memo configs in those companies.</li>
-                                    <li><strong>Branch Filter:</strong> If branches are specified, users will only be added to stages where their assigned branches intersect with the role's allowed branches.</li>
-                                    <li><strong>User Branch Matching:</strong> Users must have at least one branch that matches both the role's branch restrictions and the memo stage's branch requirement.</li>
-                                    <li>When you remove this role from a user, they will be automatically removed from the corresponding approvals.</li>
-                                </ul>
-                            </div>
-                        </page> -->
-                        
                         <page string="Assigned Users">
-                            <field name="user_ids" readonly="1">
+                            <field name="user_ids" options="{'no_create': True}">
                                 <tree>
                                     <field name="name"/>
                                     <field name="login"/>
@@ -114,6 +90,16 @@
                 Define logical roles like "Accountant" or "Sales Manager" and assign a set of permissions. When you assign this role to a user, they will automatically get all the associated security groups and memo approvals.
             </p>
         </field>
+    </record>
+
+    <record id="ir_action_server_synchronize" model="ir.actions.server">
+        <field name="name">Synchronize Role Users</field>
+        <field name="type">ir.actions.server</field>
+        <field name="model_id" ref="eedc_role_manager.model_user_role" />
+        <field name="binding_model_id" ref="eedc_role_manager.model_user_role" />
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+        <field name="code">action=model.sudo().action_sync_role_users()</field>
     </record>
 
     <menuitem id="menu_user_role"
