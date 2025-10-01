@@ -21,7 +21,6 @@ class EedcReport(http.Controller):
             query = post.get('q', '').strip()
             limit = int(post.get('page_limit', 10))
             
-            # Debug logging
             _logger.info(f"Company autocomplete - Query: '{query}', Limit: {limit}")
             
             domain = [('active', '=', True)]
@@ -37,10 +36,8 @@ class EedcReport(http.Controller):
                 "pagination": {"more": len(companies) >= limit}
             }
             
-            # Debug logging
             _logger.info(f"Company autocomplete response: {response_data}")
             
-            # Set proper content type
             response = request.make_response(
                 json.dumps(response_data),
                 headers=[('Content-Type', 'application/json')]
