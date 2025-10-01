@@ -1066,37 +1066,32 @@
                         $input.data('select2-initialized', true);
 
                         // --- 1. Select2 Initialization (CRITICAL: Use $('body') for placement) ---
+                        // Initialize Select2 v3.x with simple HTTP endpoint
                         $input.select2({
-                            minimumInputLength: 3,
                             placeholder: 'Type 3+ chars to search',
-                            allowClear: true,
+                            minimumInputLength: 3,
                             multiple: true,
-                            width: '100%', 
-
-                            // CRITICAL POSITIONING FIX: Use $('body') for attachment.
-                            // Select2 will internally position the dropdown absolutely relative to the body
-                            // This is the core reason the previous code worked for *visibility*.
-                            dropdownParent: $('body'), 
-                            dropdownCssClass: 'select2-companies-dropdown',
-                            
+                            allowClear: true,
+                            width: '100%',
+                            dropdownCssClass: 'compact-dropdown',
                             ajax: {
                                 url: '/web/dataset/autocomplete_companies',
                                 type: 'POST',
                                 dataType: 'json',
+                                cache: true,
                                 delay: 250,
-                                data: function (params) {
+                                data: function (term, page) {
                                     return {
-                                        q: params.term || '', 
-                                        page_limit: 20
+                                    q: term || '',
+                                    page_limit: 15,
+                                    page: page || 1
                                     };
                                 },
-                                processResults: function (data) {
-                                    return {
-                                        results: (data && data.results) ? data.results : [],
-                                        pagination: { more: !!(data && data.pagination && data.pagination.more) }
-                                    };
-                                },
-                                cache: true
+                                results: function (data, page) {
+                                    var res = data && data.results ? data.results : [];
+                                    var more = !!(data && data.pagination && data.pagination.more);
+                                    return { results: res, more: more };
+                                }
                             }
                         });
 
@@ -1441,7 +1436,7 @@
                     }
                     $input.data('select2-initialized', true);
 
-                    // Initialize Select2 v3.x with compact settings
+                    // Initialize Select2 v3.x with JSON-RPC format for autocomplete
                     $input.select2({
                         placeholder: 'Type 3+ chars to search',
                         minimumInputLength: 3,
@@ -1453,9 +1448,11 @@
                             url: '/web/dataset/autocomplete_companies',
                             type: 'POST',
                             dataType: 'json',
+                            //contentType: 'application/json',
                             cache: true,
                             delay: 250,
                             data: function (term, page) {
+                                // Format as JSON-RPC request
                                 return {
                                     q: term || '',
                                     page_limit: 15,
@@ -1463,14 +1460,20 @@
                                 };
                             },
                             results: function (data, page) {
+                                console.log('Select2 AJAX Response Data:', data);
+                                // Extract results from JSON-RPC response
+                                //var result = data && data.result ? data.result : {results: [], pagination: {more: false}};
                                 var res = data && data.results ? data.results : [];
                                 var more = !!(data && data.pagination && data.pagination.more);
+
+                                console.log('Select2 Processed Results:', res);
+                                
                                 return { results: res, more: more };
                             }
                         }
                     });
 
-                    // Enhanced dropdown positioning - SAFE FOR CROSS-ORIGIN
+                    // Enhanced dropdown positioning - cross-origin safe
                     $input.on('select2-open', function () {
                         var $drop = $('.select2-drop');
                         var $section = $input.closest('.companies-section');
@@ -1478,17 +1481,12 @@
                         if ($drop.length && $section.length) {
                             setTimeout(function() {
                                 try {
-                                    // Try to append to body for best positioning
-                                    // This will work in same-origin contexts
-                                    var targetContainer = document.body;
-                                    $drop.detach().appendTo(targetContainer);
+                                    // Try to append to body and position absolutely
+                                    $drop.detach().appendTo(document.body);
                                     
-                                    // Get precise positioning relative to the companies section
                                     var sectionOffset = $section.offset();
                                     var sectionHeight = $section.outerHeight();
                                     var sectionWidth = $section.outerWidth();
-                                    
-                                    // Position dropdown with additional clearance below the input area
                                     var topPosition = sectionOffset.top + sectionHeight + 4;
                                     
                                     $drop.css({
@@ -1515,7 +1513,6 @@
                                     
                                     var dropBottom = topPosition + $drop.outerHeight();
                                     if (dropBottom > scrollTop + windowHeight - 5) {
-                                        // Position above input instead, with clearance
                                         var abovePos = sectionOffset.top - $drop.outerHeight() - 4;
                                         if (abovePos > scrollTop + 5) {
                                             $drop.css({
@@ -1525,58 +1522,52 @@
                                         }
                                     }
                                 } catch (e) {
-                                    // Cross-origin error - fallback to natural positioning
-                                    console.warn('Cross-origin restriction detected, using fallback positioning');
-                                    // Dropdown will position naturally within iframe
+                                    // Cross-origin fallback - simple relative positioning
+                                    console.warn('Using fallback positioning:', e.message);
                                     $drop.css({
-                                        'position': 'relative',
-                                        'z-index': '999',
-                                        'width': '100%',
                                         'max-height': '150px',
-                                        'overflow-y': 'auto',
-                                        'margin-top': '2px'
+                                        'overflow-y': 'auto'
                                     });
                                 }
                             }, 5);
                         }
                     });
 
-                    // Position the status message above the companies field
+                    // Position status message - wait for Select2 to create it
                     function positionStatusMessage() {
-                        try {
-                            var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
-                            var $section = $('.companies-section');
-                            
-                            if ($status.length && $section.length) {
-                                var sectionOffset = $section.offset();
-                                $status.css({
-                                    'top': (sectionOffset.top - 25) + 'px',
-                                    'left': sectionOffset.left + 'px'
-                                });
+                        setTimeout(function() {
+                            try {
+                                var $status = $('span.select2-hidden-accessible[role="status"][aria-live="polite"]');
+                                var $section = $('.companies-section');
+                                
+                                if ($status.length && $section.length) {
+                                    var sectionOffset = $section.offset();
+                                    $status.css({
+                                        'display': 'block',
+                                        'position': 'fixed',
+                                        'top': (sectionOffset.top - 25) + 'px',
+                                        'left': sectionOffset.left + 'px',
+                                        'z-index': '10'
+                                    });
+                                }
+                            } catch (e) {
+                                console.warn('Could not position status message');
                             }
-                        } catch (e) {
-                            // Silently fail on cross-origin access
-                            console.warn('Could not position status message (cross-origin)');
-                        }
+                        }, 200);
                     }
 
-                    // Position initially and on window resize
-                    setTimeout(positionStatusMessage, 150);
-                    
-                    try {
-                        $(window).on('resize', positionStatusMessage);
-                    } catch (e) {
-                        console.warn('Could not attach resize handler (cross-origin)');
-                    }
-                    
-                
-                    // Update hidden field when selection changes
+                    // Position initially and on events
+                    positionStatusMessage();
+                    $input.on('select2-open select2-close', positionStatusMessage);
+                    $(window).on('resize', positionStatusMessage);
+
+                    // Track selection changes
                     $input.on('change', function () {
                         var data = $input.select2('data') || [];
                         console.log('Selected companies:', data);
                     });
 
-                    // Load initial companies
+                    // Load initial companies from wizard
                     function loadInitialCompanies() {
                         var initialIdsJson = $input.attr('data-initial-ids') || '[]';
                         var initialIds = [];
@@ -1589,7 +1580,12 @@
                             initialIds = [];
                         }
                         
-                        if (initialIds.length === 0) return;
+                        if (initialIds.length === 0) {
+                            console.log('No initial companies to load');
+                            return;
+                        }
+                        
+                        console.log('Loading initial companies:', initialIds);
                         
                         $.ajax({
                             url: '/web/dataset/call_kw/res.company/name_get',
@@ -1621,9 +1617,13 @@
                                     
                                     try {
                                         $input.select2('data', initialData);
+                                        console.log('Initial companies loaded successfully');
                                     } catch (err) {
                                         $input.trigger('change');
+                                        console.warn('Fallback: triggered change event');
                                     }
+                                } else {
+                                    console.warn('Invalid response format for initial companies');
                                 }
                             },
                             error: function(xhr, status, error) {
@@ -1634,7 +1634,7 @@
 
                     setTimeout(loadInitialCompanies, 50);
 
-                    // Apply filters with correct model name
+                    // Apply filters - reload current page (no new window)
                     $apply.on('click', function (e) {
                         e.preventDefault();
                         
@@ -1648,12 +1648,20 @@
                         var dateTo = $('#rpt_date_to').val() || null;
                         var accountType = $('#rpt_account_type').val() || null;
                         
-                        // Get selected companies directly from Select2
+                        // Get selected companies from Select2
                         var companiesData = $input.select2('data') || [];
                         var companyIds = companiesData.map(function(item) {
                             return parseInt(item.id, 10);
                         }).filter(function(id) {
                             return !isNaN(id);
+                        });
+
+                        console.log('Applying filters:', {
+                            wizardId: wizardId,
+                            dateFrom: dateFrom,
+                            dateTo: dateTo,
+                            accountType: accountType,
+                            companyIds: companyIds
                         });
 
                         $loading.addClass('show');
@@ -1690,7 +1698,8 @@
                                     }
                                     
                                     if (resp.result.success) {
-                                        // Just reload the current page - it will regenerate with new params
+                                        console.log('Filters updated, reloading page...');
+                                        // Reload CURRENT page (not new window)
                                         window.location.reload(true);
                                     } else {
                                         alert('Error: Failed to update parameters');
@@ -1700,6 +1709,7 @@
                                 }
                             },
                             error: function(xhr, status, error) {
+                                console.error('AJAX error:', error, xhr);
                                 alert('Network error: ' + error);
                             },
                             complete: function() {
@@ -1737,7 +1747,7 @@
                     }
                 };
                 ]]>
-            </script>
+                </script>
 
             <style>
                 /* ========== ULTRA-COMPACT FILTER SECTION ========== */

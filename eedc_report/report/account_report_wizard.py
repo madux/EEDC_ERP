@@ -616,7 +616,7 @@ class AccountDynamicReport(models.Model):
                     key=lambda x: x.get('date', ''), reverse=True
                 )
 
-
+    
     def action_generate_consolidated_district_report(self):
         """Generate consolidated district report for browser display - now supports multiple companies"""
         self.ensure_one()
@@ -629,7 +629,7 @@ class AccountDynamicReport(models.Model):
         _logger.info(f"Format: {self.format}")
         _logger.info(f"Selected Companies: {[c.name for c in self.company_ids]}")
         _logger.info(f"Selected Branches: {[b.name for b in self.branch_ids]}")
-        _logger.info(f"Selected Accounts: {len(self.account_ids)} - {[(a.code, a.name) for a in self.account_ids[:3]]}")
+        _logger.info(f"Wizard ID: {self.id}")
         _logger.info("="*80)
         
         if self.report_type != 'consolidated_district':
@@ -639,80 +639,70 @@ class AccountDynamicReport(models.Model):
         companies_to_process = self.company_ids or self.env['res.company'].search([])
         _logger.info(f"Companies to process: {[c.name for c in companies_to_process]}")
         
-        start_date, end_date, month_headers = self._get_date_range()
-        _logger.info(f"Computed date range: {start_date} to {end_date}")
-        
-        all_company_reports = []
-        company_ids_list = []
-        
-        for company in companies_to_process:
-            _logger.info(f"\n{'='*60}")
-            _logger.info(f"Processing company: {company.name}")
-            _logger.info(f"{'='*60}")
-            
-            report_lines, district_headers, district_codes, company_id = \
-                self._get_consolidated_district_data(start_date, end_date, month_headers, company)
-            
-            _logger.info(f"Result for {company.name}: {len(report_lines)} report lines")
-            
-            if report_lines:
-                budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
-                period_string = self._get_period_string(start_date, end_date)
-                
-                report_data = {
-                    'report_lines': report_lines,
-                    'district_headers': district_headers,
-                    'district_codes': district_codes,
-                    'company_name': company.name,
-                    'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
-                    'account_type': self.account_type,
-                    'res_company': company,
-                }
-                all_company_reports.append(report_data)
-                company_ids_list.append(company_id)
-                _logger.info(f"✓ Added report for {company.name}")
-            else:
-                _logger.warning(f"✗ No data for {company.name} - SKIPPING")
-        
-        _logger.info(f"\n{'='*80}")
-        _logger.info(f"FINAL RESULT: {len(all_company_reports)} company reports generated")
-        _logger.info(f"{'='*80}\n")
-        
-        if not all_company_reports:
-            _logger.error("VALIDATION ERROR: No data could be generated!")
-            _logger.error("Troubleshooting checklist:")
-            _logger.error(f"1. Journal entries exist? Check account.move.line for date range {start_date} to {end_date}")
-            _logger.error(f"2. Account type correct? Current: '{self.account_type}'")
-            _logger.error(f"3. Account head type correct? Current: '{self.account_head_type}' (affects Revenue vs Expenditure)")
-            _logger.error(f"4. Branches configured? Current: {[b.name for b in self.branch_ids or []]}")
-            _logger.error(f"5. Company IDs correct? Current: {[c.id for c in self.company_ids or []]}")
-            raise ValidationError("No data could be generated for the selected criteria.")
-        
-        data = {
-            'doc_model': self._name,
-            'company_reports': all_company_reports,
-            'wizard_id': self.id,
-            'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
-            'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
-            'account_types': self._fields['account_type'].selection,
-            'current_account_type': self.account_type,
-            'current_company_ids': company_ids_list,
-            'current_company_ids_json': json.dumps(company_ids_list),
-        }
-        
-        _logger.info(f"Generating report with format: {self.format}")
+        if not companies_to_process:
+            raise ValidationError("No companies selected or available.")
         
         if self.format == 'html':
-            report_action = self.env.ref('eedc_report.action_consolidated_district_report')
-            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-            report_obj.sudo().update({'report_type': 'qweb-html'})
-        else:
-            report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
-            report_obj = self.env['ir.actions.report'].sudo().browse([report_action.id])
-            report_obj.sudo().update({'report_type': 'qweb-pdf'})
+            report_url = f'/report/html/eedc_report.consolidated_district_report_template/{self.id}'
+            _logger.info(f"Redirecting to custom route: {report_url}")
+            
+            return {
+                'type': 'ir.actions.act_url',
+                'url': report_url,
+                'target': 'new',
+            }
         
-        _logger.info("✓ Report action prepared successfully")
-        return report_action.report_action(self, data=data)
+        else:
+            start_date, end_date, month_headers = self._get_date_range()
+            all_company_reports = []
+            company_ids_list = []
+            
+            for company in companies_to_process:
+                _logger.info(f"\n{'='*60}")
+                _logger.info(f"Processing company: {company.name}")
+                _logger.info(f"{'='*60}")
+                
+                report_lines, district_headers, district_codes, company_id = \
+                    self._get_consolidated_district_data(start_date, end_date, month_headers, company)
+                
+                _logger.info(f"Result for {company.name}: {len(report_lines)} report lines")
+                
+                if report_lines:
+                    budget_type_name = dict(self._fields['account_type'].selection).get(self.account_type, '')
+                    period_string = self._get_period_string(start_date, end_date)
+                    
+                    report_data = {
+                        'report_lines': report_lines,
+                        'district_headers': district_headers,
+                        'district_codes': district_codes,
+                        'company_name': company.name,
+                        'subtitle': f"{budget_type_name.upper()} - {period_string.upper()}",
+                        'account_type': self.account_type,
+                        'res_company': company,
+                    }
+                    all_company_reports.append(report_data)
+                    company_ids_list.append(company_id)
+                    _logger.info(f"✓ Added report for {company.name}")
+                else:
+                    _logger.warning(f"✗ No data for {company.name} - SKIPPING")
+            
+            if not all_company_reports:
+                raise ValidationError("No data could be generated for the selected criteria.")
+            
+            data = {
+                'doc_model': self._name,
+                'company_reports': all_company_reports,
+                'wizard_id': self.id,
+                'current_date_from': self.date_from.strftime('%Y-%m-%d') if self.date_from else '',
+                'current_date_to': self.date_to.strftime('%Y-%m-%d') if self.date_to else '',
+                'account_types': self._fields['account_type'].selection,
+                'current_account_type': self.account_type,
+                'current_company_ids': company_ids_list,
+                'current_company_ids_json': json.dumps(company_ids_list),
+            }
+            
+            report_action = self.env.ref('eedc_report.action_consolidated_district_report_pdf')
+            return report_action.report_action(self, data=data)
 
 
     def _generate_report_data(self):
