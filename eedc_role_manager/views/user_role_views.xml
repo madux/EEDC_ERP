@@ -69,7 +69,7 @@
                                     <field name="name"/>
                                     <field name="login"/>
                                     <field name="branch_ids" widget="many2many_tags"/>
-                                    <field name="employee_id"/>
+                                    <field name="company_id"/>
                                 </tree>
                             </field>
                         </page>

@@ -43,12 +43,12 @@
             parent="company_memo.memo_configuration"
             sequence="15"/>
 
-    <menuitem
+    <!-- <menuitem
             id="res_group_role_menu_users"
             name="User role"
             action="company_memo.res_group_role_action"
             parent="base.menu_users"
-            sequence="4"/>
+            sequence="4"/> -->
 
 
     
