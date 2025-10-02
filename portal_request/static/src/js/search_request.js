@@ -54,7 +54,7 @@ odoo.define('portal_request.search_request', function (require) {
                 console.log("the search")
                 var get_search_query = $("#search_input_panel").val();
                 $("#search_input_panel").val("");
-                window.location.href = `/my/requests/param/${get_search_query}`
+                window.location.href = `/my/requests/param?searchme=${get_search_query}`
             },
 
             'click #app-icon': function(ev){

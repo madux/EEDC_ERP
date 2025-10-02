@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'wizard/import_employee_view.xml',
         'wizard/import_product_wizard.xml',
+        'wizard/import_data.xml',
         
     ],
     "sequence": 3,

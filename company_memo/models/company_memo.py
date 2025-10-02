@@ -38,7 +38,7 @@ class Memo_Model(models.Model):
         if hasattr(self.env['memo.model'], 'payment_ids'):
             for rec in self.payment_ids:
                 rec.memo_reference = result.id
-        result.code = f"{user_company.name[0].capitalize()}/{project_prefix}0000{result.id}" 
+        result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{user_company.name[0].capitalize()}/{project_prefix}0000{result.id}/{dept_suffix}" 
         return result
     
     def _compute_attachment_number(self):
@@ -93,6 +93,9 @@ class Memo_Model(models.Model):
     memo_awaiting_procurement_request_status = fields.Boolean('')
     memo_soe_status = fields.Boolean('')
     memo_bagde_status = fields.Boolean('')
+    # USED TO MIGRATE OLD ERP DATA SUCH AS CASH ADVANCE
+    migrated_legacy_id = fields.Char('Migrated Regacy record ID')
+    migrated_legacy_module = fields.Char('Migrated Request module')
     memo_bagde_undone = fields.Boolean('', default=True)
     branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id)
     dummy_memo_types = fields.Many2many(
