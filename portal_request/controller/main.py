@@ -1262,9 +1262,12 @@ class PortalRequest(http.Controller):
     #     query_string = urlparts.query
     #     _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
-    # @http.route(['/my/requests', '/my/requests/<string:type>', '/my/requests/param/<string:search_param>', '/my/requests/param/<string:search_param>', '/my/requests/page/<string:page>'], type='http', auth="user", website=True)
-    @http.route(['/my/requests', '/my/requests/<string:type>', '/my/requests/param/<string:search_param>','/my/requests/<string:type>?search=<string:search_input_query>' '/my/requests/param/<string:search_param>', '/my/requests/page/<string:page>'], type='http', auth="user", website=True)
-    def my_requests(self, type=False, page=False, search_param=False, search_input_query=False):
+    @http.route(['/my/requests', '/my/requests/<string:type>', 
+                 '/my/requests/param/<path:search_param>',
+                 '/my/requests/param', 
+                 '/my/requests/page/<string:page>'], 
+                type='http', auth="user", website=True)
+    def my_requests(self, type=False, page=False):
         """This route is used to call the requesters or user records for display
         page: the pagination index: prev or next
         type: material_request
@@ -1276,7 +1279,11 @@ class PortalRequest(http.Controller):
             sessions['start'] = 0 
             sessions['end'] = 10
         search_input_query2 = request.params.get('search')
-        _logger.info(f"Search sest {search_input_query2} {search_input_query}")
+        _logger.info(f"Search sest {search_input_query2} {request.params.get('searchme')}, search_input_panel == {request.params.get('search_input_panel')}")
+        
+        search_input_query = request.params.get('searchme')
+        search_param = request.params.get('search_param')
+        search_input_panel = request.params.get('search_input_panel')
 
         all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].sudo().search([])]
         
@@ -1290,53 +1297,84 @@ class PortalRequest(http.Controller):
                                 
         def get_date_query(date_query):
             date_val = None
-            for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
-                try:
-                    date_val = datetime.strptime(date_query, fmt).date()
-                    break
-                except ValueError:
-                    pass 
+            if date_query:
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+                    try:
+                        date_val = datetime.strptime(date_query, fmt).date()
+                        break
+                    except ValueError:
+                        pass 
             return date_val 
         
         request_id = request.env['memo.model'].sudo()
-        domain = [
+        def query_domain(query):
+            domain = [
                 ('active', '=', True),
-                '|','|','|','|','|',('employee_id.user_id', '=', user.id),
-                ('users_followers.user_id','=', user.id),
+                '|', ('code', 'ilike', query),
+                ('name', 'ilike', query),
+                '|','|','|','|','|',
+                ('employee_id.user_id.id', '=', user.id),
+                ('users_followers.user_id.id','=', user.id),
                 ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
                 ('employee_id.parent_id.user_id.id','=', user.id),
                 ('memo_setting_id.approver_ids.user_id.id','=', user.id),
                 ('stage_id.approver_ids.user_id.id','=', user.id),
+                
             ]
-        domain += [
-            ('memo_type_key', 'in', memo_type),
-        ]
-        if search_input_query:
+            return domain
+        domain_type = domain = [
+                ('active', '=', True),
+                ('memo_type_key', 'in', memo_type),
+                '|','|','|','|','|',
+                ('employee_id.user_id.id', '=', user.id),
+                ('users_followers.user_id.id','=', user.id),
+                ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+                ('employee_id.parent_id.user_id.id','=', user.id),
+                ('memo_setting_id.approver_ids.user_id.id','=', user.id),
+                ('stage_id.approver_ids.user_id.id','=', user.id),
+                
+            ]
+        if type and not search_input_query or not search_param or not search_input_panel:
+            domain = domain_type
+        elif search_input_query or search_input_panel:
             requests = request.httprequest 
-            domain += [
-                '|','|', '|', ('name', 'ilike', search_param),
-                ('code', 'ilike', search_param),
-                ('employee_id.id', 'ilike', search_param),
-                ('employee_id.employee_number', 'ilike', search_input_query),
-            ]
-            date_search = get_date_query(search_input_query)
+            qry_param = search_input_query or search_input_panel 
+            if not type:
+                domain = query_domain(qry_param)
+            else:
+                domain = domain_type
+            date_search = get_date_query(qry_param)
             if date_search:
                 domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        if search_param:
-            requests = request.httprequest 
-            # url_obj = self.get_request_info()
-            # self.get_request_info(requests)
-            domain += [
-                '|', ('name', 'ilike', search_param),
-                ('code', 'ilike', search_param),
-            ]
+        elif search_param or request.params.get('search_param'):
+            search_param = search_param or request.params.get('search_param')
+            requests = request.httprequest  
+            # domain = [
+            #     ('active', '=', True),
+            #     '|', ('code', 'ilike', search_param),
+            #     ('name', 'ilike', search_param),
+            #     '|','|','|','|','|',
+            #     ('employee_id.user_id.id', '=', user.id),
+            #     ('users_followers.user_id.id','=', user.id),
+            #     ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+            #     ('employee_id.parent_id.user_id.id','=', user.id),
+            #     ('memo_setting_id.approver_ids.user_id.id','=', user.id),
+            #     ('stage_id.approver_ids.user_id.id','=', user.id),
+                
+            # ]
+            if not type:
+                domain = query_domain(search_param)
+            else:
+                domain = domain_type
             date_search = get_date_query(search_param)
             if date_search:
                 domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-            
+        else:
+            domain = [('id', '=', 0)]    
         start, end = self.get_pagination(page)# if page else False, False
-        _logger.info(f"Session storage is {sessions.get('start')} {sessions.get('end')}")
+        _logger.info(f"and domain is {domain} Session storage is {sessions.get('start')} {sessions.get('end')}")
         requests = request_id.search(domain)
+        
         if requests:
             requests = requests[start:end]# if page else request_id.search(domain)
             sessions['start'] = start
@@ -1344,6 +1382,8 @@ class PortalRequest(http.Controller):
         else:
             requests = False
         values = {'requests': requests}
+        _logger.info(f"Records found {requests} -- valus to render {values}")
+        
         return request.render("portal_request.my_portal_request", values)
     
     # def get_leave_days_taken(self, record):

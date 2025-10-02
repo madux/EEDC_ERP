@@ -25,7 +25,7 @@ class StockPicking(models.Model):
             # checks the property_stock_inventory to ensure products is of type inventory loss 
             if quant.product_id.property_stock_inventory.usage != 'inventory':
                 if not self._get_branch_company_inventory_loss_location():
-                    raise ValidationError(f"{quant.product_id.name} does not have location with inventory loss type set on the property_stock_inventory")
+                    raise ValidationError(f"{self.company_id.name} must have a location of type - inventory loss")
                 else:
                     quant.product_id.sudo().property_stock_inventory = self._get_branch_company_inventory_loss_location().id
             # Create and validate a move so that the quant matches its `inventory_quantity`.

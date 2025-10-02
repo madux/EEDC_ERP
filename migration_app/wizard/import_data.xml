@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_import_data_record_form_view" model="ir.ui.view">
+            <field name="name">import.data.wizard</field>
+            <field name="model">import.data.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Import ">
+                    <header>
+                        Import 
+                    </header>
+                    <group>
+                        
+                        <field name="filename" invisible="1"/> 
+                        <field name="import_type"/> 
+                        <field name="model_import"/> 
+                        <field name="index"/> 
+                    </group>
+                    <group>
+                        <field name="data_file" filename="name"/> 
+                        <field name="company_id"/> 
+                        <field name="branch_id"/> 
+                        <field name="memo_config_id"/> 
+                        <field name="default_employee_id"/> 
+                        <field name="clear_data"/> 
+                    </group>
+                    <footer>
+                        <button name="import_records_action" string="Migrate Employee Record" type="object"  class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>   
+        <record id="action_wizard_data_import_migration_record" model="ir.actions.act_window">
+            <field name="name">Import</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">import.data.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">current</field>
+        </record>
+        <menuitem id="menu_import_data_first_level" name="Import Other data" groups="hr.group_hr_manager" sequence="17" parent="migration_app.menu_import_root"/> 
+        <menuitem id="menu_import_data_records_1" name="Import Data" groups="hr.group_hr_manager" sequence="16" parent="migration_app.menu_import_data_first_level" action="action_wizard_data_import_migration_record"/> 
+</odoo>
