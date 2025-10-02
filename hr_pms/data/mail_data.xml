@@ -27,13 +27,13 @@
                                             <ul>
                                                 <li>URL: <a href='/web'>Click the link</a> </li>
                                                 
-                                                <!-- <li>URL: <a>https://hrpms.myeedc.com/web/login</a> </li> -->
+                                                <li>URL: <a>https://hrpms.myeedc.com/web/login</a> </li>
                                                 <li>Username: <t t-out="object.user_id.login"/></li>
                                                 <li>Password: <t t-out="object.migrated_password or ''"/></li>
                                             </ul>
 
                                             Should you require any additional information, please contact ICT support for help.<br/>
-                                            <a href='https://easypaybillsng.com/#Contact'>Click ICT Support link</a>
+                                            <a href='https://ictsupport.eedc.online'>Click ICT Support link</a>
                                             <br /><br/>
                                             Regards,<br />
                                             --<br/>HR Administrator
@@ -76,12 +76,12 @@
                                             A User Account has been generated for your Subordinate because he/she has no organizational or private email for him/ her to access their Performance Appraisal System. <br/>
                                             Kindly pass the following credentials to him/her to access the system.
                                             <ul>
-                                                <li>URL: <a href='https://easypaybillsng.com/#Contact'>Click the link</a> or Copy the URL: <a>https://easypaybillsng.com/#Contact</a> </li>
-                                                <li>Username: ${object.user_id.login}</li>
-                                                <li>Password: ${object.migrated_password or ''}</li>
+                                                <li>URL: <a href='https://hrpms.myeedc.com/web/login'>Click the link</a> or Copy the URL: <a>https://hrpms.myeedc.com/web/login</a> </li>
+                                                <li>Username: <t t-out="object.user_id.login"/></li>
+                                                <li>Password: <t t-out="object.migrated_password or ''"/></li>
                                             </ul>
                                             Should you require any additional information, please contact ICT support for help.<br/>
-                                            <a href='https://easypaybillsng.com/#Contact'>Click ICT Support link</a>
+                                            <a href='https://ictsupport.eedc.online'>Click ICT Support link</a>
                                             <br /><br/>
                                             Regards,<br />
                                             --<br/>HR Administrator
