@@ -6,6 +6,7 @@ from odoo import http
 import random
 from lxml import etree
 from bs4 import BeautifulSoup
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import logging
 _logger = logging.getLogger(__name__)
@@ -19,15 +20,37 @@ class Memo_Model(models.Model):
     _rec_name = "name"
     _order = "id desc"
      
+    # @api.model
+    # def create(self, vals):
+    #     code_seq = self.env["ir.sequence"].next_by_code("memo.model") or ""
+    #     ms_config = self.env['memo.config'].browse([vals.get('memo_setting_id')])
+    #     project_prefix = 'REF'
+    #     dept_suffix = ''
+    #     user_company = self.env.user.company_id
+    #     if ms_config:
+    #         project_prefix = ms_config.prefix_code or 'REF'
+    #         dept_suffix = ms_config.department_code or 'X'
+    #     result = super(Memo_Model, self).create(vals)
+    #     if self.attachment_ids:
+    #         self.attachment_ids.write({'res_model': self._name, 'res_id': self.id})
+    #     if self.invoice_ids:
+    #         for rec in self.invoice_ids:
+    #             rec.memo_id = self.id
+    #     if hasattr(self.env['memo.model'], 'payment_ids'):
+    #         for rec in self.payment_ids:
+    #             rec.memo_reference = result.id
+    #     result.code = f"{user_company.name[0].capitalize()}/{project_prefix}0000{result.id}" 
+    #     return result
+    
     @api.model
     def create(self, vals):
         code_seq = self.env["ir.sequence"].next_by_code("memo.model") or ""
         ms_config = self.env['memo.config'].browse([vals.get('memo_setting_id')])
-        project_prefix = 'REF'
+        project_prefix = 'MR'
         dept_suffix = ''
         user_company = self.env.user.company_id
         if ms_config:
-            project_prefix = ms_config.prefix_code or 'REF'
+            project_prefix = ms_config.prefix_code or 'MR'
             dept_suffix = ms_config.department_code or 'X'
         result = super(Memo_Model, self).create(vals)
         if self.attachment_ids:
@@ -38,7 +61,10 @@ class Memo_Model(models.Model):
         if hasattr(self.env['memo.model'], 'payment_ids'):
             for rec in self.payment_ids:
                 rec.memo_reference = result.id
-        result.code = f"{user_company.name[0].capitalize()}/{project_prefix}0000{result.id}" 
+        
+        current_month = datetime.now().strftime('%Y/%m')
+        
+        result.code = f"{project_prefix}/{current_month}/{result.id}"
         return result
     
     def _compute_attachment_number(self):
