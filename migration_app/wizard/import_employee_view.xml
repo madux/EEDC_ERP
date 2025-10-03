@@ -47,8 +47,8 @@
             </field>	
 	    </record>
         
-        <menuitem id="menu_import_root" name="Migration App" groups="base.group_system" sequence="10"/> 
-        <menuitem id="menu_import_gt_first_level" name="HR" groups="hr.group_hr_manager" sequence="16" parent="migration_app.menu_import_root"/> 
-        <menuitem id="menu_import_gt_records_1" name="Import Employees" groups="hr.group_hr_manager" sequence="16" parent="migration_app.menu_import_gt_first_level" action="action_wizard_hr_import_migration_record"/> 
-        <menuitem id="menu_import_gt_records" name="Import Records" groups="hr.group_hr_manager" sequence="16" parent="hr_pms.view_hr_pms_config_menu" action="action_wizard_hr_import_migration_record"/> 
+        <menuitem id="menu_import_root" name="Migration App" sequence="10"/> 
+        <menuitem id="menu_import_gt_first_level" name="HR" sequence="16" parent="migration_app.menu_import_root"/> 
+        <menuitem id="menu_import_gt_records_1" name="Import Employees" sequence="16" parent="migration_app.menu_import_gt_first_level" action="action_wizard_hr_import_migration_record"/> 
+        <menuitem id="menu_import_gt_records" name="Import Records" sequence="16" parent="hr_pms.view_hr_pms_config_menu" action="action_wizard_hr_import_migration_record"/> 
 </odoo>

@@ -43,7 +43,8 @@ class Memo_Model(models.Model):
         
         current_month = datetime.now().strftime('%Y/%m')
         
-        result.code = f"{project_prefix}/{current_month}/{result.id}"
+        # result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
+        result.code =  f"{project_prefix}/{current_month}/{result.id}"
         return result
     
     def _compute_attachment_number(self):
@@ -98,6 +99,9 @@ class Memo_Model(models.Model):
     memo_awaiting_procurement_request_status = fields.Boolean('')
     memo_soe_status = fields.Boolean('')
     memo_bagde_status = fields.Boolean('')
+    # USED TO MIGRATE OLD ERP DATA SUCH AS CASH ADVANCE
+    migrated_legacy_id = fields.Char('Migrated Regacy record ID')
+    migrated_legacy_module = fields.Char('Migrated Request module')
     memo_bagde_undone = fields.Boolean('', default=True)
     branch_id = fields.Many2one('multi.branch', string='Branch', default=lambda self: self.env.user.branch_id.id)
     dummy_memo_types = fields.Many2many(

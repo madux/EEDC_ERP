@@ -1700,7 +1700,7 @@ odoo.define('portal_request.portal_request', function (require) {
             'click .search_panel_btn': function(ev){
                 console.log("the search")
                 var get_search_query = $("#search_input_panel").val()
-                window.location.href = `/my/requests/param/${get_search_query}`
+                window.location.href = `/my/requests/param?searchme=${get_search_query}`
             },
 
             'click .set_state_draft': function(ev){
