@@ -33,7 +33,7 @@ def get_url(id):
 
 def get_model_url(id, model):
     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-    internal_path = "/web#id={}&model={}&view_type=form".format(id, model)
+    internal_path = "/my/request/view/%s" % (id) # "/web#id={}&model={}&view_type=form".format(id, model)
     internal_url = internal_path #  base_url + internal_path
     return internal_url
 
@@ -863,7 +863,7 @@ class PortalRequest(http.Controller):
             if product:
                 domain = [
                     ('company_id', '=', request.env.user.company_id.id),
-                     ('branch_id', '=', request.env.user.branch_id.id),
+                    #  ('branch_id', '=', request.env.user.branch_id.id),
                      ('usage', '=', 'internal')
                 ] 
                 # _logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
@@ -878,6 +878,7 @@ class PortalRequest(http.Controller):
                 # should_bypass_reservation : False
                 if request_type in ['material_request'] and product.detailed_type in ['product']:
                     location_ids = request.env['stock.location'].sudo().search(domain)
+                    _logger.info(f"WETIN BE LOCATIONS {location_ids}")
                     if not location_ids:
                         return {
                             "status": False,
@@ -889,16 +890,38 @@ class PortalRequest(http.Controller):
                     product_qty = float(qty) if qty else 0
                     total_availability = 0
                     for loc in location_ids:
-                        location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
+                        _logger.info(f"WETIN BE LOCATIONS and product {loc}, {product.id}, {product.name}")
+                        location_with_qty = request.env['stock.quant'].sudo().search(
+                            [('location_id', '=', loc.id), ('product_id', '=', product.id),('quantity', '>', 0)
+                             ]
+                            )
+                        _logger.info(f"WETIN BE LOCATIONS quant {location_with_qty.quantity}")
+                        # location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
                         if location_with_qty:
-                            location = loc
-                            total_availability = sum([r.available_quantity for r in location_with_qty])
-                            break
+                            for lc_quant in location_with_qty:
+                                total_availability += lc_quant.quantity
+                                if lc_quant.quantity > product_qty: # if any is greater than request qty, use the location
+                                    location = loc
+                                    break
+                                else:
+                                    location = loc
+                                _logger.info(f"WETIN BE TOTAL AVAILABILITY {location_with_qty.quantity}")
+                                # total_availability += sum([r.available_quantity for r in location_with_qty])
+                            # break
                     if not location: 
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": f"Selected product: ({product_qty}) quantity is higher than the Available Quantity. Available quantity is {total_availability}", 
+                            "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
+                            }
+                    elif product_qty > total_availability: 
+                        return {
+                            "status": False,
+                            "location_id": False,
+                            "message": f"""
+                            No store location found: Selected product: ({product_qty}) 
+                            quantity is higher than the Available Quantity. 
+                            Available quantity is {total_availability}""", 
                             }
                     else:
                         return {
@@ -1334,43 +1357,21 @@ class PortalRequest(http.Controller):
                 ('stage_id.approver_ids.user_id.id','=', user.id),
                 
             ]
-        if type and not search_input_query or not search_param or not search_input_panel:
-            domain = domain_type
-        elif search_input_query or search_input_panel:
-            requests = request.httprequest 
-            qry_param = search_input_query or search_input_panel 
-            if not type:
-                domain = query_domain(qry_param)
-            else:
-                domain = domain_type
+        if search_input_query or search_param or search_input_panel:
+            qry_param = search_input_query or search_param or search_input_panel
+            _logger.info(f"DOMAIN TO USE 1 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel}")
+            domain = query_domain(qry_param)
+            if type:
+                domain += [('memo_type_key', '=', type)]
             date_search = get_date_query(qry_param)
             if date_search:
                 domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        elif search_param or request.params.get('search_param'):
-            search_param = search_param or request.params.get('search_param')
-            requests = request.httprequest  
-            # domain = [
-            #     ('active', '=', True),
-            #     '|', ('code', 'ilike', search_param),
-            #     ('name', 'ilike', search_param),
-            #     '|','|','|','|','|',
-            #     ('employee_id.user_id.id', '=', user.id),
-            #     ('users_followers.user_id.id','=', user.id),
-            #     ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
-            #     ('employee_id.parent_id.user_id.id','=', user.id),
-            #     ('memo_setting_id.approver_ids.user_id.id','=', user.id),
-            #     ('stage_id.approver_ids.user_id.id','=', user.id),
-                
-            # ]
-            if not type:
-                domain = query_domain(search_param)
-            else:
-                domain = domain_type
-            date_search = get_date_query(search_param)
-            if date_search:
-                domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        else:
-            domain = [('id', '=', 0)]    
+        if type and not search_input_query and not search_param and not search_input_panel: 
+            domain = domain_type
+            
+        # if not type and not search_input_query and not search_param and not search_input_panel:
+        #     _logger.info(f"DOMAIN TO USE 3 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel} DOMAIN: {domain}")
+        #     domain = [('id', '=', 0)]    
         start, end = self.get_pagination(page)# if page else False, False
         _logger.info(f"and domain is {domain} Session storage is {sessions.get('start')} {sessions.get('end')}")
         requests = request_id.search(domain)
@@ -1477,9 +1478,11 @@ class PortalRequest(http.Controller):
                 ('active', '=', True),
                 # ('employee_id.user_id', '=', user.id),
                 ('id', '=', int(id)),
-                '|','|','|','|',('employee_id.user_id', '=', user.id),
+                '|','|','|','|','|',
+                ('employee_id.user_id', '=', user.id),
                 ('users_followers.user_id','=', user.id),
                 ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+                ('employee_id.parent_id.user_id.id','=', user.id),
                 ('memo_setting_id.approver_ids.user_id.id','=', user.id),
                 ('stage_id.approver_ids.user_id.id','=', user.id),
             ]
@@ -1625,7 +1628,7 @@ class PortalRequest(http.Controller):
                 if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
                     manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
                 # user_employeeid = request.env.user.employee_id.id
-                if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
+                if not request.env.user.id in [r.user_id.id for r in current_stage_approvers] + manager_approvals:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
                             "status": False, 

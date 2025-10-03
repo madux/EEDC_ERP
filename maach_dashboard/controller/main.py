@@ -32,9 +32,10 @@ class OfficeDashboard(http.Controller):
 		], type='http', auth='user', website=True, website_published=True)
 	def office_dashboard(self, memo_type_param=False, search_request=False):
 		user = request.env.user
-		domain = ['|','|','|','|', ('employee_id.user_id', '=', user.id),
+		domain = ['|','|','|','|', '|',('employee_id.user_id', '=', user.id),
 				('users_followers.user_id','=', user.id),
 				('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+				('employee_id.parent_id.user_id.id','=', user.id),
 				('memo_setting_id.approver_ids.user_id.id','=', user.id),
 				('stage_id.approver_ids.user_id.id','=', user.id),
 			]
