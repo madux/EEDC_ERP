@@ -1237,7 +1237,7 @@ class Memo_Model(models.Model):
         if is_portal:
             path = "/my/request/view/{}".format(id)
         else:
-            path = "/web#id={}&model=memo.model&view_type=form".format(id)
+            path = "/my/request/view/{}".format(id) # "/web#id={}&model=memo.model&view_type=form".format(id)
         url = base_url + path
         return "<a href='{}'>Click</a>".format(url)
     
@@ -2356,6 +2356,15 @@ class Memo_Model(models.Model):
         if not account_id:
             raise ValidationError(f"No default expense account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the default expense account or set the journal default expense account...")
         return account_id
+    
+    def get_soe_credit_account(self, journal_id=False):
+        '''pr: line'''
+        account_id = None
+        company_expense_account_id = self.company_id.default_cash_advance_account_id
+        account_id = company_expense_account_id or journal_id and journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"No default cash advance found to use on credit lines for company {self.company_id.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
+        return account_id
                     
     def generate_move_entries(self):
         is_config_approver = self.determine_if_user_is_config_approver()
@@ -2386,6 +2395,7 @@ class Memo_Model(models.Model):
                     'partner_id': partner_id.id,
                     'company_id': self.company_id.id,
                     'currency_id': self.company_id.currency_id.id,
+                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/ {self.code}",
@@ -2494,6 +2504,7 @@ class Memo_Model(models.Model):
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            cashadvance_account_to_credit =self.cash_advance_reference.move_id.line_ids[0].account_id.id if self.cash_advance_reference.move_id.line_ids and self.cash_advance_reference.move_id.line_ids[0].account_id else False
             if not inv:
                 partner_id = self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
@@ -2501,6 +2512,7 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
+                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
                     'company_id': self.sudo().company_id.id,
                     'currency_id': self.sudo().company_id.currency_id.id,
                     # Do not set default name to account move name, because it
@@ -2519,7 +2531,7 @@ class Memo_Model(models.Model):
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
                                                             'name': 'Cash Advance to Debit',
-                                                            'account_id': self.cash_advance_reference.move_id.line_ids[0].account_id.id, # account of the cash advance reference used, CASH PACM, to be on debit
+                                                            'account_id': cashadvance_account_to_credit or self.get_soe_credit_account(journal_id).id, # account of the cash advance reference used, CASH PACM, to be on debit
                                                             'credit': sum([r.retire_sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
                                                             })],
@@ -2527,12 +2539,18 @@ class Memo_Model(models.Model):
                 if self.product_ids_with_qty_to_return():
                     self.to_update_inventory_product = True
             self.move_id = inv.id
-            return self.record_to_open(
-            "account.move", 
-            view_id,
-            inv.id,
-            f"Journal Entry - {inv.name}"
+            return self.open_related_record_view(
+                'account.move', 
+                inv.id if inv.id else self.move_id.id ,
+                view_id,
+                "Journal Entry - {self.code}"
             )
+            # return self.record_to_open(
+            # "account.move", 
+            # view_id,
+            # inv.id,
+            # f"Journal Entry - {inv.name}"
+            # )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
         
@@ -2664,7 +2682,10 @@ class Memo_Model(models.Model):
     #         self.set_cash_advance_as_retired()
          
     def record_to_open(self, model, view_id, res_id=False, name=False):
-        obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
+        obj = self.env[f'{model}'].sudo().search(['|','|', 
+                                           ('origin', '=', self.code), 
+                                           ('id', '=', self.move_id.id), 
+                                           ('memo_id', '=', self.id)], limit=1)
         if obj:
             return self.open_related_record_view(
                 model, 

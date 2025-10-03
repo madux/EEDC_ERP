@@ -29,7 +29,7 @@
                                 Discard
                             </a>
                             <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
-                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve...</a>
+                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
                                 </a>
@@ -39,7 +39,7 @@
                                 <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>
                             </t>
                             <t t-if="req.move_id or req.state in ['Done'] and req.memo_type_key in ['Payment', 'cash_advance', 'soe', 'procurement_request']" id="printInvoiceBtn" class="btn btn-secondary btn-sm print_invoice_request">
-                                <a t-att-href="'/print/memo/invoice/%s' % req.id" target="_blank" class="btn-sm o_website_form_send">
+                                <a t-att-href="'/print/memo/invoice/%s' % req.id" target="_blank" class="btn btn-primary btn-sm">
                                 <!-- <a href="'/print/memo/invoice/%s' % (req.id)" class="btn btn-outline-primary o_website_form_send"> -->
                                     Print invoice
                                 </a>

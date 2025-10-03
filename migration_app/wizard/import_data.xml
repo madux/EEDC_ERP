@@ -36,7 +36,7 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">import.data.wizard</field>
             <field name="view_mode">form</field>
-            <field name="target">current</field>
+            <field name="target">new</field>
         </record>
         <menuitem id="menu_import_data_first_level" name="Import Other data" groups="hr.group_hr_manager" sequence="17" parent="migration_app.menu_import_root"/> 
         <menuitem id="menu_import_data_records_1" name="Import Data" groups="hr.group_hr_manager" sequence="16" parent="migration_app.menu_import_data_first_level" action="action_wizard_data_import_migration_record"/> 
