@@ -44,7 +44,7 @@ class Memo_Model(models.Model):
         current_month = datetime.now().strftime('%Y/%m')
         
         # result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
-        result.code =  f"{project_prefix}/{current_month}/{result.id}"
+        result.code =  vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         return result
     
     def _compute_attachment_number(self):
