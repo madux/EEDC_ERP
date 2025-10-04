@@ -43,6 +43,9 @@
                     <field name="middle_name"/>
                     <field name="last_name"/>
                 </xpath>
+                <xpath expr="//field[@name='mobile_phone']" position="after">
+                    <field name="branch_id"/> 
+                </xpath>
                 <xpath expr="//field[@name='lang']" position="after">
                     <field name="house_address" groups="hr.group_hr_user"/>
                     <field name="state_id"/>
@@ -115,6 +118,41 @@
                 <xpath expr="//field[@name='coach_id']" position="attributes">
                    <attribute name="invisible">1</attribute>
                 </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="hr_view_employee_public_inherited_kanban">
+            <field name="name">hr.employee</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.hr_kanban_view_employees"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//li[@id='last_login']" position="inside">
+                     <li t-if="record.parent_id.raw_value" class="o_text_overflow"><strong>Manager: </strong><field name="parent_id"/></li>
+                     <li t-if="record.company_id.raw_value" class="o_text_overflow"><strong>Company: </strong><field name="company_id"/></li>
+                     <li t-if="record.branch_id.raw_value" class="o_text_overflow"><strong>District: </strong><field name="branch_id"/></li>
+                     <li t-if="record.employee_number.raw_value" class="o_text_overflow"><strong>Staff ID: </strong><field name="employee_number"/></li>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_employee_tree_inherited_form_multi_branch">
+            <field name="name">hr.employee.multi_branch</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_tree"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='parent_id']" position="after">
+                    <field name="administrative_supervisor_id" optional="hide"/>
+                    <field name="reviewer_id" optional="hide"/>
+                    <field name="unit_id" optional="hide"/>
+                    <field name="grade_id" optional="hide"/>
+                    <field name="level_id" optional="hide"/> 
+                    <field name="gender" optional="show"/>
+                    <field name="age" optional="hide"/>
+                    <field name="marital" optional="hide"/>
+                    <field name="house_address" optional="hide"/>
+                    <field name="state_id" optional="hide"/>
+                    <field name="country_id" optional="hide"/>
+                </xpath> 
             </field>
         </record>
 

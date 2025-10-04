@@ -16,7 +16,33 @@ class StockPicking(models.Model):
             ], limit=1)
         return location if location else False
         
+    # def action_update_available_quantityxxx(self):
+    #     self._update_available_quantity(self.product_id, self.location_id, self.quantity)
+        
+    # def action_update_available_quantity(self):
+    #     product, location, qty = self.product_id, self.location_id, self.quantity
+    #     # Quant = self.env['stock.quant']
+    #     # quant = Quant.search([
+    #     #     ('product_id', '=', product.id),
+    #     #     ('location_id', '=', location.id),
+    #     # ], limit=1)
 
+    #     # if not quant:
+    #     #     quant = Quant.create({
+    #     #         'product_id': product.id,
+    #     #         'location_id': location.id.id,
+    #     #         'inventory_quantity': qty,
+    #     #         'inventory_date': fields.Datetime.now(),
+    #     #     })
+    #     # else:
+    #     #     quant.inventory_quantity = qty
+    #     #     quant.inventory_date = fields.Datetime.now()
+    #     quant = self
+    #     quant.inventory_date = fields.Datetime.now()
+    #     # This is the key: apply the inventory adjustment
+    #     quant._apply_inventory()
+    #     return True
+        
     def _apply_inventory(self):
         move_vals = []
         if not self.user_has_groups('stock.group_stock_manager'):
@@ -25,7 +51,7 @@ class StockPicking(models.Model):
             # checks the property_stock_inventory to ensure products is of type inventory loss 
             if quant.product_id.property_stock_inventory.usage != 'inventory':
                 if not self._get_branch_company_inventory_loss_location():
-                    raise ValidationError(f"{quant.product_id.name} does not have location with inventory loss type set on the property_stock_inventory")
+                    raise ValidationError(f"{self.company_id.name} must have a location of type - inventory loss")
                 else:
                     quant.product_id.sudo().property_stock_inventory = self._get_branch_company_inventory_loss_location().id
             # Create and validate a move so that the quant matches its `inventory_quantity`.

@@ -42,6 +42,7 @@
         'account/security/security_view.xml',
         'branch/views/eha_branch_view.xml',
         'branch/views/base_view.xml',
+        'branch/views/employee_view.xml',
         'stock/views/stock_view.xml',
         'stock/views/delivery_order_report.xml',
         'views/documents.xml',

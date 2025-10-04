@@ -451,7 +451,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
             let query = this.$('#search_input_panel').val() || '';
             console.log("Custom search for:", query);
             // Example: redirect to controller
-            window.location = `/my/requests/param/${query}`;
+            window.location = `/my/requests/param?searchme=${query}`;
         },
         events: {
             'submit': '_onSubmitSearch',

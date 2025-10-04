@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="hr_view_employee_inherited_form_multi_branch">
+            <field name="name">hr.employee.multi_branch</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                  
+                <xpath expr="//field[@name='mobile_phone']" position="after">
+                    <field name="branch_id"/> 
+                </xpath>
+                
+            </field>
+        </record>
+
+         <record model="ir.ui.view" id="hr_view_employee_public_inherited_form_multi_branch">
+            <field name="name">hr.employee.multi_branch</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.hr_employee_public_view_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='coach_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath> 
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_employee_tree_inherited_form_multi_branch">
+            <field name="name">hr.employee.multi_branch</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_tree"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath> 
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="hr_view_employee_inherited_filter_for_multi_branch" >
+            <field name="name">hr.employee.multi_branch</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_filter" />
+            <field name="arch" type="xml"> 
+                <field name="name" position="after">
+                    <field name="branch_id"/>
+                </field> 
+            </field>
+        </record>
+    </data>
+</odoo>

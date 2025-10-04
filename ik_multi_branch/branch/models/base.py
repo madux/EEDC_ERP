@@ -13,6 +13,24 @@ class ResUsers(models.Model):
     def _get_default_branch(self):
         return self.env.user.branch_id
     
+    # @api.model
+    # def create(self, vals):
+    #     user = super().create(vals)
+    #     if vals.get("branch_id"):
+    #         employee = self.env["hr.employee"].search([("user_id", "=", user.id)], limit=1)
+    #         if employee:
+    #             employee.branch_id = vals["branch_id"]
+    #     return user
+
+    # def write(self, vals):
+    #     res = super().write(vals)
+    #     if "branch_id" in vals:
+    #         for user in self:
+    #             employee = self.env["hr.employee"].search([("user_id", "=", user.id)], limit=1)
+    #             if employee:
+    #                 employee.branch_id = vals["branch_id"]
+    #     return res
+    
     @api.constrains('groups_id')
     def _check_one_user_type(self):
         """We check that no users are both portal and users (same with public).
@@ -83,8 +101,16 @@ class ResUsers(models.Model):
     #         _logger.warning(f"Traceback: {traceback.format_stack()}")
     #     return super(ResUsers, self).write(vals)
     
+    
 class HrEmployeeBase(models.AbstractModel):
     _inherit = "hr.employee.base"
+    
+    # @api.model
+    # def create(self, vals):
+    #     employee = super().create(vals)
+    #     if vals.get("branch_id") and employee.user_id:
+    #         employee.user_id.branch_id = vals["branch_id"]
+    #     return employee
     
     def write(self, values):
         if 'parent_id' in values:
@@ -93,6 +119,11 @@ class HrEmployeeBase(models.AbstractModel):
                 to_change = self.filtered(lambda e: e.leave_manager_id == e.parent_id.user_id or not e.leave_manager_id)
                 to_change.write({'leave_manager_id': values.get('leave_manager_id', manager.id)})
 
+        # if "branch_id" in values:
+        #     for emp in self:
+        #         if emp.user_id:
+        #             emp.user_id.branch_id = values["branch_id"]
+                    
         old_managers = self.env['res.users']
         if 'leave_manager_id' in values:
             old_managers = self.mapped('leave_manager_id')
@@ -104,7 +135,8 @@ class HrEmployeeBase(models.AbstractModel):
                     pass
                     # raise ValidationError("Changing Leave manager!!")
                     # leave_manager.sudo().write({'groups_id': [(4, approver_group.id)]})
-
+        
+            
         res = super(HrEmployeeBase, self).write(values)
         # remove users from the Responsible group if they are no longer leave managers
         # old_managers.sudo()._clean_leave_responsible_users()
@@ -120,6 +152,8 @@ class HrEmployeeBase(models.AbstractModel):
             holidays.write(hr_vals)
             allocations = self.env['hr.leave.allocation'].sudo().search([('state', 'in', ['draft', 'confirm']), ('employee_id', 'in', self.ids)])
             allocations.write(hr_vals)
+        
+            
         return res
 
 class ResPartner(models.Model):
