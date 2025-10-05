@@ -13,14 +13,14 @@
                                 </t> -->
                                 <h1 class="text-center">
                                     <i class="fa fa-check-circle fa-1x text-success me-2" role="img" aria-label="Success" title="Success"/>
-                                    <span>Your request Number is # <span t-esc="memo_id"/>.</span>
+                                    <span>Your request Number is # <span t-esc="memo_number"/></span>
                                 </h1>
                                 <h1 class="text-center">Thank you for submitting your request. You will get Notification on approval processes</h1>
                             </div>
                             <div class="oe_structure" id="oe_go_back"/>
                             <div class="mb-5 py-2 justify-content-center col-12 s_website_form_submit button_go_back" data-name="Submit Button">
                                 <div style="width: 200px;" class="s_website_form_label"/>
-                                <a href="/my/requests" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">View Requests</a>
+                                <a t-att-href="'/my/request/view/%s'% memo_id" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text">View Requests</a>
                                 <a href="/" role="button" class="btn btn-primary btn-lg s_website_form_send o_default_snippet_text oe_right">Go Back</a>
                                 <!-- <span id="s_website_form_result"/> -->
                             </div>
@@ -700,7 +700,8 @@
                                                             <td width="20%">
                                                                 <span name="all_total_amount" id="all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0.00</span>
                                                             </td>
-                                                            <td width="5%">
+                                                            <td width="20%">
+                                                                <span name="retire_all_total_amount" id="retire_all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0.00</span>
                                                             </td>
                                                             <td width="5%">
                                                             </td>

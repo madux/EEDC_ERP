@@ -23,12 +23,16 @@ class StockPicking(models.Model):
     
     
     override_stock_lot = fields.Boolean("Dis-Allow Lot/Serial", default=True)
-    @api.onchange('location_id', 'location_dest_id')
+    
+    # removed this implemenation since each product might come from 
+    # different source location
+    # @api.onchange('location_id', 'location_dest_id')
+    @api.onchange('location_dest_id')
     def _onchange_locations(self):
-        moves = self.move_ids_without_package | self.move_ids
+        # moves = self.move_ids_without_package | self.move_ids
         for rec in self.move_ids_without_package:
             rec.sudo().write({
-            "location_id": self.location_id.id,
+            # "location_id": self.location_id.id,
             "location_dest_id": self.location_dest_id.id
             })
             

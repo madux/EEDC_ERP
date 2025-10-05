@@ -2,22 +2,81 @@
 	<data>
 		<template name="Homepage" t-name="website.apppage" id="website_app_page">
 			<!-- <t t-call="website.layout">  -->
-			
-
 			<div class="dashboard">
 				 
 				<!-- ERP Applications Section -->
 				<div class="section"> 
+					<div class="row">
+						<div id="password_reset_successful_alert" role="dialog" class="modal col-sm-6 mt-32">
+							<div class="alert fade alert-simple alert-success alert-dismissible text-left font__family-montserrat font__size-16 font__weight-light brk-library-rendered rendered show">
+								<i class="fa fa-check" aria-hidden="true"/>
+								<strong class="font__weight-semibold">Well done!</strong> <span id="reset_message"></span>
+								<button type="button" id="close-success-btn" class="text-end reset-btn-close-success" data-bs-dismiss="modal" aria-label="Close"/>
+							</div>
+						</div>
+					</div>
+					<div class="modal" tabindex="-1" role="dialog" id="reset_password_dialog">
+						<div class="modal-dialog mt-5" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<input type="hidden" class="form-control s_website_form_input" id="cancel_input" name="cancel_input" value="" labelfor="Cancel"/>
+									<h5 class="modal-title">Reset password</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+								</div>
+								<div class="modal-body">
+									<p>Are you sure you wish to reset? </p>
+									<div id="div_reset_comment_message" class="div_reset_comment_message o_portal_chatter_composer_body mb32 mt32">
+										<div class="o_portal_messages_container mt32" data-anchor="true">
+											<h4><strong>Employee Email</strong></h4>
+											<input type="text" name="employee_email" id="employee_email" required="true" class="form-control" placeholder="Email Employee..." labelfor="Email"/>
+										</div>
+										<div class="o_portal_messages_container mt32" data-anchor="true">
+											<h4><strong>Staff ID</strong></h4>
+											<input type="text" name="employee_staff_id" id="employee_staff_id" required="true" class="form-control" placeholder="Staff ID..." labelfor="Staff Id"/>
+										</div>
+										<div class="mt8">
+											<!-- <button id="refuse_comment_button" class="o_portal_chatter_composer_btn refuse_comment_button btn btn-primary" type="button">Refuse With Comment</button> -->
+											<button id="reset_password_button" class="o_portal_chatter_composer_btn refuse_comment_button btn btn-primary" type="button">Reset Password</button>
+											<button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+										</div>
+									</div>
+								</div>
+								
+								<div class="modal-footer" id="modalfooter4cancel">
+									<!-- <a role="button" class="o_portal_chatter_composer_btn btn btn-primary" id="cancel_modal_btn" t-att-href="'/update/data/%s/%s' % (req.id, 'cancel')">Cancel the request</a> -->
+									<a role="button" class="o_portal_chatter_composer_btn btn btn-primary cancel_modal_btn" id="cancel_modal_btn">Cancel the request</a>
+									<button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
+								</div>
+							</div>
+						</div>
+					</div>
 					<div class="header-content-emp">
 						<div class="header-left-emp glass-hover" id="navigateBack">
-							<div class="header-icon-emp back-icon">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" id="back-icon" height="24" fill="white" viewBox="0 0 24 24">
-								<path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/>
-								</svg>
-							</div>
-							<span class="header-text">Back</span>
+							<!-- <t t-if="request.env.user.active in [True, true, 'True', 'true']"> -->
+							<t t-if="request.session.uid">
+								<div class="header-icon-emp back-icon">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" id="back-icon" height="24" fill="white" viewBox="0 0 24 24">
+									<path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/>
+									</svg>
+								</div>
+								<span class="header-text">Back</span>
+							</t>
+							<t t-else="">
+							</t>
 						</div>
 						<div class="header-right-emp">
+							<div class="header-left-emp glass-hover" id="core-user-div">
+								<a id="core-user-btn" href="/web" class="ms-2 text-white">
+                                    
+                                    <span class="header-text" id="switch-user-text">Switch As Core User</span>
+
+                                </a> 
+							</div>
+							<div class="header-left-emp glass-hover" id="reset-password-div">
+								<a id="reset_password_btn" class="ms-2 text-white reset_password_btn" data-bs-target="#reset_password_dialog" data-bs-toggle="modal">
+                                    <span class="header-text" id="reset_password_txt">Reset Password</span>
+                                </a> 
+							</div>
 							<div class="header-left-emp glass-hover" id="myProfile">
 								<a t-att-href="'/my/portal/dashboard/%s' % request.env.user.id if not request.env.user._is_public() else '/web/login'" class="ms-2 text-white">
 									<span class="header-text" id="myprofile">My Profile</span>

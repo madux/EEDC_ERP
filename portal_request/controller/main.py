@@ -61,7 +61,12 @@ def format_to_odoo_date(date_str: str) -> str:
         except Exception:
             return
         
-# class Home(main.Home):
+class Home(main.Home):
+    
+    def _login_redirect(self, uid, redirect=None):
+        '''we did this so that every user will be directed to portal page'''
+        return '/' # _get_login_redirect_url(uid, redirect)
+    
     # @http.route('/', type='http', auth="none")
     # def index(self, s_action=None, db=None, **kw):
     # 	# if request.db and request.session.uid and not is_user_internal(request.session.uid):
@@ -140,7 +145,56 @@ class PortalRequest(http.Controller):
         }
         return request.render("portal_request.portal_request_template", vals)
     
-    
+    @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
+    def reset_password(self, **post):
+        data = json.loads(request.httprequest.data)
+        employee_email = data.get('employee_email')
+        staff_num = data.get('staff_number')
+        _logger.info(f'Checking password reset ID No ...{data}')
+        if staff_num:
+            employee = request.env['hr.employee'].sudo().search(
+            [
+                ('employee_number', '=ilike', staff_num),
+                ('active', '=', True)], limit=1)
+            if employee:
+                if not employee.user_id:
+                    return json.dumps({
+                        "status": False,
+                        "message": "No related user found for this employee. Contact admin to linked you to a user", 
+                    })
+                _logger.info(f'MY EMPLOYEE EMAIL IS ...{employee_email} {employee.work_email}' )
+                if employee.work_email == employee_email:
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification()
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                else:
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification()
+                    if employee.parent_id.work_email:
+                        '''send to manager's email'''
+                        return json.dumps({
+                            "status": True,
+                            "message": "Your password reset was successfully sent to your manager's email", 
+                        })
+                    else:
+                        return json.dumps({
+                            "status": False,
+                            "message": "We could not find any related email to send your password. Contact admin to linked you to a user", 
+                        })
+            else:
+                return json.dumps({
+                    "status": False,
+                    "message": "Employee with staff ID provided does not exist. Contact Admin", 
+                })
+        else:
+            return json.dumps({
+                "status": False,
+                "message": "Please provide valid staff number. Contact Admin", 
+            })
+                
     @http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
     def check_staff_num(self, **post):
         """Check staff Identification No.
@@ -623,8 +677,10 @@ class PortalRequest(http.Controller):
         """Request portal for employee / portal users
         """
         memo_number = request.session.get('memo_ref')
+        memo_id = request.session.get('memo_record_id')
         vals = {
-            "memo_id": memo_number
+            "memo_number": memo_number,
+            "memo_id": memo_id
         }
         # request.session.clear()
         return request.render("portal_request.portal_request_success_template", vals)
@@ -635,9 +691,10 @@ class PortalRequest(http.Controller):
         request_type_option = post.get('request_type')
         _logger.info(f'productitemmms {productItems}')
         query = request.params.get('q', '') 
+        productItems_List = [int(i) for i in productItems if i]
         domain = [
             ('detailed_type', 'in', ['consu', 'product']), 
-               ('id', 'not in', [int(i) for i in productItems]),
+               ('id', 'not in', productItems_List),
             ('company_id', '=', request.env.user.company_id.id), 
                ('active', '=', True), 
               '|','|', 
@@ -649,9 +706,9 @@ class PortalRequest(http.Controller):
 
         if request_type_option and request_type_option == "vehicle_request":
             domain = [
-                           ('is_vehicle_product', '=', True), 
+                        ('is_vehicle_product', '=', True), 
                         ('detailed_type', 'in', ['service']), 
-                           ('id', 'not in', [int(i) for i in productItems]),
+                        ('id', 'not in', productItems_List),
                         ('company_id', '=', request.env.user.company_id.id), 
                         ('active', '=', True), 
                         '|','|', 
@@ -692,7 +749,7 @@ class PortalRequest(http.Controller):
             if request_type_option == "employee":
                 employeeItems = json.loads(post.get('employeeItems'))
                 _logger.info(f'Employeeitemmms {employeeItems}')
-                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems]), 
+                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems if i]), 
                           ('company_id', '=', request.env.user.company_id.id)]
                 employees = request.env["hr.employee"].sudo().search(domain)
                 return json.dumps({
@@ -705,7 +762,7 @@ class PortalRequest(http.Controller):
                 domain = [('active', '=', True), ('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["hr.department"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -723,7 +780,7 @@ class PortalRequest(http.Controller):
                 domain = [('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["multi.branch"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -866,19 +923,11 @@ class PortalRequest(http.Controller):
                     #  ('branch_id', '=', request.env.user.branch_id.id),
                      ('usage', '=', 'internal')
                 ] 
-                # _logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-                # warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
-                # stock_location_id = warehouse_location_id.lot_stock_id
-    
-                # _logger.info(f"""
-                #  USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION 
-                #  {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}"""
-                #  ) 
-
                 # should_bypass_reservation : False
                 if request_type in ['material_request'] and product.detailed_type in ['product']:
                     location_ids = request.env['stock.location'].sudo().search(domain)
-                    _logger.info(f"WETIN BE LOCATIONS {location_ids}")
+                    '''Checks if any location of type internal and company is user company only'''
+                    _logger.info(f"Locations found: {location_ids}")
                     if not location_ids:
                         return {
                             "status": False,
@@ -890,36 +939,49 @@ class PortalRequest(http.Controller):
                     product_qty = float(qty) if qty else 0
                     total_availability = 0
                     for loc in location_ids:
-                        _logger.info(f"WETIN BE LOCATIONS and product {loc}, {product.id}, {product.name}")
+                        _logger.info(f"what is location {loc}, and product {product.id}, {product.name}")
+                        '''search quant with the designated location'''
                         location_with_qty = request.env['stock.quant'].sudo().search(
                             [('location_id', '=', loc.id), ('product_id', '=', product.id),('quantity', '>', 0)
                              ]
                             )
-                        _logger.info(f"WETIN BE LOCATIONS quant {location_with_qty.quantity}")
+                        _logger.info(f"Quant with Quantity {location_with_qty.quantity}")
                         # location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
                         if location_with_qty:
+                            '''Quant with Quantit'''
                             for lc_quant in location_with_qty:
                                 total_availability += lc_quant.quantity
                                 if lc_quant.quantity > product_qty: # if any is greater than request qty, use the location
                                     location = loc
                                     break
                                 else:
-                                    location = loc
-                                _logger.info(f"WETIN BE TOTAL AVAILABILITY {location_with_qty.quantity}")
-                                # total_availability += sum([r.available_quantity for r in location_with_qty])
-                            # break
-                    if not location: 
+                                    # '''necessary at least to ensure there is any location of those products'''
+                                    # location = loc
+                                    pass 
+                                _logger.info(f"What is quant quantity {lc_quant.quantity}")
+                    
+                    '''necessary at least to ensure there is any location of those products'''
+                    # if not location: 
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
+                    #         }
+                    if total_availability <= 0: 
+                        '''if no quantity found in all warehouse location'''
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
+                            "message": """
+                            System could not found any single quantity available in your 
+                            company locations. Kindly request for procurement""", 
                             }
-                    elif product_qty > total_availability: 
+                    if product_qty > total_availability: 
                         return {
                             "status": False,
                             "location_id": False,
                             "message": f"""
-                            No store location found: Selected product: ({product_qty}) 
+                            Selected product: ({product_qty}) 
                             quantity is higher than the Available Quantity. 
                             Available quantity is {total_availability}""", 
                             }
@@ -927,22 +989,8 @@ class PortalRequest(http.Controller):
                         return {
                             "status": True,
                             "message": "",
-                            "location_id": location.id
-        
+                            "location_id": location and location.id
                             }
-                    # total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
-                    # product_qty = float(qty) if qty else 0
-                    # if not location:
-                    # if product_qty > total_availability:
-                    # 	return {
-                    # 		"status": False,
-                    # 		"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
-                    # 		}
-                    # else:
-                    # 	return {
-                    # 		"status": True,
-                    # 		"message": "", 
-                    # 		}
                 else:
                     return {
                             "status": False,
@@ -1032,8 +1080,6 @@ class PortalRequest(http.Controller):
             """
             # memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
             memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
-            # relative_names = request.httprequest.form.getlist('relative_name[]')
-
             _logger.info(f'what is inputfollowers {inputFollowers}')
             # Example: attach them as followers to something
             
@@ -1153,6 +1199,7 @@ class PortalRequest(http.Controller):
                     from_website=True
                     )
             request.session['memo_ref'] = memo_id.code
+            request.session['memo_record_id'] = memo_id.id
             return json.dumps({'status': True, 'message': "Form Submitted!"})
         except Exception as ex:
             _logger.exception("Unexpected Error while sending office memo request: %s" % ex)
@@ -1201,8 +1248,8 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
-            
+            line_source_location_id = rec.get('location_id', '')
+            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
                     'memo_id': memo_id.id,
                     'memo_type': memo_id.memo_type.id,
@@ -1214,8 +1261,8 @@ class PortalRequest(http.Controller):
                     'amount_total': rec.get('amount_total'),
                     'used_amount': rec.get('used_amount'),
                     'note': rec.get('note'),
+                    'source_location_id': line_source_location_id,
                     'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                    # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
                     'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
                     'distance_from': rec.get('distance_from'),
                     'distance_to': rec.get('distance_to'),
