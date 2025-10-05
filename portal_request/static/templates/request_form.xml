@@ -165,7 +165,7 @@
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
                                                     <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
-                                                    <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small>
+                                                    <!-- <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small> -->
                                                     <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
                                                     <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
@@ -327,7 +327,7 @@
                                                         Description
                                                     </th>
                                                     <th width="10%">
-                                                        <label>Unit Qty</label>
+                                                        <label>Unit / Qty</label>
                                                     </th>
                                                     <th width="15%">
                                                         <label>UnitPrice</label>
