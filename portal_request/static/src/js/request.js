@@ -15,8 +15,8 @@ odoo.define('portal_request.portal_request', function (require) {
     var core = require('web.core');
     var qweb = core.qweb;
     var _t = core._t;
-    const setProductdata = [];
-    const setEmployeedata = [];
+    let setProductdata = [];
+    let setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
     if ($("#msform")[0] !== undefined){
@@ -272,6 +272,7 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
+        $(`#tbody_product`).empty()
         $.each(data, function (k, elm) {
             if (elm) {
                 var lastRow_count = getOrAssignRowNumber()
@@ -293,7 +294,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" disabled="true" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
+                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" location_id="${elm.location_id}" labelfor="Request Quantity"/> 
                         </th>
                         <th width="10%">
                             <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" disabled="true" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Amount"/> 
@@ -352,7 +353,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
                 <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
+                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" location_id="" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
                 </th>
                 <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
                     <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
@@ -466,6 +467,7 @@ odoo.define('portal_request.portal_request', function (require) {
         // used qty and used amount and give the total of retirement subtotal 
         var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
         var total = 0
+        var rt_total = 0
         $(`#tbody_product > tr.prod_row`).each(function(){
             var row_co = $(this).attr('row_count')
             var amount = 0
@@ -494,12 +496,22 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             )
             total += amt
+            rt_total += rt_amt
             $(`.SUBTOTAL${row_co}`).val(amt)
             $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
             $(`.retireSubTotal${row_co}`).val(rt_amt)
         })
         var amount = formatCurrency(total)
+        var rt_amount = formatCurrency(rt_total)
         $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+        $('#retire_all_total_amount').text(`${rt_amount != undefined ? rt_amount : 0.0}`)
+        if ($('#selectRequestOption').val() == 'soe'){
+            $('#all_total_amount').addClass('d-none');
+            $('#retire_all_total_amount').removeClass('d-none')
+        }else{
+            $('#all_total_amount').removeClass('d-none');
+            $('#retire_all_total_amount').addClass('d-none');
+        }
     }
 
     function getOrAssignRowNumber(memo_type=false){
@@ -918,8 +930,15 @@ odoo.define('portal_request.portal_request', function (require) {
                 var remove_link = product_elm.closest(":has(a.remove_field)").find('a.remove_field');
                 link.attr('id', product_val);
                 remove_link.attr('id', product_val);
-                setProductdata.push(parseInt(product_val));
-                // console.log('sele ==> ', setProductdata) 
+                // setProductdata.push(parseInt(product_val));
+                setProductdata = [];
+                // building the productData afresh 
+                $('#tbody_product tr.prod_row input.productitemrow').each(function(ev) {
+                    // let productId = $(this)//.attr('id'); // or use .val() if you need the input’s value
+                    console.log(`My product is ==>${product_val}`);
+                    setProductdata.push(parseInt(product_val));
+                });
+                console.log(`sele ==> ${setProductdata}`)
             },
 
             'change .employeeitemrow': function(ev){
@@ -1020,10 +1039,12 @@ odoo.define('portal_request.portal_request', function (require) {
                             alert_modal.modal('show');
                             modal_message.text(data.message)
                         }else{
+                            let location_id = data.location_id
                             qty_elm.attr('required', false);
                             qty_elm.removeClass("is-invalid");
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
+                            qty_elm.attr('location_id', location_id);
                             compute_total_amount();
                             $('#TargetSourceLocation').val(data.location_id)
                         }
@@ -1568,6 +1589,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 window.open(data.link, '_blank');
                             }
                         }else{
+                            $("#tbody_product").empty();
                             var employee_name = data.data.name;
                             var email = data.data.work_email;
                             var phone = data.data.phone;   
@@ -1601,6 +1623,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             if(selectRequestOption.val() == "soe"){
                                 makefieldsReadonly(true);
                                 buildProductTable(product_ids, "soe", "required", "", "");
+                                compute_total_amount()
                             }
                             if(selectRequestOption.val() == "cash_advance"){
                                 // make cash advance field required and displayed
@@ -1792,6 +1815,9 @@ odoo.define('portal_request.portal_request', function (require) {
                                     if($(this).attr('productinput') == "productreqQty"){
                                         console.log($(this).val())
                                         list_item['qty'] = $(this).val()
+                                    }
+                                    if($(this).attr('location_id')){
+                                        list_item['location_id'] = $(this).val()
                                     }
                                 
                                     if($(this).attr('name') == "amount_total"){

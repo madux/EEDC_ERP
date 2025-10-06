@@ -33,7 +33,7 @@ def get_url(id):
 
 def get_model_url(id, model):
     base_url = http.request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-    internal_path = "/web#id={}&model={}&view_type=form".format(id, model)
+    internal_path = "/my/request/view/%s" % (id) # "/web#id={}&model={}&view_type=form".format(id, model)
     internal_url = internal_path #  base_url + internal_path
     return internal_url
 
@@ -61,7 +61,12 @@ def format_to_odoo_date(date_str: str) -> str:
         except Exception:
             return
         
-# class Home(main.Home):
+class Home(main.Home):
+    
+    def _login_redirect(self, uid, redirect=None):
+        '''we did this so that every user will be directed to portal page'''
+        return '/' # _get_login_redirect_url(uid, redirect)
+    
     # @http.route('/', type='http', auth="none")
     # def index(self, s_action=None, db=None, **kw):
     # 	# if request.db and request.session.uid and not is_user_internal(request.session.uid):
@@ -140,7 +145,65 @@ class PortalRequest(http.Controller):
         }
         return request.render("portal_request.portal_request_template", vals)
     
-    
+    @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
+    def reset_password(self, **post):
+        data = json.loads(request.httprequest.data)
+        employee_email = data.get('employee_email')
+        staff_num = data.get('staff_number')
+        _logger.info(f'Checking password reset ID No ...{data}')
+        if staff_num:
+            employee = request.env['hr.employee'].sudo().search(
+            [
+                ('employee_number', '=ilike', staff_num),
+                ('active', '=', True)], limit=1)
+            if employee:
+                if not employee.user_id:
+                    return json.dumps({
+                        "status": False,
+                        "message": "No related user found for this employee. Contact admin to linked you to a user", 
+                    })
+                _logger.info(f'MY EMPLOYEE EMAIL IS ...{employee_email} {employee.work_email}' )
+                if employee.work_email == employee_email:
+                    _logger.info(f'Employee email corresponds ...{employee_email} {employee.work_email}' )
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification([employee.id])
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                elif employee_email in [employee.user_id.login]:
+                    _logger.info(f'Employee user login corresponds ...{employee_email} {employee.user_id.login}' )
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification([employee.id])
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                else:
+                    # employee.reset_employee_user_password()
+                    # employee.send_credential_notification()
+                    # if employee.parent_id.work_email:
+                        # '''send to manager's email'''
+                        # return json.dumps({
+                        #     "status": True,
+                        #     "message": "Your password reset was successfully sent to your manager's email", 
+                        # })
+                    # else:
+                    return json.dumps({
+                            "status": False,
+                            "message": "We could not find any related email to send your password. Contact admin to linked you to a user", 
+                        })
+            else:
+                return json.dumps({
+                    "status": False,
+                    "message": "Employee with staff ID provided does not exist. Contact Admin", 
+                })
+        else:
+            return json.dumps({
+                "status": False,
+                "message": "Please provide valid staff number. Contact Admin", 
+            })
+                
     @http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
     def check_staff_num(self, **post):
         """Check staff Identification No.
@@ -623,8 +686,10 @@ class PortalRequest(http.Controller):
         """Request portal for employee / portal users
         """
         memo_number = request.session.get('memo_ref')
+        memo_id = request.session.get('memo_record_id')
         vals = {
-            "memo_id": memo_number
+            "memo_number": memo_number,
+            "memo_id": memo_id
         }
         # request.session.clear()
         return request.render("portal_request.portal_request_success_template", vals)
@@ -635,9 +700,10 @@ class PortalRequest(http.Controller):
         request_type_option = post.get('request_type')
         _logger.info(f'productitemmms {productItems}')
         query = request.params.get('q', '') 
+        productItems_List = [int(i) for i in productItems if i]
         domain = [
             ('detailed_type', 'in', ['consu', 'product']), 
-               ('id', 'not in', [int(i) for i in productItems]),
+               ('id', 'not in', productItems_List),
             ('company_id', '=', request.env.user.company_id.id), 
                ('active', '=', True), 
               '|','|', 
@@ -649,9 +715,9 @@ class PortalRequest(http.Controller):
 
         if request_type_option and request_type_option == "vehicle_request":
             domain = [
-                           ('is_vehicle_product', '=', True), 
+                        ('is_vehicle_product', '=', True), 
                         ('detailed_type', 'in', ['service']), 
-                           ('id', 'not in', [int(i) for i in productItems]),
+                        ('id', 'not in', productItems_List),
                         ('company_id', '=', request.env.user.company_id.id), 
                         ('active', '=', True), 
                         '|','|', 
@@ -692,7 +758,7 @@ class PortalRequest(http.Controller):
             if request_type_option == "employee":
                 employeeItems = json.loads(post.get('employeeItems'))
                 _logger.info(f'Employeeitemmms {employeeItems}')
-                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems]), 
+                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems if i]), 
                           ('company_id', '=', request.env.user.company_id.id)]
                 employees = request.env["hr.employee"].sudo().search(domain)
                 return json.dumps({
@@ -705,7 +771,7 @@ class PortalRequest(http.Controller):
                 domain = [('active', '=', True), ('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["hr.department"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -723,7 +789,7 @@ class PortalRequest(http.Controller):
                 domain = [('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["multi.branch"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -863,21 +929,14 @@ class PortalRequest(http.Controller):
             if product:
                 domain = [
                     ('company_id', '=', request.env.user.company_id.id),
-                     ('branch_id', '=', request.env.user.branch_id.id),
+                    #  ('branch_id', '=', request.env.user.branch_id.id),
                      ('usage', '=', 'internal')
                 ] 
-                # _logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-                # warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
-                # stock_location_id = warehouse_location_id.lot_stock_id
-    
-                # _logger.info(f"""
-                #  USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION 
-                #  {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}"""
-                #  ) 
-
                 # should_bypass_reservation : False
                 if request_type in ['material_request'] and product.detailed_type in ['product']:
                     location_ids = request.env['stock.location'].sudo().search(domain)
+                    '''Checks if any location of type internal and company is user company only'''
+                    _logger.info(f"Locations found: {location_ids}")
                     if not location_ids:
                         return {
                             "status": False,
@@ -889,37 +948,58 @@ class PortalRequest(http.Controller):
                     product_qty = float(qty) if qty else 0
                     total_availability = 0
                     for loc in location_ids:
-                        location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
+                        _logger.info(f"what is location {loc}, and product {product.id}, {product.name}")
+                        '''search quant with the designated location'''
+                        location_with_qty = request.env['stock.quant'].sudo().search(
+                            [('location_id', '=', loc.id), ('product_id', '=', product.id),('quantity', '>', 0)
+                             ]
+                            )
+                        _logger.info(f"Quant with Quantity {location_with_qty.quantity}")
+                        # location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
                         if location_with_qty:
-                            location = loc
-                            total_availability = sum([r.available_quantity for r in location_with_qty])
-                            break
-                    if not location: 
+                            '''Quant with Quantit'''
+                            for lc_quant in location_with_qty:
+                                total_availability += lc_quant.quantity
+                                if lc_quant.quantity > product_qty: # if any is greater than request qty, use the location
+                                    location = loc
+                                    break
+                                else:
+                                    # '''necessary at least to ensure there is any location of those products'''
+                                    # location = loc
+                                    pass 
+                                _logger.info(f"What is quant quantity {lc_quant.quantity}")
+                    
+                    '''necessary at least to ensure there is any location of those products'''
+                    # if not location: 
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
+                    #         }
+                    if total_availability <= 0: 
+                        '''if no quantity found in all warehouse location'''
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": f"Selected product: ({product_qty}) quantity is higher than the Available Quantity. Available quantity is {total_availability}", 
+                            "message": """
+                            System could not found any single quantity available in your 
+                            company locations. Kindly request for procurement""", 
+                            }
+                    if product_qty > total_availability: 
+                        return {
+                            "status": False,
+                            "location_id": False,
+                            "message": f"""
+                            Selected product: ({product_qty}) 
+                            quantity is higher than the Available Quantity. 
+                            Available quantity is {total_availability}""", 
                             }
                     else:
                         return {
                             "status": True,
                             "message": "",
-                            "location_id": location.id
-        
+                            "location_id": location and location.id
                             }
-                    # total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
-                    # product_qty = float(qty) if qty else 0
-                    # if not location:
-                    # if product_qty > total_availability:
-                    # 	return {
-                    # 		"status": False,
-                    # 		"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
-                    # 		}
-                    # else:
-                    # 	return {
-                    # 		"status": True,
-                    # 		"message": "", 
-                    # 		}
                 else:
                     return {
                             "status": False,
@@ -1009,8 +1089,6 @@ class PortalRequest(http.Controller):
             """
             # memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
             memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
-            # relative_names = request.httprequest.form.getlist('relative_name[]')
-
             _logger.info(f'what is inputfollowers {inputFollowers}')
             # Example: attach them as followers to something
             
@@ -1130,6 +1208,7 @@ class PortalRequest(http.Controller):
                     from_website=True
                     )
             request.session['memo_ref'] = memo_id.code
+            request.session['memo_record_id'] = memo_id.id
             return json.dumps({'status': True, 'message': "Form Submitted!"})
         except Exception as ex:
             _logger.exception("Unexpected Error while sending office memo request: %s" % ex)
@@ -1178,8 +1257,8 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
-            
+            line_source_location_id = rec.get('location_id', '')
+            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
                     'memo_id': memo_id.id,
                     'memo_type': memo_id.memo_type.id,
@@ -1191,8 +1270,8 @@ class PortalRequest(http.Controller):
                     'amount_total': rec.get('amount_total'),
                     'used_amount': rec.get('used_amount'),
                     'note': rec.get('note'),
+                    'source_location_id': line_source_location_id,
                     'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                    # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
                     'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
                     'distance_from': rec.get('distance_from'),
                     'distance_to': rec.get('distance_to'),
@@ -1334,43 +1413,21 @@ class PortalRequest(http.Controller):
                 ('stage_id.approver_ids.user_id.id','=', user.id),
                 
             ]
-        if type and not search_input_query or not search_param or not search_input_panel:
-            domain = domain_type
-        elif search_input_query or search_input_panel:
-            requests = request.httprequest 
-            qry_param = search_input_query or search_input_panel 
-            if not type:
-                domain = query_domain(qry_param)
-            else:
-                domain = domain_type
+        if search_input_query or search_param or search_input_panel:
+            qry_param = search_input_query or search_param or search_input_panel
+            _logger.info(f"DOMAIN TO USE 1 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel}")
+            domain = query_domain(qry_param)
+            if type:
+                domain += [('memo_type_key', '=', type)]
             date_search = get_date_query(qry_param)
             if date_search:
                 domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        elif search_param or request.params.get('search_param'):
-            search_param = search_param or request.params.get('search_param')
-            requests = request.httprequest  
-            # domain = [
-            #     ('active', '=', True),
-            #     '|', ('code', 'ilike', search_param),
-            #     ('name', 'ilike', search_param),
-            #     '|','|','|','|','|',
-            #     ('employee_id.user_id.id', '=', user.id),
-            #     ('users_followers.user_id.id','=', user.id),
-            #     ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
-            #     ('employee_id.parent_id.user_id.id','=', user.id),
-            #     ('memo_setting_id.approver_ids.user_id.id','=', user.id),
-            #     ('stage_id.approver_ids.user_id.id','=', user.id),
-                
-            # ]
-            if not type:
-                domain = query_domain(search_param)
-            else:
-                domain = domain_type
-            date_search = get_date_query(search_param)
-            if date_search:
-                domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        else:
-            domain = [('id', '=', 0)]    
+        if type and not search_input_query and not search_param and not search_input_panel: 
+            domain = domain_type
+            
+        # if not type and not search_input_query and not search_param and not search_input_panel:
+        #     _logger.info(f"DOMAIN TO USE 3 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel} DOMAIN: {domain}")
+        #     domain = [('id', '=', 0)]    
         start, end = self.get_pagination(page)# if page else False, False
         _logger.info(f"and domain is {domain} Session storage is {sessions.get('start')} {sessions.get('end')}")
         requests = request_id.search(domain)
@@ -1477,9 +1534,11 @@ class PortalRequest(http.Controller):
                 ('active', '=', True),
                 # ('employee_id.user_id', '=', user.id),
                 ('id', '=', int(id)),
-                '|','|','|','|',('employee_id.user_id', '=', user.id),
+                '|','|','|','|','|',
+                ('employee_id.user_id', '=', user.id),
                 ('users_followers.user_id','=', user.id),
                 ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
+                ('employee_id.parent_id.user_id.id','=', user.id),
                 ('memo_setting_id.approver_ids.user_id.id','=', user.id),
                 ('stage_id.approver_ids.user_id.id','=', user.id),
             ]
@@ -1625,7 +1684,7 @@ class PortalRequest(http.Controller):
                 if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
                     manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
                 # user_employeeid = request.env.user.employee_id.id
-                if not request.env.user.id in [r.user_id.id for r in current_stage_approvers]:
+                if not request.env.user.id in [r.user_id.id for r in current_stage_approvers] + manager_approvals:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
                             "status": False, 

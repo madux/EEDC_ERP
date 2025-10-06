@@ -738,6 +738,7 @@ class Memo_Model(models.Model):
             [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
+            ('publish_to_public', '=', True),
             # ('department_id', '=', employee.department_id.id),
             ('branch_id', '=', employee.user_id.branch_id.id),
             ('company_id', '=', employee.user_id.company_id.id),
@@ -750,8 +751,16 @@ class Memo_Model(models.Model):
         #     """Show memo config where user companies is in memo configs"""
         #     if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
         #         cds.append(rec.id)
-        
         # config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
+        memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
+        for r in memo_configs:
+            if r.stage_ids:
+                initiation_stage = r.stage_ids[0]
+                if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
+                    # memo_setting_with_initiators_not_user.append(r)
+                    memo_configs = memo_configs - r
+        # result_ids = list(set(memo_configs) - set(memo_setting_with_initiators_not_user))
+        # memo_configs = result_ids # self.env['memo.config'].sudo().browse(result_ids)
         return memo_configs
     
     @api.model
@@ -1243,7 +1252,7 @@ class Memo_Model(models.Model):
         if is_portal:
             path = "/my/request/view/{}".format(id)
         else:
-            path = "/web#id={}&model=memo.model&view_type=form".format(id)
+            path = "/my/request/view/{}".format(id) # "/web#id={}&model=memo.model&view_type=form".format(id)
         url = base_url + path
         return "<a href='{}'>Click</a>".format(url)
     
@@ -1766,6 +1775,11 @@ class Memo_Model(models.Model):
         else:
             self.memo_bagde_status = True #'Completed'
 
+    def enable_edit_mode(self):
+        self.edit_mode = True 
+        for edit in self.product_ids:
+            edit.edit_mode = True 
+            
     def update_final_state_and_approver(self, from_website=False, default_stage=False, assigned_to=False):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
@@ -1784,6 +1798,10 @@ class Memo_Model(models.Model):
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
                 if self.stage_id.is_approved_stage:
+                    if self.memo_type_key in ['material_request']: 
+                        # for now open material request location to set location of your stock move 
+                        self.enable_edit_mode()
+                        
                     if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                         self.state = "Approve"
                     else:
@@ -2071,6 +2089,11 @@ class Memo_Model(models.Model):
             raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
         if not self.dest_location_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
+        
+        for ln in self.product_ids:
+            """Enforce to disallow stock move that has no products qty in the location"""
+            ln.onchange_location_check_available_qty()
+        
         stock_picking_type_out = self.picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
@@ -2079,6 +2102,7 @@ class Memo_Model(models.Model):
             ('company_id', '=', self.company_id.id) 
         ], limit=1)
         if not existing_picking:
+            # for mm in self.product_ids:
             vals = {
                 'scheduled_date': fields.Date.today(),
                 'picking_type_id': stock_picking_type_out.id,
@@ -2091,7 +2115,7 @@ class Memo_Model(models.Model):
                 'move_ids_without_package': [(0, 0, {
                                 'name': self.code,
                                 'picking_type_id': stock_picking_type_out.id,
-                                'location_id': self.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                                'location_id': mm.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
                                 'location_dest_id': self.dest_location_id.id or stock_picking_type_out.default_location_src_id.id, # or destination_location_id.id,
                                 'product_id': mm.product_id.id,
                                 'product_uom_qty': mm.quantity_available,
@@ -2198,9 +2222,13 @@ class Memo_Model(models.Model):
         "stock.picking.type",
         string="Operation type", 
         )
+    edit_mode = fields.Boolean(
+        string="Edit mode", 
+        help="Allow some fields to be editable"
+        )
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
-        
+    
     @api.onchange('dest_location_id')
     def on_change_of_destination_location(self):
         if self.dest_location_id:
@@ -2362,6 +2390,15 @@ class Memo_Model(models.Model):
         if not account_id:
             raise ValidationError(f"No default expense account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the default expense account or set the journal default expense account...")
         return account_id
+    
+    def get_soe_credit_account(self, journal_id=False):
+        '''pr: line'''
+        account_id = None
+        company_expense_account_id = self.company_id.default_cash_advance_account_id
+        account_id = company_expense_account_id or journal_id and journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"No default cash advance found to use on credit lines for company {self.company_id.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
+        return account_id
                     
     def generate_move_entries(self):
         is_config_approver = self.determine_if_user_is_config_approver()
@@ -2392,6 +2429,7 @@ class Memo_Model(models.Model):
                     'partner_id': partner_id.id,
                     'company_id': self.company_id.id,
                     'currency_id': self.company_id.currency_id.id,
+                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/ {self.code}",
@@ -2500,6 +2538,7 @@ class Memo_Model(models.Model):
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            cashadvance_account_to_credit =self.cash_advance_reference.move_id.line_ids[0].account_id.id if self.cash_advance_reference.move_id.line_ids and self.cash_advance_reference.move_id.line_ids[0].account_id else False
             if not inv:
                 partner_id = self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
@@ -2507,6 +2546,7 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
+                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
                     'company_id': self.sudo().company_id.id,
                     'currency_id': self.sudo().company_id.currency_id.id,
                     # Do not set default name to account move name, because it
@@ -2525,7 +2565,7 @@ class Memo_Model(models.Model):
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
                                                             'name': 'Cash Advance to Debit',
-                                                            'account_id': self.cash_advance_reference.move_id.line_ids[0].account_id.id, # account of the cash advance reference used, CASH PACM, to be on debit
+                                                            'account_id': cashadvance_account_to_credit or self.get_soe_credit_account(journal_id).id, # account of the cash advance reference used, CASH PACM, to be on debit
                                                             'credit': sum([r.retire_sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
                                                             })],
@@ -2533,12 +2573,18 @@ class Memo_Model(models.Model):
                 if self.product_ids_with_qty_to_return():
                     self.to_update_inventory_product = True
             self.move_id = inv.id
-            return self.record_to_open(
-            "account.move", 
-            view_id,
-            inv.id,
-            f"Journal Entry - {inv.name}"
+            return self.open_related_record_view(
+                'account.move', 
+                inv.id if inv.id else self.move_id.id ,
+                view_id,
+                "Journal Entry - {self.code}"
             )
+            # return self.record_to_open(
+            # "account.move", 
+            # view_id,
+            # inv.id,
+            # f"Journal Entry - {inv.name}"
+            # )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
         
@@ -2670,7 +2716,10 @@ class Memo_Model(models.Model):
     #         self.set_cash_advance_as_retired()
          
     def record_to_open(self, model, view_id, res_id=False, name=False):
-        obj = self.env[f'{model}'].search([('origin', '=', self.code)], limit=1)
+        obj = self.env[f'{model}'].sudo().search(['|','|', 
+                                           ('origin', '=', self.code), 
+                                           ('id', '=', self.move_id.id), 
+                                           ('memo_id', '=', self.id)], limit=1)
         if obj:
             return self.open_related_record_view(
                 model, 

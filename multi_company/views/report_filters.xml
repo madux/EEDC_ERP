@@ -112,7 +112,10 @@
                 <xpath expr="//group[1]" position="inside">
                     <filter name="group_by_company_id" string="Company" 
                             context="{'group_by': 'company_id'}"/>
+                    <filter name="group_by_branch_id" string="District/Branch" 
+                            context="{'group_by': 'branch_id'}"/>
                 </xpath>
+                
             </field>
         </record>
 
