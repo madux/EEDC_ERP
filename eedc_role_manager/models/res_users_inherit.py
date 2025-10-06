@@ -34,70 +34,187 @@ class ResUsers(models.Model):
             users_with_roles._sync_approvals_from_roles()
         return users
 
+   
+    
     def write(self, vals):
         """Override write to sync roles and approvals when relevant fields change."""
         users_to_resync_approvals = None
+        newly_added_roles = self.env['user.role']
+        
+        if 'role_ids' in vals:
+            for command in vals['role_ids']:
+                if command[0] == 4:
+                    newly_added_roles |= self.env['user.role'].browse(command[1])
+                elif command[0] == 6:
+                    new_role_ids = set(command[2])
+                    current_role_ids = set(self.role_ids.ids)
+                    added_role_ids = new_role_ids - current_role_ids
+                    newly_added_roles |= self.env['user.role'].browse(list(added_role_ids))
+        
         if any(field in vals for field in ['role_ids', 'branch_ids', 'branch_id', 'company_id', 'company_ids']):
             users_to_resync_approvals = self
             
         res = super().write(vals)
         
         if 'role_ids' in vals:
-            self._sync_permissions_from_roles()
+            ctx = {}
+            if newly_added_roles:
+                portal_user = self.env.ref('base.group_portal', raise_if_not_found=False)
+                portal_roles = newly_added_roles.filtered(lambda r: portal_user in r.group_ids) if portal_user else self.env['user.role']
+                
+                if portal_roles:
+                    ctx['newly_added_user_ids'] = self.ids
+                    ctx['priority_role_id'] = portal_roles[0].id
+                    _logger.info("User %s: Adding Portal role %s, will trigger downgrade", 
+                            self.mapped('name'), portal_roles[0].name)
+            
+            self.with_context(**ctx)._sync_permissions_from_roles()
             
         if users_to_resync_approvals:
             users_to_resync_approvals._sync_approvals_from_roles()
             
         return res
 
+    
+    
     def _sync_permissions_from_roles(self):
         """
-        This is the core synchronization method for groups and companies.
-        It ensures that a user's groups and companies match exactly what their assigned roles dictate.
-        This method is unchanged from the original implementation to preserve functionality.
+        Synchronize groups and companies from roles.
+        Priority: Newly added role wins in conflicts.
         """
         ownership_model = self.env['user.role.group.ownership']
         
+        newly_added_user_ids = self.env.context.get('newly_added_user_ids', [])
+        priority_role_id = self.env.context.get('priority_role_id')
+        
         users_to_sync = self.filtered(lambda u: u.id != SUPERUSER_ID)
         for user in users_to_sync:
-            desired_groups = user.role_ids.mapped('group_ids')
+            internal_user = self.env.ref('base.group_user', raise_if_not_found=False)
+            portal_user = self.env.ref('base.group_portal', raise_if_not_found=False)
             
+            if not internal_user or not portal_user:
+                desired_groups = user.role_ids.mapped('group_ids')
+            else:
+                internal_implying_groups = self._get_groups_implying_internal(internal_user)
+                internal_check_set = internal_implying_groups | internal_user
+                
+                desired_groups = user.role_ids.mapped('group_ids')
+                roles_to_remove = self.env['user.role']
+                
+                has_internal_in_roles = bool(desired_groups & internal_check_set)
+                has_portal_in_roles = portal_user in desired_groups
+                
+                is_newly_added = user.id in newly_added_user_ids
+                priority_role = self.env['user.role'].browse(priority_role_id) if priority_role_id else None
+                
+                portal_has_priority = False
+                if is_newly_added and priority_role:
+                    portal_has_priority = portal_user in priority_role.group_ids
+                
+                # === CONFLICT RESOLUTION ===
+                
+                if has_internal_in_roles and has_portal_in_roles:
+                    if portal_has_priority:
+                        internal_roles = user.role_ids.filtered(
+                            lambda r: bool(r.group_ids & internal_check_set) and r.id != priority_role_id
+                        )
+                        roles_to_remove |= internal_roles
+                        _logger.warning(
+                            "User %s: Adding Portal role '%s'. Removing Internal roles: %s",
+                            user.name, priority_role.name, internal_roles.mapped('name')
+                        )
+                        
+                        groups_to_remove = internal_check_set & user.groups_id
+                        if groups_to_remove:
+                            user.sudo().write({
+                                'groups_id': [(3, g.id) for g in groups_to_remove]
+                            })
+                    else:
+                        portal_roles = user.role_ids.filtered(
+                            lambda r: portal_user in r.group_ids and r.id != priority_role_id
+                        )
+                        roles_to_remove |= portal_roles
+                        _logger.warning(
+                            "User %s: Conflict - Internal wins. Removing Portal roles: %s",
+                            user.name, portal_roles.mapped('name')
+                        )
+                
+                elif has_internal_in_roles and not has_portal_in_roles:
+                    if portal_user in user.groups_id:
+                        user.sudo().write({'groups_id': [(3, portal_user.id)]})
+                        _logger.info("User %s: Removed Portal group (Internal access granted)", user.name)
+                
+                elif has_portal_in_roles and not has_internal_in_roles:
+                    pass
+                
+                if roles_to_remove:
+                    user.sudo().write({'role_ids': [(3, r.id) for r in roles_to_remove]})
+                    _logger.warning(
+                        "User %s: Removed conflicting roles: %s",
+                        user.name, roles_to_remove.mapped('name')
+                    )
+                    desired_groups = user.role_ids.mapped('group_ids')
+            
+            # === Normal group sync (rest stays the same) ===
             current_ownerships = ownership_model.search([('user_id', '=', user.id)])
             groups_managed_by_roles = current_ownerships.mapped('group_id')
             
             groups_to_add = desired_groups - user.groups_id
             if groups_to_add:
                 user.sudo().write({'groups_id': [(4, group.id) for group in groups_to_add]})
-
+            
             groups_to_remove = groups_managed_by_roles - desired_groups
             if groups_to_remove:
                 user.sudo().write({'groups_id': [(3, group.id) for group in groups_to_remove]})
-
+            
             current_ownerships.filtered(lambda own: own.group_id not in desired_groups).unlink()
             
             for group in desired_groups:
-                ownership = ownership_model.search([('user_id', '=', user.id), ('group_id', '=', group.id)])
+                ownership = ownership_model.search([
+                    ('user_id', '=', user.id),
+                    ('group_id', '=', group.id)
+                ], limit=1)
                 roles_granting_group = user.role_ids.filtered(lambda r: group in r.group_ids)
                 if ownership:
-                    ownership.write({'role_ids': [(6, 0, roles_granting_group.ids)]})
+                    ownership.sudo().write({'role_ids': [(6, 0, roles_granting_group.ids)]})
                 else:
-                    ownership_model.create({
+                    ownership_model.sudo().create({
                         'user_id': user.id,
                         'group_id': group.id,
                         'role_ids': [(6, 0, roles_granting_group.ids)]
                     })
-
-            # desired_companies = user.role_ids.mapped('company_ids')
+            
             cross_scope_roles = user.role_ids.filtered(lambda r: not r.limit_to_user_context)
             desired_companies = cross_scope_roles.mapped('company_ids')
-            
             if desired_companies:
-                # companies_to_set = desired_companies | user.company_id
-                user.company_ids = [(6, 0, desired_companies.ids)]
+                user.sudo().write({'company_ids': [(6, 0, desired_companies.ids)]})
                 if user.company_id not in desired_companies:
-                    user.company_id = desired_companies[0].id
-                    
+                    user.sudo().write({'company_id': desired_companies[0].id})
+        
         return True
+
+
+    def _get_groups_implying_internal(self, internal_group):
+        """
+        Find all groups that imply internal_group (with cycle protection).
+        """
+        Groups = self.env['res.groups']
+        to_visit = [internal_group.id]
+        visited = set()
+        result = self.env['res.groups']
+        
+        while to_visit:
+            gid = to_visit.pop(0)
+            if gid in visited:
+                continue
+            visited.add(gid)
+            
+            implying = Groups.search([('implied_ids', 'in', gid)])
+            new_to_visit = implying.filtered(lambda g: g.id not in visited)
+            result |= implying
+            to_visit.extend(new_to_visit.ids)
+        
+        return result
 
     
     # def _sync_approvals_from_roles(self):

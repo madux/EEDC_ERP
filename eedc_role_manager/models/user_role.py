@@ -112,40 +112,45 @@ class UserRole(models.Model):
         }
     }
 
-    # def write(self, vals):
-    #     """When role definition changes, sync all users who have this role."""
-    #     res = super().write(vals)
-        
-    #     if 'group_ids' in vals or 'company_ids' in vals:
-    #         _logger.info("Role definition changed for %s. Syncing %d users.", 
-    #                     self.mapped('name'), len(self.user_ids))
-    #         self.user_ids._sync_permissions_from_roles()
-        
-    #     if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context']):
-    #         _logger.info("Role approval settings changed for %s. Syncing approvals for %d users.", 
-    #                     self.mapped('name'), len(self.user_ids))
-    #         self.user_ids._sync_approvals_from_roles()
-            
-    #     return res
+    
     
     def write(self, vals):
         """When role definition changes, sync all users who have this role."""
         users_to_sync_permissions = self.env['res.users']
         users_to_sync_approvals = self.env['res.users']
+        newly_added_users = self.env['res.users']
         
-        if 'group_ids' in vals or 'company_ids' in vals:
+        if 'group_ids' in vals or 'company_ids' in vals or 'user_ids' in vals:
             users_to_sync_permissions = self.user_ids
+            
+            if 'user_ids' in vals:
+                for command in vals['user_ids']:
+                    if command[0] == 3:  # Remove user
+                        users_to_sync_permissions |= self.env['res.users'].browse(command[1])
+                    elif command[0] == 4:  # Add user
+                        new_user = self.env['res.users'].browse(command[1])
+                        users_to_sync_permissions |= new_user
+                        newly_added_users |= new_user
+                    elif command[0] == 6:  # Replace all
+                        new_user_ids = set(command[2])
+                        current_user_ids = set(self.user_ids.ids)
+                        removed_user_ids = current_user_ids - new_user_ids
+                        added_user_ids = new_user_ids - current_user_ids
+                        users_to_sync_permissions |= self.env['res.users'].browse(list(removed_user_ids))
+                        added_users = self.env['res.users'].browse(list(added_user_ids))
+                        users_to_sync_permissions |= added_users
+                        newly_added_users |= added_users
             
         if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context', 'user_ids']):
             users_to_sync_approvals = self.user_ids
             
             if 'user_ids' in vals:
                 for command in vals['user_ids']:
-                    if command[0] == 3:  # (3, id) - remove single user
+                    if command[0] == 3:
                         users_to_sync_approvals |= self.env['res.users'].browse(command[1])
-                    elif command[0] == 4:  # (4, id) - add single user
+                    elif command[0] == 4:
                         users_to_sync_approvals |= self.env['res.users'].browse(command[1])
-                    elif command[0] == 6:  # (6, 0, [ids]) - replace all
+                    elif command[0] == 6:
                         new_user_ids = set(command[2])
                         current_user_ids = set(self.user_ids.ids)
                         removed_user_ids = current_user_ids - new_user_ids
@@ -158,7 +163,14 @@ class UserRole(models.Model):
         if users_to_sync_permissions:
             _logger.info("Role definition changed for %s. Syncing %d users.", 
                         self.mapped('name'), len(users_to_sync_permissions))
-            users_to_sync_permissions._sync_permissions_from_roles()
+            
+            # Pass context with newly added users and priority role
+            ctx = {}
+            if newly_added_users:
+                ctx['newly_added_user_ids'] = newly_added_users.ids
+                ctx['priority_role_id'] = self.id
+            
+            users_to_sync_permissions.with_context(**ctx)._sync_permissions_from_roles()
         
         if users_to_sync_approvals:
             _logger.info("Role approval settings changed for %s. Syncing approvals for %d users.", 
@@ -166,7 +178,8 @@ class UserRole(models.Model):
             users_to_sync_approvals._sync_approvals_from_roles()
             
         return res
-
+    
+    
 
 class RoleGroupOwnership(models.Model):
     """
