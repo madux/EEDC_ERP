@@ -113,20 +113,23 @@
 
 					<div class="tm-card-body">
 						<div class="pf-wrap d-flex align-items-center gap-3">
-						<!-- Avatar with gradient ring (falls back to initials if no image) -->
+						<!-- Avatar with gradient ring + resilient fallback -->
 						<div class="pf-avatar">
-							<t t-if="image_url">
-								<img t-att-src="image_url" alt="Avatar"/>
+							<t t-if="image_url or image">
+								<img
+									t-att-src="image_url or image_data_uri(image)"
+									t-att-data-fallback="image and image_data_uri(image)"
+									alt="Avatar" width="72" height="72" loading="eager" decoding="async"
+									onerror="this.onerror=null; if (this.dataset.fallback) { this.src=this.dataset.fallback; } else { this.src='/web/static/img/placeholder.png'; }"
+								/>
 							</t>
-							<t t-elif="image">
-								<img t-att-src="image_data_uri(image)" alt="Avatar"/>
-							</t>
-							<t t-else="">
-							<div class="pf-initials">
+							<t t-if="not image_url and not image">
+								<div class="pf-initials">
 								<t t-esc="(user.employee_id.name or user.name or '?')[0]"/>
-							</div>
+								</div>
 							</t>
 						</div>
+
 
 						<div class="flex-grow-1">
 							<!-- Top row: name + status + date + queries chip -->
@@ -194,7 +197,6 @@
                       </div>
                     </div>
                     <div class="tm-card-body">
-                      <!-- Reuse admin chart key 'empDone' for a generic bar series -->
                       <canvas id="tm_ad_chart_emp_done"></canvas>
                     </div>
                   </div>
@@ -213,25 +215,10 @@
                       </div>
                     </div>
                     <div class="tm-card-body">
-                      <!-- Use admin chart key 'stage' for Done/Review/In Progress/To Do -->
                       <canvas id="tm_ad_chart_stage"></canvas>
                     </div>
                   </div>
 
-                  <!-- <div class="tm-card">
-                    <div class="tm-card-head">Highlights</div>
-                    <div class="tm-card-body small">
-                      <div class="d-flex justify-content-between"><span>Documentation</span><strong>80%</strong></div>
-                      <div class="progress my-2" style="height:6px;"><div class="progress-bar" style="width:80%"></div></div>
-
-                      <div class="d-flex justify-content-between"><span>Recommendations</span><strong>90%</strong></div>
-                      <div class="progress my-2" style="height:6px;"><div class="progress-bar bg-success" style="width:90%"></div></div>
-
-                      <div class="d-flex justify-content-between"><span>Planning</span><strong>5</strong></div>
-                      <div class="d-flex justify-content-between"><span>Backlog</span><strong>29</strong></div>
-                      <div class="d-flex justify-content-between"><span>Payslips</span><strong>30</strong></div>
-                    </div>
-                  </div> -->
 
 				<div class="tm-card">
 					<div class="tm-card-head">Highlights</div>

@@ -3,6 +3,7 @@ import json
 import logging
 from odoo import http, fields
 from odoo.http import request
+from dateutil.relativedelta import relativedelta
 _logger = logging.getLogger(__name__)
 
 class PortalDashboard(http.Controller):
@@ -19,17 +20,27 @@ class PortalDashboard(http.Controller):
             user.image_128
         ) or False
 
-    def _get_profile_image_url(self, user):
-        """Optional: cache-friendly /web/image URL (works only if portal can read the record)."""
-        user = user.sudo()
-        emp = user.employee_id
-        if emp:
-            return f"/web/image/hr.employee/{emp.id}/image_128?unique={emp.write_date or ''}"
-        if user.partner_id:
-            p = user.partner_id
-            return f"/web/image/res.partner/{p.id}/image_128?unique={p.write_date or ''}"
-        return f"/web/image/res.users/{user.id}/image_128?unique={user.write_date or ''}"
+    def _can_read(self, record):
+        """True if current user can read the record (rights + rules)."""
+        try:
+            rec = record.with_user(request.env.user)
+            rec.check_access_rights('read')
+            rec.check_access_rule('read')
+            return True
+        except Exception:
+            return False
 
+    def _get_profile_image_url(self, user):
+        """Return a cache-friendly /web/image URL only if the user can read it."""
+        emp = user.employee_id
+        if emp and self._can_read(emp):
+            return f"/web/image/hr.employee/{emp.id}/image_128?unique={emp.write_date or ''}"
+        p = user.partner_id
+        if p and self._can_read(p):
+            return f"/web/image/res.partner/{p.id}/image_128?unique={p.write_date or ''}"
+        if self._can_read(user):
+            return f"/web/image/res.users/{user.id}/image_128?unique={user.write_date or ''}"
+        return False  # force template to use base64 fallback
 
     # ---------- PAGE ROUTE ----------
     @http.route(["/my/portal/dashboard/<int:user_id>"], type='http', auth='user', website=True, website_published=True)
@@ -68,82 +79,6 @@ class PortalDashboard(http.Controller):
             _logger.exception("dashboardPortal error: %s", e)
             return request.not_found()
 
-    # # ---------- JSON API FOR REDESIGNED DASHBOARD ----------
-    # @http.route('/portal_request/api/data', type='json', auth='user')
-    # def portal_request_data(self, user_id=None):
-    #     try:
-    #         # resolve user
-    #         if user_id:
-    #             user = request.env['res.users'].sudo().browse(int(user_id))
-    #             if not user.exists():
-    #                 return {"ok": False, "error": "User not found"}
-    #         else:
-    #             user = request.env.user.sudo()
-
-    #         emp = user.employee_id
-
-    #         # KPIs from memos (unchanged)
-    #         memo = request.env['memo.model'].sudo()
-    #         memos = memo.search([('employee_id', '=', emp.id)]) if emp else memo.browse()
-    #         open_cnt     = len(self.open_files(memos))
-    #         closed_cnt   = len(self.closed_files(memos))
-    #         approved_cnt = len(self.approved_files(memos))
-    #         leave_remaining = emp.allocation_remaining_display if emp else 0
-
-    #         # --- Workload Distribution from tm.task (accurate)
-    #         Task = request.env['tm.task']              # no sudo → ACL-safe
-    #         domain = [('active', '=', True)]
-    #         if emp:
-    #             staff_code = (emp.employee_number or emp.barcode or '').strip()
-    #             domain += ['|', ('employee_id', '=', emp.id), ('assignee_staff_id', '=', staff_code)]
-    #         else:
-    #             domain += [('id', '=', 0)]
-
-    #         stages = ['todo', 'in_progress', 'review', 'done']
-    #         labels = {'todo': 'To Do', 'in_progress': 'In Progress', 'review': 'Review', 'done': 'Done'}
-
-    #         # 1) Try read_group (fast)
-    #         counts = {}
-    #         try:
-    #             rg = Task.read_group(domain, ['__count'], ['stage'])
-    #             counts = {r['stage']: int(r.get('__count', 0)) for r in rg if r.get('stage')}
-    #         except Exception:
-    #             counts = {}
-
-    #         # 2) If RG gave nothing useful, use search_count (always correct)
-    #         if sum(counts.values()) == 0:
-    #             counts = {st: Task.search_count(domain + [('stage', '=', st)]) for st in stages}
-
-    #         stage_distribution = [
-    #             {'key': st, 'stage': st, 'label': labels[st], 'count': int(counts.get(st, 0))}
-    #             for st in stages
-    #         ]
-
-
-    #         # Performance rows
-    #         kra, fc, lc = self._current_year_scores(emp)
-    #         performance_rows = [
-    #             {"name": "KRA",                   "count": kra},
-    #             {"name": "Functional Competence", "count": fc},
-    #             {"name": "Leadership Competence", "count": lc},
-    #         ]
-
-    #         data = {
-    #             "open_request": open_cnt,
-    #             "approved_request": approved_cnt,
-    #             "closed_request": closed_cnt,
-    #             "leave_remaining": leave_remaining,
-    #             "employee_name": emp.name if emp else user.name,
-    #             "department": (emp.department_id.name if emp and emp.department_id else "") or "",
-    #             "role": (emp.job_id.name if emp and emp.job_id else "") or "",
-    #             "manager": (emp.parent_id.name if emp and emp.parent_id else "") or "",
-    #             "stage_distribution": stage_distribution,
-    #             "performance_rows": performance_rows,
-    #         }
-    #         return {"ok": True, "data": data}
-    #     except Exception as e:
-    #         _logger.exception("portal_request_data error: %s", e)
-    #         return {"ok": False, "error": "Unexpected error"}
     # ---------- JSON API FOR REDESIGNED DASHBOARD ----------
     @http.route('/portal_request/api/data', type='json', auth='user')
     def portal_request_data(self, user_id=None):
@@ -201,7 +136,7 @@ class PortalDashboard(http.Controller):
             ]
 
             # -------- Performance (PMS current year)
-            kra, fc, lc = self._current_year_scores(emp)
+            kra, fc, lc = self._current_month_scores(emp, fallback_to_year=True)
             performance_rows = [
                 {"name": "KRA",                   "count": kra or 0.0},
                 {"name": "Functional Competence", "count": fc  or 0.0},
@@ -279,6 +214,53 @@ class PortalDashboard(http.Controller):
     def approved_files(self, memos):
         # Your previous logic (keep as-is): not Refuse/submit/Sent
         return memos.filtered(lambda m: m.state not in ['Refuse', 'submit', 'Sent'])
+    
+    def _in_month(self, dt, month_start, next_month_start):
+        return bool(dt and month_start <= dt.date() < next_month_start)
+
+    def _current_month_scores(self, emp, fallback_to_year=True):
+        """Return (kra, fc, lc) for the appraisee record updated in the current month.
+        If none found and fallback_to_year=True, fall back to current-year scores.
+        """
+        kra = fc = lc = 0.0
+        try:
+            if not emp:
+                return kra, fc, lc
+
+            Appraisee = request.env['pms.appraisee'].sudo()
+            apps = Appraisee.search([('employee_id', '=', emp.id)])
+            if not apps:
+                return kra, fc, lc
+
+            today = fields.Date.today()
+            month_start = today.replace(day=1)
+            next_month_start = month_start + relativedelta(months=1)
+
+            # restrict to current year like your previous helper
+            year_apps = apps.filtered(
+                lambda a: a.pms_year_id and a.pms_year_id.date_from
+                and a.pms_year_id.date_from.strftime('%Y') == str(today.year)
+            )
+
+            # find one written in this month (prefer write_date, then create_date)
+            def _pick_monthly(a):
+                wd = a.write_date or a.create_date
+                return self._in_month(wd, month_start, next_month_start)
+
+            monthly = next((a for a in year_apps if _pick_monthly(a)), None)
+
+            picked = monthly
+            if not picked and fallback_to_year:
+                # fallback: same record you used before (any current-year one)
+                picked = next(iter(year_apps), None)
+
+            if picked:
+                kra = float(picked.final_kra_score or 0.0)
+                fc  = float(picked.final_fc_score or 0.0)
+                lc  = float(picked.final_lc_score or 0.0)
+        except Exception as e:
+            _logger.debug("Monthly score fetch failed: %s", e)
+        return kra, fc, lc
 
     def _current_year_scores(self, emp):
         """Return (kra, fc, lc) floats for the current year if available; else zeros."""

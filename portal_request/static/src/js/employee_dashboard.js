@@ -10,12 +10,9 @@ odoo.define('portal_request.portal_employee_dashboard', function (require) {
         selector: '#portal-dashboard-form',
 
         start() {
-            // Prepare chart canvases + bind chart toolbar / modal actions
             Charts.initCharts(this.el);
-            // Reuse the admin front widget’s chart controls (tools + modal)
-            // by instantiating a lightweight instance on this page container:
+            this._syncActiveToolbarStates();
             this._bindChartControlsLikeAdmin();
-
             this._loadData();
             return this._super.apply(this, arguments);
         },
@@ -164,57 +161,82 @@ odoo.define('portal_request.portal_employee_dashboard', function (require) {
             }
         },
 
-        // Borrow the admin dashboard chart-toolbar behavior without duplicating code
-        _bindChartControlsLikeAdmin() {
-            // Minimal subset of tm_admin_front’s behavior to keep this file self-contained:
+         /** Mark the toolbar icon that matches the chart’s current type. */
+        _syncActiveToolbarStates() {
             const $root = $(this.el);
 
-            // Change type (works for cards; modal will sync when open)
+            // Card -> chart key resolver
+            const findKeyForCard = ($card) => {
+                if ($card.find('canvas#tm_ad_chart_stage').length)   return 'stage';
+                if ($card.find('canvas#tm_ad_chart_emp_done').length) return 'empDone';
+                return null;
+            };
+
+            $root.find('.tm-card').each((_, el) => {
+                const $card = $(el);
+                const key = findKeyForCard($card);
+                if (!key) return;
+
+                const t = (Charts._state && Charts._state[key] && Charts._state[key].type) || null;
+                if (!t) return;
+
+                $card.find('.tm-card-tools .tm-ct[data-type]').removeClass('is-active');
+                $card.find(`.tm-card-tools .tm-ct[data-type="${t}"]`).addClass('is-active');
+            });
+        },
+
+        // Borrow the admin dashboard chart-toolbar behavior without duplicating code
+        _bindChartControlsLikeAdmin() {
+            const $root = $(this.el);
+
+            // Change type 
             $root.on('click', '.tm-card-tools .tm-ct[data-type]', (e) => {
-                const $btn = $(e.currentTarget);
+                const $btn  = $(e.currentTarget);
                 const $card = $btn.closest('.tm-card');
-                const key = $card.data('chartKey') ||
-                    ($card.find('canvas#tm_ad_chart_stage').length ? 'stage' :
-                        $card.find('canvas#tm_ad_chart_emp_done').length ? 'empDone' : null);
+
+                let key = null;
+                if ($card.find('canvas#tm_ad_chart_stage').length)   key = 'stage';
+                if ($card.find('canvas#tm_ad_chart_emp_done').length) key = 'empDone';
                 const type = $btn.data('type');
                 if (!key || !type) return;
+
                 Charts.setType(key, type);
                 $card.find('.tm-ct[data-type]').removeClass('is-active');
                 $btn.addClass('is-active');
             });
 
-            // Expand to modal
-            $(document).off('click.pfExpand')
-                .on('click.pfExpand', '.tm-card-tools .tm-ct[data-action="expand"]', (e) => {
-                    const $card = $(e.currentTarget).closest('.tm-card');
-                    let key = null, title = $card.find('.tm-card-head').text().trim() || 'Chart';
-                    if ($card.find('canvas#tm_ad_chart_stage').length) key = 'stage';
-                    if ($card.find('canvas#tm_ad_chart_emp_done').length) key = 'empDone';
-                    if (!key) return;
+            // Expand to modal(I'll implement expand modal later)
+            // $(document).off('click.pfExpand')
+            //     .on('click.pfExpand', '.tm-card-tools .tm-ct[data-action="expand"]', (e) => {
+            //         const $card = $(e.currentTarget).closest('.tm-card');
+            //         let key = null, title = $card.find('.tm-card-head').text().trim() || 'Chart';
+            //         if ($card.find('canvas#tm_ad_chart_stage').length) key = 'stage';
+            //         if ($card.find('canvas#tm_ad_chart_emp_done').length) key = 'empDone';
+            //         if (!key) return;
 
-                    const $modal = $('#tm_ad_modal').appendTo('body');
-                    $modal.data('chartKey', key);
-                    $modal.find('.modal-title').text(title);
-                    $modal.off('shown.bs.modal hidden.bs.modal');
+            //         const $modal = $('#tm_ad_modal').appendTo('body');
+            //         $modal.data('chartKey', key);
+            //         $modal.find('.modal-title').text(title);
+            //         $modal.off('shown.bs.modal hidden.bs.modal');
 
-                    $modal.on('shown.bs.modal', () => {
-                        const canvas = document.getElementById('tm_ad_modal_canvas');
-                        Charts.renderModal(key, canvas);
-                        // mark active in modal toolbar
-                        const t = (Charts._state && Charts._state[key] && Charts._state[key].type) || 'bar';
-                        $modal.find('.tm-ct[data-type]').removeClass('is-active');
-                        $modal.find(`.tm-ct[data-type="${t}"]`).addClass('is-active');
-                    });
-                    $modal.on('hidden.bs.modal', () => Charts.destroyModal(key));
+            //         $modal.on('shown.bs.modal', () => {
+            //             const canvas = document.getElementById('tm_ad_modal_canvas');
+            //             Charts.renderModal(key, canvas);
+            //             // mark active in modal toolbar
+            //             const t = (Charts._state && Charts._state[key] && Charts._state[key].type) || 'bar';
+            //             $modal.find('.tm-ct[data-type]').removeClass('is-active');
+            //             $modal.find(`.tm-ct[data-type="${t}"]`).addClass('is-active');
+            //         });
+            //         $modal.on('hidden.bs.modal', () => Charts.destroyModal(key));
 
-                    $modal.modal({ backdrop: 'static', keyboard: false }).modal('show');
-                });
+            //         $modal.modal({ backdrop: 'static', keyboard: false }).modal('show');
+            //     });
 
             // Collapse modal
-            $(document).off('click.pfCollapse')
-                .on('click.pfCollapse', '#tm_ad_modal .tm-ct[data-action="collapse"]', () => {
-                    $('#tm_ad_modal').modal('hide');
-                });
+            // $(document).off('click.pfCollapse')
+            //     .on('click.pfCollapse', '#tm_ad_modal .tm-ct[data-action="collapse"]', () => {
+            //         $('#tm_ad_modal').modal('hide');
+            //     });
         },
     });
 
