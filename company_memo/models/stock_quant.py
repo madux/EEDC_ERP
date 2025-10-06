@@ -15,6 +15,10 @@ class StockPicking(models.Model):
             ('usage', '=', 'inventory')
             ], limit=1)
         return location if location else False
+    
+    def action_update_available_quantity(self):
+        qty = self._get_available_quantity(self.product_id, self.location_id, allow_negative=False)
+        raise ValidationError(qty)
         
     # def action_update_available_quantityxxx(self):
     #     self._update_available_quantity(self.product_id, self.location_id, self.quantity)

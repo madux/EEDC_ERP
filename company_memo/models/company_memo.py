@@ -1766,6 +1766,11 @@ class Memo_Model(models.Model):
         else:
             self.memo_bagde_status = True #'Completed'
 
+    def enable_edit_mode(self):
+        self.edit_mode = True 
+        for edit in self.product_ids:
+            edit.edit_mode = True 
+            
     def update_final_state_and_approver(self, from_website=False, default_stage=False, assigned_to=False):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
@@ -1784,6 +1789,10 @@ class Memo_Model(models.Model):
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
                 if self.stage_id.is_approved_stage:
+                    if self.memo_type_key in ['material_request']: 
+                        # for now open material request location to set location of your stock move 
+                        self.enable_edit_mode()
+                        
                     if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                         self.state = "Approve"
                     else:
@@ -2071,6 +2080,11 @@ class Memo_Model(models.Model):
             raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
         if not self.dest_location_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
+        
+        for ln in self.product_ids:
+            """Enforce to disallow stock move that has no products qty in the location"""
+            ln.onchange_location_check_available_qty()
+        
         stock_picking_type_out = self.picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
@@ -2079,6 +2093,7 @@ class Memo_Model(models.Model):
             ('company_id', '=', self.company_id.id) 
         ], limit=1)
         if not existing_picking:
+            # for mm in self.product_ids:
             vals = {
                 'scheduled_date': fields.Date.today(),
                 'picking_type_id': stock_picking_type_out.id,
@@ -2091,7 +2106,7 @@ class Memo_Model(models.Model):
                 'move_ids_without_package': [(0, 0, {
                                 'name': self.code,
                                 'picking_type_id': stock_picking_type_out.id,
-                                'location_id': self.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                                'location_id': mm.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
                                 'location_dest_id': self.dest_location_id.id or stock_picking_type_out.default_location_src_id.id, # or destination_location_id.id,
                                 'product_id': mm.product_id.id,
                                 'product_uom_qty': mm.quantity_available,
@@ -2198,9 +2213,13 @@ class Memo_Model(models.Model):
         "stock.picking.type",
         string="Operation type", 
         )
+    edit_mode = fields.Boolean(
+        string="Edit mode", 
+        help="Allow some fields to be editable"
+        )
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
-        
+    
     @api.onchange('dest_location_id')
     def on_change_of_destination_location(self):
         if self.dest_location_id:
