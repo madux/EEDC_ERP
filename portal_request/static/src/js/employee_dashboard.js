@@ -139,6 +139,26 @@ odoo.define('portal_request.portal_employee_dashboard', function (require) {
                     );
                 }
 
+                // ---- Highlights ----
+                if (d.highlights) {
+                const hl = d.highlights;
+                const clamp = (v) => Math.max(0, Math.min(100, Number(v || 0)));
+
+                const doc = clamp(hl.documentation_pct);
+                const rec = clamp(hl.recommendations_pct);
+
+                $('#hl_doc_pct').text(doc + '%');
+                $('#hl_doc_bar').css('width', doc + '%');
+
+                $('#hl_rec_pct').text(rec + '%');
+                $('#hl_rec_bar').css('width', rec + '%');
+
+                $('#hl_planning').text(hl.planning ?? 0);
+                $('#hl_backlog').text(hl.backlog ?? 0);
+                $('#hl_payslips').text(hl.payslips ?? 0);
+                }
+
+
             } catch (e) {
                 console.error('[EmployeeDashboard] load error', e);
             }
