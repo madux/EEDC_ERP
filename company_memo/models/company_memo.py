@@ -738,6 +738,7 @@ class Memo_Model(models.Model):
             [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
+            ('publish_to_public', '=', True),
             # ('department_id', '=', employee.department_id.id),
             ('branch_id', '=', employee.user_id.branch_id.id),
             ('company_id', '=', employee.user_id.company_id.id),
@@ -750,8 +751,16 @@ class Memo_Model(models.Model):
         #     """Show memo config where user companies is in memo configs"""
         #     if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
         #         cds.append(rec.id)
-        
         # config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
+        memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
+        for r in memo_configs:
+            if r.stage_ids:
+                initiation_stage = r.stage_ids[0]
+                if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
+                    # memo_setting_with_initiators_not_user.append(r)
+                    memo_configs = memo_configs - r
+        # result_ids = list(set(memo_configs) - set(memo_setting_with_initiators_not_user))
+        # memo_configs = result_ids # self.env['memo.config'].sudo().browse(result_ids)
         return memo_configs
     
     @api.model

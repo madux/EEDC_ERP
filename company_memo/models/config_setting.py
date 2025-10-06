@@ -345,6 +345,7 @@ class MemoConfig(models.Model):
         'res.company',
         string="Company",
     )
+    publish_to_public = fields.Boolean("Publish", default=True)
     memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
     name = fields.Char(
         string='Name', 

@@ -115,6 +115,9 @@
                                 </div>
                                 <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true">
                                     <div class="navbar-light  py-0 mb-2">
+                                        <a id="myrequest" href="/" class="btn btn-secondary btn-sm">
+                                            My Apps
+                                        </a>
                                         <a id="myrequest" href="/my/requests" class="btn btn-secondary btn-sm">
                                             My requests
                                         </a>
