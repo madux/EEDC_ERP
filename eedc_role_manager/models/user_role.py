@@ -34,7 +34,7 @@ class UserRole(models.Model):
         'user_role_branch_rel',
         'role_id',
         'branch_id',
-        string='Allowed Branches',
+        string='Allowed Districts',
         help="Users with this role will be approvers for memo stages in these branches only. Leave empty for all branches."
     )
     
