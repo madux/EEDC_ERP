@@ -164,7 +164,6 @@ class UserRole(models.Model):
             _logger.info("Role definition changed for %s. Syncing %d users.", 
                         self.mapped('name'), len(users_to_sync_permissions))
             
-            # Pass context with newly added users and priority role
             ctx = {}
             if newly_added_users:
                 ctx['newly_added_user_ids'] = newly_added_users.ids

@@ -154,6 +154,16 @@ class ResUsers(models.Model):
                         user.name, roles_to_remove.mapped('name')
                     )
                     desired_groups = user.role_ids.mapped('group_ids')
+                    
+                final_has_internal = bool(desired_groups & internal_check_set)
+                final_has_portal = portal_user in desired_groups
+
+                if not final_has_internal and not final_has_portal:
+                    desired_groups |= portal_user
+                    _logger.info(
+                        "User %s (%s): Defaulting to Portal group as no remaining role grants Internal or Portal access.",
+                        user.login or user.name, user.id
+                    )
             
             # === Normal group sync (rest stays the same) ===
             current_ownerships = ownership_model.search([('user_id', '=', user.id)])
