@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="0">
+    <data noupdate="1">
 
         <!-- ######################## CATEGORIES ################################################ -->
         <record id="memo_category_billing" model="memo.category">
@@ -47,7 +47,7 @@
         <!-- BILLING ON DISCONNECTION -->
         <record id="memo_config_helpdesk_cs_bod_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Billing On Disconnection</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_billing"/>
@@ -960,7 +960,7 @@
         <!-- REPLACEMENT OF UNISTAR METER CARD -->
         <record id="memo_config_helpdesk_cs_rouumc_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Replacement of Unistar Meter Card</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_payment"/>
@@ -1372,7 +1372,7 @@
         <!-- WIRE/FUSE CUT -->
         <record id="memo_config_helpdesk_cs_wfc_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Wire/Fuse cut</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_supply"/>
@@ -1874,7 +1874,7 @@
         <!-- BURNING METER -->
         <record id="memo_config_helpdesk_cs_bm_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Burning Meter</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_hazard"/>
@@ -2221,7 +2221,7 @@
         <!-- NEW CONNECTION REQUEST -->
         <record id="memo_config_helpdesk_cs_ncr_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">New Connection Request</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_connection"/>
@@ -2388,7 +2388,7 @@
         <!-- DISCONNECTION REQUEST -->
         <record id="memo_config_helpdesk_cs_dr_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Disconnection Request</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_disconnection"/>
@@ -2505,7 +2505,7 @@
         <!-- NERC COMPLAINTS RESOLUTION -->
         <record id="memo_config_helpdesk_cs_ncr_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">NERC Complaints Resolution</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_nerc_letter"/>
@@ -2577,7 +2577,7 @@
         <!-- BILL REPRINT -->
         <record id="memo_config_helpdesk_cs_brpt_process" model="memo.config">
             <field name="memo_type" ref="helpdesk_process.mtype_helpdesk"/>
-            <field name="active">1</field>
+            <field name="active">0</field>
             <field name="name">Bill Reprint</field>
             <field name="department_id" ref="__export__.hr_department_635_3f29911e"/>
             <field name="memo_category_id" ref="memo_category_metering"/>
