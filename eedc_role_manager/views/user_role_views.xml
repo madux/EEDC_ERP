@@ -95,7 +95,7 @@
                                             <page string="Access Rights">
                                                 <group>
                                                     <group string="Roles">
-                                                        <field name="role_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                                        <field name="role_ids" widget="many2many_tags" options="{'no_create': True, 'color_field': 'color'}"/>
                                                     </group>
                                                 </group>
                                                 <group>

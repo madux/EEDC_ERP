@@ -61,6 +61,9 @@ class UserRole(models.Model):
         help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/branches."
     )
     
+    color = fields.Integer(string='Color Index', default=0,
+                           help="Integer index used by many2many_tags to color the tag.")
+    
     active = fields.Boolean(default=True)
 
     @api.depends('user_ids')
