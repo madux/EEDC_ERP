@@ -1,87 +1,186 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
 import logging
-import random
-from multiprocessing.spawn import prepare
-import urllib.parse
 from odoo import http, fields
-from odoo.exceptions import ValidationError
-from odoo.tools import consteq, plaintext2html
 from odoo.http import request
-from datetime import date, datetime
-from dateutil.relativedelta import relativedelta
-from bs4 import BeautifulSoup
-import odoo
-import odoo.addons.web.controllers.home as main
-from odoo.addons.web.controllers.utils import ensure_db, _get_login_redirect_url, is_user_internal
-from odoo.tools.translate import _
 _logger = logging.getLogger(__name__)
 
-
 class PortalDashboard(http.Controller):
+
+    # ---------- GET EMPLOYEE PROFILE IMAGE ----------
+    def _get_profile_image_b64(self, user):
+        """Return the best available *small* photo as base64 (ACL-safe via sudo)."""
+        user = user.sudo()
+        emp = user.employee_id
+        # prefer employee photo → partner photo → user photo
+        return (
+            (emp and emp.image_128) or
+            (user.partner_id and user.partner_id.image_128) or
+            user.image_128
+        ) or False
+
+    def _get_profile_image_url(self, user):
+        """Optional: cache-friendly /web/image URL (works only if portal can read the record)."""
+        user = user.sudo()
+        emp = user.employee_id
+        if emp:
+            return f"/web/image/hr.employee/{emp.id}/image_128?unique={emp.write_date or ''}"
+        if user.partner_id:
+            p = user.partner_id
+            return f"/web/image/res.partner/{p.id}/image_128?unique={p.write_date or ''}"
+        return f"/web/image/res.users/{user.id}/image_128?unique={user.write_date or ''}"
+
+
+    # ---------- PAGE ROUTE ----------
     @http.route(["/my/portal/dashboard/<int:user_id>"], type='http', auth='user', website=True, website_published=True)
-    def dashboardPortal(self, user_id): 
+    def dashboardPortal(self, user_id):
         try:
             user = request.env['res.users'].sudo().browse([user_id])
-            # user_id
-            current_time = datetime.now() 
+            if not user.exists():
+                return request.not_found()
+
             memo = request.env['memo.model'].sudo()
-            memo_ids = memo.search([
-                ('employee_id', '=', user.employee_id.id),
-            ], order="id desc")
-            vals = {  
+            memo_ids = memo.search([('employee_id', '=', user.employee_id.id)], order="id desc")
+
+            vals = {
                 "user": user,
-                "image": user.employee_id.image_512 or user.image_1920,
+                # "image": user.employee_id.image_512 or user.image_1920,
+                "image": self._get_profile_image_b64(user),
+                "image_url": self._get_profile_image_url(user),
                 "memo_ids": memo_ids,
+
+                # FIX: open_request previously used closed_files()
+                "open_request": len(self.open_files(memo_ids)),
                 "closed_request": len(self.closed_files(memo_ids)),
-                "open_request": len(self.closed_files(memo_ids)),
                 "approved_request": len(self.approved_files(memo_ids)),
-                "leave_remaining":  user.employee_id.allocation_remaining_display,
-                "template_name":  'portal_dashboard_template_id',
-                "performance_y_data_chart": json.dumps(
-                    {"performance_y_data_chart": ["KRA","Functional Competence","Leadership Competence"]}
-                    ),
-                "performance_x_data_chart": self.get_pms_performance(user),
+
+                "leave_remaining": user.employee_id.allocation_remaining_display,
+                "template_name": "portal_dashboard_template_id",
+
+                # Kept for backward-compat UI (unused by new charts)
+                "performance_y_data_chart": json.dumps({"performance_y_data_chart": [
+                    "KRA","Functional Competence","Leadership Competence"
+                ]}),
+                "performance_x_data_chart": self.get_pms_performance_json(user),
             }
-            # _logger.info(f"{vals.get('performance_y_data_chart')} and the x is {vals.performance_x_data_chart}")
             return request.render("portal_request.portal_dashboard_template_id", vals)
         except Exception as e:
-            return request.not_found() 
+            _logger.exception("dashboardPortal error: %s", e)
+            return request.not_found()
 
-    def closed_files(self, memo):
-        closed_memo_ids = memo.filtered(lambda se: se.state in ['Done'])
-        return closed_memo_ids
-    
-    def open_files(self, memo):
-        open_memo_ids = memo.filtered(lambda se: se.state not in ['Refuse', 'Done'])
-        return open_memo_ids
-    
-    def approved_files(self, memo):
-        approved_memo_ids = memo.filtered(lambda se: se.state not in ['Refuse', 'submit', 'Sent'])
-        return approved_memo_ids
-    
-    def get_pms_performance(self, user):
+    # # ---------- JSON API FOR REDESIGNED DASHBOARD ----------
+    @http.route('/portal_request/api/data', type='json', auth='user')
+    def portal_request_data(self, user_id=None):
         try:
-            appraisee = request.env['pms.appraisee'].sudo()
-            employee_appraisee = appraisee.search([(
-                'employee_id', '=', user.employee_id.id,
-            )])
-            performance_x_data_chart = [0,0,0]
-            if employee_appraisee:
-                emp_app = None
-                today_year = fields.Date.today().year
-                _logger.info(f"apprasia  {employee_appraisee}")
-                for app in employee_appraisee:
-                    _logger.info(f"APPRAISAL YEAR {app.pms_year_id.date_from.strftime('%Y')} == TODAY YEAR {today_year}")
-                    if app.pms_year_id.date_from.strftime("%Y") == str(today_year):
-                        emp_app = app
-                        _logger.info(f"DID NOT SEE ANY {emp_app} == YEAR {app.pms_year_id.date_from.strftime('%Y')}")
-                        break
-                if emp_app:
-                    performance_x_data_chart = [emp_app.final_kra_score, emp_app.final_fc_score, emp_app.final_lc_score]
-                
-            return json.dumps({'performance_x_data_chart': performance_x_data_chart})
-            
-        except ModuleNotFoundError as e:
-            return json.dumps({'performance_x_data_chart': performance_x_data_chart})
+            # resolve user
+            if user_id:
+                user = request.env['res.users'].sudo().browse(int(user_id))
+                if not user.exists():
+                    return {"ok": False, "error": "User not found"}
+            else:
+                user = request.env.user.sudo()
+
+            emp = user.employee_id
+
+            # KPIs from memos (unchanged)
+            memo = request.env['memo.model'].sudo()
+            memos = memo.search([('employee_id', '=', emp.id)]) if emp else memo.browse()
+            open_cnt     = len(self.open_files(memos))
+            closed_cnt   = len(self.closed_files(memos))
+            approved_cnt = len(self.approved_files(memos))
+            leave_remaining = emp.allocation_remaining_display if emp else 0
+
+            # --- Workload Distribution from tm.task (accurate)
+            Task = request.env['tm.task']              # no sudo → ACL-safe
+            domain = [('active', '=', True)]
+            if emp:
+                staff_code = (emp.employee_number or emp.barcode or '').strip()
+                domain += ['|', ('employee_id', '=', emp.id), ('assignee_staff_id', '=', staff_code)]
+            else:
+                domain += [('id', '=', 0)]
+
+            stages = ['todo', 'in_progress', 'review', 'done']
+            labels = {'todo': 'To Do', 'in_progress': 'In Progress', 'review': 'Review', 'done': 'Done'}
+
+            # 1) Try read_group (fast)
+            counts = {}
+            try:
+                rg = Task.read_group(domain, ['__count'], ['stage'])
+                counts = {r['stage']: int(r.get('__count', 0)) for r in rg if r.get('stage')}
+            except Exception:
+                counts = {}
+
+            # 2) If RG gave nothing useful, use search_count (always correct)
+            if sum(counts.values()) == 0:
+                counts = {st: Task.search_count(domain + [('stage', '=', st)]) for st in stages}
+
+            stage_distribution = [
+                {'key': st, 'stage': st, 'label': labels[st], 'count': int(counts.get(st, 0))}
+                for st in stages
+            ]
+
+
+            # Performance rows
+            kra, fc, lc = self._current_year_scores(emp)
+            performance_rows = [
+                {"name": "KRA",                   "count": kra},
+                {"name": "Functional Competence", "count": fc},
+                {"name": "Leadership Competence", "count": lc},
+            ]
+
+            data = {
+                "open_request": open_cnt,
+                "approved_request": approved_cnt,
+                "closed_request": closed_cnt,
+                "leave_remaining": leave_remaining,
+                "employee_name": emp.name if emp else user.name,
+                "department": (emp.department_id.name if emp and emp.department_id else "") or "",
+                "role": (emp.job_id.name if emp and emp.job_id else "") or "",
+                "manager": (emp.parent_id.name if emp and emp.parent_id else "") or "",
+                "stage_distribution": stage_distribution,
+                "performance_rows": performance_rows,
+            }
+            return {"ok": True, "data": data}
+        except Exception as e:
+            _logger.exception("portal_request_data error: %s", e)
+            return {"ok": False, "error": "Unexpected error"}
+
+    # ---------- Helpers ----------
+    def closed_files(self, memos):
+        return memos.filtered(lambda m: m.state in ['Done'])
+
+    def open_files(self, memos):
+        # Not refused and not done ⇒ considered open
+        return memos.filtered(lambda m: m.state not in ['Refuse', 'Done'])
+
+    def approved_files(self, memos):
+        # Your previous logic (keep as-is): not Refuse/submit/Sent
+        return memos.filtered(lambda m: m.state not in ['Refuse', 'submit', 'Sent'])
+
+    def _current_year_scores(self, emp):
+        """Return (kra, fc, lc) floats for the current year if available; else zeros."""
+        kra = fc = lc = 0.0
+        try:
+            if not emp:
+                return kra, fc, lc
+            appraisee_env = request.env['pms.appraisee'].sudo()
+            employee_appraisees = appraisee_env.search([('employee_id', '=', emp.id)])
+            if not employee_appraisees:
+                return kra, fc, lc
+
+            this_year = fields.Date.today().year
+            current = next((a for a in employee_appraisees
+                            if a.pms_year_id and a.pms_year_id.date_from and
+                               a.pms_year_id.date_from.strftime("%Y") == str(this_year)), None)
+            if current:
+                kra = float(current.final_kra_score or 0.0)
+                fc  = float(current.final_fc_score or 0.0)
+                lc  = float(current.final_lc_score or 0.0)
+        except Exception as e:
+            _logger.debug("Score fetch failed: %s", e)
+        return kra, fc, lc
+
+    # Back-compat with your previous template use (returns JSON string)
+    def get_pms_performance_json(self, user):
+        kra, fc, lc = self._current_year_scores(user.employee_id)
+        return json.dumps({'performance_x_data_chart': [kra, fc, lc]})
