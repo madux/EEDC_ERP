@@ -27,7 +27,7 @@
                                             <ul>
                                                 <li>URL: <a href='/web'>Click the link</a> </li>
                                                 
-                                                <li>URL: <a>https://hrpms.myeedc.com/web/login</a> </li>
+                                                <li>URL: <a>https://apps.myeedc.com/web/login</a> </li>
                                                 <li>Username: <t t-out="object.user_id.login"/></li>
                                                 <li>Password: <t t-out="object.migrated_password or ''"/></li>
                                             </ul>
