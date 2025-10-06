@@ -263,6 +263,7 @@ class HrEmployeeBase(models.AbstractModel):
                 })
                 change_password_wiz_id.user_ids[0].change_password_button()
                 rec.migrated_password = new_password
+                _logger.info(f"Password updated {rec.migrated_password}")
                 # self.send_credential_notification()
             else:
                 raise ValidationError('Employee is not related to any user. Kindly contact system admin to create a user for the employee')
@@ -299,12 +300,12 @@ class HrEmployeeBase(models.AbstractModel):
     #         )
     
 
-    def send_credential_notification(self):
+    def send_credential_notification(self, employee_ids=[]):
         MAIL_TEMPLATE = self.env.ref(
         'hr_pms.mail_template_pms_notification', raise_if_not_found=False)
         # self.with_context(allow_write=True)._message_post(
         #     MAIL_TEMPLATE)  mail_template_non_email_subordinates_pms_notification
-        rec_ids = self.env.context.get('active_ids', [])
+        rec_ids = self.env.context.get('active_ids', []) or employee_ids
         template_to_use = "mail_template_pms_notification"
         for rec in rec_ids:
             record = self.env['hr.employee'].browse([rec])

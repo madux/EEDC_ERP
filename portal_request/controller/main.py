@@ -164,23 +164,32 @@ class PortalRequest(http.Controller):
                     })
                 _logger.info(f'MY EMPLOYEE EMAIL IS ...{employee_email} {employee.work_email}' )
                 if employee.work_email == employee_email:
+                    _logger.info(f'Employee email corresponds ...{employee_email} {employee.work_email}' )
                     employee.reset_employee_user_password()
-                    employee.send_credential_notification()
+                    employee.send_credential_notification([employee.id])
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                elif employee_email in [employee.user_id.login]:
+                    _logger.info(f'Employee user login corresponds ...{employee_email} {employee.user_id.login}' )
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification([employee.id])
                     return json.dumps({
                         "status": True,
                         "message": "Your password reset was successful.. Please check your email", 
                     })
                 else:
-                    employee.reset_employee_user_password()
-                    employee.send_credential_notification()
-                    if employee.parent_id.work_email:
-                        '''send to manager's email'''
-                        return json.dumps({
-                            "status": True,
-                            "message": "Your password reset was successfully sent to your manager's email", 
-                        })
-                    else:
-                        return json.dumps({
+                    # employee.reset_employee_user_password()
+                    # employee.send_credential_notification()
+                    # if employee.parent_id.work_email:
+                        # '''send to manager's email'''
+                        # return json.dumps({
+                        #     "status": True,
+                        #     "message": "Your password reset was successfully sent to your manager's email", 
+                        # })
+                    # else:
+                    return json.dumps({
                             "status": False,
                             "message": "We could not find any related email to send your password. Contact admin to linked you to a user", 
                         })
