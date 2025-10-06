@@ -37,6 +37,29 @@ odoo.define('portal_request.portal_employee_dashboard', function (require) {
       $('#portal-dashboard-content').addClass('active');
     },
 
+     /** Show a message block instead of a chart when there's nothing to plot */
+    _showEmptyIfNeeded(canvasSelector, show, message) {
+        const $canvas = this.$(canvasSelector);
+        const $body = $canvas.closest('.tm-card-body');
+        const cls = 'tm-empty-chart';
+
+        if (show) {
+        $canvas.addClass('d-none');
+        if (!$body.find('.' + cls).length) {
+            $body.append(`
+            <div class="${cls}">
+                <i class="fa fa-info-circle tm-empty-icn" aria-hidden="true"></i>
+                <div class="tm-empty-title">No data yet</div>
+                <div class="tm-empty-sub">${_.escape(message || "There's nothing to show here yet.")}</div>
+            </div>
+            `);
+        }
+        } else {
+        $canvas.removeClass('d-none');
+        $body.find('.' + cls).remove();
+        }
+    },
+
     async _loadData() {
       try {
         const res = await ajax.rpc('/portal_request/api/data', {});  // implement server route
@@ -65,17 +88,29 @@ odoo.define('portal_request.portal_employee_dashboard', function (require) {
         if (d.role)          $('#pf_role').text(smartCap(d.role));
         if (d.manager)       $('#pf_manager').text(smartCap(d.manager));
 
-        // CHARTS
-        // 1) Donut: Workload distribution → reuse 'stage' updater
-        //    Expected rows like: [{key:'todo', label:'Pending', count:6}, {key:'in_progress', label:'In Progress', count:8}, {key:'review', label:'Review', count:8}, {key:'done', label:'Done', count:16}]
+        // ===== CHARTS =====
+        // 1) Workload distribution
         if (Array.isArray(d.stage_distribution)) {
-          Charts.updateStage(d.stage_distribution);
+            Charts.updateStage(d.stage_distribution);
+            const totalStage = d.stage_distribution.reduce(
+            (s, r) => s + Number(r.count ?? r.id_count ?? r.employee_id_count ?? 0), 0
+            );
+            this._showEmptyIfNeeded(
+            '#tm_ad_chart_stage',
+            totalStage === 0,
+            "You haven't been assigned any tasks yet by your manager. When tasks are assigned, they’ll appear here."
+            );
         }
 
-        // 2) Bars/Line: Performance categories → reuse empDone updater (free labels)
-        //    Expected rows like: [{name:'Documentation', count:24}, {name:'Recommendations', count:31}, ...]
+        // 2) Performance chart (optional empty state too)
         if (Array.isArray(d.performance_rows)) {
-          Charts.updateEmpDone(d.performance_rows);
+            Charts.updateEmpDone(d.performance_rows);
+            const totalPerf = d.performance_rows.reduce((s, r) => s + Number(r.count ?? 0), 0);
+            this._showEmptyIfNeeded(
+            '#tm_ad_chart_emp_done',
+            totalPerf === 0,
+            "No performance data to display yet."
+            );
         }
 
       } catch (e) {

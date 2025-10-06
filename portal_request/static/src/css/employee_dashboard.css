@@ -25,7 +25,24 @@
 /* Profile page: tighter vertical rhythm */
 #portal-dashboard-content .tm-card { margin-bottom: 0 !important; min-height: auto; }
 #portal-dashboard-content .tm-card .tm-card-head { padding-bottom: .5rem; }
-#portal-dashboard-content .tm-card .tm-card-body { padding-bottom: .75rem; }
+#portal-dashboard-content .tm-card .tm-card-body { padding-bottom: .75rem; position: relative; }
+/* Empty state for charts */
+/* .tm-card-body { position: relative; } */
+#portal-dashboard-content .tm-empty-chart{
+min-height: 240px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .25rem;
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+}
+#portal-dashboard-content .tm-empty-icn { font-size: 20px; margin-bottom: .25rem; color: #64748b; }
+#portal-dashboard-content .tm-empty-title { font-weight: 600; color: #0f172a; }
+#portal-dashboard-content .tm-empty-sub { font-size: .9rem; color: #64748b; }
+
 
 /* Charts: reduce default min-height a bit so cards don't look bottom-heavy */
 #portal-dashboard-content .tm-card .tm-card-body canvas { min-height: 240px !important; }
