@@ -339,126 +339,306 @@ class PortalRequest(http.Controller):
     # 			"message": "Please select staff ID. Contact Admin", 
     # 			}
     # ['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+    # @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
+    # def get_leave_allocation(self, **post):
+    #     """Check staff Identification No.
+    #     Args:
+    #         staff_num (str): The Id No to be validated
+    #     Returns:
+    #         dict: Response
+    #     """
+    #     _logger.info(f'Checking Staff leave ID No ... {post}')
+    #     staff_num = post.get('staff_num')
+    #     leave_type = post.get('leave_id')
+    #     user = request.env.user
+    #     if staff_num:
+    #         _logger.info('staff number found ...')
+    #         employee = request.env['hr.employee'].sudo().search(
+    #         [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
+    #         if employee:
+    #             _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
+
+    #             # get leave artifacts
+    #             leave_allocation = request.env['hr.leave.allocation'].sudo()
+    #             # Get today's year
+    #             current_year = date.today().year
+    #             # Define the range
+    #             within_this_start_year = date(current_year, 1, 1)    # Jan 1
+    #             within_this_end_year = date(current_year, 12, 31)    # Dec 31
+    #             leave_allocation_id = leave_allocation.search([
+    #                 ('holiday_status_id', '=', int(leave_type)),
+    #                 ('employee_id', '=', employee.id),
+    #                 ('date_from', '>=', within_this_start_year),
+    #                 ('date_from', '<=', within_this_end_year),
+    #                 ('active', '=', True),
+    #                 # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
+    #                 ], limit=1)
+    #             leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
+    #             # _logger.info('staff number found ...')
+    #             _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
+    
+    #             if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
+    #                 return {
+    #                     "status": False,
+    #                     "data": {
+    #                         'number_of_days_display': "",
+    #                     },
+    #                     "message": "No allocation set up for the employee. Contact Admin", 
+    #                     }
+    #             else: # if leave_allocation_id:
+    #                 return {
+    #                     "status": True,
+    #                     "data": {
+    #                         'number_of_days_display': employee.allocation_remaining_display,
+    #                         # 'number_of_days_display': leave_allocation_id.number_of_days_display,
+    #                     },
+    #                     "message": "", 
+    #                 }
+
+    #         else:
+    #             return {
+    #                 "status": False,
+    #                 "data": {
+    #                     'number_of_days_display': "",
+    #                 },
+    #                 "message": "Employee with staff ID provided does not exist. Contact Admin", 
+    #                 }
+    #     return {
+    #             "status": False,
+    #             "data": {
+    #                 'number_of_days_display': "",
+    #             },
+    #             "message": "Please select2 staff ID. Contact Admin", 
+    #             }
+  
+    # @http.route(['/check-overlapping-leave'], type='json', website=True, auth="user", csrf=False)
+    # def check_overlapping_leave(self, **post):
+    #     staff_num = post.get('data').get('staff_num')
+    #     start_date = post.get('data').get('start_date')
+    #     end_date = post.get('data').get('end_date')
+    #     _logger.info(f'posted to check overlapping leave ...{staff_num}, {start_date}, {end_date}')
+
+    #     employee_id = request.env['hr.employee'].sudo().search([
+    #         ('employee_number', '=', staff_num)
+    #         ], limit=1)
+    #     if not any([staff_num, start_date, end_date]):
+    #         return {
+    #                 "status": False,
+    #                 "message": "Please ensure you provide staff number , leave start date and leave end date", 
+    #                 }
+    #     else:
+    #         _logger.info('All fields captured')
+
+    #     if employee_id: 
+    #         st = datetime.strptime(start_date, "%m/%d/%Y")
+    #         ed = datetime.strptime(end_date, "%m/%d/%Y")
+    #         # all_employees = self.employee_id | self.employee_ids
+    #         hr_request = request.env['hr.leave'].sudo().search(
+    #             [
+    #             ('request_date_from', '<=', st),
+    #             ('request_date_to', '>=', ed),
+    #             ('employee_id', '=', employee_id.id),
+    #             # ('state', 'not in', ['draft', 'Refuse']),
+    #             ], 
+    #             limit=1) 
+    #         if hr_request:
+    #             msg = """You can not set two time off that overlap on the same day for the same employee. Existing time off:"""
+    #             return {
+    #                 "status": False,
+    #                 "message": msg, 
+    #                 } 
+    #         else:
+    #             _logger.info('No date inbetween')
+    #             return {
+    #                 "status": True,
+    #                 "message": "", 
+    #                 }
+    #     else:
+    #         msg = """No Employee record found"""
+    #         return {
+    #             "status": False,
+    #             "message": msg, 
+    #             }
+    
     @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
     def get_leave_allocation(self, **post):
-        """Check staff Identification No.
+        """Check staff leave allocation for specific leave type.
         Args:
-            staff_num (str): The Id No to be validated
+            staff_num (str): The employee ID/staff number
+            leave_id (str): The specific leave type ID
         Returns:
-            dict: Response
+            dict: Response with remaining days for the SPECIFIC leave type
         """
-        _logger.info(f'Checking Staff leave ID No ... {post}')
+        _logger.info(f'Checking Staff leave allocation ... {post}')
         staff_num = post.get('staff_num')
         leave_type = post.get('leave_id')
         user = request.env.user
-        if staff_num:
-            _logger.info('staff number found ...')
-            employee = request.env['hr.employee'].sudo().search(
-            [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
-            if employee:
-                _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
-
-                # get leave artifacts
-                leave_allocation = request.env['hr.leave.allocation'].sudo()
-                # Get today's year
-                current_year = date.today().year
-                # Define the range
-                within_this_start_year = date(current_year, 1, 1)    # Jan 1
-                within_this_end_year = date(current_year, 12, 31)    # Dec 31
-                leave_allocation_id = leave_allocation.search([
-                    ('holiday_status_id', '=', int(leave_type)),
-                    ('employee_id', '=', employee.id),
-                    ('date_from', '>=', within_this_start_year),
-                    ('date_from', '<=', within_this_end_year),
-                    ('active', '=', True),
-                    # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
-                    ], limit=1)
-                leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
-                # _logger.info('staff number found ...')
-                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
-    
-                if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
-                    return {
-                        "status": False,
-                        "data": {
-                            'number_of_days_display': "",
-                        },
-                        "message": "No allocation set up for the employee. Contact Admin", 
-                        }
-                else: # if leave_allocation_id:
-                    return {
-                        "status": True,
-                        "data": {
-                            'number_of_days_display': employee.allocation_remaining_display,
-                            # 'number_of_days_display': leave_allocation_id.number_of_days_display,
-                        },
-                        "message": "", 
-                    }
-
-            else:
+        
+        if not staff_num:
+            return {
+                "status": False,
+                "data": {'number_of_days_display': ""},
+                "message": "Please provide staff ID", 
+            }
+        
+        if not leave_type:
+            return {
+                "status": False,
+                "data": {'number_of_days_display': ""},
+                "message": "Please select a leave type", 
+            }
+        
+        _logger.info('Staff number and leave type found ...')
+        
+        # Find the employee
+        employee = request.env['hr.employee'].sudo().search(
+            [('employee_number', '=', staff_num), ('active', '=', True)], 
+            limit=1
+        )
+        
+        if not employee:
+            return {
+                "status": False,
+                "data": {'number_of_days_display': ""},
+                "message": "Employee with staff ID provided does not exist. Contact Admin", 
+            }
+        
+        _logger.info(f'Employee found: {employee.name} (ID: {employee.id})')
+        
+        # Get the specific leave type
+        leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
+        
+        if not leave_type_obj:
+            return {
+                "status": False,
+                "data": {'number_of_days_display': ""},
+                "message": "Invalid leave type selected", 
+            }
+        
+        # Get current year range
+        current_year = date.today().year
+        within_this_start_year = date(current_year, 1, 1)
+        within_this_end_year = date(current_year, 12, 31)
+        
+        # Search for allocation for THIS SPECIFIC leave type
+        leave_allocation_id = request.env['hr.leave.allocation'].sudo().search([
+            ('holiday_status_id', '=', int(leave_type)),
+            ('employee_id', '=', employee.id),
+            ('date_from', '>=', within_this_start_year),
+            ('date_from', '<=', within_this_end_year),
+            ('active', '=', True),
+            ('state', '=', 'validate'),  # Only validated allocations
+        ], limit=1)
+        
+        _logger.info(f'Leave Type: {leave_type_obj.name}, Requires Allocation: {leave_type_obj.requires_allocation}')
+        _logger.info(f'Allocation Found: {leave_allocation_id.name if leave_allocation_id else "None"}')
+        
+        # Check if this leave type requires allocation
+        if leave_type_obj.requires_allocation == 'yes':
+            if not leave_allocation_id:
                 return {
                     "status": False,
-                    "data": {
-                        'number_of_days_display': "",
-                    },
-                    "message": "Employee with staff ID provided does not exist. Contact Admin", 
-                    }
-        return {
-                "status": False,
-                "data": {
-                    'number_of_days_display': "",
-                },
-                "message": "Please select2 staff ID. Contact Admin", 
+                    "data": {'number_of_days_display': ""},
+                    "message": f"No allocation set up for {leave_type_obj.name}. Contact Admin", 
                 }
-  
+            
+            # CRITICAL FIX: Return the remaining days for THIS SPECIFIC leave type only
+            remaining_days = leave_allocation_id.number_of_days_display
+            
+            _logger.info(f'Remaining days for {leave_type_obj.name}: {remaining_days}')
+            
+            return {
+                "status": True,
+                "data": {
+                    'number_of_days_display': remaining_days,
+                    'leave_type_name': leave_type_obj.name,
+                    'allocation_id': leave_allocation_id.id,
+                },
+                "message": "", 
+            }
+        else:
+            # For leave types that don't require allocation (unlimited leaves)
+            return {
+                "status": True,
+                "data": {
+                    'number_of_days_display': 999,  # Or set a high number for unlimited
+                    'leave_type_name': leave_type_obj.name,
+                    'allocation_id': False,
+                },
+                "message": "", 
+            }
+
+
     @http.route(['/check-overlapping-leave'], type='json', website=True, auth="user", csrf=False)
     def check_overlapping_leave(self, **post):
-        staff_num = post.get('data').get('staff_num')
-        start_date = post.get('data').get('start_date')
-        end_date = post.get('data').get('end_date')
-        _logger.info(f'posted to check overlapping leave ...{staff_num}, {start_date}, {end_date}')
-
+        """Check if employee has overlapping leave dates"""
+        data = post.get('data', {})
+        staff_num = data.get('staff_num')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        _logger.info(f'Checking overlapping leave: Staff={staff_num}, Start={start_date}, End={end_date}')
+        
+        # Validate inputs
+        if not all([staff_num, start_date, end_date]):
+            return {
+                "status": False,
+                "message": "Please provide staff number, leave start date and leave end date", 
+            }
+        
+        # Find employee
         employee_id = request.env['hr.employee'].sudo().search([
             ('employee_number', '=', staff_num)
-            ], limit=1)
-        if not any([staff_num, start_date, end_date]):
+        ], limit=1)
+        
+        if not employee_id:
             return {
-                    "status": False,
-                    "message": "Please ensure you provide staff number , leave start date and leave end date", 
-                    }
-        else:
-            _logger.info('All fields captured')
-
-        if employee_id: 
+                "status": False,
+                "message": "Employee not found", 
+            }
+        
+        try:
+            # Parse dates
             st = datetime.strptime(start_date, "%m/%d/%Y")
             ed = datetime.strptime(end_date, "%m/%d/%Y")
-            # all_employees = self.employee_id | self.employee_ids
-            hr_request = request.env['hr.leave'].sudo().search(
-                [
-                ('request_date_from', '<=', st),
-                ('request_date_to', '>=', ed),
+            
+            # Check for overlapping leaves
+            # A leave overlaps if:
+            # - It starts before or on the new end date AND
+            # - It ends on or after the new start date
+            overlapping_leaves = request.env['hr.leave'].sudo().search([
                 ('employee_id', '=', employee_id.id),
-                # ('state', 'not in', ['draft', 'Refuse']),
-                ], 
-                limit=1) 
-            if hr_request:
-                msg = """You can not set two time off that overlap on the same day for the same employee. Existing time off:"""
+                ('request_date_from', '<=', ed),
+                ('request_date_to', '>=', st),
+                ('state', 'not in', ['cancel', 'refuse']),  # Exclude cancelled/refused
+            ], limit=1)
+            
+            if overlapping_leaves:
+                msg = f"You cannot set overlapping leave dates. Existing leave from {overlapping_leaves.request_date_from.strftime('%m/%d/%Y')} to {overlapping_leaves.request_date_to.strftime('%m/%d/%Y')}"
+                _logger.warning(msg)
                 return {
                     "status": False,
                     "message": msg, 
-                    } 
-            else:
-                _logger.info('No date inbetween')
-                return {
-                    "status": True,
-                    "message": "", 
-                    }
-        else:
-            msg = """No Employee record found"""
+                }
+            
+            _logger.info('No overlapping leave found')
+            return {
+                "status": True,
+                "message": "", 
+            }
+            
+        except ValueError as e:
+            _logger.error(f'Date parsing error: {e}')
             return {
                 "status": False,
-                "message": msg, 
-                }
+                "message": "Invalid date format. Please use MM/DD/YYYY", 
+            }
+        except Exception as e:
+            _logger.error(f'Error checking overlapping leave: {e}')
+            return {
+                "status": False,
+                "message": f"Error: {str(e)}", 
+            }
         
     @http.route(['/check-configured-stage'], type='json', website=True, auth="user", csrf=False)
     def check_configured_leave(self, **post):
