@@ -342,10 +342,10 @@ class PortalRequest(http.Controller):
     @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
     def get_leave_allocation(self, **post):
         """Check staff Identification No.
-        Args:
-            staff_num (str): The Id No to be validated
-        Returns:
-            dict: Response
+            Args:
+                staff_num (str): The Id No to be validated
+            Returns:
+                dict: Response
         """
         _logger.info(f'Checking Staff leave ID No ... {post}')
         staff_num = post.get('staff_num')
@@ -357,7 +357,6 @@ class PortalRequest(http.Controller):
             [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
             if employee:
                 _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
-
                 # get leave artifacts
                 leave_allocation = request.env['hr.leave.allocation'].sudo()
                 # Get today's year
@@ -375,7 +374,7 @@ class PortalRequest(http.Controller):
                     ], limit=1)
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
-                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
+                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} TAKEN OR REMAINING ={leave_allocation_id.leaves_taken} == {leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken} {within_this_start_year}   =={within_this_end_year}')
     
                 if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
                     return {
@@ -389,8 +388,9 @@ class PortalRequest(http.Controller):
                     return {
                         "status": True,
                         "data": {
-                            'number_of_days_display': employee.allocation_remaining_display,
+                            # 'number_of_days_display': employee.allocation_remaining_display,
                             # 'number_of_days_display': leave_allocation_id.number_of_days_display,
+                            'number_of_days_display': leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken,
                         },
                         "message": "", 
                     }
@@ -740,7 +740,8 @@ class PortalRequest(http.Controller):
         query = request.params.get('q', '') 
         domain = [
             ('active', '=', True), 
-            ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id.user_id.company_ids.ids', 'in', [request.env.user.company_id.id]),
             '|', ('name', 'ilike', query),('employee_number', 'ilike', query),
             ]#, ('id', 'in', available_employees)]
         employees = request.env["hr.employee"].sudo().search(domain)
@@ -1385,7 +1386,7 @@ class PortalRequest(http.Controller):
                         pass 
             return date_val 
         
-        request_id = request.env['memo.model'].sudo()
+        request_id = request.env['memo.model'].sudo()  
         def query_domain(query):
             domain = [
                 ('active', '=', True),

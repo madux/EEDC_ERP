@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hr_employee_query_id,hr_employee_query_name,hr_addons.model_hr_employee_query,hr.group_hr_manager,1,1,1,1
+access_hr_employee_query_user_id,hr_employee_query_user_name,hr_addons.model_hr_employee_query,,1,1,1,0
 access_hr_employeewarning_id,hr_employee_warning_name,hr_addons.model_hr_employee_warning,hr.group_hr_manager,1,1,1,1
+access_hr_employeewarning_user_id,hr_employee_warning_user_name,hr_addons.model_hr_employee_warning,,1,1,1,0

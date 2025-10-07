@@ -30,7 +30,7 @@
                             <group>
                                 
                                 <field name="employment_date" required="0"/>
-                                <field name="migrated_password" required="0" groups="base.group_system" string="Ps"/>
+                                <field name="migrated_password" required="0" groups="base.group_system" string="Ps" invisible="1"/>
                                 <field name="login_username" required="0" groups="base.group_system" string="User Login"/>
                                 <button name="reset_employee_user_password" type="object" string="Reset user login" required="0" groups="base.group_system,hr.group_hr_manager"/>
                             </group> 
