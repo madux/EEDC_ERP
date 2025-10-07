@@ -34,7 +34,7 @@ class UserRole(models.Model):
         'user_role_branch_rel',
         'role_id',
         'branch_id',
-        string='Allowed Branches',
+        string='Allowed Districts',
         help="Users with this role will be approvers for memo stages in these branches only. Leave empty for all branches."
     )
     
@@ -60,6 +60,9 @@ class UserRole(models.Model):
         string='Limit to User Context',
         help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/branches."
     )
+    
+    color = fields.Integer(string='Color Index', default=0,
+                           help="Integer index used by many2many_tags to color the tag.")
     
     active = fields.Boolean(default=True)
 

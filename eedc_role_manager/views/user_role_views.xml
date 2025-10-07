@@ -68,9 +68,48 @@
                                 <tree>
                                     <field name="name"/>
                                     <field name="login"/>
-                                    <field name="branch_ids" widget="many2many_tags"/>
+                                    <field name="branch_id" string="District"/>
                                     <field name="company_id"/>
                                 </tree>
+
+                                <form string="User Details">
+                                    <sheet>
+                                        <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'avatar_128'}"/>
+                                        <div class="oe_title">
+                                            <label for="name" string="Name"/>
+                                            <h1><field name="name" placeholder="User's Name" required="1" readonly="1"/></h1>
+                                            <label for="login" string="Email Address"/>
+                                            <h2><field name="login" readonly="1"/></h2>
+                                        </div>
+                                        
+                                        <group>
+                                            <group>
+                                                <field name="company_id" options="{'no_create': True}"/>
+                                            </group>
+                                            <group>
+                                                <field name="branch_id" string="District" options="{'no_create': True}"/>
+                                            </group>
+                                        </group>
+                                        
+                                        <notebook>
+                                            <page string="Access Rights">
+                                                <group>
+                                                    <group string="Roles">
+                                                        <field name="role_ids" widget="many2many_tags" options="{'no_create': True, 'color_field': 'color'}"/>
+                                                    </group>
+                                                </group>
+                                                <group>
+                                                    <group string="Multi-Company">
+                                                        <field name="company_ids" widget="many2many_tags" string="Allowed Companies" options="{'no_create': True}"/>
+                                                    </group>
+                                                    <group string="Multi-Branch">
+                                                        <field name="branch_ids" widget="many2many_tags" string="Allowed Districts" options="{'no_create': True}"/>
+                                                    </group>
+                                                </group>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
                             </field>
                         </page>
                     </notebook>
