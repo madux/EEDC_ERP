@@ -462,80 +462,61 @@ class PortalRequest(http.Controller):
     
     @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
     def get_leave_allocation(self, **post):
-        """Check staff leave allocation for specific leave type.
-        Args:
-            staff_num (str): The employee ID/staff number
-            leave_id (str): The specific leave type ID
-        Returns:
-            dict: Response with remaining days for the SPECIFIC leave type
+        """Check staff Identification No.
+            Args:
+                staff_num (str): The Id No to be validated
+            Returns:
+                dict: Response
         """
         _logger.info(f'Checking Staff leave allocation ... {post}')
         staff_num = post.get('staff_num')
         leave_type = post.get('leave_id')
         user = request.env.user
-        
-        if not staff_num:
-            return {
-                "status": False,
-                "data": {'number_of_days_display': ""},
-                "message": "Please provide staff ID", 
-            }
-        
-        if not leave_type:
-            return {
-                "status": False,
-                "data": {'number_of_days_display': ""},
-                "message": "Please select a leave type", 
-            }
-        
-        _logger.info('Staff number and leave type found ...')
-        
-        # Find the employee
-        employee = request.env['hr.employee'].sudo().search(
-            [('employee_number', '=', staff_num), ('active', '=', True)], 
-            limit=1
-        )
-        
-        if not employee:
-            return {
-                "status": False,
-                "data": {'number_of_days_display': ""},
-                "message": "Employee with staff ID provided does not exist. Contact Admin", 
-            }
-        
-        _logger.info(f'Employee found: {employee.name} (ID: {employee.id})')
-        
-        # Get the specific leave type
-        leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
-        
-        if not leave_type_obj:
-            return {
-                "status": False,
-                "data": {'number_of_days_display': ""},
-                "message": "Invalid leave type selected", 
-            }
-        
-        # Get current year range
-        current_year = date.today().year
-        within_this_start_year = date(current_year, 1, 1)
-        within_this_end_year = date(current_year, 12, 31)
-        
-        # Search for allocation for THIS SPECIFIC leave type
-        leave_allocation_id = request.env['hr.leave.allocation'].sudo().search([
-            ('holiday_status_id', '=', int(leave_type)),
-            ('employee_id', '=', employee.id),
-            ('date_from', '>=', within_this_start_year),
-            ('date_from', '<=', within_this_end_year),
-            ('active', '=', True),
-            ('state', '=', 'validate'),  # Only validated allocations
-        ], limit=1)
-        
-        _logger.info(f'Leave Type: {leave_type_obj.name}, Requires Allocation: {leave_type_obj.requires_allocation}')
-        _logger.info(f'Allocation Found: {leave_allocation_id.name if leave_allocation_id else "None"}')
-        
-        # Check if this leave type requires allocation
-        if leave_type_obj.requires_allocation == 'yes':
-            if not leave_allocation_id:
+        if staff_num:
+            _logger.info('staff number found ...')
+            employee = request.env['hr.employee'].sudo().search(
+            [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
+            if employee:
+                _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
+                # get leave artifacts
+                leave_allocation = request.env['hr.leave.allocation'].sudo()
+                # Get today's year
+                current_year = date.today().year
+                # Define the range
+                within_this_start_year = date(current_year, 1, 1)    # Jan 1
+                within_this_end_year = date(current_year, 12, 31)    # Dec 31
+                leave_allocation_id = leave_allocation.search([
+                    ('holiday_status_id', '=', int(leave_type)),
+                    ('employee_id', '=', employee.id),
+                    ('date_from', '>=', within_this_start_year),
+                    ('date_from', '<=', within_this_end_year),
+                    ('active', '=', True),
+                    # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
+                    ], limit=1)
+                leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
+                # _logger.info('staff number found ...')
+                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} TAKEN OR REMAINING ={leave_allocation_id.leaves_taken} == {leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken} {within_this_start_year}   =={within_this_end_year}')
+    
+                if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
+                    return {
+                        "status": False,
+                        "data": {
+                            'number_of_days_display': "",
+                        },
+                        "message": "No allocation set up for the employee. Contact Admin", 
+                        }
+                else: # if leave_allocation_id:
+                    return {
+                        "status": True,
+                        "data": {
+                            # 'number_of_days_display': employee.allocation_remaining_display,
+                            # 'number_of_days_display': leave_allocation_id.number_of_days_display,
+                            'number_of_days_display': leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken,
+                        },
+                        "message": "", 
+                    }
+
+            else:
                 return {
                     "status": False,
                     "data": {'number_of_days_display': ""},
@@ -920,7 +901,8 @@ class PortalRequest(http.Controller):
         query = request.params.get('q', '') 
         domain = [
             ('active', '=', True), 
-            ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id.user_id.company_ids.ids', 'in', [request.env.user.company_id.id]),
             '|', ('name', 'ilike', query),('employee_number', 'ilike', query),
             ]#, ('id', 'in', available_employees)]
         employees = request.env["hr.employee"].sudo().search(domain)
@@ -1565,7 +1547,7 @@ class PortalRequest(http.Controller):
                         pass 
             return date_val 
         
-        request_id = request.env['memo.model'].sudo()
+        request_id = request.env['memo.model'].sudo()  
         def query_domain(query):
             domain = [
                 ('active', '=', True),
