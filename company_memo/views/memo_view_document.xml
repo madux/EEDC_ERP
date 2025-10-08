@@ -17,7 +17,8 @@
 							<field name="memo_state" invisible="0"/> 
 							<field name="dummy_request_from_document_folder_ids" invisible="1"/> 
 							<field name="dummy_request_to_document_folder_ids" invisible="1"/> 
-							<field name="name" required="1" widget="text" placeholder="Enter of document(s)..."/> 
+							<field name="name" required="1" widget="text" placeholder="Enter of document(s)..."
+							attrs="{'readonly': [('memo_state', 'not in', ['submit', 'refuse'])]}"/> 
 						</group>
 						<group>
 							<field name="request_to_document_folder" string="Your target folder" domain="[('id', 'in', dummy_request_to_document_folder_ids)]" required="1"/> 
@@ -26,6 +27,7 @@
 					</group>
 					<notebook> 
 						<page string="Upload from Computer">
+
 							<field name="attachment_ids" string="Attachment" domain="[('id', '=', None)]" 
 							context="{'default_res_model': 'memo.model', 'default_res_id': active_id, 'default_public': False, 'default_memo_id': memo_document_request_id}"
 							attrs="{'readonly': [('memo_state', 'not in', ['Approve', 'Approve2'])]}"
@@ -137,8 +139,10 @@
 							<group>
 							</group>
 							<group name="normal_memo_group1"> 
+
 								<field name="document_memo_config_id" string="Requesting from?" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 								required="1" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
+
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="phone" readonly="1"/>
 								<field name="email" readonly="1"/>
@@ -147,7 +151,6 @@
 								<field name="demo_staff" invisible="1"/>
 								<field name="dept_ids" widget="selection" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<field name="start_date" attrs="{'invisible':[('memo_type_key','!=', 'loan')],'required':[('memo_type_key','=','loan')]}"/>
-								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 							</group> 
 							<group name="normal_memo_group2"> 
 								<field name="date" attrs="{'readonly':[('state','not in',['submit','Refuse'])]}" options='{"datepicker": {"daysOfWeekDisabled": [5,6]}}'/>
@@ -155,23 +158,23 @@
 								<field name="user_ids" readonly="1" invisible="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" />
 								<field name="status_progress" widget="progressbar" string="Progress(%)"/>
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>   
+								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 							</group> 
 						</group>
 						<notebook>
 							<page name='document_request_id' string='Attachment Lines' attrs="{'invisible':[('to_create_document','=', False)]}">
 								<field name="document_request_ids" string = "Document Lines" readonly="0" force_save="1"
-								context="{'default_memo_document_request_id': active_id}">
+								context="{'default_memo_document_request_id': active_id}" attrs="{'readonly': [('state', 'not in', ['submit', 'Approve', 'Approve2', 'Refuse'])]}">
 									<tree string="">
 										<field name="memo_document_request_id" invisible="1" column_invisible="1"/> 
 										<field name="request_from_document_folder" invisible="1"/> 
-										<field name="request_to_document_folder" required="1"/> 
-										<field name="attachment_ids" widget="many2many_tags" required="1"/>
+										<field name="request_to_document_folder" required="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
+										<field name="attachment_ids" widget="many2many_tags" required="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 										<field name="memo_state" invisible="1"/> 
 										<button name="view_related_file_system" type="object" class="oe_highlight btn-sm" 
 										string="View files" attrs="{'invisible': [('memo_state', 'not in', ['Done'])]}"/>
 									</tree>
 								</field>
-								
 							</page> 
 							
 							<page name="sub_stages" string="Sub Tasks" attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}">

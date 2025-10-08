@@ -43,6 +43,13 @@ class DocumentRequestLine(models.Model):
         "document_folder_id",
         string="Dummy Request to IDs"
         )
+    dummy_documents_document_ids = fields.Many2many(
+        "documents.document",
+        "documents_document_to_request_line_rel",
+        "documents_document_to_id",
+        "document_document_id",
+        string="Dummy document document to IDs"
+        )
     attachment_ids = fields.Many2many(
         'ir.attachment', 
         'document_request_ir_attachment_rel',
@@ -95,7 +102,6 @@ class DocumentRequestLine(models.Model):
         # # return {'action': action}
         # return action
             
-     
     @api.onchange('request_from_document_folder')
     def suitable_document_ids(self):
         if self.request_from_document_folder:
@@ -109,5 +115,12 @@ class DocumentRequestLine(models.Model):
                     document_folders.append(r.id)
             self.dummy_request_from_document_folder_ids = [(6, 0, document_folders)]
             
-    
-    
+    @api.onchange('request_to_document_folder')
+    def onchange_request_to_document_folder(self):
+        '''Gets all the document that has the targeted folder'''
+        if self.request_to_document_folder:
+            document_ids = self.env['documents.document'].search([('folder_id', '=', self.request_to_document_folder.id)])
+            self.dummy_documents_document_ids = [(6, 0, document_ids.ids)]
+        else:
+            self.dummy_documents_document_ids = False
+            
