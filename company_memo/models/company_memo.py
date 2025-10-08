@@ -744,23 +744,12 @@ class Memo_Model(models.Model):
             ('company_id', '=', employee.user_id.company_id.id),
             ])
         _logger.info(f'THis is configs == > {memo_configs}')
-        # user_company = user.company_id.id
-        # cds = []
-        # for rec in memo_configs:
-        #     _logger.info(f"Userxxx companies and memo companies {user.company_ids.ids}, {rec.company_ids.ids}")
-        #     """Show memo config where user companies is in memo configs"""
-        #     if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
-        #         cds.append(rec.id)
-        # config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
         memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
         for r in memo_configs:
             if r.stage_ids:
                 initiation_stage = r.stage_ids[0]
                 if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
-                    # memo_setting_with_initiators_not_user.append(r)
                     memo_configs = memo_configs - r
-        # result_ids = list(set(memo_configs) - set(memo_setting_with_initiators_not_user))
-        # memo_configs = result_ids # self.env['memo.config'].sudo().browse(result_ids)
         return memo_configs
     
     @api.model

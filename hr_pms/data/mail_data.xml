@@ -6,7 +6,7 @@
             <field name="name">Login credential Notification  </field>
             <field name="name">Login credential Notification  </field>
             <field name="model_id" ref="hr.model_hr_employee"/>
-            <field name="email_from">${object.write_uid.company_id.email}</field>
+            <field name="email_from">erpsupport@enugudisco.com</field>
             <field name="email_to">${object.work_email}</field>
             <field name="subject">Login credential Notification</field>
             <field name="reply_to">""</field>
