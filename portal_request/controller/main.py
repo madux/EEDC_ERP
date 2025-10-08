@@ -1724,7 +1724,8 @@ class PortalRequest(http.Controller):
                'employee_ids': request.env['hr.employee'].sudo().search([('active', '=', True)]),
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
             'record_attachment_ids': memo_attachment_ids,
-            "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            # "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            "number_of_days_display": leave_allocation_id.number_of_days_display,
             "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
         }
         return request.render("portal_request.request_form_template", values) 
