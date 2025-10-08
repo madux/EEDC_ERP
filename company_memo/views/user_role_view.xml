@@ -36,12 +36,12 @@
     </record>
  
 
-    <menuitem
+    <!-- <menuitem
             id="res_group_role_menu_memo"
             name="User role"
             action="company_memo.res_group_role_action"
             parent="company_memo.memo_configuration"
-            sequence="15"/>
+            sequence="15"/> -->
 
     <!-- <menuitem
             id="res_group_role_menu_users"
