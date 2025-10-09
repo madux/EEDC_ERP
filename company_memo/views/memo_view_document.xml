@@ -321,7 +321,7 @@
 			<field name="name">Office memo tree</field>
 			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
-				<tree string="Memo Requests">
+				<tree string="ERP Requests">
 					<field name="date"/> 
 					<field name="name"/>
 					<field name="code"/> 

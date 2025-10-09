@@ -1397,7 +1397,7 @@ class PortalRequest(http.Controller):
             request.session['memo_record_id'] = memo_id.id
             return json.dumps({'status': True, 'message': "Form Submitted!"})
         except Exception as ex:
-            _logger.exception("Unexpected Error while sending office memo request: %s" % ex)
+            _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
             return json.dumps({'status': False, 'message': "Form Submitted!"})
     
     def update_request_line(self, DataItems, memo_id):

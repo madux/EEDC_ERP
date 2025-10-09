@@ -586,7 +586,7 @@
 			<field name="model">memo.model</field>
 			<field name="priority">50</field>
 			<field name="arch" type="xml">
-				<tree string="Memo Requests">
+				<tree string="ERP Requests">
 					<field name="date"/> 
 					<field name="name"/>
 					<field name="employee_id"/>
@@ -740,7 +740,7 @@
 		<menuitem id="internal_memo_menu_model_1" name="ERP Request"
 		parent="internal_memo_menu_model_main2" sequence="3" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
 			<!-- parent="internal_memo_menu_model_main2" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/> -->
-			<menuitem id="internal_memo_menu_model2" sequence= "1" name="Memo Requests"
+			<menuitem id="internal_memo_menu_model2" sequence= "1" name="All ERP Requests"
 			parent="internal_memo_menu_model_1" action="internal_memo_model_action" groups="base.group_system,company_memo.mainmemo_manager,company_memo.mainmemo_account,company_memo.mainmemo_officer"/>
 
 			<menuitem id="internal_memo_menu_sent" name="To Approve"
