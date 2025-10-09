@@ -1844,7 +1844,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                         list_item['qty'] = $(this).val()
                                     }
                                     if($(this).attr('location_id')){
-                                        console.log("Location indexing (1)" + $(this).val() + "Location indexing 2" + $(this).attr('location_id'))
                                         // list_item['location_id'] = $(this).val()
                                         list_item['location_id'] = $(this).attr('location_id')
                                     }
