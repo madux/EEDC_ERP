@@ -113,8 +113,10 @@
 								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" help="Only displays posted cash advance, the ones you created and memo type is cash advance" attrs="{'readonly':[('state','=', 'Done')], 'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"
                                 options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 								
-								<field name="payment_reference" attrs="{'readonly':[('state','!=', 'submit')], 'invisible':[('memo_type_key','!=', 'Payment')]}"/>
-								<field name="payment_reference_id" attrs="{'invisible':[('memo_type_key','!=', 'Payment')]}"
+								<field name="payment_reference" string="Reference Number" attrs="{'readonly':[('state','!=', 'submit')], 'invisible':[('memo_type_key','!=', 'Payment')]}"/>
+								<field name="payment_reference_id" readonly="1" attrs="{'invisible':[('memo_type_key','!=', 'Payment')]}"
+                                options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
+								<field name="vendor_id" attrs="{'readonly':[('state','not in',['submit'])], 'invisible':[('memo_type_key','not in', ['Payment', 'procurement_request'])]}"
                                 options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
 								<field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>

@@ -916,6 +916,25 @@ class PortalRequest(http.Controller):
                 "more": True,
             }
         })
+        
+    @http.route(['/portal-request-get-vendors'], type='http', website=True, auth="user", csrf=False)
+    def get_vendors(self, **post):
+        available_employees = []
+        query = request.params.get('q', '') 
+        domain = [
+            ('active', '=', True), 
+            # ('company_id', '=', request.env.user.company_id.id),
+            # ('supplier_rank', 'in', [1, '1']),
+            # ('company_id.user_id.company_ids.ids', 'in', [request.env.user.company_id.id]),
+            '|', ('name', 'ilike', query),('vendor_code', 'ilike', query),
+            ]
+        vendors = request.env["res.partner"].sudo().search(domain)
+        return json.dumps({
+            "results": [{"id": item.id, "text": f"{item.name} - {item.vendor_code or ''}"} for item in vendors],
+            "pagination": {
+                "more": True,
+            }
+        })
     
     @http.route(['/portal-request-employee'], type='http', website=True, auth="user", csrf=False)
     def get_portal_employee(self, **post):
@@ -1280,6 +1299,7 @@ class PortalRequest(http.Controller):
                 "leave_start_date": leave_start_date,
                 "leave_end_date": leave_end_date,
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
+                "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
                 "source_location_id": int(post.get("TargetSourceLocation")) if post.get("TargetSourceLocation") else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
                 "enhancement": True if post.get("enhancement") == "on" else False,

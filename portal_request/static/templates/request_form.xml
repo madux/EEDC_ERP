@@ -198,6 +198,12 @@
                                                     <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" field_name="payment_reference" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
                                                 </span>
                                             </div> 
+                                            <div class="row mb-4">
+                                                <strong class="col-md-4">Vendor</strong>:
+                                                <span class="col-md-6">
+                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" id="vendor_id_form" name="vendor_id_form" readonly="true" labelfor="Vendor"/>
+                                                </span>
+                                            </div> 
                                         </t>
 
                                         <t t-if="req.memo_type.memo_key in ['leave_request']">
