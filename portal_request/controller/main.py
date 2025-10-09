@@ -492,11 +492,14 @@ class PortalRequest(http.Controller):
                     ('date_from', '<=', within_this_end_year),
                     ('active', '=', True),
                     # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
-                    ], limit=1)
+                    ])
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
-                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} TAKEN OR REMAINING ={leave_allocation_id.leaves_taken} == {leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken} {within_this_start_year}   =={within_this_end_year}')
-    
+                number_of_days_display, leaves_taken = 0, 0
+                for lv in leave_allocation_id:
+                    number_of_days_display += lv.number_of_days_display 
+                    leaves_taken += lv.leaves_taken
+                
                 if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
                     return {
                         "status": False,
@@ -511,7 +514,8 @@ class PortalRequest(http.Controller):
                         "data": {
                             # 'number_of_days_display': employee.allocation_remaining_display,
                             # 'number_of_days_display': leave_allocation_id.number_of_days_display,
-                            'number_of_days_display': leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken,
+                            # 'number_of_days_display': leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken,
+                            'number_of_days_display': number_of_days_display - leaves_taken,
                         },
                         "message": "", 
                     }
@@ -523,20 +527,20 @@ class PortalRequest(http.Controller):
                     "message": f"No allocation set up for {leave_type_obj.name}. Contact Admin", 
                 }
             
-            # CRITICAL FIX: Return the remaining days for THIS SPECIFIC leave type only
-            remaining_days = leave_allocation_id.number_of_days_display
-            
-            _logger.info(f'Remaining days for {leave_type_obj.name}: {remaining_days}')
-            
-            return {
-                "status": True,
-                "data": {
-                    'number_of_days_display': remaining_days,
-                    'leave_type_name': leave_type_obj.name,
-                    'allocation_id': leave_allocation_id.id,
-                },
-                "message": "", 
-            }
+                # # CRITICAL FIX: Return the remaining days for THIS SPECIFIC leave type only
+                # remaining_days = leave_allocation_id.number_of_days_display
+                
+                # _logger.info(f'Remaining days for {leave_type_obj.name}: {remaining_days}')
+                
+                # return {
+                #     "status": True,
+                #     "data": {
+                #         'number_of_days_display': remaining_days,
+                #         'leave_type_name': leave_type_obj.name,
+                #         'allocation_id': leave_allocation_id.id,
+                #     },
+                #     "message": "", 
+                # }
         else:
             # For leave types that don't require allocation (unlimited leaves)
             return {
@@ -1713,7 +1717,12 @@ class PortalRequest(http.Controller):
         leave_allocation_id = leave_allocation.search([
                     ('holiday_status_id', '=', int(requests.leave_type_id.id)),
                     ('employee_id', '=', requests.employee_id.id),
-                    ], limit=1)
+                    ])
+        number_of_days_display, leaves_taken = 0, 0
+        for lv in leave_allocation_id:
+            number_of_days_display += lv.number_of_days_display 
+            leaves_taken += lv.leaves_taken
+        number_of_days_display = number_of_days_display - leaves_taken
         values = {
             'req': requests,
             # 'format_date': lambda date, fmt='%m/%d/%Y': format_date(request.env, date, date_format=fmt),
@@ -1725,7 +1734,7 @@ class PortalRequest(http.Controller):
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
             'record_attachment_ids': memo_attachment_ids,
             # "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
-            "number_of_days_display": leave_allocation_id.number_of_days_display,
+            "number_of_days_display": number_of_days_display,#leave_allocation_id.number_of_days_display,
             "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
         }
         return request.render("portal_request.request_form_template", values) 
