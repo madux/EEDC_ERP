@@ -60,6 +60,24 @@ class ImportDataWizard(models.TransientModel):
                 else:
                     appt_date = datetime(*xlrd.xldate_as_tuple(float(date_str), 0)) #eg 4554545
         return appt_date
+    
+    def _normalize_emp_no(self, raw):
+        
+        if raw is None or raw == '':
+            return ''
+        if isinstance(raw, (int,)):
+            return str(raw)
+        if isinstance(raw, float):
+            if raw.is_integer():
+                return str(int(raw))
+            s = str(raw)
+            if s.endswith('.0'):
+                return s[:-2]
+            return s
+        s = str(raw).strip()
+        if s.endswith('.0') and re.match(r'^\d+\.0$', s):
+            return s[:-2]
+        return s
         
     def import_records_action(self):
         if self.data_file:
@@ -86,7 +104,7 @@ class ImportDataWizard(models.TransientModel):
                     migrated_number = str(row[0]).strip() if row[0] else ''
                     code = str(row[0]).strip() if row[0] else ''
                     subject = str(row[0]).strip() if row[0] else ''
-                    employee_number = str(row[1]).strip() if row[1] else ''
+                    employee_number = self._normalize_emp_no(row[1])
                     total_amount = row[2]
                     request_date = self.compute_date(row[10]) 
                     if migrated_number:
@@ -137,7 +155,7 @@ class ImportDataWizard(models.TransientModel):
                     migrated_number = str(row[0]).strip() if row[0] else ''
                     code = str(row[0]).strip() if row[0] else ''
                     subject = str(row[0]).strip() if row[0] else ''
-                    employee_number = str(row[1]).strip() if row[1] else ''
+                    employee_number = self._normalize_emp_no(row[1])
                     total_amount = row[2]
                     request_date = self.compute_date(row[10]) 
                     if migrated_number:
