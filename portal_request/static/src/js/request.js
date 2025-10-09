@@ -772,6 +772,30 @@ odoo.define('portal_request.portal_request', function (require) {
         allowClear: true,
     });
 
+    $('#vendor_id').select2({
+        ajax: {
+            url: '/portal-request-get-vendors',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 2,
+        multiple: true,
+        placeholder: 'Search for Vendors',
+        allowClear: true,
+    });
+
     let checkOverlappingLeaveDate = function(thiis){
         var message = ""
         if ($('#selectRequestOption').val() === "leave_request"){
@@ -1468,6 +1492,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             displayNonLeaveElement()
                              $('#PaymentcashAdvanceDiv').removeClass('d-none');
                             $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#vendor_label').removeClass('d-none'); 
+                            $('#vendor_id').attr("required", false);
+                            $('#vendor_div').removeClass('d-none');
                             $('#product_form_div').removeClass('d-none');
                             $('.add_item').removeClass('d-none');
                         }
@@ -1981,7 +2008,13 @@ odoo.define('portal_request.portal_request', function (require) {
 
         $('#PaymentcashAdvanceDiv').addClass('d-none');
         $('#PaymentcashAdvanceLabel').addClass('d-none');
+        
         $('#PaymentcashAdvance').val('');
+
+        $('#vendor_label').addClass('d-none');
+        $('#vendor_id').val('');
+        $('#vendor_div').addClass('d-none');
+        $('#vendor_id').attr("required", false);
         // $('#justification_reason').addClass("is-valid");
     }
     var form = $('#msform')[0];

@@ -134,6 +134,7 @@ class Memo_Model(models.Model):
         )
     memo_type_key = fields.Char('Memo type key', readonly=True)
     name = fields.Char('Subject', size=400)
+    requester_name = fields.Char('Legacy Request name')
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
@@ -2409,7 +2410,7 @@ class Memo_Model(models.Model):
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
-                partner_id = self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
+                partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
                 # partner_id = self.employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
@@ -2529,7 +2530,7 @@ class Memo_Model(models.Model):
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             cashadvance_account_to_credit =self.cash_advance_reference.move_id.line_ids[0].account_id.id if self.cash_advance_reference.move_id.line_ids and self.cash_advance_reference.move_id.line_ids[0].account_id else False
             if not inv:
-                partner_id = self.sudo().employee_id.user_id.partner_id
+                partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
@@ -2975,7 +2976,7 @@ class Memo_Model(models.Model):
                 'context': {
                         'default_amount': self.amountfig or computed_amount_total,
                         'default_payment_type': 'outbound',
-                        'default_partner_id':self.vendor_id.id or self.sudo().employee_id.user_id.partner_id.id, 
+                        'default_partner_id':self.vendor_id.id or self.client_id.id or self.sudo().employee_id.user_id.partner_id.id, 
                         'default_memo_reference': self.id,
                         'default_communication': self.name,
                         'default_currency_id': self.env.user.company_id.currency_id.id,

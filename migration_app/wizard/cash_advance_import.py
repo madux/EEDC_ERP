@@ -1,4 +1,3 @@
-
 from odoo import fields, models ,api, _
 from tempfile import TemporaryFile
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
@@ -40,6 +39,28 @@ class ImportDataWizard(models.TransientModel):
     default_employee_id = fields.Many2one("hr.employee","Employee to use as default", required=True)
     clear_data = fields.Boolean("Clear data")
     
+    def compute_date(self, date_str):
+        appt_date = None
+        if date_str:
+            if type(date_str) in [int, float]:
+                appt_date = datetime(*xlrd.xldate_as_tuple(date_str, 0)) 
+            elif type(date_str) in [str]:
+                if '-' in date_str:
+                    # pref = str(date_str).strip()[0:7] # 12-Jul-
+                    # suff = '20'+ date_str.strip()[-2:] # 2022
+                    datesplit = date_str.split('-') # eg. 09, jul, 22
+                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                    appt_date = f"{d}-{m}-20{y}"
+                    appt_date = datetime.strptime(appt_date.strip(), '%d-%b-%Y') 
+                elif '/' in date_str:
+                    datesplit = date_str.split('/') # eg. 09, jul, 22
+                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                    appt_date = f"{d}-{m}-20{y}"
+                    appt_date = datetime.strptime(appt_date.strip(), '%d-%b-%Y') 
+                else:
+                    appt_date = datetime(*xlrd.xldate_as_tuple(float(date_str), 0)) #eg 4554545
+        return appt_date
+        
     def import_records_action(self):
         if self.data_file:
             if not self.memo_config_id.stage_ids:
@@ -66,19 +87,25 @@ class ImportDataWizard(models.TransientModel):
                     code = str(row[0]).strip() if row[0] else ''
                     subject = str(row[0]).strip() if row[0] else ''
                     employee_number = str(row[1]).strip() if row[1] else ''
-                    total_amount = row[2] 
+                    total_amount = row[2]
+                    request_date = self.compute_date(row[10]) 
                     if migrated_number:
                         existing_memo = self.env['memo.model'].sudo().search([
-                            ('code', '=ilike', code)], limit=1)
-                        
+                            ('code', '=ilike', code)], limit=1) 
                         if existing_memo:
                             if self.clear_data:
                                 existing_memo.unlink()
+                            else:
+                                _logger.info(f"Skipping existing memo {code}")
+                                unsuccess_records.append(f"Skipped existing record: {code}")
+                                count += 1
+                                continue
                         employee = self.env['hr.employee'].sudo().search([('employee_number', '=', employee_number)], limit=1)
                         _logger.info(f"Processing {row[0]} - {migrated_number} ..EMPLOYEE: {employee_number}")
                         memo_id = self.env['memo.model'].sudo().create({
                             'code': code,
                             'migrated_legacy_id': migrated_number,
+                            'requester_name': row[9],
                             'name': subject,
                             'employee_id': employee.id if employee else self.default_employee_id.id or self.env.user.employee_id.id,
                             'code': code,
@@ -88,6 +115,7 @@ class ImportDataWizard(models.TransientModel):
                             'branch_id': self.branch_id.id,
                             'memo_setting_id': self.memo_config_id.id,
                             'memo_type': self.memo_config_id.memo_type.id,
+                            'request_date': request_date if request_date else fields.Date.today(),
                             'memo_type_key': self.memo_config_id.memo_key,
                         })
                         vals = {
@@ -104,10 +132,54 @@ class ImportDataWizard(models.TransientModel):
                     else:
                         unsuccess_records.append(f"Memo record created {migrated_number}")
                     count += 1
-                else:
-                    pass     
+            elif self.import_type == "update":
+                for row in file_data:
+                    migrated_number = str(row[0]).strip() if row[0] else ''
+                    code = str(row[0]).strip() if row[0] else ''
+                    subject = str(row[0]).strip() if row[0] else ''
+                    employee_number = str(row[1]).strip() if row[1] else ''
+                    total_amount = row[2]
+                    request_date = self.compute_date(row[10]) 
+                    if migrated_number:
+                        existing_memo = self.env['memo.model'].sudo().search([
+                            ('code', '=ilike', code)], limit=1)
+                        if existing_memo:
+                            employee = self.env['hr.employee'].sudo().search([('employee_number', '=', employee_number)], limit=1)
+                            _logger.info(f"Updating {row[0]} - {migrated_number} ..EMPLOYEE: {employee_number}")
+                            existing_memo.sudo().write({
+                                'migrated_legacy_id': migrated_number,
+                                'requester_name': row[9],
+                                'name': subject,
+                                'employee_id': employee.id if employee else self.default_employee_id.id or self.env.user.employee_id.id,
+                                'request_date': request_date if request_date else fields.Date.today(),
+                            })
+                            # Update or create request line
+                            existing_line = self.env['request.line'].sudo().search([
+                                ('memo_id', '=', existing_memo.id)], limit=1)
+                            vals = {
+                                'memo_id': existing_memo.id,
+                                'memo_type': existing_memo.memo_type.id,
+                                'memo_type_key': existing_memo.memo_type_key,
+                                'description': row[3] or row[6],
+                                'quantity_available': row[4] or 1,
+                                'amount_total':  row[5],
+                            }
+                            if existing_line:
+                                existing_line.sudo().write(vals)
+                            else:
+                                self.env['request.line'].sudo().create(vals)
+                            _logger.info(f"Memo record updated {existing_memo.code}")
+                            success_records.append(f"{existing_memo.code} (updated)")
+                        else:
+                            _logger.info(f"Record not found for update: {code}")
+                            unsuccess_records.append(f"Record not found: {code}")
+                    else:
+                        unsuccess_records.append(f"Missing migrated number for row")
+                    count += 1
+            else:
+                pass     
             errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
-            errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
+            errors.append('Unsuccessful Import(s): '+str(len(unsuccess_records))+' Record(s)')
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
@@ -127,6 +199,3 @@ class ImportDataWizard(models.TransientModel):
                 'target':'new',
                 'context':context,
                 }
-         
-
- 
