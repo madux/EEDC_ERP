@@ -1443,7 +1443,7 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            line_source_location_id = rec.get('location_id', '')
+            line_source_location_id = rec.get('location_id', None)
             _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
                     'memo_id': memo_id.id,
