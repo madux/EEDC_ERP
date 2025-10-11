@@ -1845,7 +1845,10 @@ odoo.define('portal_request.portal_request', function (require) {
                                     }
                                     if($(this).attr('location_id')){
                                         // list_item['location_id'] = $(this).val()
-                                        list_item['location_id'] = $(this).attr('location_id')
+                                        let loc_id = $(this).attr('location_id');
+                                        if(loc_id && loc_id !== 'undefined' && loc_id !== 'false' && loc_id !== 'null' && loc_id.trim() !== '') {
+                                            list_item['location_id'] = loc_id;
+                                        }
                                     }
                                 
                                     if($(this).attr('name') == "amount_total"){
