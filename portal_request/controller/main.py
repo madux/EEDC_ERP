@@ -1438,120 +1438,49 @@ class PortalRequest(http.Controller):
                     message.error(f"No product with ID {rec.get('product_id')} found on the system")
             request_line.update(request_vals)
         
-    # def generate_request_line(self, DataItems, memo_id):
-    #     memo_id.sudo().write({'product_ids': False})
-    #     counter = 1
-    #     for rec in DataItems:
-    #         desc = rec.get('description', '')
-    #         line_source_location_id = rec.get('location_id', None)
-    #         _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
-    #         request_vals = {
-    #                 'memo_id': memo_id.id,
-    #                 'memo_type': memo_id.memo_type.id,
-    #                 'memo_type_key': memo_id.memo_type_key,
-    #                 # 'product_id': product_id.id, 
-    #                 'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-    #                 'description': BeautifulSoup(desc, features="lxml").get_text(),
-    #                 'used_qty': rec.get('used_qty'),
-    #                 'amount_total': rec.get('amount_total'),
-    #                 'used_amount': rec.get('used_amount'),
-    #                 'note': rec.get('note'),
-    #                 'source_location_id': line_source_location_id,
-    #                 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-    #                 'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
-    #                 'distance_from': rec.get('distance_from'),
-    #                 'distance_to': rec.get('distance_to'),
-    #             }
-    #         _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
-    #         productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
-    #         product_id = request.env['product.product'].sudo().browse([int(productid)])
-    #         if product_id:
-    #             request_vals.update({
-    #                 'product_id': product_id.id, 
-    #             })
-    #         request.env['request.line'].sudo().create(request_vals)
-    #         counter += 1
-    
-    def _safe_int(self, val):
-        """Return int(value) or False if not a valid integer-like value."""
-        if val is None:
-            return False
-        if isinstance(val, bool):
-            return False
-        s = str(val).strip()
-        if s.lower() in ('', 'false', 'none', 'undefined', 'null', 'nan'):
-            return False
-        # allow negative too if ever needed
-        # accept plain digits or digits with leading +/-
-        if s.lstrip('+-').isdigit():
-            try:
-                return int(s)
-            except Exception:
-                return False
-        return False
-
-    def _safe_float(self, val, default=0.0):
-        try:
-            if val is None or str(val).strip().lower() in ('', 'false', 'none', 'undefined', 'null'):
-                return default
-            return float(val)
-        except Exception:
-            return default
-
     def generate_request_line(self, DataItems, memo_id):
         memo_id.sudo().write({'product_ids': False})
         counter = 1
         for rec in DataItems:
-            # normalize raw values
-            desc = rec.get('description', '') or ''
-            raw_loc = rec.get('location_id', None)
-            line_source_location_id = self._safe_int(raw_loc)
-            request_line_id = self._safe_int(rec.get('request_line_id', None))
-            # product id may be 'false' or '' or number string
-            product_id_val = self._safe_int(rec.get('product_id', None))
-            # numeric conversions
-            qty = self._safe_float(rec.get('qty'), default=0.0)
-            amount_total = self._safe_float(rec.get('amount_total'), default=0.0)
-            used_qty = self._safe_float(rec.get('used_qty'), default=0.0)
-            used_amount = self._safe_float(rec.get('used_amount'), default=0.0)
-
-            _logger.info("REQUESTS INCLUDES=====> MEMO IS %s -ID %s ---%s location is %s",
-                        memo_id, memo_id.id, rec, line_source_location_id)
-
-            request_vals = {
-                'memo_id': memo_id.id,
-                'memo_type': memo_id.memo_type.id,
-                'memo_type_key': memo_id.memo_type_key,
-                'quantity_available': qty,
-                'description': BeautifulSoup(desc, features="lxml").get_text() if desc else '',
-                'used_qty': used_qty if used_qty else False,
-                'amount_total': amount_total if amount_total else 0.0,
-                'used_amount': used_amount if used_amount else 0.0,
-                'note': rec.get('note') or '',
-                # pass either an integer id or False (so Odoo will store NULL)
-                'source_location_id': line_source_location_id or False,
-                'request_line_id': request_line_id or 0,
-                'to_retire': True if str(rec.get('line_checked')).lower() in ['on', 'true', '1'] else False,
-                'distance_from': rec.get('distance_from') or '',
-                'distance_to': rec.get('distance_to') or '',
-            }
-
-            _logger.info("REQUESTS VALS (sanitized) => %s", request_vals)
-
-            if product_id_val:
-                product_id = request.env['product.product'].sudo().browse([product_id_val])
-                if product_id and product_id.exists():
-                    request_vals['product_id'] = product_id.id
+            desc = rec.get('description', '')
+            line_source_location_id = rec.get('location_id', False)
+            if isinstance(line_source_location_id, str):
+                if line_source_location_id.lower() in ['undefined', 'false', 'null', 'none', '']:
+                    line_source_location_id = False
                 else:
-                    # product_id_val supplied but product not found -> ignore product_id
-                    _logger.debug("Product id %s not found; skipping product_id for request line", product_id_val)
-
-            # finally create the line
-            try:
-                request.env['request.line'].sudo().create(request_vals)
-            except Exception as e:
-                _logger.exception("Failed to create request.line with vals=%s : %s", request_vals, e)
+                    try:
+                        line_source_location_id = int(line_source_location_id)
+                    except (ValueError, TypeError):
+                        _logger.error(f"Invalid location_id value: {line_source_location_id}, setting to False")
+                        line_source_location_id = False
+            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
+            request_vals = {
+                    'memo_id': memo_id.id,
+                    'memo_type': memo_id.memo_type.id,
+                    'memo_type_key': memo_id.memo_type_key,
+                    # 'product_id': product_id.id, 
+                    'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
+                    'description': BeautifulSoup(desc, features="lxml").get_text(),
+                    'used_qty': rec.get('used_qty'),
+                    'amount_total': rec.get('amount_total'),
+                    'used_amount': rec.get('used_amount'),
+                    'note': rec.get('note'),
+                    'source_location_id': line_source_location_id,
+                    'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
+                    'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+                    'distance_from': rec.get('distance_from'),
+                    'distance_to': rec.get('distance_to'),
+                }
+            _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
+            productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
+            product_id = request.env['product.product'].sudo().browse([int(productid)])
+            if product_id:
+                request_vals.update({
+                    'product_id': product_id.id, 
+                })
+            request.env['request.line'].sudo().create(request_vals)
             counter += 1
+    
 
     def generate_employee_transfer_line(self, DataItems, memo_id):
         counter = 1
