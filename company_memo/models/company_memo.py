@@ -2066,7 +2066,7 @@ class Memo_Model(models.Model):
                   'default_employee_transfer_lines': self.employee_transfer_line_ids.ids
               },
         }
-
+    is_inter_district_transfer = fields.Boolean("Is inter district transfer")
     def generate_stock_material_request(self, body_msg, body):
         user = self.env.user
         if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
@@ -2075,8 +2075,9 @@ class Memo_Model(models.Model):
         #     raise ValidationError("Destination location Branch does not correspond to the requester's branch")
         if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Operation type does not relate to the company {self.company_id.name} this request was initiated from')
-        if not self.sudo().source_location_id.company_id.id == self.company_id.id:
-            raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
+        if not self.is_inter_district_transfer:
+            if not self.sudo().source_location_id.company_id.id == self.company_id.id:
+                raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
         if not self.dest_location_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
         
@@ -2084,7 +2085,7 @@ class Memo_Model(models.Model):
             """Enforce to disallow stock move that has no products qty in the location"""
             ln.onchange_location_check_available_qty()
         
-        stock_picking_type_out = self.picking_type_id # self.env.ref('stock.picking_type_out')
+        stock_picking_type_out = self.sudo().picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
         
@@ -2107,7 +2108,7 @@ class Memo_Model(models.Model):
                                 'picking_type_id': stock_picking_type_out.id,
                                 'location_id': mm.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
                                 'location_dest_id': self.dest_location_id.id or stock_picking_type_out.default_location_src_id.id, # or destination_location_id.id,
-                                'product_id': mm.product_id.id,
+                                'product_id': mm.sudo().product_id.id,
                                 'product_uom_qty': mm.quantity_available,
                                 'date_deadline': self.date_deadline,
                 }) for mm in self.product_ids]
@@ -2812,9 +2813,9 @@ class Memo_Model(models.Model):
       
     def view_related_record(self):
         if self.env.uid not in [r.user_id.id for r in self.users_followers]:
-            raise ValidationError("You are not responsioble to view this")
+            raise ValidationError("You are not responsible to view this")
         if self.memo_type.memo_key == "material_request":
-            view_id = self.env.ref('stock.view_picking_form').id
+            view_id = self.sudo().env.ref('stock.view_picking_form').id
             return self.record_to_open('stock.picking', view_id)
              
         elif self.memo_type.memo_key == "procurement_request":
