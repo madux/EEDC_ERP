@@ -165,6 +165,8 @@
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
                                                     <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
+                                                    <input type="text" class="form-control d-none" id="selectRequestOption" name="selectRequestOption" t-att-value="req.memo_type_key" labelfor=""/>
+
                                                     <!-- <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small> -->
                                                     <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
                                                     <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
@@ -178,7 +180,6 @@
                                             <!--        <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>-->
                                             <!--    </t>-->
                                             <!--</div>-->
-                                    
                                             <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
@@ -292,6 +293,57 @@
                                                 </a>
                                             </span>
                                         </div><br/>
+
+                                        <t t-if="req.memo_type_key in ['material_request']">
+                                            <!-- Interdistrict checkbox on top -->
+                                            <div class="row mb-3 d-none">
+                                                <div class="col-md-12">
+                                                    <label for="isInterDistrict" class="form-label fw-bold">Is Inter-district</label>
+                                                    <input type="checkbox"
+                                                        name="isInterDistrict"
+                                                        id="isInterDistrict"
+                                                        class="ms-2" 
+                                                        disabled="true"
+                                                        t-att-checked="req.is_inter_district_transfer and 'checked' or None"/>
+                                                </div>
+                                            </div>
+
+                                            <!-- Source and Destination side by side -->
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="source_location_id" class="form-label fw-bold">Source Location</label>
+                                                    <input field_name="source_location_id"
+                                                        name="source_location_id"
+                                                        t-att-id="req.source_location_id.id"
+                                                        t-att-value="req.source_location_id.name"
+                                                        class="Sourcelocation-cls form-control form-control-sm"
+                                                        disable="true"
+                                                        readonly="readonly"
+                                                        required="required"/>
+
+                                                    <!-- hidden source id -->
+                                                    <input
+                                                        t-att-id="req.source_location_id.id"
+                                                        t-att-value="req.source_location_id.name"
+                                                        class="TargetSourceLocation form-control d-none"
+                                                        name="TargetSourceLocation"/>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label for="destination_location_id" class="form-label fw-bold">Destination Location</label>
+                                                    <input field_name="destination_location_id"
+                                                        t-att-value="req.dest_location_id.name"
+                                                        t-att-id="req.dest_location_id.id"
+                                                        t-att-relation="true"
+                                                        name="destination_location_id"
+                                                        class="destinationlocation-cls form-control form-control-sm"
+                                                        disable="true"
+                                                        readonly="readonly"
+                                                        required="required"/>
+                                                </div>
+                                            </div>
+                                        </t>
+
                                          
                                         <strong class="col-md-4">Description:</strong>
                                         <!-- <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="descriptionDiv"> -->
@@ -335,12 +387,14 @@
                                                     <th width="10%">
                                                         <label>Unit / Qty</label>
                                                     </th>
-                                                    <th width="15%">
-                                                        <label>UnitPrice</label>
-                                                    </th>
-                                                    <th width="15%">
-                                                        <label>SubTotal</label>
-                                                    </th>
+                                                    <t t-if="req.memo_type.memo_key not in ['material_request']">
+                                                        <th width="15%">
+                                                            <label>UnitPrice</label>
+                                                        </th>
+                                                        <th width="15%">
+                                                            <label>SubTotal</label>
+                                                        </th>
+                                                    </t>
                                                     <t t-if="req.memo_type.memo_key in ['soe']">
                                                         
                                                         <th width="10%">
@@ -361,7 +415,7 @@
                                                     </t>
                                                     <t t-else="">
                                                         <th width="5%">
-                                                            <label>X</label>
+                                                            <label></label>
                                                         </th>
                                                     </t>
                                                 </tr>
@@ -388,13 +442,15 @@
                                                         <th width="5%">
                                                             <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" disable="true" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
-                                                        <th width="20%">
-                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
-                                                        </th>
-                                                        <th width="20%">
-                                                            <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
-                                                        </th>
+                                                        <t t-if="req.memo_type.memo_key not in ['material_request']">
+                                                            <th width="20%">
+                                                                <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                                <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
+                                                            </th>
+                                                            <th width="20%">
+                                                                <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                            </th>
+                                                        </t>
                                                         <t t-if="req.memo_type.memo_key in ['soe']">
                                                             <th width="10%">
                                                                 <input type="text" main_name = "used_qty" field_name= "used_qty" t-att-name="prod.used_qty" t-att-id="prod.id" required="required" t-att-value="prod.used_qty" t-att-class="'productinput form-control USEDQTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
@@ -425,7 +481,7 @@
                                                         </t>
                                                         
                                                         <th width="5%">
-                                                            #
+                                                            
                                                         </th>
                                                     </tr>
                                                     <t t-set="total_amount" t-value="total_amount + prod.sub_total_amount"/>

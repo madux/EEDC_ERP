@@ -47,7 +47,7 @@ class RequestLine(models.Model):
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested", default=0)
-    amount_total = fields.Float(string="Unit Price")
+    amount_total = fields.Float(string="Unit Price", default=0)
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
     difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
@@ -105,7 +105,7 @@ class RequestLine(models.Model):
     def onchange_location_check_available_qty(self):
         if self.sudo().source_location_id:
             qty = self.env['stock.quant'].sudo()._get_available_quantity(
-                self.product_id, 
+                self.sudo().product_id, 
                 self.sudo().source_location_id, 
                 allow_negative=False)
             err_msg = [f"{self.sudo().product_id.name} Available Quantity is {qty} at Location {self.sudo().source_location_id.name} \n Below are the available locations with Quantities- \n"]

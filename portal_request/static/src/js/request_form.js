@@ -8,7 +8,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
     var core = require('web.core');
     var qweb = core.qweb;
     var _t = core._t;  
-
+    let setProductdata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let successful_alert = $('#successful_alert');
     let modal_message = $('#display_modal_message');
@@ -35,6 +35,56 @@ odoo.define('portal_request.portal_request_form', function (require) {
         console.log(`trigger end date on start ${st} ${end}`)
         return [st, end]
     }
+
+    // $(`input[name=source_location_id]`).select2({
+    //     ajax: {
+    //         url:'/get-stock-location',
+    //         dataType: 'json',
+    //         delay: 250,
+    //         data: function (term, page) {
+    //             return {
+    //                 q: term, //search term
+    //                 page_limit: 10, // page size
+    //                 page: page, // page number
+    //             };
+    //         },
+    //         results: function (data, page) {
+    //         var more = (page * 30) < data.total;
+    //         return {results: data.results, more: more};
+    //         },
+    //         cache: true
+    //     },
+    //     minimumInputLength: 2,
+    //     multiple: false,
+    //     placeholder: 'Search for Vendors',
+    //     allowClear: true,
+    // });
+
+    // $(`input[name=destination_location_id]`).select2({
+    //     ajax: {
+    //         url:'/get-stock-location',
+    //         dataType: 'json',
+    //         delay: 250,
+    //         data: function (term, page) {
+    //             return {
+    //                 q: term, //search term
+    //                 page_limit: 10, // page size
+    //                 page: page, // page number
+    //             };
+    //         },
+    //         results: function (data, page) {
+    //         var more = (page * 30) < data.total;
+    //         return {results: data.results, more: more};
+    //         },
+    //         cache: true
+    //     },
+    //     minimumInputLength: 2,
+    //     multiple: false,
+    //     placeholder: 'Search for Location',
+    //     allowClear: true,
+    // });
+
+    
 
     function workingDaysBetweenDates(startDate, endDate) {
         let count = 0;
@@ -147,6 +197,119 @@ odoo.define('portal_request.portal_request_form', function (require) {
         });
     }
 
+    function TriggerProductField(lastRow_count){
+        // PRODUCTSEARCH
+        let oldValue = $(`input[special_id='${lastRow_count}']`).val()
+        $(`input[special_id='${lastRow_count}']`).select2({
+            ajax: {
+              url: '/portal-request-product',
+              dataType: 'json',
+              delay: 30,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  productItems: JSON.stringify(setProductdata), 
+                  request_type: $('#selectRequestOption').val(),
+                  source_locationId: $('#source_location_id').attr('id'),
+                  page_limit: 10, // page size
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                // console.log(data);
+                // localStorage.setItem('productStorage', JSON.stringify(data.results))
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 2,
+            multiple: false,
+            placeholder: 'Search for a Products',
+            allowClear: true,
+          });
+          $(`div#s2id_${lastRow_count} > a.select2-choice > span.select2-chosen`).text(oldValue)
+    }
+
+    let trigger_product_line = function(){
+        $(`#tbody_product > tr.prod_row`).each(function(){
+            var row_count = $(this).attr('row_count') 
+            // i got row_count value e.g 543 which i will 
+            // pass as special_id to trigger the product
+            TriggerProductField(row_count);
+        })
+    }
+    // trigger_product_line();
+
+    function searchStockLocation(element, source, classes=''){
+        // find the input field
+        const elm = $(`input[name=source_location_id]`);
+        let oldValue = elm.val(); // OGIDI
+        let oldId = elm.attr('id'); 
+        elm.select2({
+            ajax: {
+              url: '/get-stock-location',
+              dataType: 'json',
+              delay: 30,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  page_limit: 10, // page size
+                  location_type: source, 
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 2,
+            multiple: false,
+            placeholder: 'Search for location',
+            allowClear: true,
+        }); 
+
+        elm.val(oldId)
+        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+        $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    }
+
+    function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
+        // find the input field
+        const elm = $(`input[name=destination_location_id]`);
+        let oldValue = elm.val(); // OGIDI
+        let oldId = elm.attr('id'); 
+        elm.select2({
+            ajax: {
+              url: '/get-stock-location',
+              dataType: 'json',
+              delay: 30,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  page_limit: 10, // page size
+                  location_type: source, 
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 2,
+            multiple: false,
+            placeholder: 'Search for location',
+            allowClear: true,
+        }); 
+        elm.val(oldId).trigger('change')
+        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+        $(`.select2-container.destinationlocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    }
+
     let storeOldFieldsValue = function(){
         let storeFieldItem = {};
         $('input,textarea,select,select2,span').each(function(ev){
@@ -156,7 +319,14 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 storeFieldItem[`${field_id.attr('field_name')}`] = field_id.text()
             }
             else{
-                storeFieldItem[`${field_id.attr('field_name')}`] = field_id.val()
+                // checks if it is a relational field
+                // if ($.inArray(field_id.attr('relation'), ['source_location_id', 'destination_location_id']) !== -1) {
+                if (field_id.attr('relation')) {
+                    storeFieldItem[`${field_id.attr('field_name')}`] = field_id.attr('id')
+                }
+                else{
+                    storeFieldItem[`${field_id.attr('field_name')}`] = field_id.val()
+                }
             }
         });
         localStorage.setItem('oldValueStore', JSON.stringify(storeFieldItem))
@@ -266,18 +436,18 @@ odoo.define('portal_request.portal_request_form', function (require) {
         // $('input,textarea,select,select2').filter('[required]:visible')
         $('input[required], textarea[required], select[required]').filter(':visible:not([disabled])')
         .each(function () {
-                let field = $(this);
-                console.log('show me fields to edit', field);
-                if (field.val() == "" || field.val().trim() === "") {
-                    field.addClass('is-invalid');
-                    // Prefer labelfor, fallback to name or id
-                    let label =  field.attr('labelfor') || field.attr('name') || field.attr('id') 
-                    console.log(`All edited fields in forms ${label}`);
-                    lf.push(label);
-                } else {
-                    field.removeClass('is-invalid'); // cleanup if corrected
-                }
-            }); 
+            let field = $(this);
+            console.log('show me fields to edit', field);
+            if (field.val() == "" || field.val().trim() === "") {
+                field.addClass('is-invalid');
+                // Prefer labelfor, fallback to name or id
+                let label =  field.attr('labelfor') || field.attr('name') || field.attr('id') 
+                console.log(`All edited fields in forms ${label}`);
+                lf.push(label);
+            } else {
+                field.removeClass('is-invalid'); // cleanup if corrected
+            }
+        }); 
         let fields_to_exclude = ['message', 'product_item_id']
         let filtered_fields = lf.filter(item => $.inArray(item, fields_to_exclude) === -1);
         if (filtered_fields.length > 0) {
@@ -474,7 +644,20 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 save.removeClass('d-none');
                 discard.removeClass('d-none');
                 makeWritableFieldsEditable();
+                trigger_product_line();
+                searchStockLocation('source_location_id', 'source', 'Sourcelocation-cls');
+                searchStockLocation2('destination_location_id', 'destination', 'destinationlocation-cls');
+
             },
+            // 'focus select[name="source_location_id"]': function(ev){
+            //     console.log(`WE HAVE SOURCE LOCATION == ${$(ev.target).val()}`)
+            //     searchStockLocation('source_location_id', 'source');
+            // },
+
+            // 'focus select[name="destination_location_id"]': function(ev){
+            //     searchStockLocation('destination_location_id', 'destination');
+            // },
+
 
             'click #save': function(ev){
                 // hide save btn 
@@ -486,25 +669,14 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     return false;
                 }
                 resetModificationProps()
-                // let save = $(ev.target);
-                // let edit = $('#editbtn');
-                // let back = $('#previous')
-                // let discard = $('#discardbtn')
-                // let resend_request = $('.resend_request')
-
-                // edit.removeClass('d-none');
-                // back.removeClass('d-none');
-                // resend_request.removeClass('d-none');
-                // save.addClass('d-none');
-                // discard.addClass('d-none');
-                // // saveChangedFieldsValues();
-
                 let leave_type_id = $("#leave_type_id")
                 let leave_start_datex = $("#leave_start_datex")
                 let leave_end_datex = $("#leave_end_datex")
                 let leave_remaining = $("#leave_remaining")
                 let leave_reliever_ids = $("#leave_reliever_ids")
                 let description = $("#description")
+                let source_location_id = $("input[name=source_location_id]")
+                let dest_location_id = $("input[name=destination_location_id]")
                 let payment_reference_form = $("#payment_reference_form")
                 let record_id = $(".record_id").attr('id')
                 console.log('saving record data => 1', saveProductitem())
@@ -517,8 +689,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'leave_start_date': leave_start_datex.val(),
                         'leave_end_date': leave_end_datex.val(),
                         'leave_Reliever': leave_reliever_ids.val(),
-                        'leave_Reliever': leave_reliever_ids.val(),
                         'description': description.val(),
+                        'source_location_id': source_location_id.val(),
+                        'dest_location_id': dest_location_id.val(),
                         'memo_id': record_id,
                         'payment_reference': payment_reference_form.val(),
                         'Dataitem': saveProductitem()
@@ -580,6 +753,46 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 }
 
                 
+            },
+
+            'change .productitemrow': function(ev){
+                let product_elm = $(ev.target);
+                let product_val = product_elm.val(); 
+                var link = product_elm.closest(":has(input.productinput)").find('input.productinput');
+                // var remove_link = product_elm.closest(":has(a.remove_field)").find('a.remove_field');
+                link.attr('id', product_val);
+                // remove_link.attr('id', product_val);
+                setProductdata = [];
+                // building the productData afresh 
+                $('#tbody_product tr.prod_row input.productitemrow').each(function(ev) {
+                    // let productId = $(this)//.attr('id'); // or use .val() if you need the input’s value
+                    console.log(`My product is ==>${product_val}`);
+                    setProductdata.push(parseInt(product_val));
+                });
+            },
+
+            'change .Sourcelocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+				if($(ev.target)){
+					$('#TargetSourceLocation').val() == $(ev.target).val()
+				}else{
+					$('.destinationlocation-cls').val('')
+					$('.destinationlocation-cls').attr('id') == ''
+					$('.destinationlocation-cls').addClass('is-invalid')
+				}
+            },
+            'change .destinationlocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				if(sourceLocationId.val() == $(ev.target).val()){
+					$(ev.target).val('');
+					$(ev.target).addClass("is-invalid");
+					alert("Source Location and Destination Location must not be the same");
+					return true;
+				}
+				else{
+					$(ev.target).removeClass("is-invalid");
+				}
             },
             'change select[name=leave_type_id]': function(ev){
                 let leave_id = $(ev.target).val();
