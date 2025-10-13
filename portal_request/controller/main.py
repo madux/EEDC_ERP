@@ -129,11 +129,33 @@ class Home(main.Home):
     # 	return response
     
 class PortalRequest(http.Controller):
+    
+    
+    
+    # @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
+    # def portal_request(self):
+    #     """Request portal for employee / portal users
+    #     """
+    #     # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+    #     memo_configs = request.env['memo.model'].sudo().get_user_configs()
+    #     vals = {
+    #         "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
+    #         "memo_key_ids": [{'id': 0, 'name': ''}],
+    #         "config_type_ids": memo_configs, # self.get_user_configs ,
+    #     }
+    #     return request.render("portal_request.portal_request_template", vals)
+    
     @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
-    def portal_request(self):
+    def portal_request(self, **kw):
         """Request portal for employee / portal users
         """
-        # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+        
+        memo_type_key = kw.get('memo_type_key', False) or kw.get('memo_type', False)
+        
+        _logger.info(f"=== Portal Request Form (Create New) ===")
+        _logger.info(f"URL params: {kw}")
+        _logger.info(f"Extracted memo_type_key: {memo_type_key}")
+        
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
         source_location_data_ids = request.env['stock.location'].sudo().search(
             [('usage', '=', 'internal')]
@@ -144,14 +166,49 @@ class PortalRequest(http.Controller):
             ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
             ]
         )
+        
+        _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
+        
+        # memo_type_ids = request.env['memo.type'].sudo().search([
+        #     ('allow_for_publish', '=', True),
+        #     ('active', '=', True)
+        # ])
+        memo_type_ids = memo_configs.mapped('memo_type')
+        
+        selected_memo_type_id = False
+        if memo_type_key:
+            # selected_memo_type = request.env['memo.type'].sudo().search([
+            #     ('memo_key', '=', memo_type_key),
+            #     ('allow_for_publish', '=', True),
+            #     ('active', '=', True)
+            # ], limit=1)
+            selected_memo_type = memo_type_ids.filtered(lambda m: m.memo_key == memo_type_key)
+            
+            if selected_memo_type:
+                selected_memo_type_id = selected_memo_type.id
+                _logger.info(f"✓ Selected memo type: {selected_memo_type.name} (ID: {selected_memo_type_id}, Key: {memo_type_key})")
+            else:
+                _logger.warning(f"✗ No memo type found for key: {memo_type_key}")
+        else:
+            _logger.info("No memo_type_key provided in URL")
+        
         vals = {
-            "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
+            "leave_type_ids": request.env["hr.leave.type"].sudo().search([
+                ('company_id', '=', request.env.user.company_id.id)
+            ]),
             "memo_key_ids": [{'id': 0, 'name': ''}],
             "source_location_data_ids": source_location_data_ids,
             "destination_location_data_ids": destination_location_data_ids,
-            "config_type_ids": memo_configs, # self.get_user_configs ,
+            "memo_type_ids": memo_type_ids,
+            "config_type_ids": memo_configs,
+            "selected_memo_type_id": selected_memo_type_id,
+            "preselected_memo_key": memo_type_key,
         }
+        
+        _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
+        
         return request.render("portal_request.portal_request_template", vals)
+
     
     @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
     def reset_password(self, **post):
@@ -1590,15 +1647,13 @@ class PortalRequest(http.Controller):
             e = 10
         return s, e
     
-    # def get_request_info(self, request):
-    #     """
-    #     Returns context data extracted from :param:`request`.
-
-    #     Heavily based on flask integration for Sentry: https://git.io/vP4i9.
-    #     """
-    #     urlparts = urllib.parse.urlsplit(request.url)
-    #     query_string = urlparts.query
-    #     _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
+    def get_request_info(self, request):
+        """
+        Returns context data extracted from :param:`request`.
+        """
+        urlparts = urllib.parse.urlsplit(request.url)
+        query_string = urlparts.query
+        _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
     @http.route(['/my/requests', '/my/requests/<string:type>', 
                  '/my/requests/param/<path:search_param>',
@@ -1697,10 +1752,15 @@ class PortalRequest(http.Controller):
             sessions['end'] = end 
         else:
             requests = False
-        values = {'requests': requests}
+        values = {
+            'requests': requests,
+            'current_memo_type_key': type if type else False,
+            'page_name': 'my_requests',
+            }
         _logger.info(f"Records found {requests} -- valus to render {values}")
         
         return request.render("portal_request.my_portal_request", values)
+    
     
     # def get_leave_days_taken(self, record):
     #     if record and record.leave_end_date and record.leave_start_date:
