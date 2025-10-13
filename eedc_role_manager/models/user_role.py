@@ -40,7 +40,7 @@ class UserRole(models.Model):
     
     is_request_approver = fields.Boolean(
         string='Is Request Approver?',
-        help="Check this if this role designates the user as an approver in the memo request module."
+        help="Check this if this role designates the user as an approver in the ERP Request module."
     )
     
     user_ids = fields.Many2many(

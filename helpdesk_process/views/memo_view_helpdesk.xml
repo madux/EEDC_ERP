@@ -163,7 +163,7 @@
 			<field name="name">Office memo helpdesk tree</field>
 			<field name="model">memo.model</field>
 			<field name="arch" type="xml">
-				<tree string="Memo Requests">
+				<tree string="ERP Requests">
 					<field name="date"/> 
 					<field name="name"/>
 					<field name="code"/> 
@@ -242,7 +242,7 @@
 			<field name="name">Office type helpdesk tree</field>
 			<field name="model">memo.type</field>
 			<field name="arch" type="xml">
-				<tree string="Memo Requests">
+				<tree string="ERP Requests">
 					<field name="name"/>
 					<field name="allow_for_publish"/> 
 				</tree>

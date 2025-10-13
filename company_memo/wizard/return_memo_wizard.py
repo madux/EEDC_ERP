@@ -48,7 +48,7 @@ class Send_Memo_back(models.Model):
         get_previous_stage, first_stage = self.get_previous_stage(get_record)
         reasons = "<b><h4>Refusal Message From: %s </b></br> Please refer to the reasons below:</h4></br>* %s." %(self.env.user.name,self.reason)
         if self.reason:
-            msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a Memo request from {} has been refused / returned. <br/>\
+            msg_body = "Dear Sir/Madam, <br/>We wish to notify you that a ERP request from {} has been refused / returned. <br/>\
              <br/>Kindly {} to Review<br/> <br/>Thanks".format(self.memo_record.employee_id.name, self.get_url(self.id))
             get_record.write({
                 'state':'submit' if first_stage == 0 else 'Sent',
