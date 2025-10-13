@@ -8,6 +8,10 @@ access_id_memo_account_main,access_name_account_main,account.model_account_payme
 access_id_memo_users_id,access_name_all_users,base.model_res_users,,1,1,1,0
 access_report_memo_id,access_report_memo_name,base.model_ir_actions_report,,1,1,1,0
 access_main_memo_id,access_report_memo_name,base.model_ir_actions_report,,1,1,1,0
+access_product_user_id,access_product_user_name,product.model_product_product,base.group_user,1,1,0,0
+access_product_user_id,access_product_user_name,product.model_product_product,,1,1,1,1
+access_product_inventory_user_id,access_product_inventory_user_name,product.model_product_product,stock.group_stock_user,1,1,1,0
+access_product_inventory_admin_id,access_product_inventory_admin_name,product.model_product_product,stock.group_stock_manager,1,1,1,1
 mail.access_mail_mail_user,mail.mail.user,mail.model_mail_mail,base.group_user,1,1,1,0
 access_company_memo_request_line_user,company_memo_request_line.user,company_memo.model_request_line,base.group_user,1,1,1,1
 access_memo_config_manager,memo_config_user_name,company_memo.model_memo_config,company_memo.mainmemo_manager,1,1,1,1

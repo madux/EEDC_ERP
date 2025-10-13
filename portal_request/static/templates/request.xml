@@ -150,7 +150,66 @@
                                                     <input type="text" class="form-control s_website_form_input" name="staff_id" required="1" id="staff_id" labelfor="Staff ID:"/>
                                                 </div>
                                             </div>
-                                        </div> 
+                                        </div>
+
+                                        <!-- new field added -->
+                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestType">
+                                                    <span class="s_website_form_label_content">Request Type</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                    <input type="number" class="d-none form-control s_website_form_input" 
+                                                        name="selectedRequestTypeId" id="selectedRequestTypeId"/>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <select name="selectRequestType" id="selectRequestType" required="required" class="form-control" labelfor="Request Type">
+                                                        <option disabled="true" value="" t-att-selected="'selected' if not selected_memo_type_id else None">
+                                                            .. Select Request Type ..
+                                                        </option>
+                                                        <t t-foreach="memo_type_ids" t-as="mt">
+                                                            <option t-att-value="mt.id" 
+                                                                    t-att-id="mt.id" 
+                                                                    t-att-memo_key="mt.memo_key"
+                                                                    t-att-selected="'selected' if selected_memo_type_id and mt.id == selected_memo_type_id else None">
+                                                                <span t-esc="mt.name"/>
+                                                            </option>
+                                                        </t> 
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- end of new field -->
+
+                                        <!-- <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
+                                                    <span class="s_website_form_label_content">Request Option </span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                    <input type="number" class="d-none form-control s_website_form_input" 
+                                                        name="selectedRequestOptionId" id="selectedRequestOptionId"/>
+                                                    <input type="number" class="d-none form-control s_website_form_input" 
+                                                        name="selectConfigOptionId" id="selectConfigOptionId"/>
+                                                    <input type="text" class="d-none form-control s_website_form_input" 
+                                                        name="selectRequestOption" id="selectRequestOption" placeholder="request option eg soe"/>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <select name="selectConfigOption" id="selectConfigOption" required="required" class="form-control" labelfor="Request Option">
+                                                        <option disabled="true" selected="true" value="">.. Select ..</option>
+                                                        <t t-foreach="config_type_ids" t-as="ct">
+                                                            <option t-att-value="ct.id" 
+                                                                    t-att-id="ct.id" 
+                                                                    t-att-memo_key_id="str(ct.memo_type.id)"
+                                                                    t-att-memo_type_key="ct.memo_key"
+                                                                    class="config-option"
+                                                                    style="display: none;">
+                                                                <span t-esc="ct.name"/>
+                                                            </option>
+                                                        </t> 
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div> -->
+
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
@@ -194,6 +253,57 @@
                                                         <option value="soe">Statement of Expense</option> -->
                                                     </select>
                                                 </div>
+
+                                                <div id="interdistrict" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" data-type="text" data-name="Field">
+                                                    <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                        <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
+                                                            <span class="s_website_form_label_content">Inter-district Transfer</span>
+                                                        </label>
+                                                        <div class="col-sm" id="interdistrict-checkbox-div">
+                                                            <div class="mb-2 mt-2 text-muted">
+                                                                <input type="checkbox" name="isInterDistrict" id="isInterDistrict" class="isInterDistrict"/>
+                                                                <label for="isInterDistrict">Is Inter-district</label>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-sm d-none" id="inter-source-location-div">
+                                                            <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="source_location_id">
+                                                                <span class="s_website_form_label_content">Source Location </span>
+                                                                <span class="s_website_form_mark"> *</span>
+                                                            </label>
+                                                            <div class="mb-2 mt-2 text-muted">
+                                                                <!-- TARGETTTLOCATION: -->
+                                                                <input id="TargetSourceLocation" class="form-control d-none" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
+                                                                <select name="source_location_id" id="source_location_id" required="" data-init="" class="form-control Sourcelocation-cls" labelfor="Source Location">
+                                                                    <option disabled="true" selected="true" value="">.. Select ..</option>
+                                                                    <t t-foreach="source_location_data_ids" t-as="key">
+                                                                        <!-- <option t-att-value="key.memo_key"> -->
+                                                                        <option t-att-value="key.id" t-att-id="key.id">
+                                                                            <span t-esc="key.display_name"/>
+                                                                        </option>
+                                                                    </t>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm d-none" id="inter-destination-location-div">
+                                                             <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="destination_location_id">
+                                                                <span class="s_website_form_label_content">Destination Location </span>
+                                                                <span class="s_website_form_mark"> *</span>
+                                                            </label>
+                                                            <div class="mb-2 mt-2 text-muted">
+
+                                                                <select name="destination_location_id" id="destination_location_id" required="" data-init="" class="form-control destinationlocation-cls" labelfor="Destination Location">
+                                                                    <option disabled="true" selected="true" value="">.. Select ..</option>
+                                                                    <t t-foreach="destination_location_data_ids" t-as="key">
+                                                                        <option t-att-value="key.id" t-att-id="key.id">
+                                                                            <span t-esc="key.display_name"/>
+                                                                        </option>
+                                                                    </t>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <label class="col-form-label col-sm-auto s_website_form_label d-none" style="width: 200px" for="selectTypeRequest">
                                                     <span class="s_website_form_label_content">Type of Request</span>
                                                     <span class="s_website_form_mark"> *</span>
@@ -213,6 +323,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <input type="hidden" id="preselected_memo_key" t-att-value="preselected_memo_key or ''"/>
 
                                         <div id ="divEmployeeData" class="d-none s_website_form_field mb-3 col-6 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
@@ -398,7 +509,6 @@
                                                 <div class="col-sm">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="request_date" name="request_date" required="true" labelfor="Request Date"/>
                                                 </div>
-
                                                 <label id="vendor_label" class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="vendor">
                                                     <span class="s_website_form_label_content">Vendor</span>
                                                     <span class="s_website_form_mark"> </span>
@@ -442,7 +552,7 @@
                                                 </div> 
                                             </div>
                                         </div> 
-                                        <div class="s_website_form_field mb-3 col-8 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
                                                 <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
                                                     <span class="s_website_form_label_content">Choose Followers</span>
@@ -524,7 +634,6 @@
                                                 </label>
                                                 <div class="col-sm">
                                                     <input id="leave_reliever" class="form-control" name="leave_reliever" labelfor="leave_reliever"/>
-                                                    <!-- <input id="TargetSourceLocation" class="form-control" name="TargetSourceLocation" labelfor="TargetSourceLocation"/> -->
                                                 </div> 
                                             </div>
                                         </div> 

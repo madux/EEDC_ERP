@@ -680,6 +680,7 @@ odoo.define('portal_request.portal_request', function (require) {
                   q: term, //search term
                   productItems: JSON.stringify(setProductdata), //getSelectedProductItems(),
                   request_type: $('#selectRequestOption').val(), //getSelectedProductItems(),
+                  source_locationId: $('#source_location_id').val(), //getSelectedProductItems(),
                   page_limit: 10, // page size
                   page: page, // page number
                 };
@@ -791,7 +792,7 @@ odoo.define('portal_request.portal_request', function (require) {
             cache: true
         },
         minimumInputLength: 2,
-        multiple: true,
+        multiple: false,
         placeholder: 'Search for Vendors',
         allowClear: true,
     });
@@ -927,6 +928,60 @@ odoo.define('portal_request.portal_request', function (require) {
                     maxDate: null,
                     minDate: new Date()
                 });
+
+                var urlParams = new URLSearchParams(window.location.search);
+                var preselectedType = urlParams.get('memo_type_key') || urlParams.get('memo_type') || $('#preselected_memo_key').val();
+                
+                console.log('=== PRESELECTION DEBUG ===');
+                console.log('URL params:', window.location.search);
+                console.log('Preselected type:', preselectedType);
+                console.log('Current dropdown value:', $('#selectRequestType').val());
+                if (preselectedType) {
+                    console.log('Attempting to preselect type:', preselectedType);
+                    
+                    // Find and select the memo type in the dropdown
+                    var foundMatch = false;
+                    $('#selectRequestType option').each(function(){
+                        var memoKey = $(this).attr('memo_key');
+                        var typeId = $(this).val();
+                        
+                        console.log('Checking option:', {
+                            text: $(this).text(),
+                            value: typeId,
+                            memo_key: memoKey,
+                            matches: memoKey === preselectedType
+                        });
+                        
+                        if (memoKey === preselectedType) {
+                            console.log('✓ Found matching type! Setting to:', typeId, memoKey);
+                            foundMatch = true;
+                            
+                            // Set the value
+                            $('#selectRequestType').val(typeId);
+                            
+                            // Store the selected type ID
+                            $('#selectedRequestTypeId').val(typeId);
+                            
+                            // Small delay to ensure DOM is ready, then trigger change
+                            setTimeout(function() {
+                                console.log('Triggering change event for:', typeId);
+                                $('#selectRequestType').trigger('change');
+                            }, 100);
+                            
+                            return false; // break the loop
+                        }
+                    });
+                    
+                    if (!foundMatch) {
+                        console.error('✗ No matching option found for memo_type_key:', preselectedType);
+                        console.log('Available options:', $('#selectRequestType option').map(function() {
+                            return {text: $(this).text(), memo_key: $(this).attr('memo_key')};
+                        }).get());
+                    }
+                } else {
+                    console.log('No preselection needed');
+                }
+                console.log('=== END PRESELECTION DEBUG ===');
             });
 
         },
@@ -1019,6 +1074,52 @@ odoo.define('portal_request.portal_request', function (require) {
             // $('#inactivelist').change(function () {
             //     alert('changed');
             //  });
+			
+            'change .Sourcelocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+				if($(ev.target)){
+					$('#TargetSourceLocation').val($(ev.target).val())
+				}else{
+					$('.destinationlocation-cls').val('')
+					$('.destinationlocation-cls').addClass('is-invalid')
+				}
+            },
+
+			'change .destinationlocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+				if(sourceLocationId.val() == $(ev.target).val()){
+					$(ev.target).val('');
+					$(ev.target).addClass("is-invalid");
+					alert("Source Location and Destination Location must not be the same");
+					return true;
+				}
+				else{
+					$(ev.target).removeClass("is-invalid");
+				}
+            },
+            'change .isInterDistrict': function(ev){
+                $('#destination_location_id').val('');
+                $('#source_location_id').val('');
+                if ($(ev.target).is(':checked')){
+                    // make the source location required
+                    $('#inter-source-location-div').removeClass('d-none');
+                    $('#source_location_id').attr('required', true);
+                    
+                    // make the destination location required
+                    $('#inter-destination-location-div').removeClass('d-none');
+                    $('#destination_location_id').attr('required', true);
+                }else{
+                    // make the source location not required
+                    $('#inter-source-location-div').addClass('d-none');
+                    $('#source_location_id').attr('required', false);
+                    
+                    // make the destination location not required
+                    $('#inter-destination-location-div').addClass('d-none');
+                    $('#destination_location_id').attr('required', false);
+                }
+            },
 
             'change .otherChangeOption': function(ev){
                 if ($(ev.target).is(':checked')){
@@ -1053,7 +1154,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             'product_id': qty_elm.attr('id'),
                             'qty': selectedproductQty,
                             'district': $("#selectDistrict").val(),
-                            'request_type': $("#selectRequestOption").val()
+                            'request_type': $("#selectRequestOption").val(),
+                            'sourceLocationId': $("#TargetSourceLocation").val(),
                         }
                     }).then(function(data){
                         if(!data.status){
@@ -1336,6 +1438,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             console.log("request selected== ", selectedTarget);
                             displayNonLeaveElement()
                         }
+                        else if(selectedTarget == "material_request"){
+                            $('#interdistrict-checkbox-div').removeClass('d-none');
+                        }
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if(selectedTarget == "cash_advance"){
                             var staff_num = $('#staff_id').val();
@@ -1406,6 +1511,65 @@ odoo.define('portal_request.portal_request', function (require) {
                 });
             },
 
+            // New block added
+            'change select[name=selectRequestType]': function(ev){
+                let selectedTypeElement = $(ev.target);
+                let selected_type_id = selectedTypeElement.val();
+                let selected_option = selectedTypeElement.find('option:selected');
+                let memo_key = selected_option.attr('memo_key');
+                
+                console.log('Request Type changed:', selected_type_id, memo_key);
+                
+                // Store selected type ID
+                $('#selectedRequestTypeId').val(selected_type_id);
+                
+                // Reset Request Option dropdown
+                $('#selectConfigOption').val('');
+                $('#selectedRequestOptionId').val('');
+                $('#selectConfigOptionId').val('');
+                $('#selectRequestOption').val('');
+                
+                // Show all config options first
+                $('#selectConfigOption option').show();
+                
+                // Hide the placeholder option temporarily to filter properly
+                $('#selectConfigOption option[value=""]').hide();
+                
+                // Hide all config options except those matching the selected memo type
+                let matchingOptionsCount = 0;
+                $('#selectConfigOption option').each(function(){
+                    if ($(this).val() !== '') { // Skip the placeholder
+                        let option_memo_type_id = $(this).attr('memo_key_id');
+                        console.log('Checking option:', $(this).text(), 'memo_key_id:', option_memo_type_id, 'vs selected:', selected_type_id);
+                        
+                        if (option_memo_type_id === selected_type_id) {
+                            $(this).show();
+                            matchingOptionsCount++;
+                        } else {
+                            $(this).hide();
+                        }
+                    }
+                });
+                
+                // Show the placeholder option again
+                $('#selectConfigOption option[value=""]').show();
+                
+                console.log('Matching options found:', matchingOptionsCount);
+                
+                // Enable/disable based on available options
+                if (matchingOptionsCount === 0) {
+                    $('#selectConfigOption').prop('disabled', true);
+                    alert('No request configurations available for this type. Please contact your administrator to configure options for ' + selected_option.text());
+                } else {
+                    $('#selectConfigOption').prop('disabled', false);
+                }
+                
+                // Clear form elements
+                clearAllElement();
+            },
+
+            // End of new block.....
+
             'change select[name=selectConfigOption]': function(ev){
                 // let selectedTarget = $(ev.target).val();
                 let selectedTarget = $(ev.target);
@@ -1436,6 +1600,8 @@ odoo.define('portal_request.portal_request', function (require) {
                         let memo_config_id = sro.getAttribute("id");
                         let memo_type_id = sro.getAttribute("memo_key_id");
                         let memo_type_key = sro.getAttribute("memo_type_key");
+                        console.log(`KEY MEMO IS ${memo_type_key}`)
+
                         $('#selectConfigOptionId').val(Number(memo_config_id));
                         $('#selectedRequestOptionId').val(Number(memo_type_id));
                         $('#selectRequestOption').val(memo_type_key);
@@ -1552,6 +1718,12 @@ odoo.define('portal_request.portal_request', function (require) {
                             }
                         }
                          
+                        else if(memo_type_key == "material_request"){
+                            $('#interdistrict').removeClass('d-none');
+							displayNonLeaveElement()
+                            $('.add_item').removeClass('d-none')
+                            $('#product_form_div').removeClass('d-none'); 
+                        }
                         else{
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
@@ -1844,12 +2016,10 @@ odoo.define('portal_request.portal_request', function (require) {
                                         list_item['qty'] = $(this).val()
                                     }
                                     if($(this).attr('location_id')){
-                                        // list_item['location_id'] = $(this).val()
-                                        let loc_id = $(this).attr('location_id');
-                                        if(loc_id && loc_id !== 'undefined' && loc_id !== 'false' && loc_id !== 'null' && loc_id.trim() !== '') {
-                                            list_item['location_id'] = loc_id;
-                                        }
+                                        list_item['location_id'] = $(this).val()
+                                        list_item['dest_location_id'] = $('#destination_location_id').val()
                                     }
+									 
                                 
                                     if($(this).attr('name') == "amount_total"){
                                         console.log($(this).val())
@@ -2020,6 +2190,14 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#vendor_div').addClass('d-none');
         $('#vendor_id').attr("required", false);
         // $('#justification_reason').addClass("is-valid");
+        $('#interdistrict').addClass('d-none');
+        $('#isInterDistrict').prop('checked', false);
+        $('#source_location_id').val('');
+        $('#destination_location_id').val('');
+        $('#source_location_id').attr("required", false);
+        $('#destination_location_id').attr("required", false);
+        $('#inter-destination-location-div').addClass('d-none');
+        $('#inter-source-location-div').addClass('d-none');
     }
     var form = $('#msform')[0];
 // return PortalRequestWidget;
