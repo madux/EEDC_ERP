@@ -47,26 +47,25 @@ class ImportDataWizard(models.TransientModel):
         ('approve2', 'Approve 2'),
         ('done', 'Done'),
         ('refuse', 'Refuse'),
-        ('custom', 'Select Custom Stage'),
-    ], string='State/Stage Option', default='done', required=True)
+    ], string='State Option', default='done', required=True)
     
-    custom_stage_id = fields.Many2one(
+    stage_id = fields.Many2one(
         'memo.stage',
-        string='Custom Stage',
+        string='Stage',
         domain="[('memo_config_id', '=', memo_config_id)]"
     )
     
     @api.onchange('memo_config_id')
     def _onchange_memo_config_id(self):
-        """Clear custom_stage_id when memo_config_id changes to ensure correct domain"""
-        self.custom_stage_id = False
+        """Clear stage_id when memo_config_id changes to ensure correct domain"""
+        self.stage_id = False
     
     def _get_stage_and_state(self):
         """
-        Compute stage_id and state based on state_option.
-        - If state_option is 'custom', use the selected custom_stage_id
-        - If state_option is 'submit' or 'done', compute from memo_config stages
-        - Otherwise, use custom_stage_id or the closest available stage
+        Compute stage_id and state based on state_option and selected stage.
+        - If state_option is 'submit', use first stage and 'submit' state
+        - If state_option is 'done', use last stage and 'Done' state
+        - Otherwise, use the manually selected stage_id and the state_option value
         Returns: (stage_id, state_string)
         """
         if not self.memo_config_id.stage_ids:
@@ -76,34 +75,25 @@ class ImportDataWizard(models.TransientModel):
         
         stages = self.memo_config_id.stage_ids.sorted(key=lambda s: s.sequence)
         
-        if self.state_option == 'custom':
-            if not self.custom_stage_id:
+        # Auto-compute stage for 'submit' and 'done'
+        if self.state_option == 'submit':
+            return stages[0].id if len(stages) > 0 else False, 'submit'
+        
+        elif self.state_option == 'done':
+            return stages[-1].id, 'Done'
+        
+        # For other states, use the manually selected stage
+        else:
+            if not self.stage_id:
                 raise ValidationError(
-                    "Please select a custom stage when 'Select Custom Stage' is chosen"
+                    f"Please select a stage for state '{self.state_option}'"
                 )
-            if self.custom_stage_id.memo_config_id.id != self.memo_config_id.id:
+            if self.stage_id.memo_config_id.id != self.memo_config_id.id:
                 raise ValidationError(
-                    f"Selected stage '{self.custom_stage_id.name}' does not belong to "
+                    f"Selected stage '{self.stage_id.name}' does not belong to "
                     f"memo config '{self.memo_config_id.name}'"
                 )
-            return self.custom_stage_id.id, self.custom_stage_id.name
-        
-        # Pre-computed stage mappings for standard options
-        stage_mapping = {
-            'submit': (stages[0].id if len(stages) > 0 else False, 'submit'),
-            'sent': (stages[1].id if len(stages) > 1 else stages[0].id, 'Sent'),
-            'approve': (stages[2].id if len(stages) > 2 else stages[-1].id, 'Approve'),
-            'approve2': (stages[3].id if len(stages) > 3 else stages[-1].id, 'Approve2'),
-            'done': (stages[-1].id, 'Done'),
-            'refuse': (stages[-1].id, 'Refuse'),
-        }
-        
-        stage_id, state_value = stage_mapping.get(
-            self.state_option, 
-            (stages[-1].id, 'Done')
-        )
-        
-        return stage_id, state_value
+            return self.stage_id.id, self.state_option
     
     def compute_date(self, date_str):
         """Convert various date formats to datetime object"""
