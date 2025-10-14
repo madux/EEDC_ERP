@@ -202,7 +202,7 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Vendor</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" id="vendor_id_form" name="vendor_id_form" readonly="true" labelfor="Vendor"/>
+                                                    <input type="text" class="vendor-cls form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" t-attf-id="{{req.vendor_id.id}}" name="vendor_id_form" readonly="true" required="true" labelfor="Vendor"/>
                                                 </span>
                                             </div> 
                                         </t>
