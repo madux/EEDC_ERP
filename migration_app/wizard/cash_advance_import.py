@@ -42,12 +42,12 @@ class ImportDataWizard(models.TransientModel):
     
     state_option = fields.Selection([
         ('submit', 'Draft'),
-        ('sent', 'Sent'),
-        ('approve', 'Approve'),
-        ('approve2', 'Approve 2'),
-        ('done', 'Done'),
-        ('refuse', 'Refuse'),
-    ], string='State Option', default='done', required=True)
+        ('Sent', 'Sent'),
+        ('Approve', 'Approve'),
+        ('Approve2', 'Approve 2'),
+        ('Done', 'Done'),
+        ('Refuse', 'Refuse'),
+    ], string='State Option', default='Done', required=True)
     
     stage_id = fields.Many2one(
         'memo.stage',
@@ -63,37 +63,33 @@ class ImportDataWizard(models.TransientModel):
     def _get_stage_and_state(self):
         """
         Compute stage_id and state based on state_option and selected stage.
-        - If state_option is 'submit', use first stage and 'submit' state
-        - If state_option is 'done', use last stage and 'Done' state
-        - Otherwise, use the manually selected stage_id and the state_option value
-        Returns: (stage_id, state_string)
+
         """
-        if not self.memo_config_id.stage_ids:
+        if not self.memo_config_id or not self.memo_config_id.stage_ids:
             raise ValidationError(
-                f"Memo config '{self.memo_config_id.name}' has no stages configured"
+                f"Memo config '{getattr(self.memo_config_id, 'name', '')}' has no stages configured"
             )
-        
+
         stages = self.memo_config_id.stage_ids.sorted(key=lambda s: s.sequence)
-        
-        # Auto-compute stage for 'submit' and 'done'
-        if self.state_option == 'submit':
-            return stages[0].id if len(stages) > 0 else False, 'submit'
-        
-        elif self.state_option == 'done':
-            return stages[-1].id, 'Done'
-        
-        # For other states, use the manually selected stage
-        else:
-            if not self.stage_id:
-                raise ValidationError(
-                    f"Please select a stage for state '{self.state_option}'"
-                )
-            if self.stage_id.memo_config_id.id != self.memo_config_id.id:
-                raise ValidationError(
-                    f"Selected stage '{self.stage_id.name}' does not belong to "
-                    f"memo config '{self.memo_config_id.name}'"
-                )
-            return self.stage_id.id, self.state_option
+        opt = self.state_option
+
+        if opt in ['submit', 'Submit']:
+            return (stages[0].id if len(stages) > 0 else False, 'submit')
+
+        if opt in ['Done', 'done'] == 'done':
+            return (stages[-1].id if len(stages) > 0 else False, 'Done')
+
+        if not self.stage_id:
+            raise ValidationError(
+                f"Please select a stage for state '{self.state_option}'"
+            )
+        if self.stage_id.memo_config_id.id != self.memo_config_id.id:
+            raise ValidationError(
+                f"Selected stage '{self.stage_id.name}' does not belong to "
+                f"memo config '{self.memo_config_id.name}'"
+            )
+
+        return (self.stage_id.id, opt)
     
     def compute_date(self, date_str):
         """Convert various date formats to datetime object"""
