@@ -20,6 +20,8 @@
                         <field name="company_id"/> 
                         <field name="branch_id"/> 
                         <field name="memo_config_id"/> 
+                        <field name="custom_stage_id"/> 
+                        <field name="state_option"/> 
                         <field name="default_employee_id"/> 
                         <field name="clear_data"/> 
                     </group>

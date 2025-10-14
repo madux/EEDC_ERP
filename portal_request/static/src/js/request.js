@@ -928,6 +928,60 @@ odoo.define('portal_request.portal_request', function (require) {
                     maxDate: null,
                     minDate: new Date()
                 });
+
+                var urlParams = new URLSearchParams(window.location.search);
+                var preselectedType = urlParams.get('memo_type_key') || urlParams.get('memo_type') || $('#preselected_memo_key').val();
+                
+                console.log('=== PRESELECTION DEBUG ===');
+                console.log('URL params:', window.location.search);
+                console.log('Preselected type:', preselectedType);
+                console.log('Current dropdown value:', $('#selectRequestType').val());
+                if (preselectedType) {
+                    console.log('Attempting to preselect type:', preselectedType);
+                    
+                    // Find and select the memo type in the dropdown
+                    var foundMatch = false;
+                    $('#selectRequestType option').each(function(){
+                        var memoKey = $(this).attr('memo_key');
+                        var typeId = $(this).val();
+                        
+                        console.log('Checking option:', {
+                            text: $(this).text(),
+                            value: typeId,
+                            memo_key: memoKey,
+                            matches: memoKey === preselectedType
+                        });
+                        
+                        if (memoKey === preselectedType) {
+                            console.log('✓ Found matching type! Setting to:', typeId, memoKey);
+                            foundMatch = true;
+                            
+                            // Set the value
+                            $('#selectRequestType').val(typeId);
+                            
+                            // Store the selected type ID
+                            $('#selectedRequestTypeId').val(typeId);
+                            
+                            // Small delay to ensure DOM is ready, then trigger change
+                            setTimeout(function() {
+                                console.log('Triggering change event for:', typeId);
+                                $('#selectRequestType').trigger('change');
+                            }, 100);
+                            
+                            return false; // break the loop
+                        }
+                    });
+                    
+                    if (!foundMatch) {
+                        console.error('✗ No matching option found for memo_type_key:', preselectedType);
+                        console.log('Available options:', $('#selectRequestType option').map(function() {
+                            return {text: $(this).text(), memo_key: $(this).attr('memo_key')};
+                        }).get());
+                    }
+                } else {
+                    console.log('No preselection needed');
+                }
+                console.log('=== END PRESELECTION DEBUG ===');
             });
 
         },
@@ -1456,6 +1510,65 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert(`Unknown Error! ${msg}`)
                 });
             },
+
+            // New block added
+            'change select[name=selectRequestType]': function(ev){
+                let selectedTypeElement = $(ev.target);
+                let selected_type_id = selectedTypeElement.val();
+                let selected_option = selectedTypeElement.find('option:selected');
+                let memo_key = selected_option.attr('memo_key');
+                
+                console.log('Request Type changed:', selected_type_id, memo_key);
+                
+                // Store selected type ID
+                $('#selectedRequestTypeId').val(selected_type_id);
+                
+                // Reset Request Option dropdown
+                $('#selectConfigOption').val('');
+                $('#selectedRequestOptionId').val('');
+                $('#selectConfigOptionId').val('');
+                $('#selectRequestOption').val('');
+                
+                // Show all config options first
+                $('#selectConfigOption option').show();
+                
+                // Hide the placeholder option temporarily to filter properly
+                $('#selectConfigOption option[value=""]').hide();
+                
+                // Hide all config options except those matching the selected memo type
+                let matchingOptionsCount = 0;
+                $('#selectConfigOption option').each(function(){
+                    if ($(this).val() !== '') { // Skip the placeholder
+                        let option_memo_type_id = $(this).attr('memo_key_id');
+                        console.log('Checking option:', $(this).text(), 'memo_key_id:', option_memo_type_id, 'vs selected:', selected_type_id);
+                        
+                        if (option_memo_type_id === selected_type_id) {
+                            $(this).show();
+                            matchingOptionsCount++;
+                        } else {
+                            $(this).hide();
+                        }
+                    }
+                });
+                
+                // Show the placeholder option again
+                $('#selectConfigOption option[value=""]').show();
+                
+                console.log('Matching options found:', matchingOptionsCount);
+                
+                // Enable/disable based on available options
+                if (matchingOptionsCount === 0) {
+                    $('#selectConfigOption').prop('disabled', true);
+                    alert('No request configurations available for this type. Please contact your administrator to configure options for ' + selected_option.text());
+                } else {
+                    $('#selectConfigOption').prop('disabled', false);
+                }
+                
+                // Clear form elements
+                clearAllElement();
+            },
+
+            // End of new block.....
 
             'change select[name=selectConfigOption]': function(ev){
                 // let selectedTarget = $(ev.target).val();

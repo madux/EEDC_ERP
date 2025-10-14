@@ -97,7 +97,7 @@
 					</div>
 					<div class="apps-grid">
 						<div class="app-item">
-							<a href="/my/requests/leave_request">
+							<a href="/my/requests/leave_request?memo_type=leave_request">
 								<div class="app-icon leave-icon">📅</div>
 								<div class="app-label">Leave</div>
 							</a>
@@ -109,7 +109,7 @@
 							</a>
 						</div> -->
 						<div class="app-item" name="material">
-							<a href="/my/requests/material_request" >
+							<a href="/my/requests/material_request?memo_type=material_request" >
 							<!-- <a href="/my/requests/material_request"> -->
 								<div class="app-icon material-icon">📊</div>
 								<div class="app-label">Material Request</div>
@@ -117,20 +117,20 @@
 							</a>
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/procurement_request">
+							<a href="/my/requests/procurement_request?memo_type=procurement_request">
 								<div class="app-icon procurement-icon">🛒</div>
 								<div class="app-label">Procurement</div>
 							</a>
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/Payment">
+							<a href="/my/requests/Payment?memo_type=Payment">
 								<div class="app-icon payment-icon">💳</div>
 								<div class="app-label">Payment</div>
 							</a>
 
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/cash_advance">
+							<a href="/my/requests/cash_advance?memo_type=cash_advance">
 								<div class="app-icon cash-advance-icon">💰</div>
 								<div class="app-label">Cash Advance</div>
 							</a>
@@ -142,7 +142,7 @@
 							</a>
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/vehicle_request">
+							<a href="/my/requests/vehicle_request?memo_type=vehicle_request">
 								<div class="app-icon vehicle-icon">🚗</div>
 								<div class="app-label">Vehicle Request</div>
 							</a>
@@ -156,7 +156,7 @@
 							</a>
 						</div>
 						<div class="app-item">
-							<a href="/my/requests/soe">
+							<a href="/my/requests/soe?memo_type=soe">
 							<!-- <a t-att-href="'/get-menu-url/%s' % 'soe' if not request.env.user._is_public() else '/my/requests/soe'"> -->
 								<div class="app-icon expense-icon">📝</div>
 								<div class="app-label">Retirement</div>
