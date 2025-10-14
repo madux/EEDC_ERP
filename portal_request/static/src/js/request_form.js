@@ -276,6 +276,41 @@ odoo.define('portal_request.portal_request_form', function (require) {
         $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
     }
 
+    function triggerVendor(){
+        // find the input field
+        const elm = $(`input[name=vendor_id_form]`);
+        let oldValue = elm.val(); 
+        let oldId = elm.attr('id'); 
+        elm.select2({
+            ajax: {
+              url: '/portal-request-get-vendors',
+              dataType: 'json',
+              delay: 30,
+              data: function (term, page) {
+                return {
+                  q: term, //search term
+                  page_limit: 10, // page size
+                //   location_type: source, 
+                  page: page, // page number
+                };
+              },
+              results: function (data, page) {
+                var more = (page * 30) < data.total;
+                return {results: data.results, more: more};
+              },
+              cache: true
+            },
+            minimumInputLength: 2,
+            multiple: false,
+            placeholder: 'Search for Vendor',
+            allowClear: true,
+        }); 
+
+        elm.val(oldId)
+        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+        $(`.select2-container.vendor-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    }
+
     function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
         // find the input field
         const elm = $(`input[name=destination_location_id]`);
@@ -647,6 +682,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 trigger_product_line();
                 searchStockLocation('source_location_id', 'source', 'Sourcelocation-cls');
                 searchStockLocation2('destination_location_id', 'destination', 'destinationlocation-cls');
+                triggerVendor();
 
             },
             // 'focus select[name="source_location_id"]': function(ev){
@@ -677,6 +713,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let description = $("#description")
                 let source_location_id = $("input[name=source_location_id]")
                 let dest_location_id = $("input[name=destination_location_id]")
+                let vendor_id_form = $("input[name=vendor_id_form]")
                 let payment_reference_form = $("#payment_reference_form")
                 let record_id = $(".record_id").attr('id')
                 console.log('saving record data => 1', saveProductitem())
@@ -692,6 +729,8 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'description': description.val(),
                         'source_location_id': source_location_id.val(),
                         'dest_location_id': dest_location_id.val(),
+                        'vendor_id': vendor_id_form.val(),
+                        'client_id': vendor_id_form.val(),
                         'memo_id': record_id,
                         'payment_reference': payment_reference_form.val(),
                         'Dataitem': saveProductitem()

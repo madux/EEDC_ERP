@@ -10,7 +10,6 @@ class MemoFleetMaintenance(models.Model):
     _name = 'memo.fleet.maintenance'
     _description = "FLEET MAINTANACE MODEL"
 
-
     vehicle_id = fields.Many2one(
         'product.product',
         string="Vehicle Assigned",

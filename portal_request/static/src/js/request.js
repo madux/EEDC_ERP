@@ -1079,7 +1079,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 let sourceLocationId = $('#source_location_id')
 				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
 				if($(ev.target)){
-					$('#TargetSourceLocation').val($(ev.target).val())
+					$('#TargetSourceLocation').val($('#source_location_id').val())
 				}else{
 					$('.destinationlocation-cls').val('')
 					$('.destinationlocation-cls').addClass('is-invalid')
@@ -1155,7 +1155,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             'qty': selectedproductQty,
                             'district': $("#selectDistrict").val(),
                             'request_type': $("#selectRequestOption").val(),
-                            'sourceLocationId': $("#TargetSourceLocation").val(),
+                            'sourceLocationId': $("#TargetSourceLocation").val() || $("#source_location_id").val(),
                         }
                     }).then(function(data){
                         if(!data.status){

@@ -1574,23 +1574,22 @@ class PortalRequest(http.Controller):
             line_dest_location_id = memo_id.dest_location_id.id if memo_id.dest_location_id else rec.get('dest_location_id')
             _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
-                    'memo_id': memo_id.id,
-                    'memo_type': memo_id.memo_type.id,
-                    'memo_type_key': memo_id.memo_type_key,
-                    # 'product_id': product_id.id, 
-                    'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-                    'description': BeautifulSoup(desc, features="lxml").get_text(),
-                    'used_qty': rec.get('used_qty'),
-                    'amount_total': rec.get('amount_total'),
-                    'used_amount': rec.get('used_amount'),
-                    'note': rec.get('note'),
-                    'source_location_id': line_source_location_id,
-                    'dest_location_id': line_dest_location_id,
-                    'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                    'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
-                    'distance_from': rec.get('distance_from'),
-                    'distance_to': rec.get('distance_to'),
-                }
+                'memo_id': memo_id.id,
+                'memo_type': memo_id.memo_type.id,
+                'memo_type_key': memo_id.memo_type_key,
+                'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
+                'description': BeautifulSoup(desc, features="lxml").get_text(),
+                'used_qty': rec.get('used_qty'),
+                'amount_total': rec.get('amount_total'),
+                'used_amount': rec.get('used_amount'),
+                'note': rec.get('note'),
+                'source_location_id': line_source_location_id,
+                'dest_location_id': line_dest_location_id,
+                'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
+                'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+                'distance_from': rec.get('distance_from'),
+                'distance_to': rec.get('distance_to'),
+            }
             _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
             productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
             product_id = request.env['product.product'].sudo().browse([int(productid)])
@@ -2101,15 +2100,16 @@ class PortalRequest(http.Controller):
         if request_record:
             leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
             leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
-            _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
+            # _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
             values = {
                 'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
                 'leave_start_date': leave_start_date,
                 'leave_end_date': leave_end_date,
                 "leave_Reliever": int(post.get("leave_Reliever")) if post.get("leave_Reliever") else False,
                 'description': post.get('description'),
-                'source_location_id': int(post.get('source_location_id')),
-                'dest_location_id': int(post.get('dest_location_id')),
+                'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
+                'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
+                'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
             }
             request_record.update(values)
             # updated_request = self.update_request_line(DataItems, request_record)
@@ -2124,7 +2124,7 @@ class PortalRequest(http.Controller):
                         'quantity_available': float(rec.get('qty').replace(',', '')) if rec.get('qty') else 0,
                         'description': BeautifulSoup(desc, features="lxml").get_text(),
                         'used_qty': rec.get('used_qty'),
-                        'amount_total': float(rec.get('amount_total').replace(',', '')),
+                        'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
                         'used_amount': rec.get('used_amount'),
                         'note': rec.get('note'),
                         # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
