@@ -144,16 +144,45 @@ class ImportDataWizard(models.TransientModel):
         }
     
     def _process_payment_row(self, first_row):
-        """Extract payment data from row - flexible mapping for now"""
+        """Extract payment data from row"""
+        
+        def safe_float(val, default=0.0):
+            try:
+                if val is None or val == '':
+                    return default
+                if isinstance(val, str) and val.upper() == 'FALSE':
+                    return default
+                return float(val)
+            except (ValueError, TypeError):
+                _logger.warning(f"Could not convert '{val}' to float, using {default}")
+                return default
+        
+        def extract_product_code(display_name):
+            """Extract code from format like '[ST-609-0072] Product Name'"""
+            if not display_name:
+                return None
+            display_name_str = str(display_name).strip()
+            match = re.match(r'\[([^\]]+)\]', display_name_str)
+            if match:
+                return match.group(1)
+            return None
+        
+        product_display_name = str(first_row[15]).strip() if len(first_row) > 15 else ''
+        product_code = extract_product_code(product_display_name)
+        
         return {
             'code': str(first_row[0]).strip() if first_row[0] else '',
-            'employee_number': self._normalize_emp_no(first_row[1]) if len(first_row) > 1 else '',
-            'amount': first_row[2] if len(first_row) > 2 else 0,
-            'request_date': self.compute_date(first_row[9]) if len(first_row) > 9 else None,
+            'employee_number': self._normalize_emp_no(first_row[2]) if len(first_row) > 2 else '',
+            'amount': safe_float(first_row[9]) if len(first_row) > 9 else 0.0,
+            'request_date': self.compute_date(first_row[18]) if len(first_row) > 18 else None,
             'requester_name': str(first_row[3]).strip() if len(first_row) > 3 else '',
-            'description': str(first_row[8]).strip() if len(first_row) > 8 else '',
-            'quantity': 1,
-            'unit_price': first_row[2] if len(first_row) > 2 else 0,
+            'description': str(first_row[11]).strip() if len(first_row) > 11 and first_row[11] else str(first_row[10]).strip() if len(first_row) > 10 else '',
+            'quantity': safe_float(first_row[12], 1.0) if len(first_row) > 12 else 1.0,
+            'unit_price': safe_float(first_row[13]) if len(first_row) > 13 else 0.0,
+            'display_name': str(first_row[1]).strip() if len(first_row) > 1 else '',
+            'work_location': str(first_row[4]).strip() if len(first_row) > 4 else '',
+            'product_code': product_code,
+            'product_display_name': product_display_name,
         }
         
     def import_records_action(self):
@@ -318,7 +347,7 @@ class ImportDataWizard(models.TransientModel):
                     'code': code,
                     'migrated_legacy_id': payment_number,
                     'requester_name': row_data['requester_name'],
-                    'name': row_data['code'],
+                    'name': row_data['display_name'] or row_data['code'],  # Use Display Name as subject
                     'employee_id': employee.id if employee else self.default_employee_id.id,
                     'state': state_value,
                     'stage_id': stage_id,
@@ -333,14 +362,35 @@ class ImportDataWizard(models.TransientModel):
                 line_count = 0
                 for row in rows:
                     row_data = self._process_payment_row(row)
+                    
+                    # Search for product by code
+                    product_id = False
+                    if row_data['product_code']:
+                        product = self.env['product.product'].sudo().search([
+                            '|',
+                            ('default_code', '=ilike', row_data['product_code']),
+                            ('name', '=ilike', row_data['product_code'])
+                        ], limit=1)
+                        
+                        if product:
+                            product_id = product.id
+                            _logger.info(f"Found product: {product.name} for code {row_data['product_code']}")
+                        else:
+                            _logger.warning(f"Product not found for code: {row_data['product_code']}")
+                    
                     vals = {
                         'memo_id': memo_id.id,
                         'memo_type': memo_id.memo_type.id,
                         'memo_type_key': memo_id.memo_type_key,
-                        'description': row_data['description'] or row_data['requester_name'],
+                        'description': row_data['description'] or row_data['display_name'],
                         'quantity_available': row_data['quantity'],
                         'amount_total': row_data['unit_price'],
                     }
+                    
+                    # Add product_id if found
+                    if product_id:
+                        vals['product_id'] = product_id
+                    
                     self.env['request.line'].sudo().create(vals)
                     line_count += 1
                 
