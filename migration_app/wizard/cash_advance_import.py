@@ -30,6 +30,7 @@ class ImportDataWizard(models.TransientModel):
     model_import = fields.Selection([
             ('cash_advance', 'Cash Advance'),
             ('payment', 'Payment'),
+            ('retirement', 'Retirement'),
         ],
         string='Model to Import', required=True, index=True,
         copy=True, default='cash_advance', 
@@ -143,7 +144,7 @@ class ImportDataWizard(models.TransientModel):
             'unit_price': first_row[5] if len(first_row) > 5 else 0,
         }
     
-    def _process_payment_row(self, first_row):
+    def _process_payment_row(self, first_row, retirement):
         """Extract payment data from row"""
         
         def safe_float(val, default=0.0):
@@ -172,7 +173,7 @@ class ImportDataWizard(models.TransientModel):
         
         approver_employee_number = self._normalize_emp_no(first_row[16]) if len(first_row) > 16 else ''
         
-        return {
+        vals = {
             'code': str(first_row[0]).strip() if first_row[0] else '',
             'employee_number': self._normalize_emp_no(first_row[2]) if len(first_row) > 2 else '',
             'amount': safe_float(first_row[9]) if len(first_row) > 9 else 0.0,
@@ -187,6 +188,14 @@ class ImportDataWizard(models.TransientModel):
             'product_display_name': product_display_name,
             'approver_employee_number': approver_employee_number,
         }
+        if retirement: 
+            used_amount = max(safe_float(first_row[5])/vals['quantity'], (safe_float(first_row[7]) - safe_float(first_row[6]))/vals['quantity'] )
+            vals.update({
+                'advance_no': str(first_row[20]).strip() if len(first_row) >= 20 else '',
+                'used_amount': used_amount if used_amount > 0.0 else vals['unit_price'],
+                })
+        
+        return vals
         
     def import_records_action(self):
         if self.data_file:
@@ -219,7 +228,12 @@ class ImportDataWizard(models.TransientModel):
             
         elif self.model_import == "payment":
             success_records, unsuccess_records, count = self._import_payment(
-                file_data, stage_id, state_value, success_records, unsuccess_records
+                file_data, stage_id, state_value, success_records, unsuccess_records, retirement=False
+            )
+            
+        elif self.model_import == "retirement":
+            success_records, unsuccess_records, count = self._import_payment(
+                file_data, stage_id, state_value, success_records, unsuccess_records, retirement=True
             )
         
         errors.append(f'Successful Import(s): {count} Record(s)')
@@ -351,7 +365,7 @@ class ImportDataWizard(models.TransientModel):
         
         return success_records, unsuccess_records, count
 
-    def _import_payment(self, file_data, stage_id, state_value, success_records, unsuccess_records):
+    def _import_payment(self, file_data, stage_id, state_value, success_records, unsuccess_records, retirement=False):
         """Handle payment import logic"""
         payment_groups = {}
         for row in file_data:
@@ -366,11 +380,13 @@ class ImportDataWizard(models.TransientModel):
         
         for payment_number, rows in payment_groups.items():
             first_row = rows[0]
-            row_data = self._process_payment_row(first_row)
+            get_advance_no = True if retirement else False
+            row_data = self._process_payment_row(first_row, retirement)
             code = row_data['code']
             employee_number = row_data['employee_number']
             request_date = row_data['request_date']
             approver_employee_number = row_data['approver_employee_number']
+            advance_number = row_data['advance_no']
             
             if payment_number:
                 existing_memo = self.env['memo.model'].sudo().search([
@@ -384,6 +400,22 @@ class ImportDataWizard(models.TransientModel):
                     if approver_employee and approver_employee.user_id:
                         approver_user = approver_employee.user_id
                         _logger.info(f"Found approver user: {approver_user.name}")
+                        
+                cash_advance_reference = None
+                if retirement:
+                    if advance_number:
+                        cash_advance_reference = self.env['memo.model'].sudo().search([
+                        ('code', '=ilike', advance_number)], limit=1)
+                        if not cash_advance_reference:
+                            _logger.info(f"Skipping cash advance {advance_number} not existing for {code}")
+                            unsuccess_records.append(f"Skipping cash advance {advance_number} not existing for {code}")
+                            count += 1
+                            continue
+                    else:
+                        _logger.info(f"Skipping as no cash advance no. provided for {advance_number}")
+                        unsuccess_records.append(f"Skipping as no cash advance no. provided for {code}")
+                        count += 1
+                        continue
                 
                 if self.import_type == 'new':
                     if existing_memo:
@@ -419,11 +451,14 @@ class ImportDataWizard(models.TransientModel):
                     if approver_user:
                         memo_vals['users_followers'] = [(4, approver_user.id)]
                     
+                    if cash_advance_reference:
+                        memo_vals['cash_advance_reference'] = cash_advance_reference.id
+                        
                     memo_id = self.env['memo.model'].sudo().create(memo_vals)
                     
                     line_count = 0
                     for row in rows:
-                        row_data = self._process_payment_row(row)
+                        row_data = self._process_payment_row(row, retirement)
                         
                         product_id = False
                         if row_data['product_code']:
@@ -450,6 +485,10 @@ class ImportDataWizard(models.TransientModel):
                         
                         if product_id:
                             vals['product_id'] = product_id
+                        
+                        if retirement:
+                            vals['used_qty'] = row_data['quantity']
+                            vals['used_amount'] = row_data['used_amount']
                         
                         self.env['request.line'].sudo().create(vals)
                         line_count += 1
@@ -483,7 +522,7 @@ class ImportDataWizard(models.TransientModel):
                         
                         line_count = 0
                         for row in rows:
-                            row_data = self._process_payment_row(row)
+                            row_data = self._process_payment_row(row, retirement)
                             
                             product_id = False
                             if row_data['product_code']:
@@ -508,6 +547,10 @@ class ImportDataWizard(models.TransientModel):
                             
                             if product_id:
                                 vals['product_id'] = product_id
+                                
+                            if retirement:
+                                vals['used_qty'] = row_data['quantity']
+                                vals['used_amount'] = row_data['used_amount']
                             
                             self.env['request.line'].sudo().create(vals)
                             line_count += 1
