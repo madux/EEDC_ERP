@@ -409,13 +409,26 @@ class ImportDataWizard(models.TransientModel):
                     ('code', '=ilike', code)], limit=1)
                 
                 # Find approver user for users_followers
-                approver_user = None
-                if approver_employee_number:
-                    approver_employee = self.env['hr.employee'].sudo().search([
-                        ('employee_number', '=', approver_employee_number)], limit=1)
-                    if approver_employee and approver_employee.user_id:
-                        approver_user = approver_employee.user_id
-                        _logger.info(f"Found approver user: {approver_user.name}")
+                # approver_user = None
+                # if approver_employee_number:
+                #     approver_employee = self.env['hr.employee'].sudo().search([
+                #         ('employee_number', '=', approver_employee_number)], limit=1)
+                    
+                #     if approver_employee and approver_employee.user_id:
+                #         employee_exists = self.env['hr.employee'].sudo().search_count([
+                #             ('id', '=', approver_employee.id)
+                #         ])
+                        
+                #         if employee_exists:
+                #             approver_user = approver_employee.user_id
+                #             _logger.info(f"Found approver user: {approver_user.name}")
+                #         else:
+                #             _logger.warning(
+                #                 f"Approver employee {approver_employee_number} (ID: {approver_employee.id}) "
+                #                 f"is invalid or orphaned"
+                #             )
+                #     else:
+                #         _logger.warning(f"No valid user found for approver employee {approver_employee_number}")
                 
                 cash_advance_reference = None
                 if retirement:
@@ -471,8 +484,12 @@ class ImportDataWizard(models.TransientModel):
                         'memo_type_key': self.memo_config_id.memo_key,
                     }
                     
-                    if approver_user:
-                        memo_vals['users_followers'] = [(4, approver_user.id)]
+                    # if approver_user:
+                    #     try:
+                    #         memo_vals['users_followers'] = [(4, approver_user.id)]
+                    #     except Exception as e:
+                    #         _logger.error(f"Failed to add follower {approver_user.name}: {str(e)}")
+                    #         memo_vals.pop('users_followers', None)
                     
                     if cash_advance_reference:
                         memo_vals['cash_advance_reference'] = cash_advance_reference.id
@@ -556,8 +573,11 @@ class ImportDataWizard(models.TransientModel):
                             'request_date': request_date if request_date else fields.Date.today(),
                         }
                         
-                        if approver_user:
-                            update_vals['users_followers'] = [(5, 0, 0), (4, approver_user.id)]
+                        # if approver_user:
+                        #     try:
+                        #         update_vals['users_followers'] = [(5, 0, 0), (4, approver_user.id)]
+                        #     except Exception as e:
+                        #         _logger.warning(f"Could not add follower {approver_user.name}: {str(e)}")
                         
                         if cash_advance_reference:
                             update_vals['cash_advance_reference'] = cash_advance_reference.id
