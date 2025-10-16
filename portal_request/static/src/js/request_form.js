@@ -21,7 +21,17 @@ odoo.define('portal_request.portal_request_form', function (require) {
     divRefuseCommentMessage.hide()
     modalfooter4cancel.hide()
     refuseCommentMessage.attr('required', false);
+    // document.addEventListener("input", autoResize);
     let localStorage = window.localStorage;
+
+    // let autoResize = function(e) {
+    //     if (e.target.classList.contains("auto-expand")) {
+    //         e.target.style.height = "auto";
+    //         e.target.style.height = e.target.scrollHeight + "px";
+    //         console.log("TESTINGGGGG DFDGFHJGDS")
+    //     }
+    // }
+    // $('input').autoResize();
 
     let triggerEndDate = function(){
         var endDate = new Date($('#leave_start_datex').val()).getTime() + (1 * 24 * 60 * 60 * 1000);
@@ -34,57 +44,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
         var end = `${join2}/${new Date(maxDate).getDate()}/${new Date(maxDate).getFullYear()}`
         console.log(`trigger end date on start ${st} ${end}`)
         return [st, end]
-    }
-
-    // $(`input[name=source_location_id]`).select2({
-    //     ajax: {
-    //         url:'/get-stock-location',
-    //         dataType: 'json',
-    //         delay: 250,
-    //         data: function (term, page) {
-    //             return {
-    //                 q: term, //search term
-    //                 page_limit: 10, // page size
-    //                 page: page, // page number
-    //             };
-    //         },
-    //         results: function (data, page) {
-    //         var more = (page * 30) < data.total;
-    //         return {results: data.results, more: more};
-    //         },
-    //         cache: true
-    //     },
-    //     minimumInputLength: 2,
-    //     multiple: false,
-    //     placeholder: 'Search for Vendors',
-    //     allowClear: true,
-    // });
-
-    // $(`input[name=destination_location_id]`).select2({
-    //     ajax: {
-    //         url:'/get-stock-location',
-    //         dataType: 'json',
-    //         delay: 250,
-    //         data: function (term, page) {
-    //             return {
-    //                 q: term, //search term
-    //                 page_limit: 10, // page size
-    //                 page: page, // page number
-    //             };
-    //         },
-    //         results: function (data, page) {
-    //         var more = (page * 30) < data.total;
-    //         return {results: data.results, more: more};
-    //         },
-    //         cache: true
-    //     },
-    //     minimumInputLength: 2,
-    //     multiple: false,
-    //     placeholder: 'Search for Location',
-    //     allowClear: true,
-    // });
-
-    
+    } 
 
     function workingDaysBetweenDates(startDate, endDate) {
         let count = 0;
@@ -97,8 +57,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 count++;
             }
             curDate.setDate(curDate.getDate() + 1); // move to next day
-        }
-
+        } 
         return count;
     }
 
@@ -310,6 +269,30 @@ odoo.define('portal_request.portal_request_form', function (require) {
         console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
         $(`.select2-container.vendor-cls a.select2-choice span.select2-chosen`).text(oldValue)
     }
+
+    $('#inputFollowers').select2({
+        ajax: {
+            url: '/portal-request-employee-reliever',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 3,
+        multiple: true,
+        placeholder: 'Search for followers',
+        allowClear: true,
+    });
 
     function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
         // find the input field
@@ -658,8 +641,19 @@ odoo.define('portal_request.portal_request_form', function (require) {
             // Example: redirect to controller
             window.location = `/my/requests/param?searchme=${query}`;
         },
-        events: {
+        events: { 
             'submit': '_onSubmitSearch',
+            'click .expand-btn': function (ev) {
+                const textarea = $(ev.currentTarget)
+                    .closest('tr')
+                    .find('textarea[name="product_item_description"]');
+
+                textarea.each(function () {
+                    this.style.height = "auto";
+                    this.style.height = this.scrollHeight + "px";
+                });
+            },
+                
             'click .editbtn': function(ev){
                 console.log("EDIT MODE ACTIVATED")
                 let [st, end] = triggerEndDate();
@@ -672,11 +666,13 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let save = $('#save');
                 let back = $('#previous')
                 let discard = $('#discardbtn')
+                let inputFollowers = $('#inputFollowers_div')
                 let resend_request = $('.resend_request');
                 edit.addClass('d-none');
                 resend_request.addClass('d-none');
                 back.addClass('d-none');
                 save.removeClass('d-none');
+                inputFollowers.removeClass('d-none');
                 discard.removeClass('d-none');
                 makeWritableFieldsEditable();
                 trigger_product_line();
@@ -715,6 +711,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let dest_location_id = $("input[name=destination_location_id]")
                 let vendor_id_form = $("input[name=vendor_id_form]")
                 let payment_reference_form = $("#payment_reference_form")
+                let inputFollowers = $('#inputFollowers').select2('data')
                 let record_id = $(".record_id").attr('id')
                 console.log('saving record data => 1', saveProductitem())
                 // call a save route 
@@ -733,7 +730,8 @@ odoo.define('portal_request.portal_request_form', function (require) {
                         'client_id': vendor_id_form.val(),
                         'memo_id': record_id,
                         'payment_reference': payment_reference_form.val(),
-                        'Dataitem': saveProductitem()
+                        'Dataitem': saveProductitem(),
+                        'inputFollowers': inputFollowers
                     },
                 }).then(function (data) {
                     if(data.status){

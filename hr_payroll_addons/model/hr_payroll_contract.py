@@ -98,3 +98,64 @@ class HRContract(models.Model):
     overpay = fields.Float(string="Overpay")
     salary_advance = fields.Float(string="Salary Advance")
     
+    x_PRORATA = fields.Float(string='Prorata', default=30)
+    x_type = fields.Float(string='Type', default=0)
+    x_ARREARS = fields.Float(string='Arrears', default=0) 
+    x_shiftall = fields.Float(string='Shiftall', default=0)
+    x_cashiersall = fields.Float(string='All Cashiers', default=0)
+    x_uniondue = fields.Float(string='Union Due', default=0)
+    x_overpay = fields.Float(string='Overpay', default=0)
+    x_saladv = fields.Float(string='Salary Advance', default=0)
+    x_thrift3 = fields.Float(string='Thrift', default=0)
+    x_HMO1 = fields.Float(string='HMO 1', default=0)
+    x_HMO2 = fields.Float(string='HMO 2', default=0)
+    x_HMO3 = fields.Float(string='HMO 3', default=0)
+    x_HMO4 = fields.Float(string='HMO 4', default=0)
+    x_volpfa = fields.Float(string='VOLPFA', default=0)
+    x_nhf_loan = fields.Float(string='NHF Loan', default=0)
+    x_ssadue = fields.Float(string='SSA DUE', default=0)
+    x_cashadv = fields.Float(string='Cash advance 1', default=0)
+    x_cashadv2 = fields.Float(string='Cash advance 2', default=0)
+    x_houseloan = fields.Float(string='House loan', default=0)
+    x_dev = fields.Float(string='House loan', default=0)
+    
+
+class HRSalaryRule(models.Model):
+    _inherit = "hr.salary.rule" 
+    
+    struct_id = fields.Many2one(
+        'hr.payroll.structure', 
+        required=False,
+        string='Structure')
+    
+class HRPayrollStructure(models.Model):
+    _inherit = "hr.payroll.structure" 
+    
+    clear_rule = fields.Boolean(
+        required=False,
+        default=True,
+        string='Clear rule')
+    
+    structure_duplicate_ids = fields.Many2many(
+        'hr.payroll.structure', 
+        'hr_duplicate_structure_rels',
+        'struct_id',
+        'duplicate_struct_id',
+        required=False,
+        string='Structures')
+    
+    def action_duplicate_rule(self):
+        # if not self.structure_duplicate_ids:
+        #     raise ValidationError("Please select Structures to duplicate rules")
+        get_structure_ids = self.structure_duplicate_ids if self.structure_duplicate_ids else self.env['hr.payroll.structure'].search([('id', '!=', self.id)])
+        for strucs in get_structure_ids:
+            if self.clear_rule:
+                strucs.rule_ids = [(3, sr.id) for sr in strucs.rule_ids]
+            for rule in self.rule_ids:
+                new_rule = rule.copy()
+                strucs.rule_ids = [(4, new_rule.id)]
+        self.structure_duplicate_ids = False
+            
+        
+                    
+    

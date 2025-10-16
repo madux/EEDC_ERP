@@ -148,6 +148,53 @@
       transform: translateX(-2px);
     }
 
+    .input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 300px;
+    }
+
+    .auto-expand {
+        overflow-y: auto;
+        resize: none;
+        min-height: 32px;
+        line-height: 1.4;
+        transition: height 0.2s ease;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    input[type="text"].expanded {
+      white-space: normal;
+      height: 80px;
+    }
+
+    .expand-btn {
+      position: absolute;
+      right: 5px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .expand-btn:hover {
+      background: #0056b3;
+    }
+
     .header-emp {
             background: #303030;
             border-radius: 8px;

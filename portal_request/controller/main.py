@@ -2,6 +2,7 @@
 import base64
 import json
 import logging
+import ast 
 import random
 from multiprocessing.spawn import prepare
 import urllib.parse
@@ -2101,6 +2102,9 @@ class PortalRequest(http.Controller):
             leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
             leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
             # _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
+            Data_inputFollowers = post.get('inputFollowers') # [{'id': 342233}]
+            _logger.info(f"""SEE FOLLOWERS HERE {post.get('inputFollowers')} ---{type(Data_inputFollowers)}""")
+            inputFollowers = [r.get('id') for r in Data_inputFollowers] if Data_inputFollowers else [] 
             values = {
                 'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
                 'leave_start_date': leave_start_date,
@@ -2110,17 +2114,15 @@ class PortalRequest(http.Controller):
                 'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
                 'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
                 'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
+                'users_followers': [(4, fol) for fol in inputFollowers],
+                
             }
             request_record.update(values)
             # updated_request = self.update_request_line(DataItems, request_record)
             for rec in DataItems:
                 desc = rec.get('description', '')
                 _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
-                request_vals = {
-                        # 'memo_id': memo_id.id,
-                        # 'memo_type': memo_id.memo_type.id,
-                        # 'memo_type_key': memo_id.memo_type_key,
-                        # 'product_id': product_id.id, 
+                request_vals = { 
                         'quantity_available': float(rec.get('qty').replace(',', '')) if rec.get('qty') else 0,
                         'description': BeautifulSoup(desc, features="lxml").get_text(),
                         'used_qty': rec.get('used_qty'),
@@ -2135,6 +2137,7 @@ class PortalRequest(http.Controller):
                     }
                 _logger.info(f"UPDATED REQUESTS with VALS =====> {request_vals} ")
                 # productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
+                
                 request_line = request.env['request.line'].sudo().search([('id', '=', int(rec.get('request_line_id'))), ('memo_id', '=', request_record.id)])
                 if not request_line:
                     message=f"No request line with this memo ID {request_record.id} found on the system"

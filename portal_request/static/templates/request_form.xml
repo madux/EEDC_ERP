@@ -28,8 +28,10 @@
                             <a id="discardbtn" class="btn btn-danger btn-sm d-none">
                                 Discard
                             </a>
-                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
-                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
+                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id.id]">
+                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
+                                    Approve
+                                </a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
                                 </a>
@@ -149,6 +151,21 @@
                                                         <a t-attf-href="tel:{{req.employee_id.mobile_phone}}" t-if="req.employee_id.mobile_phone"><div t-field="req.employee_id.user_id.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;phone&quot;]}"/></a>
                                                     </div>
                                                 </div>
+                                            </div>
+ 
+                                            <div class="col-12 col-md-12 pb-2">
+                                                <strong>Followers:</strong>
+                                                <t t-if="req.users_followers">
+                                                    <t t-foreach="req.users_followers" t-as="fol">
+                                                        <div class="d-flex ps-3 flex-nowrap">
+                                                            <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(fol.avatar_1024)" alt="Contact"/>
+                                                            <div class="ms-2">
+                                                                <div class="mt-2"><t t-esc="fol.name"/></div>
+
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                </t>
                                             </div>
                                         </li>
                                     </ul>
@@ -351,6 +368,17 @@
                                             <t t-set="raw_description" t-value="req.description"/>
                                             <textarea class="form-control s_website_form_input" name="description" field_name= "description_id" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
                                         </div>
+
+                                        <div id="inputFollowers_div" class="d-none s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
+                                                    <span class="s_website_form_label_content">Choose Followers</span>
+                                                </label>
+                                                    <div class="col-sm">
+                                                    <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers"/>
+                                                </div> 
+                                            </div>
+                                        </div> 
                                     </div>
                                 </div>
                                 <div class="row">
@@ -435,8 +463,14 @@
                                                             </span>
                                                         </th>
                                                         <th width="35%">
-                                                            <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
+                                                            <!-- <span t-att-id="prod.id"> -->
+                                                            <span class="input-container" t-att-id="prod.id">
+                                                                <textarea t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" 
+                                                                class="form-control productitemrow scroll-textarea" name="product_item_description">
+                                                                <t t-esc="prod.description"/>
+                                                                </textarea>
+                                                                <!-- t-att-value="prod.description"/> -->
+                                                                <button id="expandid" class="expand-btn">↕</button>
                                                             </span>
                                                         </th>
                                                         <th width="5%">
@@ -620,6 +654,8 @@
                                     <t t-set="disable_composer" t-value="ticket.stage_id.fold"/>
                                 </t>
                             </div>  -->
+                            
+                            
                             <t t-if="record_attachment_ids">
                                 <div id="attachment_section" class="card-header container" data-anchor="true">
                                     <div class="row gs-0">
@@ -648,7 +684,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </t>
+                            </t> 
                             <div id="message_thread_section" class="card-header container" data-anchor="true">
                                 <div class="row gs-0">
                                     <div class="col-md">

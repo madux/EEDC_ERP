@@ -1,22 +1,36 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!-- Copyright 2011 Alexis de Lattre <alexis.delattre@akretion.com>
-     Copyright 2016 Antonio Espinosa <antonio.espinosa@tecnativa.com>
-     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+	 Copyright 2016 Antonio Espinosa <antonio.espinosa@tecnativa.com>
+	 License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
-    <record id="view_hr_leave_allocation_inherited" model="ir.ui.view">
-        <field name="name">hr contract salary</field>
-        <field name="model">hr.contract</field>
-        <field name="inherit_id" ref="hr_contract_salary.hr_contract_view_form"/>
-        <field name="arch" type="xml">
-            <field name="sign_template_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-            <field name="contract_update_template_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-            <field name="default_contract_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-        </field>
-    </record>
+	<record id="view_hr_leave_allocation_inherited" model="ir.ui.view">
+		<field name="name">hr contract salary</field>
+		<field name="model">hr.contract</field>
+		<field name="inherit_id" ref="hr_contract_salary.hr_contract_view_form"/>
+		<field name="arch" type="xml">
+			<field name="sign_template_id" position="attributes">
+				<attribute name="required">0</attribute>
+			</field>
+			<field name="contract_update_template_id" position="attributes">
+				<attribute name="required">0</attribute>
+			</field>
+			<field name="default_contract_id" position="attributes">
+				<attribute name="required">0</attribute>
+			</field>
+		</field>
+	</record>
+
+	<record id="view_hr_payroll_structure_inherited" model="ir.ui.view">
+		<field name="name">hr.payroll.structure</field>
+		<field name="model">hr.payroll.structure</field>
+		<field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
+		<field name="arch" type="xml">
+			<field name="country_id" position="after">
+				<field name="structure_duplicate_ids" widget="many2many_tags"/>
+				<field name="clear_rule"/>
+				<button name="action_duplicate_rule" string="Duplicate Rule" type="object" class="oe_highlight" confirm="Are you sure want to duplicate"/>
+			
+			</field>
+		</field>
+	</record>
 </odoo>
