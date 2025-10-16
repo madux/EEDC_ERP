@@ -30,6 +30,7 @@ class ImportDataWizard(models.TransientModel):
     model_import = fields.Selection([
             ('cash_advance', 'Cash Advance'),
             ('payment', 'Payment'),
+            ('retirement', 'Retirement'),
         ],
         string='Model to Import', required=True, index=True,
         copy=True, default='cash_advance', 
@@ -42,68 +43,63 @@ class ImportDataWizard(models.TransientModel):
     
     state_option = fields.Selection([
         ('submit', 'Draft'),
-        ('sent', 'Sent'),
-        ('approve', 'Approve'),
-        ('approve2', 'Approve 2'),
-        ('done', 'Done'),
-        ('refuse', 'Refuse'),
-        ('custom', 'Select Custom Stage'),
-    ], string='State/Stage Option', default='done', required=True)
+        ('Sent', 'Sent'),
+        ('Approve', 'Approve'),
+        ('Approve2', 'Approve 2'),
+        ('Done', 'Done'),
+        ('Refuse', 'Refuse'),
+    ], string='State Option', default='Done', required=True)
     
-    custom_stage_id = fields.Many2one(
+    stage_id = fields.Many2one(
         'memo.stage',
-        string='Custom Stage',
+        string='Stage',
         domain="[('memo_config_id', '=', memo_config_id)]"
     )
     
+    retirement_line_source = fields.Selection([
+        ('excel', 'Use Excel Data'),
+        ('advance', 'Fetch from Cash Advance'),
+        ('hybrid', 'Excel with Advance Validation'),
+    ], string='Retirement Line Source', default='advance',
+       help="Determine how to populate retirement lines:\n"
+            "- Use Excel Data: Only use quantities/amounts from Excel\n"
+            "- Fetch from Cash Advance: Auto-populate all unreturned items from cash advance\n"
+            "- Excel with Advance Validation: Use Excel but validate against cash advance")
+    
     @api.onchange('memo_config_id')
     def _onchange_memo_config_id(self):
-        """Clear custom_stage_id when memo_config_id changes to ensure correct domain"""
-        self.custom_stage_id = False
+        """Clear stage_id when memo_config_id changes to ensure correct domain"""
+        self.stage_id = False
     
     def _get_stage_and_state(self):
         """
-        Compute stage_id and state based on state_option.
-        - If state_option is 'custom', use the selected custom_stage_id
-        - If state_option is 'submit' or 'done', compute from memo_config stages
-        - Otherwise, use custom_stage_id or the closest available stage
-        Returns: (stage_id, state_string)
+        Compute stage_id and state based on state_option and selected stage.
         """
-        if not self.memo_config_id.stage_ids:
+        if not self.memo_config_id or not self.memo_config_id.stage_ids:
             raise ValidationError(
-                f"Memo config '{self.memo_config_id.name}' has no stages configured"
+                f"Memo config '{getattr(self.memo_config_id, 'name', '')}' has no stages configured"
             )
-        
+
         stages = self.memo_config_id.stage_ids.sorted(key=lambda s: s.sequence)
-        
-        if self.state_option == 'custom':
-            if not self.custom_stage_id:
-                raise ValidationError(
-                    "Please select a custom stage when 'Select Custom Stage' is chosen"
-                )
-            if self.custom_stage_id.memo_config_id.id != self.memo_config_id.id:
-                raise ValidationError(
-                    f"Selected stage '{self.custom_stage_id.name}' does not belong to "
-                    f"memo config '{self.memo_config_id.name}'"
-                )
-            return self.custom_stage_id.id, self.custom_stage_id.name
-        
-        # Pre-computed stage mappings for standard options
-        stage_mapping = {
-            'submit': (stages[0].id if len(stages) > 0 else False, 'submit'),
-            'sent': (stages[1].id if len(stages) > 1 else stages[0].id, 'Sent'),
-            'approve': (stages[2].id if len(stages) > 2 else stages[-1].id, 'Approve'),
-            'approve2': (stages[3].id if len(stages) > 3 else stages[-1].id, 'Approve2'),
-            'done': (stages[-1].id, 'Done'),
-            'refuse': (stages[-1].id, 'Refuse'),
-        }
-        
-        stage_id, state_value = stage_mapping.get(
-            self.state_option, 
-            (stages[-1].id, 'Done')
-        )
-        
-        return stage_id, state_value
+        opt = self.state_option
+
+        if opt in ['submit', 'Submit']:
+            return (stages[0].id if len(stages) > 0 else False, 'submit')
+
+        if opt in ['Done', 'done']:
+            return (stages[-1].id if len(stages) > 0 else False, 'Done')
+
+        if not self.stage_id:
+            raise ValidationError(
+                f"Please select a stage for state '{self.state_option}'"
+            )
+        if self.stage_id.memo_config_id.id != self.memo_config_id.id:
+            raise ValidationError(
+                f"Selected stage '{self.stage_id.name}' does not belong to "
+                f"memo config '{self.memo_config_id.name}'"
+            )
+
+        return (self.stage_id.id, opt)
     
     def compute_date(self, date_str):
         """Convert various date formats to datetime object"""
@@ -152,23 +148,72 @@ class ImportDataWizard(models.TransientModel):
             'amount': first_row[2],
             'request_date': self.compute_date(first_row[10]) if len(first_row) > 10 else None,
             'requester_name': first_row[9] if len(first_row) > 9 else '',
-            'description': first_row[3] if len(first_row) > 3 else '',
+            'description': first_row[3] or first_row[6] if len(first_row) > 6 else '',
             'quantity': first_row[4] if len(first_row) > 4 else 1,
             'unit_price': first_row[5] if len(first_row) > 5 else 0,
         }
     
-    def _process_payment_row(self, first_row):
-        """Extract payment data from row - flexible mapping for now"""
-        return {
+    def _process_payment_row(self, first_row, retirement=False):
+        """Extract payment/retirement data from row"""
+        
+        def safe_float(val, default=0.0):
+            try:
+                if val is None or val == '':
+                    return default
+                if isinstance(val, str) and val.upper() == 'FALSE':
+                    return default
+                return float(val)
+            except (ValueError, TypeError):
+                _logger.warning(f"Could not convert '{val}' to float, using {default}")
+                return default
+        
+        def extract_product_code(display_name):
+            """Extract code from format like '[ST-609-0072] Product Name'"""
+            if not display_name:
+                return None
+            display_name_str = str(display_name).strip()
+            match = re.match(r'\[([^\]]+)\]', display_name_str)
+            if match:
+                return match.group(1)
+            return None
+        
+        product_display_name = str(first_row[15]).strip() if len(first_row) > 15 else ''
+        product_code = extract_product_code(product_display_name)
+        
+        approver_employee_number = self._normalize_emp_no(first_row[16]) if len(first_row) > 16 else ''
+        
+        vals = {
             'code': str(first_row[0]).strip() if first_row[0] else '',
-            'employee_number': self._normalize_emp_no(first_row[1]) if len(first_row) > 1 else '',
-            'amount': first_row[2] if len(first_row) > 2 else 0,
-            'request_date': self.compute_date(first_row[9]) if len(first_row) > 9 else None,
+            'employee_number': self._normalize_emp_no(first_row[2]) if len(first_row) > 2 else '',
+            'amount': safe_float(first_row[9]) if len(first_row) > 9 else 0.0,
+            'request_date': self.compute_date(first_row[18]) if len(first_row) > 18 else None,
             'requester_name': str(first_row[3]).strip() if len(first_row) > 3 else '',
-            'description': str(first_row[8]).strip() if len(first_row) > 8 else '',
-            'quantity': 1,
-            'unit_price': first_row[2] if len(first_row) > 2 else 0,
+            'description': str(first_row[11]).strip() if len(first_row) > 11 and first_row[11] else str(first_row[10]).strip() if len(first_row) > 10 else '',
+            'quantity': safe_float(first_row[12], 1.0) if len(first_row) > 12 else 1.0,
+            'unit_price': safe_float(first_row[13]) if len(first_row) > 13 else 0.0,
+            'display_name': str(first_row[1]).strip() if len(first_row) > 1 else '',
+            'work_location': str(first_row[4]).strip() if len(first_row) > 4 else '',
+            'product_code': product_code,
+            'product_display_name': product_display_name,
+            'approver_employee_number': approver_employee_number,
         }
+        
+        if retirement:
+            advance_no = str(first_row[20]).strip() if len(first_row) > 20 and first_row[20] else ''
+            
+            # Calculate used_amount: use the max of (Amount to retire / qty) or (Advance Remaining - Payable Amount) / qty
+            # Column 5: Amount to retire, Column 6: Advance Remaining, Column 7: Payable Amount
+            used_amount = max(
+                safe_float(first_row[5]) / vals['quantity'] if vals['quantity'] > 0 else safe_float(first_row[5]),
+                (safe_float(first_row[6]) - safe_float(first_row[7])) / vals['quantity'] if vals['quantity'] > 0 else 0.0
+            )
+            
+            vals.update({
+                'advance_no': advance_no,
+                'used_amount': used_amount if used_amount > 0.0 else vals['unit_price'],
+            })
+        
+        return vals
         
     def import_records_action(self):
         if self.data_file:
@@ -190,7 +235,6 @@ class ImportDataWizard(models.TransientModel):
         stage_id, state_value = self._get_stage_and_state()
         
         errors = ['The Following messages occurred']
-        unimport_count, count = 0, 0
         success_records = []
         unsuccess_records = []
         
@@ -201,7 +245,12 @@ class ImportDataWizard(models.TransientModel):
             
         elif self.model_import == "payment":
             success_records, unsuccess_records, count = self._import_payment(
-                file_data, stage_id, state_value, success_records, unsuccess_records
+                file_data, stage_id, state_value, success_records, unsuccess_records, retirement=False
+            )
+            
+        elif self.model_import == "retirement":
+            success_records, unsuccess_records, count = self._import_payment(
+                file_data, stage_id, state_value, success_records, unsuccess_records, retirement=True
             )
         
         errors.append(f'Successful Import(s): {count} Record(s)')
@@ -238,61 +287,102 @@ class ImportDataWizard(models.TransientModel):
             
             if migrated_number:
                 existing_memo = self.env['memo.model'].sudo().search([
-                    ('code', '=ilike', code)], limit=1) 
-                if existing_memo:
-                    if self.clear_data:
-                        existing_memo.unlink()
-                        _logger.info(f"Deleted existing memo {code}")
+                    ('code', '=ilike', code)], limit=1)
+                
+                if self.import_type == 'new':
+                    if existing_memo:
+                        if self.clear_data:
+                            existing_memo.unlink()
+                            _logger.info(f"Deleted existing memo {code}")
+                        else:
+                            _logger.info(f"Skipping existing memo {code}")
+                            unsuccess_records.append(f"Skipped existing record: {code}")
+                            count += 1
+                            continue
+                    
+                    employee = self.env['hr.employee'].sudo().search([
+                        ('employee_number', '=', employee_number)], limit=1)
+                    _logger.info(f"Processing {code} - Employee: {employee_number}")
+                    
+                    memo_id = self.env['memo.model'].sudo().create({
+                        'code': code,
+                        'migrated_legacy_id': migrated_number,
+                        'requester_name': row_data['requester_name'],
+                        'name': row_data['code'],
+                        'employee_id': employee.id if employee else self.default_employee_id.id,
+                        'state': state_value,
+                        'stage_id': stage_id,
+                        'company_id': self.company_id.id,
+                        'branch_id': self.branch_id.id,
+                        'memo_setting_id': self.memo_config_id.id,
+                        'memo_type': self.memo_config_id.memo_type.id,
+                        'request_date': request_date if request_date else fields.Date.today(),
+                        'memo_type_key': self.memo_config_id.memo_key,
+                    })
+                    
+                    line_count = 0
+                    for row in rows:
+                        row_data = self._process_cash_advance_row(row)
+                        vals = {
+                            'memo_id': memo_id.id,
+                            'memo_type': memo_id.memo_type.id,
+                            'memo_type_key': memo_id.memo_type_key,
+                            'description': row_data['description'] or row_data['code'],
+                            'quantity_available': row_data['quantity'] or 1,
+                            'amount_total': row_data['unit_price'],
+                        }
+                        self.env['request.line'].sudo().create(vals)
+                        line_count += 1
+                    
+                    _logger.info(f"Created memo {memo_id.code} with {line_count} lines")
+                    success_records.append(f"{memo_id.code} ({line_count} lines)")
+                    
+                elif self.import_type == 'update':
+                    if existing_memo:
+                        employee = self.env['hr.employee'].sudo().search([
+                            ('employee_number', '=', employee_number)], limit=1)
+                        _logger.info(f"Updating {code} - Employee: {employee_number}")
+                        
+                        existing_memo.sudo().write({
+                            'migrated_legacy_id': migrated_number,
+                            'requester_name': row_data['requester_name'],
+                            'name': row_data['code'],
+                            'employee_id': employee.id if employee else self.default_employee_id.id,
+                            'request_date': request_date if request_date else fields.Date.today(),
+                        })
+                        
+                        existing_lines = self.env['request.line'].sudo().search([
+                            ('memo_id', '=', existing_memo.id)])
+                        if existing_lines:
+                            existing_lines.unlink()
+                        
+                        line_count = 0
+                        for row in rows:
+                            row_data = self._process_cash_advance_row(row)
+                            vals = {
+                                'memo_id': existing_memo.id,
+                                'memo_type': existing_memo.memo_type.id,
+                                'memo_type_key': existing_memo.memo_type_key,
+                                'description': row_data['description'] or row_data['code'],
+                                'quantity_available': row_data['quantity'] or 1,
+                                'amount_total': row_data['unit_price'],
+                            }
+                            self.env['request.line'].sudo().create(vals)
+                            line_count += 1
+                        
+                        _logger.info(f"Updated memo {existing_memo.code} with {line_count} lines")
+                        success_records.append(f"{existing_memo.code} (updated, {line_count} lines)")
                     else:
-                        _logger.info(f"Skipping existing memo {code}")
-                        unsuccess_records.append(f"Skipped existing record: {code}")
-                        count += 1
-                        continue
-                
-                employee = self.env['hr.employee'].sudo().search([
-                    ('employee_number', '=', employee_number)], limit=1)
-                _logger.info(f"Processing {code} - Employee: {employee_number}")
-                
-                memo_id = self.env['memo.model'].sudo().create({
-                    'code': code,
-                    'migrated_legacy_id': migrated_number,
-                    'requester_name': row_data['requester_name'],
-                    'name': row_data['code'],
-                    'employee_id': employee.id if employee else self.default_employee_id.id,
-                    'state': state_value,
-                    'stage_id': stage_id,
-                    'company_id': self.company_id.id,
-                    'branch_id': self.branch_id.id,
-                    'memo_setting_id': self.memo_config_id.id,
-                    'memo_type': self.memo_config_id.memo_type.id,
-                    'request_date': request_date if request_date else fields.Date.today(),
-                    'memo_type_key': self.memo_config_id.memo_key,
-                })
-                
-                line_count = 0
-                for row in rows:
-                    row_data = self._process_cash_advance_row(row)
-                    vals = {
-                        'memo_id': memo_id.id,
-                        'memo_type': memo_id.memo_type.id,
-                        'memo_type_key': memo_id.memo_type_key,
-                        'description': row_data['description'] or row_data['code'],
-                        'quantity_available': row_data['quantity'] or 1,
-                        'amount_total': row_data['unit_price'],
-                    }
-                    self.env['request.line'].sudo().create(vals)
-                    line_count += 1
-                
-                _logger.info(f"Created memo {memo_id.code} with {line_count} lines")
-                success_records.append(f"{memo_id.code} ({line_count} lines)")
+                        _logger.info(f"Record not found for update: {code}")
+                        unsuccess_records.append(f"Record not found: {code}")
             else:
                 unsuccess_records.append(f"Skipped - no migrated number")
             count += 1
         
         return success_records, unsuccess_records, count
 
-    def _import_payment(self, file_data, stage_id, state_value, success_records, unsuccess_records):
-        """Handle payment import logic"""
+    def _import_payment(self, file_data, stage_id, state_value, success_records, unsuccess_records, retirement=False):
+        """Handle payment/retirement import logic"""
         payment_groups = {}
         for row in file_data:
             payment_number = str(row[0]).strip() if row[0] else ''
@@ -301,67 +391,268 @@ class ImportDataWizard(models.TransientModel):
                     payment_groups[payment_number] = []
                 payment_groups[payment_number].append(row)
         
-        _logger.info(f"Found {len(payment_groups)} unique payment numbers")
+        record_type = "retirement" if retirement else "payment"
+        _logger.info(f"Found {len(payment_groups)} unique {record_type} numbers")
         count = 0
         
         for payment_number, rows in payment_groups.items():
             first_row = rows[0]
-            row_data = self._process_payment_row(first_row)
+            row_data = self._process_payment_row(first_row, retirement)
             code = row_data['code']
             employee_number = row_data['employee_number']
             request_date = row_data['request_date']
+            approver_employee_number = row_data['approver_employee_number']
+            advance_number = row_data.get('advance_no', '')
             
             if payment_number:
                 existing_memo = self.env['memo.model'].sudo().search([
                     ('code', '=ilike', code)], limit=1)
-                if existing_memo:
-                    if self.clear_data:
-                        existing_memo.unlink()
-                        _logger.info(f"Deleted existing payment {code}")
+                
+                # Find approver user for users_followers
+                # approver_user = None
+                # if approver_employee_number:
+                #     approver_employee = self.env['hr.employee'].sudo().search([
+                #         ('employee_number', '=', approver_employee_number)], limit=1)
+                    
+                #     if approver_employee and approver_employee.user_id:
+                #         employee_exists = self.env['hr.employee'].sudo().search_count([
+                #             ('id', '=', approver_employee.id)
+                #         ])
+                        
+                #         if employee_exists:
+                #             approver_user = approver_employee.user_id
+                #             _logger.info(f"Found approver user: {approver_user.name}")
+                #         else:
+                #             _logger.warning(
+                #                 f"Approver employee {approver_employee_number} (ID: {approver_employee.id}) "
+                #                 f"is invalid or orphaned"
+                #             )
+                #     else:
+                #         _logger.warning(f"No valid user found for approver employee {approver_employee_number}")
+                
+                cash_advance_reference = None
+                if retirement:
+                    if advance_number:
+                        cash_advance_reference = self.env['memo.model'].sudo().search([
+                            ('code', '=ilike', advance_number)], limit=1)
+                        if not cash_advance_reference:
+                            _logger.warning(f"Cash advance {advance_number} not found for {code}")
+                            unsuccess_records.append(f"Cash advance {advance_number} not found for {code}")
+                            count += 1
+                            continue
+                        
+                        unreturned_items = cash_advance_reference.mapped('product_ids').filtered(lambda x: not x.retired)
+                        if not unreturned_items:
+                            _logger.warning(f"All items already retired for advance {advance_number}")
+                            unsuccess_records.append(f"All items already retired for advance {advance_number}")
+                            count += 1
+                            continue
                     else:
-                        _logger.info(f"Skipping existing payment {code}")
-                        unsuccess_records.append(f"Skipped existing payment: {code}")
+                        _logger.warning(f"No cash advance number provided for retirement {code}")
+                        unsuccess_records.append(f"No cash advance number for retirement {code}")
                         count += 1
                         continue
                 
-                employee = self.env['hr.employee'].sudo().search([
-                    ('employee_number', '=', employee_number)], limit=1) if employee_number else None
-                _logger.info(f"Processing payment {code} - Employee: {employee_number}")
-                
-                memo_id = self.env['memo.model'].sudo().create({
-                    'code': code,
-                    'migrated_legacy_id': payment_number,
-                    'requester_name': row_data['requester_name'],
-                    'name': row_data['code'],
-                    'employee_id': employee.id if employee else self.default_employee_id.id,
-                    'state': state_value,
-                    'stage_id': stage_id,
-                    'company_id': self.company_id.id,
-                    'branch_id': self.branch_id.id,
-                    'memo_setting_id': self.memo_config_id.id,
-                    'memo_type': self.memo_config_id.memo_type.id,
-                    'request_date': request_date if request_date else fields.Date.today(),
-                    'memo_type_key': self.memo_config_id.memo_key,
-                })
-                
-                line_count = 0
-                for row in rows:
-                    row_data = self._process_payment_row(row)
-                    vals = {
-                        'memo_id': memo_id.id,
-                        'memo_type': memo_id.memo_type.id,
-                        'memo_type_key': memo_id.memo_type_key,
-                        'description': row_data['description'] or row_data['requester_name'],
-                        'quantity_available': row_data['quantity'],
-                        'amount_total': row_data['unit_price'],
+                if self.import_type == 'new':
+                    if existing_memo:
+                        if self.clear_data:
+                            existing_memo.unlink()
+                            _logger.info(f"Deleted existing {record_type} {code}")
+                        else:
+                            _logger.info(f"Skipping existing {record_type} {code}")
+                            unsuccess_records.append(f"Skipped existing {record_type}: {code}")
+                            count += 1
+                            continue
+                    
+                    employee = self.env['hr.employee'].sudo().search([
+                        ('employee_number', '=', employee_number)], limit=1) if employee_number else None
+                    _logger.info(f"Processing {record_type} {code} - Employee: {employee_number}")
+                    
+                    memo_vals = {
+                        'code': code,
+                        'migrated_legacy_id': payment_number,
+                        'requester_name': row_data['requester_name'],
+                        'name': row_data['display_name'] or row_data['code'],
+                        'employee_id': employee.id if employee else self.default_employee_id.id,
+                        'state': state_value,
+                        'stage_id': stage_id,
+                        'company_id': self.company_id.id,
+                        'branch_id': self.branch_id.id,
+                        'memo_setting_id': self.memo_config_id.id,
+                        'memo_type': self.memo_config_id.memo_type.id,
+                        'request_date': request_date if request_date else fields.Date.today(),
+                        'memo_type_key': self.memo_config_id.memo_key,
                     }
-                    self.env['request.line'].sudo().create(vals)
-                    line_count += 1
-                
-                _logger.info(f"Created payment {memo_id.code} with {line_count} lines")
-                success_records.append(f"{memo_id.code} ({line_count} lines)")
+                    
+                    # if approver_user:
+                    #     try:
+                    #         memo_vals['users_followers'] = [(4, approver_user.id)]
+                    #     except Exception as e:
+                    #         _logger.error(f"Failed to add follower {approver_user.name}: {str(e)}")
+                    #         memo_vals.pop('users_followers', None)
+                    
+                    if cash_advance_reference:
+                        memo_vals['cash_advance_reference'] = cash_advance_reference.id
+                    
+                    memo_id = self.env['memo.model'].sudo().create(memo_vals)
+                    
+                    line_count = 0
+                    
+                    if retirement and self.retirement_line_source == 'advance':
+                        _logger.info(f"Fetching lines from cash advance {advance_number}")
+                        unreturned_items = cash_advance_reference.mapped('product_ids').filtered(lambda x: not x.retired)
+                        
+                        for rec in unreturned_items:
+                            vals = {
+                                'memo_id': memo_id.id,
+                                'memo_type': memo_id.memo_type.id,
+                                'memo_type_key': memo_id.memo_type_key,
+                                'product_id': rec.product_id.id if rec.product_id else False,
+                                'quantity_available': rec.quantity_available,
+                                'description': rec.description,
+                                'request_line_id': rec.id,
+                                'used_qty': rec.quantity_available,
+                                'amount_total': rec.amount_total,
+                                'used_amount': rec.amount_total,
+                                'to_retire': True,
+                            }
+                            self.env['request.line'].sudo().create(vals)
+                            line_count += 1
+                    else:
+                        for row in rows:
+                            row_data = self._process_payment_row(row, retirement)
+                            
+                            product_id = False
+                            if row_data['product_code']:
+                                product = self.env['product.product'].sudo().search([
+                                    '|',
+                                    ('default_code', '=ilike', row_data['product_code']),
+                                    ('name', '=ilike', row_data['product_code'])
+                                ], limit=1)
+                                
+                                if product:
+                                    product_id = product.id
+                                    _logger.info(f"Found product: {product.name}")
+                                else:
+                                    _logger.warning(f"Product not found: {row_data['product_code']}")
+                            
+                            vals = {
+                                'memo_id': memo_id.id,
+                                'memo_type': memo_id.memo_type.id,
+                                'memo_type_key': memo_id.memo_type_key,
+                                'description': row_data['description'] or row_data['display_name'],
+                                'quantity_available': row_data['quantity'],
+                                'amount_total': row_data['unit_price'],
+                            }
+                            
+                            if product_id:
+                                vals['product_id'] = product_id
+                            
+                            if retirement:
+                                vals['used_qty'] = row_data['quantity']
+                                vals['used_amount'] = row_data['used_amount']
+                                vals['to_retire'] = True
+                            
+                            self.env['request.line'].sudo().create(vals)
+                            line_count += 1
+                    
+                    _logger.info(f"Created {record_type} {memo_id.code} with {line_count} lines")
+                    success_records.append(f"{memo_id.code} ({line_count} lines)")
+                    
+                elif self.import_type == 'update':
+                    if existing_memo:
+                        employee = self.env['hr.employee'].sudo().search([
+                            ('employee_number', '=', employee_number)], limit=1) if employee_number else None
+                        _logger.info(f"Updating {record_type} {code} - Employee: {employee_number}")
+                        
+                        update_vals = {
+                            'migrated_legacy_id': payment_number,
+                            'requester_name': row_data['requester_name'],
+                            'name': row_data['display_name'] or row_data['code'],
+                            'employee_id': employee.id if employee else self.default_employee_id.id,
+                            'request_date': request_date if request_date else fields.Date.today(),
+                        }
+                        
+                        # if approver_user:
+                        #     try:
+                        #         update_vals['users_followers'] = [(5, 0, 0), (4, approver_user.id)]
+                        #     except Exception as e:
+                        #         _logger.warning(f"Could not add follower {approver_user.name}: {str(e)}")
+                        
+                        if cash_advance_reference:
+                            update_vals['cash_advance_reference'] = cash_advance_reference.id
+                        
+                        existing_memo.sudo().write(update_vals)
+                        
+                        existing_lines = self.env['request.line'].sudo().search([
+                            ('memo_id', '=', existing_memo.id)])
+                        if existing_lines:
+                            existing_lines.unlink()
+                        
+                        line_count = 0
+                        
+                        if retirement and self.retirement_line_source == 'advance':
+                            unreturned_items = cash_advance_reference.mapped('product_ids').filtered(lambda x: not x.retired)
+                            
+                            for rec in unreturned_items:
+                                vals = {
+                                    'memo_id': existing_memo.id,
+                                    'memo_type': existing_memo.memo_type.id,
+                                    'memo_type_key': existing_memo.memo_type_key,
+                                    'product_id': rec.product_id.id if rec.product_id else False,
+                                    'quantity_available': rec.quantity_available,
+                                    'description': rec.description,
+                                    'request_line_id': rec.id,
+                                    'used_qty': rec.quantity_available,
+                                    'amount_total': rec.amount_total,
+                                    'used_amount': rec.amount_total,
+                                    'to_retire': True,
+                                }
+                                self.env['request.line'].sudo().create(vals)
+                                line_count += 1
+                        else:
+                            for row in rows:
+                                row_data = self._process_payment_row(row, retirement)
+                                
+                                product_id = False
+                                if row_data['product_code']:
+                                    product = self.env['product.product'].sudo().search([
+                                        '|',
+                                        ('default_code', '=ilike', row_data['product_code']),
+                                        ('name', '=ilike', row_data['product_code'])
+                                    ], limit=1)
+                                    
+                                    if product:
+                                        product_id = product.id
+                                        _logger.info(f"Found product: {product.name}")
+                                
+                                vals = {
+                                    'memo_id': existing_memo.id,
+                                    'memo_type': existing_memo.memo_type.id,
+                                    'memo_type_key': existing_memo.memo_type_key,
+                                    'description': row_data['description'] or row_data['display_name'],
+                                    'quantity_available': row_data['quantity'],
+                                    'amount_total': row_data['unit_price'],
+                                }
+                                
+                                if product_id:
+                                    vals['product_id'] = product_id
+                                
+                                if retirement:
+                                    vals['used_qty'] = row_data['quantity']
+                                    vals['used_amount'] = row_data['used_amount']
+                                    vals['to_retire'] = True
+                                
+                                self.env['request.line'].sudo().create(vals)
+                                line_count += 1
+                        
+                        _logger.info(f"Updated {record_type} {existing_memo.code} with {line_count} lines")
+                        success_records.append(f"{existing_memo.code} (updated, {line_count} lines)")
+                    else:
+                        _logger.info(f"Record not found for update: {code}")
+                        unsuccess_records.append(f"Record not found: {code}")
             else:
-                unsuccess_records.append(f"Skipped payment - no reference number")
+                unsuccess_records.append(f"Skipped {record_type} - no reference number")
             count += 1
         
         return success_records, unsuccess_records, count
