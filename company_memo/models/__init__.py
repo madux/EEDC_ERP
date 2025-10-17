@@ -17,3 +17,4 @@ from . import doc_mgt_config
 from . import ir_attachment
 from . import hr_holidays
 from . import res_company
+from . import sale_order

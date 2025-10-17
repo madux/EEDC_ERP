@@ -1,22 +1,94 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!-- Copyright 2011 Alexis de Lattre <alexis.delattre@akretion.com>
-     Copyright 2016 Antonio Espinosa <antonio.espinosa@tecnativa.com>
-     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+	 Copyright 2016 Antonio Espinosa <antonio.espinosa@tecnativa.com>
+	 License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
-    <record id="view_hr_leave_allocation_inherited" model="ir.ui.view">
-        <field name="name">hr contract salary</field>
+	<record id="view_hr_contact_kanban" model="ir.ui.view">
+        <field name="name">hr.contract.kanban</field>
         <field name="model">hr.contract</field>
-        <field name="inherit_id" ref="hr_contract_salary.hr_contract_view_form"/>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_kanban"/>
         <field name="arch" type="xml">
-            <field name="sign_template_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-            <field name="contract_update_template_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-            <field name="default_contract_id" position="attributes">
-                <attribute name="required">0</attribute>
-            </field>
-        </field>
+            <xpath expr="//field[@name='name']" position="after">
+                <br/><field name="employee_id"/><br/>
+                Staff ID: <field name="employee_number"/><br/>
+                Wage: <field name="wage"/><br/>
+            </xpath>
+		</field>
     </record>
+	<record id="view_hr_contract_inherited" model="ir.ui.view">
+		<field name="name">hr contract salary</field>
+		<field name="model">hr.contract</field>
+		<field name="inherit_id" ref="hr_contract_salary.hr_contract_view_form"/>
+		<field name="arch" type="xml">
+			<field name="sign_template_id" position="attributes">
+				<attribute name="required">0</attribute>
+			</field>
+			<field name="contract_update_template_id" position="attributes">
+				<attribute name="required">0</attribute>
+			</field>
+			<field name="structure_type_id" position="after">
+				<field name="structure_id" required="1"/>
+			</field>
+			<field name="employee_id" position="after">
+				<field name="employee_number" readonly="0" force_save="1"/>
+			</field>
+			<field name="hr_responsible_id" position="after">
+				<button name="action_run_contract" string="Run contract" type="object" class="oe_highlight" confirm="Are you sure want to run?"/>
+			</field>
+			
+			<xpath expr="//page[@name='information']" position="after">
+				<page string="Other Contract details" name="information">
+					<group name="other_details">
+						<group name="Detail">
+							<field name="x_PRORATA"/>
+							<!-- <field name="x_type"/> -->
+							<field name="x_type"/>
+							<field name="x_ARREARS"/>
+							<field name="x_shiftall"/>
+							<field name="x_cashiersall"/>
+							<field name="x_uniondue"/>
+							<field name="x_overpay"/>
+							<field name="x_saladv"/>
+							<field name="x_thrift3"/>
+							<field name="x_emp_type"/>
+							<field name="x_accountno"/>
+							<field name="x_pfa2"/>
+							<field name="x_banksortcode" string="Sort code 1"/>
+							<field name="x_banksortcode1" string="Sort code 1"/>
+							<field name="x_banksortcode2" string="Sort code 2"/>
+						</group>
+						<group name="oasgrp">
+							<field name="x_HMO1"/>
+							<field name="x_HMO2"/>
+							<field name="x_HMO3"/>
+							<field name="x_HMO4"/>
+							<field name="x_nhf_loan"/>
+							<field name="x_volpfa"/>
+							<field name="x_ssadue"/>
+							<field name="x_cashadv"/>
+							<field name="x_cashadv2"/>
+							<field name="x_houseloan"/>
+							<field name="x_dev"/>
+							<field name="x_district1"/>
+
+						</group>
+					</group>
+				</page>
+			</xpath>
+		</field>
+	</record>
+
+	<record id="view_hr_payroll_structure_inherited" model="ir.ui.view">
+		<field name="name">hr.payroll.structure</field>
+		<field name="model">hr.payroll.structure</field>
+		<field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
+		<field name="arch" type="xml">
+			<field name="country_id" position="after">
+				<field name="structure_duplicate_ids" widget="many2many_tags"/>
+				<field name="clear_rule"/>
+				<button name="action_duplicate_rule" string="Duplicate Rule" type="object" class="oe_highlight" confirm="Are you sure want to duplicate"/>
+			
+			</field>
+		</field>
+	</record>
 </odoo>

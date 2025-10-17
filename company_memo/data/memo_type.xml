@@ -6,6 +6,7 @@
             <field name="memo_key">Payment</field>
             <field name="active">1</field>
         </record>
+        
         <record id="mtype_loan" model="memo.type">
             <field name="name">Loan</field>
             <field name="memo_key">loan</field>
@@ -64,8 +65,11 @@
             <field name="is_document">1</field>
         </record>
 
-        
-         
+        <record id="mtype_sale" model="memo.type">
+            <field name="name">Sale</field>
+            <field name="memo_key">sale_request</field>
+            <field name="active">1</field>
+        </record>
 
      </data>
 </odoo>

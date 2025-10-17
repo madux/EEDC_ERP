@@ -11,9 +11,9 @@
 				<form string="Memo Record">
 				<header>
 					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
-					<button name="approve_memo" string="Approve" type="object" class="oe_highlight" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['soe', 'leave_request', 'cash_advance', 'loan', 'Payment', 'server_access', 'material_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
+					<button name="approve_memo" string="Approve" type="object" class="oe_highlight" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['soe', 'leave_request', 'cash_advance', 'loan', 'Payment', 'server_access', 'material_request','sale_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
 					<button name="generate_recruitment_request" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['recruitment_request']),('state','not in',['Done', 'Approve2']), ('user_is_approver','!=',True)]}" string="View / Generate Recruitment Request" type="object" class="oe_highlight"/>
-					<button name="action_post_and_vallidate_payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/>
+					<!-- <button name="action_post_and_vallidate_payment" string="Register Payment" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/> -->
                     <button name="generate_move_entries" string="Register Via Invoice" type="object" class="oe_highlight" confirm="Are you sure you want to make Payment?" attrs="{'invisible':['|','|', '|',('user_is_approver','!=',True), ('state','not in',['Approve']), ('memo_type_key','not in',['Payment']),('is_request_completed','=', True)]}"/>
 					<button name="send_memo_to_contacts" string="Send Memo" type="object" class="oe_highlight" confirm="Are you sure you want to make send memo?" attrs="{'invisible':['|','|', '|', ('user_is_approver','!=',True), ('state','not in',['Approve2']), ('memo_type_key','not in',['internal', 'Internal']), ('internal_memo_option','not in',['all', 'selected'])]}"/>
 					<button name="complete_memo_transactions" string="Generate &amp; Confirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type_key','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
@@ -118,6 +118,9 @@
                                 options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
 								<field name="vendor_id" attrs="{'readonly':[('state','not in',['submit'])], 'invisible':[('memo_type_key','not in', ['Payment', 'procurement_request'])]}"
                                 options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
+								<field name="customer_id" string="Customer" attrs="{'readonly':[('state','not in',['submit'])], 'invisible':[('memo_type_key','not in', ['sale_request'])], 'required':[('memo_type_key','in', ['sale_request'])]}"
+                                options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
+								
 								<field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
 								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
 								<!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
@@ -189,7 +192,7 @@
 							</group>
 						</group>
 						<notebook>
-							<page name='Products' string='Request item' attrs="{'invisible':['|', ('to_create_document', '=', True),('memo_type_key','not in',['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])]}">
+							<page name='Products' string='Request item' attrs="{'invisible':['|', ('to_create_document', '=', True),('memo_type_key','not in',['Payment', 'material_request', 'sale_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request'])]}">
 								<field name="product_ids" string = "Items" 
 								attrs="{'readonly':[('edit_mode','=',False),('state','in',['Sent', 'Approve','Approve2', 'Done'])]}"
 								context="{'default_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}"
@@ -400,7 +403,7 @@
 							<!-- <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}"> -->
 							<!-- attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}" -->
 							<page name="PurchaseOrder" string="Purchase Order" 
-                            attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment'])]}">
+                            attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment', 'sale_request'])]}">
 								<button name="generate_po_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate Purchase Order"/>
 								<!-- <field name="po_ids" force_save="1" readonly="0" domain="[('id', '=', 0)]" -->
 								<field name="po_ids" force_save="1" readonly="0"
@@ -426,6 +429,29 @@
 										<button name="unlink" type="object" string="Delete" confirm="Click Ok to confirm delete" attrs="{'invisible':[('state', 'not in', ['cancel'])]}" class="oe_highlight btn-sm" id="dlt" data-hotkey="x"/>
 									</tree>
 									 
+								</field>
+							</page>
+
+							<page name="SaleOrder" string="Sale Order" 
+                            attrs="{'invisible': [('memo_type_key','not in', ['sale_request'])]}">
+								<button name="generate_so_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate SO Order from Line"/>
+
+								<field name="so_ids" force_save="1" readonly="0"
+								context="{'default_memo_id': active_id, 'default_partner_id': customer_id, 'default_memo_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
+                                    <tree string="SO" editable="bottom" create="0" delete="0" no_open="0" decoration-info="state == 'draft'" decoration-primary="state in ['done']" decoration-success="state in ['sale']" decoration-danger="state == 'draft'" export_xlsx="1">
+										<field name="memo_state" string="Memo State" column_invisible="1" invisible="1"/> 
+                                        <field name="memo_type_key" string="memo key" column_invisible="1" invisible="1"/>  
+										<field name="memo_id" string="Memo" column_invisible="1"/> 
+										<field name="memo_type" string="Memo type" column_invisible="1" invisible="1"/> 
+										<field name="name" string="SO Number"/>
+										<field name="state" string="SO Status"/>
+										<field name="invoice_status" string="Invoice Status"/>
+										<field name="amount_total" string="Total" sum="Total"/>
+										<button name="button_view_po" type="object" string="View" class="oe_highlight btn-sm" id="view_so" data-hotkey="q"/>
+										<button name="action_confirm" type="object" attrs="{'invisible': [('state', 'not in', ['draft', 'sent'])]}" string="Confirm Order" class="oe_highlight" id="sale_confirm" data-hotkey="q"/>
+										<button name="action_cancel" type="object" confirm="Click Ok to confirm cancel" string="Cancel" attrs="{'invisible':[('state', 'not in', ['sent', 'sale'])]}" class="oe_highlight btn-sm" id="dlt" data-hotkey="x"/>
+										<button name="unlink" type="object" string="Delete" confirm="Click Ok to confirm delete" attrs="{'invisible':[('state', 'not in', ['cancel'])]}" class="oe_highlight btn-sm" id="dlt" data-hotkey="x"/>
+									</tree>
 								</field>
 							</page>
 							<page name='description' string='Memo Body'>
