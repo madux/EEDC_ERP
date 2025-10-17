@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="dashboard_page" name="Sales Rep Dashboard">
+    <t t-call="website.layout">
+      <div class="o_container_sm sales-rep-dashboard container-xxl py-3">
+
+        <!-- Toolbar / Filters -->
+        <div class="dash-toolbar card glassy mb-3 p-3" data-testid="toolbar">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-4 col-md-3">
+              <label class="form-label small text-muted mb-1">Date From</label>
+              <input type="date" class="form-control" id="srd-date-from" data-testid="date-from"/>
+            </div>
+            <div class="col-sm-4 col-md-3">
+              <label class="form-label small text-muted mb-1">Date To</label>
+              <input type="date" class="form-control" id="srd-date-to" data-testid="date-to"/>
+            </div>
+            <div class="col-sm-12 col-md-4">
+              <label class="form-label small text-muted mb-1">Search</label>
+              <input type="text" class="form-control" id="srd-search" placeholder="Search order or customer" data-testid="search"/>
+            </div>
+            <div class="col-sm-12 col-md-2 d-flex gap-2 justify-content-md-end">
+              <button class="btn btn-primary gradient" id="srd-apply" data-testid="apply">APPLY</button>
+              <button class="btn btn-outline-secondary" id="srd-reset" data-testid="reset">RESET</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="row g-3 mb-2">
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi card glassy p-3" data-testid="kpi-quotations">
+              <div class="kpi-label">Quotations</div>
+              <div class="kpi-value" id="kpi-quotations">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi card glassy p-3" data-testid="kpi-won">
+              <div class="kpi-label">Sales Won</div>
+              <div class="kpi-value" id="kpi-won">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi card glassy p-3" data-testid="kpi-customers">
+              <div class="kpi-label">Customers</div>
+              <div class="kpi-value" id="kpi-customers">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi card glassy p-3" data-testid="kpi-total-won">
+              <div class="kpi-label">Total Won</div>
+              <div class="kpi-value" id="kpi-total-won">0</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi card glassy p-3" data-testid="kpi-forecast">
+              <div class="kpi-label">Forecast</div>
+              <div class="kpi-value" id="kpi-forecast">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts grid -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-6">
+            <div class="card glassy p-3 h-100">
+              <div class="card-title d-flex justify-content-between align-items-center mb-2">
+                <span>Pipeline by Month</span>
+                <i class="fa fa-line-chart"></i>
+              </div>
+              <canvas id="chart-pipeline" height="220" data-testid="chart-pipeline"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card glassy p-3 h-100">
+              <div class="card-title d-flex justify-content-between align-items-center mb-2">
+                <span>Top Customers</span>
+              </div>
+              <canvas id="chart-top-customers" height="220" data-testid="chart-top-customers"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card glassy p-3 h-100">
+              <div class="card-title d-flex justify-content-between align-items-center mb-2">
+                <span>Forecast (Next 3 Months)</span>
+              </div>
+              <canvas id="chart-forecast" height="220" data-testid="chart-forecast"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales table -->
+        <div class="card glassy p-0" data-testid="sales-table">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="small text-uppercase text-muted">
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th class="text-end">Untaxed</th>
+                  <th class="text-end">Total</th>
+                  <th>Forecast</th>
+                </tr>
+              </thead>
+              <tbody id="srd-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center p-3">
+            <div class="small text-muted" id="srd-pager-info">0–0 of 0</div>
+            <div class="btn-group">
+              <button class="btn btn-outline-secondary btn-sm" id="srd-prev">Prev</button>
+              <button class="btn btn-outline-secondary btn-sm" id="srd-next">Next</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </t>
+  </template>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Client action opening our route -->
+  <record id="action_sales_rep_dashboard_url" model="ir.actions.act_url">
+    <field name="name">My Sales Dashboard</field>
+    <field name="type">ir.actions.act_url</field>
+    <field name="url">/sales_rep_dashboard</field>
+    <field name="target">self</field>
+  </record>
+
+  <!-- Place under Sales -->
+  <menuitem id="menu_sales_rep_dashboard"
+            name="My Sales Dashboard"
+            parent="sale.sale_menu_root"
+            action="action_sales_rep_dashboard_url"
+            sequence="95"/>
+</odoo>

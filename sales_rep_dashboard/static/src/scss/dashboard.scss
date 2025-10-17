@@ -1,0 +1,25 @@
+// Soft pastel + glass look to match your screenshots
+
+.sales-rep-dashboard {
+  .glassy {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,.06);
+    border-radius: 16px;
+  }
+
+  .gradient {
+    background: linear-gradient(90deg, #a855f7, #22d3ee);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(168,85,247,.25);
+  }
+
+  .kpi {
+    .kpi-label { font-size: .8rem; color: #6b7280; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; color: #111827; }
+  }
+
+  .card-title { font-weight: 600; color: #374151; }
+  .table thead th { letter-spacing: .04em; }
+}
