@@ -43,7 +43,7 @@ class SaleOrder(models.Model):
     def _default_warehouse_id(self):
         company = self.env.company.id
         user_branch = self.env.user.branch_id
-        warehouse_id = self.env['stock.warehouse'].search([('branch_id', '=',user_branch.id)], limit=1)
+        warehouse_id = self.env['stock.warehouse'].search([('branch_id', '=',user_branch.id), ('company_id', 'in', [company, self.env.user.company_id.id])], limit=1)
         return warehouse_id
     
     # @api.depends('user_id', 'company_id')

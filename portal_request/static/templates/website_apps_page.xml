@@ -175,6 +175,12 @@
 								<div class="app-label">Portal Request</div>
 							</a>
 						</div>
+						<div class="app-item">
+							<a href="/my/requests/sale_request?memo_type=sale_request">
+								<div class="app-icon procurement-icon">🛒</div>
+								<div class="app-label">Sales / CRM</div>
+							</a>
+						</div>
 					</div>
 				</div>
 

@@ -534,6 +534,8 @@ class Memo_Model(models.Model):
         )
     
     client_id = fields.Many2one('res.partner', 'Client')
+    customer_id = fields.Many2one('res.partner', 'Client')
+    
     po_ids = fields.Many2many('purchase.order', 
                               store=True)
     so_ids = fields.Many2many('sale.order', 
@@ -600,6 +602,11 @@ class Memo_Model(models.Model):
         '''if the stage requires PO confirmation'''
         self.procurement_confirmation()
     
+    def validate_so_line(self):
+        '''if the stage requires so confirmation'''
+        if self.memo_type_key == 'sale_request':
+            self.sale_confirmation()
+        
     def validate_necessary_components(self):
         '''check relevant fields necessary for different memo type'''
         request_list = ['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']
@@ -699,6 +706,53 @@ class Memo_Model(models.Model):
                 )
             if po_without_invoice_payment:
                 raise UserError("Please kindly create and pay the bills for each PO lines")
+
+    def sale_confirmation(self):
+        if self.stage_id.require_so_confirmation:
+            # selected = self.mapped('so_ids').filtered(
+            #         lambda st: st.selected
+            #     )
+            # if not selected:
+            #     raise UserError(
+            #         """Please select at least on Sale order to confirm""")
+                
+            if not self.so_ids:
+                raise UserError("Please enter sale order lines")
+            else:
+                so_without_lines = self.mapped('so_ids').filtered(
+                    lambda tot: tot.amount_total < 1 and tot.selected
+                )
+                if so_without_lines:
+                    raise UserError("Please kindly ensure that all sale order lines are added with price amount")
+
+            so_without_confirmation = self.mapped('so_ids').filtered(
+                    lambda st: st.state in ['draft', 'sent'] and st.selected == True
+                )
+            if so_without_confirmation:
+                raise UserError(
+                    """All Selected POs must be confirmed at this stage. To avoid errors, 
+                    Please kindly go through each SO to confirm them""")
+        # if self.stage_id.require_waybill_detail: 
+        #     '''Checks if the PO is expecting a picking count and there is no pickings '''
+        #     without_picking_reciept = self.mapped('po_ids').filtered(
+        #             lambda st: st.selected and st.incoming_picking_count > 0 and not st.picking_ids
+        #         )
+        #     if without_picking_reciept:
+        #         raise UserError('Please ensure all PO(s) has been recieved before Vendor Bill is generated')
+        #     for po in self.mapped('po_ids').filtered(
+        #             lambda st: st.selected):
+        #         if po.mapped('picking_ids').filtered(
+        #             lambda st: st.state not in ["cancel", "done"]):
+        #             raise UserError(
+        #                 """Please ensure all PO picking / receipts are marked done before vendor bill is generated \n 1) Please go under purchase order tab \n 2) Click view button \n. 3) Click on the Receive button. \n 4) On the new page click Validate. (If stock pickings are shown, ensure to either cancel or validate the records.)""")
+        if self.stage_id.require_bill_payment: 
+            so_without_invoice_payment = self.mapped('so_ids').filtered(
+                    lambda st: st.selected and st.invoice_status not in ['invoiced']
+                    # lambda st: not st.invoice_ids
+                )
+            if so_without_invoice_payment:
+                raise UserError("Please kindly create and pay the bills for each SO lines")
+
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
@@ -1396,6 +1450,36 @@ class Memo_Model(models.Model):
             }
         return ret
 
+    def generate_so_from_request(self):
+        if not self.user_in_stage_exists():
+            raise ValidationError("You are not allowed to generate a SO lines. Kindly use request item tabs to request")
+        if self.mapped('so_ids').filtered(
+            lambda s: s.selected and s.state not in ['draft', 'sent', 'cancel']):
+            raise UserError("You cannot generate SO again")
+        vals = {
+                'date_order': fields.Date.today(),
+                'origin': self.code,
+                'memo_id': self.id,
+                'memo_type_key': self.memo_type_key,
+                'memo_type': self.memo_type.id,
+                'partner_id': 1 or 2,
+            }
+        so_id = self.env['sale.order'].sudo().create(vals)
+        
+        self.build_so_line(so_id)
+        view_id = self.env.ref('purchase.purchase_order_form').id
+        ret = {
+            'name': "Purchase Order",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'purchase.order',
+            'res_id': so_id.id,
+            'type': 'ir.actions.act_window', 
+            'target': 'new',
+            }
+        return ret
+    
     def build_multiple_vendor_line(self, order_id):
         request_lines = self.mapped('product_ids')
         exists = False
@@ -1425,6 +1509,7 @@ class Memo_Model(models.Model):
     def forward_memo(self):
         self.validate_necessary_components()
         self.validate_po_line()
+        self.validate_so_line()
         self.validate_compulsory_document()
         self.validate_sub_stage()
         self.validate_invoice_line()
@@ -1559,6 +1644,31 @@ class Memo_Model(models.Model):
             self.update({'po_ids': [(4, order_id.id)]})
         else:
             order_id.button_cancel()
+            order_id.unlink()
+            
+    def build_so_line(self, order_id):
+        '''args: order_id: the so_id already created'''
+        so_ids = self.mapped('so_ids')
+        request_lines = self.mapped('product_ids')
+        so_products = []
+        for so in so_ids:
+            '''Filtered the products already added to po lines'''
+            so_products.append(so.order_line.mapped('product_id'))
+        exists = False
+        for rq in request_lines:
+            if not rq.product_id in so_products:
+                orderlineval = {
+                    'order_id': order_id.id,
+                    'product_id': rq.product_id.id,
+                    'product_uom_qty': rq.quantity_available if rq.quantity_available > 0 else 1,
+                    'price_unit': rq.amount_total,
+                }
+                self.env['sale.order.line'].create(orderlineval)
+                exists = True
+        if exists:
+            self.update({'so_ids': [(4, order_id.id)]})
+        else:
+            order_id.action_cancel()
             order_id.unlink()
 
     def generate_sub_stage_artifacts(self, stage_id):
@@ -1956,6 +2066,7 @@ class Memo_Model(models.Model):
         self.check_supervisor_comment()
         self.validate_necessary_components()
         self.validate_po_line()
+        self.validate_so_line()
         self.validate_compulsory_document()
         self.validate_sub_stage()
         '''Determine if current user has access to approve'''
@@ -1988,6 +2099,8 @@ class Memo_Model(models.Model):
             return self.generate_stock_material_request(body_msg, body)
         elif self.memo_type.memo_key == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
+        elif self.memo_type.memo_key == "sale_request":
+            return self.generate_sale_request(body_msg, body)
         elif self.memo_type.memo_key == "vehicle_request":
             return self.generate_vehicle_request(body_msg) 
         elif self.memo_type.memo_key == "recruitment_request":
@@ -2186,7 +2299,17 @@ class Memo_Model(models.Model):
         #         'target': 'new'
         #         }
         #     return ret
-        
+       
+    def generate_sale_request(self, body_msg, body):
+        if not self.so_ids:
+            raise ValidationError('''Please kindly click generate sale Order button from the sale order tab
+                '''
+                )
+        self.update_memo_type_approver()
+        self.mail_sending_direct(body_msg)
+        is_config_approver = self.determine_if_user_is_config_approver()
+        self.update_status_badge()
+          
     def check_available_fleet_before_assignment(self, productid):
         available_fleet = self.env['product.product'].sudo().search([
                 ('is_available', '=', True),
