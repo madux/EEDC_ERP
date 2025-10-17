@@ -6,7 +6,7 @@
             <field name="name">Login credential Notification  </field>
             <field name="name">Login credential Notification  </field>
             <field name="model_id" ref="hr.model_hr_employee"/>
-            <field name="email_from">${object.write_uid.company_id.email || object.write_uid.login}</field>
+            <field name="email_from">erpsupport@enugudisco.com</field>
             <field name="email_to">${object.work_email}</field>
             <field name="subject">Login credential Notification</field>
             <field name="reply_to">""</field>
@@ -27,7 +27,7 @@
                                             <ul>
                                                 <li>URL: <a href='/web'>Click the link</a> </li>
                                                 
-                                                <li>URL: <a>https://hrpms.myeedc.com/web/login</a> </li>
+                                                <li>URL: <a>https://apps.myeedc.com/web/login</a> </li>
                                                 <li>Username: <t t-out="object.user_id.login"/></li>
                                                 <li>Password: <t t-out="object.migrated_password or ''"/></li>
                                             </ul>

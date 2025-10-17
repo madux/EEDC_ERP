@@ -29,6 +29,8 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
             localStorage.setItem('mode', 'light');
             $('#back-icon').attr('fill', 'black');
             $('#myProfile').attr('color', 'black');
+            $('#reset_password_txt').attr('color', 'black');
+            $('#switch-user-text').attr('color', 'black');
             $('#switchModeBtn1').attr('color', 'black');
         } else {
             $dashboard.removeClass('light-mode');
@@ -36,8 +38,9 @@ odoo.define('portal_request.portal_employee_dashboards', function (require) {
             localStorage.setItem('mode', 'dark');
              $('#back-icon').attr('fill', 'white');
             $('#myprofile').attr('color', 'white');
+            $('#reset_password_txt').attr('color', 'white');
+            $('#switch-user-text').attr('color', 'white');
             $('#switchModeBtn1').attr('color', 'white');
-
         }
     }
 

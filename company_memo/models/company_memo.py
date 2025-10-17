@@ -44,7 +44,7 @@ class Memo_Model(models.Model):
         current_month = datetime.now().strftime('%Y/%m')
         
         # result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
-        result.code =  vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
+        result.code =   vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         return result
     
     def _compute_attachment_number(self):
@@ -134,6 +134,7 @@ class Memo_Model(models.Model):
         )
     memo_type_key = fields.Char('Memo type key', readonly=True)
     name = fields.Char('Subject', size=400)
+    requester_name = fields.Char('Legacy Request name')
     code = fields.Char('Code', readonly=True)
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
@@ -738,20 +739,18 @@ class Memo_Model(models.Model):
             [('user_id', '=', self.env.uid)], limit=1)
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
+            ('publish_to_public', '=', True),
             # ('department_id', '=', employee.department_id.id),
             ('branch_id', '=', employee.user_id.branch_id.id),
             ('company_id', '=', employee.user_id.company_id.id),
             ])
         _logger.info(f'THis is configs == > {memo_configs}')
-        # user_company = user.company_id.id
-        # cds = []
-        # for rec in memo_configs:
-        #     _logger.info(f"Userxxx companies and memo companies {user.company_ids.ids}, {rec.company_ids.ids}")
-        #     """Show memo config where user companies is in memo configs"""
-        #     if user_company in rec.company_ids.ids: # or self.get_user_company_in_memo_companies(user.company_ids.ids, rec.company_ids.ids):
-        #         cds.append(rec.id)
-        
-        # config_ids = self.env['memo.config'].sudo().search([('id', 'in', cds)])
+        memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
+        for r in memo_configs:
+            if r.stage_ids:
+                initiation_stage = r.stage_ids[0]
+                if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
+                    memo_configs = memo_configs - r
         return memo_configs
     
     @api.model
@@ -1766,6 +1765,11 @@ class Memo_Model(models.Model):
         else:
             self.memo_bagde_status = True #'Completed'
 
+    def enable_edit_mode(self):
+        self.edit_mode = True 
+        for edit in self.product_ids:
+            edit.edit_mode = True 
+            
     def update_final_state_and_approver(self, from_website=False, default_stage=False, assigned_to=False):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
@@ -1784,6 +1788,10 @@ class Memo_Model(models.Model):
             # determining the stage to update the already existing state used to hide or display some components
             if self.stage_id:
                 if self.stage_id.is_approved_stage:
+                    if self.memo_type_key in ['material_request']: 
+                        # for now open material request location to set location of your stock move 
+                        self.enable_edit_mode()
+                        
                     if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                         self.state = "Approve"
                     else:
@@ -2058,7 +2066,7 @@ class Memo_Model(models.Model):
                   'default_employee_transfer_lines': self.employee_transfer_line_ids.ids
               },
         }
-
+    is_inter_district_transfer = fields.Boolean("Is inter district transfer")
     def generate_stock_material_request(self, body_msg, body):
         user = self.env.user
         if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
@@ -2067,11 +2075,17 @@ class Memo_Model(models.Model):
         #     raise ValidationError("Destination location Branch does not correspond to the requester's branch")
         if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Operation type does not relate to the company {self.company_id.name} this request was initiated from')
-        if not self.sudo().source_location_id.company_id.id == self.company_id.id:
-            raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
+        if not self.is_inter_district_transfer:
+            if not self.sudo().source_location_id.company_id.id == self.company_id.id:
+                raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
         if not self.dest_location_id.company_id.id == self.company_id.id:
             raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
-        stock_picking_type_out = self.picking_type_id # self.env.ref('stock.picking_type_out')
+        
+        for ln in self.product_ids:
+            """Enforce to disallow stock move that has no products qty in the location"""
+            ln.onchange_location_check_available_qty()
+        
+        stock_picking_type_out = self.sudo().picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
         
@@ -2079,6 +2093,7 @@ class Memo_Model(models.Model):
             ('company_id', '=', self.company_id.id) 
         ], limit=1)
         if not existing_picking:
+            # for mm in self.product_ids:
             vals = {
                 'scheduled_date': fields.Date.today(),
                 'picking_type_id': stock_picking_type_out.id,
@@ -2091,9 +2106,9 @@ class Memo_Model(models.Model):
                 'move_ids_without_package': [(0, 0, {
                                 'name': self.code,
                                 'picking_type_id': stock_picking_type_out.id,
-                                'location_id': self.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                                'location_id': mm.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
                                 'location_dest_id': self.dest_location_id.id or stock_picking_type_out.default_location_src_id.id, # or destination_location_id.id,
-                                'product_id': mm.product_id.id,
+                                'product_id': mm.sudo().product_id.id,
                                 'product_uom_qty': mm.quantity_available,
                                 'date_deadline': self.date_deadline,
                 }) for mm in self.product_ids]
@@ -2198,9 +2213,13 @@ class Memo_Model(models.Model):
         "stock.picking.type",
         string="Operation type", 
         )
+    edit_mode = fields.Boolean(
+        string="Edit mode", 
+        help="Allow some fields to be editable"
+        )
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
-        
+    
     @api.onchange('dest_location_id')
     def on_change_of_destination_location(self):
         if self.dest_location_id:
@@ -2392,7 +2411,7 @@ class Memo_Model(models.Model):
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             if not inv:
-                partner_id = self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
+                partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
                 # partner_id = self.employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
@@ -2512,7 +2531,7 @@ class Memo_Model(models.Model):
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             cashadvance_account_to_credit =self.cash_advance_reference.move_id.line_ids[0].account_id.id if self.cash_advance_reference.move_id.line_ids and self.cash_advance_reference.move_id.line_ids[0].account_id else False
             if not inv:
-                partner_id = self.sudo().employee_id.user_id.partner_id
+                partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
@@ -2794,9 +2813,9 @@ class Memo_Model(models.Model):
       
     def view_related_record(self):
         if self.env.uid not in [r.user_id.id for r in self.users_followers]:
-            raise ValidationError("You are not responsioble to view this")
+            raise ValidationError("You are not responsible to view this")
         if self.memo_type.memo_key == "material_request":
-            view_id = self.env.ref('stock.view_picking_form').id
+            view_id = self.sudo().env.ref('stock.view_picking_form').id
             return self.record_to_open('stock.picking', view_id)
              
         elif self.memo_type.memo_key == "procurement_request":
@@ -2958,7 +2977,7 @@ class Memo_Model(models.Model):
                 'context': {
                         'default_amount': self.amountfig or computed_amount_total,
                         'default_payment_type': 'outbound',
-                        'default_partner_id':self.vendor_id.id or self.sudo().employee_id.user_id.partner_id.id, 
+                        'default_partner_id':self.vendor_id.id or self.client_id.id or self.sudo().employee_id.user_id.partner_id.id, 
                         'default_memo_reference': self.id,
                         'default_communication': self.name,
                         'default_currency_id': self.env.user.company_id.currency_id.id,

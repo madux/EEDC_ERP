@@ -14,10 +14,11 @@
 
     .dashboard {
       min-height: 100vh;
+      min-width: 100vh;
       background: linear-gradient(135deg, rgba(7, 7, 7, 0.9) 0%, rgba(41, 41, 41, 0.9) 50%, rgba(32, 32, 32, 0.9) 100%);
       position: relative;
       padding-bottom: 50px;
-
+      width: 100%;
       color: white; /* text white in dark mode */
       position: relative;
       padding-bottom: 50px;
@@ -94,7 +95,7 @@
 
     .apps-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 40px;
       padding: 0 204px;
       max-width: 1440px;
@@ -145,6 +146,53 @@
     .back-btn:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateX(-2px);
+    }
+
+    .input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 300px;
+    }
+
+    .auto-expand {
+        overflow-y: auto;
+        resize: none;
+        min-height: 32px;
+        line-height: 1.4;
+        transition: height 0.2s ease;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    input[type="text"].expanded {
+      white-space: normal;
+      height: 80px;
+    }
+
+    .expand-btn {
+      position: absolute;
+      right: 5px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .expand-btn:hover {
+      background: #0056b3;
     }
 
     .header-emp {

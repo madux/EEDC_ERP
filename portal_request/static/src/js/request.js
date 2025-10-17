@@ -15,8 +15,8 @@ odoo.define('portal_request.portal_request', function (require) {
     var core = require('web.core');
     var qweb = core.qweb;
     var _t = core._t;
-    const setProductdata = [];
-    const setEmployeedata = [];
+    let setProductdata = [];
+    let setEmployeedata = [];
     let alert_modal = $('#portal_request_alert_modal');
     let modal_message = $('#display_modal_message');
     if ($("#msform")[0] !== undefined){
@@ -272,6 +272,7 @@ odoo.define('portal_request.portal_request', function (require) {
     }
 
     function buildProductTable(data, memo_type, require='', hidden='d-none', readon=''){
+        $(`#tbody_product`).empty()
         $.each(data, function (k, elm) {
             if (elm) {
                 var lastRow_count = getOrAssignRowNumber()
@@ -293,7 +294,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" disabled="true" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
                         </th>
                         <th width="5%">
-                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" labelfor="Request Quantity"/> 
+                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" location_id="${elm.location_id}" labelfor="Request Quantity"/> 
                         </th>
                         <th width="10%">
                             <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" disabled="true" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '': 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '': 'd-none'}" labelfor="Unit Amount"/> 
@@ -352,7 +353,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
                 <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
+                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" location_id="" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
                 </th>
                 <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
                     <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
@@ -466,6 +467,7 @@ odoo.define('portal_request.portal_request', function (require) {
         // used qty and used amount and give the total of retirement subtotal 
         var targetEv = $('#selectRequestOption').val() == "soe" ? "usedAmount" : "amount_total"
         var total = 0
+        var rt_total = 0
         $(`#tbody_product > tr.prod_row`).each(function(){
             var row_co = $(this).attr('row_count')
             var amount = 0
@@ -494,12 +496,22 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             )
             total += amt
+            rt_total += rt_amt
             $(`.SUBTOTAL${row_co}`).val(amt)
             $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
             $(`.retireSubTotal${row_co}`).val(rt_amt)
         })
         var amount = formatCurrency(total)
+        var rt_amount = formatCurrency(rt_total)
         $('#all_total_amount').text(`${amount != undefined ? amount : 0.0}`)
+        $('#retire_all_total_amount').text(`${rt_amount != undefined ? rt_amount : 0.0}`)
+        if ($('#selectRequestOption').val() == 'soe'){
+            $('#all_total_amount').addClass('d-none');
+            $('#retire_all_total_amount').removeClass('d-none')
+        }else{
+            $('#all_total_amount').removeClass('d-none');
+            $('#retire_all_total_amount').addClass('d-none');
+        }
     }
 
     function getOrAssignRowNumber(memo_type=false){
@@ -668,6 +680,7 @@ odoo.define('portal_request.portal_request', function (require) {
                   q: term, //search term
                   productItems: JSON.stringify(setProductdata), //getSelectedProductItems(),
                   request_type: $('#selectRequestOption').val(), //getSelectedProductItems(),
+                  source_locationId: $('#source_location_id').val(), //getSelectedProductItems(),
                   page_limit: 10, // page size
                   page: page, // page number
                 };
@@ -757,6 +770,30 @@ odoo.define('portal_request.portal_request', function (require) {
         minimumInputLength: 3,
         multiple: true,
         placeholder: 'Search for followers',
+        allowClear: true,
+    });
+
+    $('#vendor_id').select2({
+        ajax: {
+            url: '/portal-request-get-vendors',
+            dataType: 'json',
+            delay: 250,
+            data: function (term, page) {
+                return {
+                    q: term, //search term
+                    page_limit: 10, // page size
+                    page: page, // page number
+                };
+            },
+            results: function (data, page) {
+            var more = (page * 30) < data.total;
+            return {results: data.results, more: more};
+            },
+            cache: true
+        },
+        minimumInputLength: 2,
+        multiple: false,
+        placeholder: 'Search for Vendors',
         allowClear: true,
     });
 
@@ -891,6 +928,60 @@ odoo.define('portal_request.portal_request', function (require) {
                     maxDate: null,
                     minDate: new Date()
                 });
+
+                var urlParams = new URLSearchParams(window.location.search);
+                var preselectedType = urlParams.get('memo_type_key') || urlParams.get('memo_type') || $('#preselected_memo_key').val();
+                
+                console.log('=== PRESELECTION DEBUG ===');
+                console.log('URL params:', window.location.search);
+                console.log('Preselected type:', preselectedType);
+                console.log('Current dropdown value:', $('#selectRequestType').val());
+                if (preselectedType) {
+                    console.log('Attempting to preselect type:', preselectedType);
+                    
+                    // Find and select the memo type in the dropdown
+                    var foundMatch = false;
+                    $('#selectRequestType option').each(function(){
+                        var memoKey = $(this).attr('memo_key');
+                        var typeId = $(this).val();
+                        
+                        console.log('Checking option:', {
+                            text: $(this).text(),
+                            value: typeId,
+                            memo_key: memoKey,
+                            matches: memoKey === preselectedType
+                        });
+                        
+                        if (memoKey === preselectedType) {
+                            console.log('✓ Found matching type! Setting to:', typeId, memoKey);
+                            foundMatch = true;
+                            
+                            // Set the value
+                            $('#selectRequestType').val(typeId);
+                            
+                            // Store the selected type ID
+                            $('#selectedRequestTypeId').val(typeId);
+                            
+                            // Small delay to ensure DOM is ready, then trigger change
+                            setTimeout(function() {
+                                console.log('Triggering change event for:', typeId);
+                                $('#selectRequestType').trigger('change');
+                            }, 100);
+                            
+                            return false; // break the loop
+                        }
+                    });
+                    
+                    if (!foundMatch) {
+                        console.error('✗ No matching option found for memo_type_key:', preselectedType);
+                        console.log('Available options:', $('#selectRequestType option').map(function() {
+                            return {text: $(this).text(), memo_key: $(this).attr('memo_key')};
+                        }).get());
+                    }
+                } else {
+                    console.log('No preselection needed');
+                }
+                console.log('=== END PRESELECTION DEBUG ===');
             });
 
         },
@@ -918,8 +1009,15 @@ odoo.define('portal_request.portal_request', function (require) {
                 var remove_link = product_elm.closest(":has(a.remove_field)").find('a.remove_field');
                 link.attr('id', product_val);
                 remove_link.attr('id', product_val);
-                setProductdata.push(parseInt(product_val));
-                // console.log('sele ==> ', setProductdata) 
+                // setProductdata.push(parseInt(product_val));
+                setProductdata = [];
+                // building the productData afresh 
+                $('#tbody_product tr.prod_row input.productitemrow').each(function(ev) {
+                    // let productId = $(this)//.attr('id'); // or use .val() if you need the input’s value
+                    console.log(`My product is ==>${product_val}`);
+                    setProductdata.push(parseInt(product_val));
+                });
+                console.log(`sele ==> ${setProductdata}`)
             },
 
             'change .employeeitemrow': function(ev){
@@ -976,6 +1074,52 @@ odoo.define('portal_request.portal_request', function (require) {
             // $('#inactivelist').change(function () {
             //     alert('changed');
             //  });
+			
+            'change .Sourcelocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+				if($(ev.target)){
+					$('#TargetSourceLocation').val($('#source_location_id').val())
+				}else{
+					$('.destinationlocation-cls').val('')
+					$('.destinationlocation-cls').addClass('is-invalid')
+				}
+            },
+
+			'change .destinationlocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id')
+				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+				if(sourceLocationId.val() == $(ev.target).val()){
+					$(ev.target).val('');
+					$(ev.target).addClass("is-invalid");
+					alert("Source Location and Destination Location must not be the same");
+					return true;
+				}
+				else{
+					$(ev.target).removeClass("is-invalid");
+				}
+            },
+            'change .isInterDistrict': function(ev){
+                $('#destination_location_id').val('');
+                $('#source_location_id').val('');
+                if ($(ev.target).is(':checked')){
+                    // make the source location required
+                    $('#inter-source-location-div').removeClass('d-none');
+                    $('#source_location_id').attr('required', true);
+                    
+                    // make the destination location required
+                    $('#inter-destination-location-div').removeClass('d-none');
+                    $('#destination_location_id').attr('required', true);
+                }else{
+                    // make the source location not required
+                    $('#inter-source-location-div').addClass('d-none');
+                    $('#source_location_id').attr('required', false);
+                    
+                    // make the destination location not required
+                    $('#inter-destination-location-div').addClass('d-none');
+                    $('#destination_location_id').attr('required', false);
+                }
+            },
 
             'change .otherChangeOption': function(ev){
                 if ($(ev.target).is(':checked')){
@@ -1010,7 +1154,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             'product_id': qty_elm.attr('id'),
                             'qty': selectedproductQty,
                             'district': $("#selectDistrict").val(),
-                            'request_type': $("#selectRequestOption").val()
+                            'request_type': $("#selectRequestOption").val(),
+                            'sourceLocationId': $("#TargetSourceLocation").val() || $("#source_location_id").val(),
                         }
                     }).then(function(data){
                         if(!data.status){
@@ -1020,10 +1165,12 @@ odoo.define('portal_request.portal_request', function (require) {
                             alert_modal.modal('show');
                             modal_message.text(data.message)
                         }else{
+                            let location_id = data.location_id
                             qty_elm.attr('required', false);
                             qty_elm.removeClass("is-invalid");
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
+                            qty_elm.attr('location_id', location_id);
                             compute_total_amount();
                             $('#TargetSourceLocation').val(data.location_id)
                         }
@@ -1291,6 +1438,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             console.log("request selected== ", selectedTarget);
                             displayNonLeaveElement()
                         }
+                        else if(selectedTarget == "material_request"){
+                            $('#interdistrict-checkbox-div').removeClass('d-none');
+                        }
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if(selectedTarget == "cash_advance"){
                             var staff_num = $('#staff_id').val();
@@ -1361,6 +1511,65 @@ odoo.define('portal_request.portal_request', function (require) {
                 });
             },
 
+            // New block added
+            'change select[name=selectRequestType]': function(ev){
+                let selectedTypeElement = $(ev.target);
+                let selected_type_id = selectedTypeElement.val();
+                let selected_option = selectedTypeElement.find('option:selected');
+                let memo_key = selected_option.attr('memo_key');
+                
+                console.log('Request Type changed:', selected_type_id, memo_key);
+                
+                // Store selected type ID
+                $('#selectedRequestTypeId').val(selected_type_id);
+                
+                // Reset Request Option dropdown
+                $('#selectConfigOption').val('');
+                $('#selectedRequestOptionId').val('');
+                $('#selectConfigOptionId').val('');
+                $('#selectRequestOption').val('');
+                
+                // Show all config options first
+                $('#selectConfigOption option').show();
+                
+                // Hide the placeholder option temporarily to filter properly
+                $('#selectConfigOption option[value=""]').hide();
+                
+                // Hide all config options except those matching the selected memo type
+                let matchingOptionsCount = 0;
+                $('#selectConfigOption option').each(function(){
+                    if ($(this).val() !== '') { // Skip the placeholder
+                        let option_memo_type_id = $(this).attr('memo_key_id');
+                        console.log('Checking option:', $(this).text(), 'memo_key_id:', option_memo_type_id, 'vs selected:', selected_type_id);
+                        
+                        if (option_memo_type_id === selected_type_id) {
+                            $(this).show();
+                            matchingOptionsCount++;
+                        } else {
+                            $(this).hide();
+                        }
+                    }
+                });
+                
+                // Show the placeholder option again
+                $('#selectConfigOption option[value=""]').show();
+                
+                console.log('Matching options found:', matchingOptionsCount);
+                
+                // Enable/disable based on available options
+                if (matchingOptionsCount === 0) {
+                    $('#selectConfigOption').prop('disabled', true);
+                    alert('No request configurations available for this type. Please contact your administrator to configure options for ' + selected_option.text());
+                } else {
+                    $('#selectConfigOption').prop('disabled', false);
+                }
+                
+                // Clear form elements
+                clearAllElement();
+            },
+
+            // End of new block.....
+
             'change select[name=selectConfigOption]': function(ev){
                 // let selectedTarget = $(ev.target).val();
                 let selectedTarget = $(ev.target);
@@ -1391,6 +1600,8 @@ odoo.define('portal_request.portal_request', function (require) {
                         let memo_config_id = sro.getAttribute("id");
                         let memo_type_id = sro.getAttribute("memo_key_id");
                         let memo_type_key = sro.getAttribute("memo_type_key");
+                        console.log(`KEY MEMO IS ${memo_type_key}`)
+
                         $('#selectConfigOptionId').val(Number(memo_config_id));
                         $('#selectedRequestOptionId').val(Number(memo_type_id));
                         $('#selectRequestOption').val(memo_type_key);
@@ -1447,6 +1658,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             displayNonLeaveElement()
                              $('#PaymentcashAdvanceDiv').removeClass('d-none');
                             $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#vendor_label').removeClass('d-none'); 
+                            $('#vendor_id').attr("required", false);
+                            $('#vendor_div').removeClass('d-none');
                             $('#product_form_div').removeClass('d-none');
                             $('.add_item').removeClass('d-none');
                         }
@@ -1504,6 +1718,12 @@ odoo.define('portal_request.portal_request', function (require) {
                             }
                         }
                          
+                        else if(memo_type_key == "material_request"){
+                            $('#interdistrict').removeClass('d-none');
+							displayNonLeaveElement()
+                            $('.add_item').removeClass('d-none')
+                            $('#product_form_div').removeClass('d-none'); 
+                        }
                         else{
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
@@ -1568,6 +1788,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 window.open(data.link, '_blank');
                             }
                         }else{
+                            $("#tbody_product").empty();
                             var employee_name = data.data.name;
                             var email = data.data.work_email;
                             var phone = data.data.phone;   
@@ -1601,6 +1822,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             if(selectRequestOption.val() == "soe"){
                                 makefieldsReadonly(true);
                                 buildProductTable(product_ids, "soe", "required", "", "");
+                                compute_total_amount()
                             }
                             if(selectRequestOption.val() == "cash_advance"){
                                 // make cash advance field required and displayed
@@ -1793,6 +2015,11 @@ odoo.define('portal_request.portal_request', function (require) {
                                         console.log($(this).val())
                                         list_item['qty'] = $(this).val()
                                     }
+                                    if($(this).attr('location_id')){
+                                        list_item['location_id'] = $(this).val()
+                                        list_item['dest_location_id'] = $('#destination_location_id').val()
+                                    }
+									 
                                 
                                     if($(this).attr('name') == "amount_total"){
                                         console.log($(this).val())
@@ -1955,8 +2182,22 @@ odoo.define('portal_request.portal_request', function (require) {
 
         $('#PaymentcashAdvanceDiv').addClass('d-none');
         $('#PaymentcashAdvanceLabel').addClass('d-none');
+        
         $('#PaymentcashAdvance').val('');
+
+        $('#vendor_label').addClass('d-none');
+        $('#vendor_id').val('');
+        $('#vendor_div').addClass('d-none');
+        $('#vendor_id').attr("required", false);
         // $('#justification_reason').addClass("is-valid");
+        $('#interdistrict').addClass('d-none');
+        $('#isInterDistrict').prop('checked', false);
+        $('#source_location_id').val('');
+        $('#destination_location_id').val('');
+        $('#source_location_id').attr("required", false);
+        $('#destination_location_id').attr("required", false);
+        $('#inter-destination-location-div').addClass('d-none');
+        $('#inter-source-location-div').addClass('d-none');
     }
     var form = $('#msform')[0];
 // return PortalRequestWidget;

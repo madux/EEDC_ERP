@@ -16,7 +16,7 @@
         </field>
     </record>
 
-    <record id="memo_stage_form_inherit" model="ir.ui.view">
+  <record id="memo_stage_form_inherit" model="ir.ui.view">
     <field name="name">memo.stage.form.inherit</field>
     <field name="model">memo.stage</field>
     <field name="inherit_id" ref="company_memo.memo_stage_form"/>
@@ -30,6 +30,25 @@
     </field>
   </record>
 
+<record id="memo_config_duplication_wizard_form_inherit" model="ir.ui.view">
+  <field name="name">memo.config.duplication.wizard.form.inherit</field>
+  <field name="model">memo.config.duplication.wizard</field>
+  <field name="inherit_id" ref="company_memo.view_memo_config_duplication_wizard_form"/>
+  <field name="arch" type="xml">
+    <xpath expr="//field[@name='dummy_memo_stage_ids']" position="replace">
+      <field name="dummy_memo_stage_ids" nolabel="1" widget="one2many_list">
+        <tree editable="top">
+          <field name="name"/>
+          <field name="sequence"/>
+          <field name="approver_ids" widget="many2many_tags"/>
+          <field name="approval_role_ids" widget="many2many_tags"/>
+          <field name="is_approved_stage"/>
+        </tree>
+      </field>
+    </xpath>
+  </field>
+</record>
+
  <record id="ir_action_server_synchronize_approvers" model="ir.actions.server">
     <field name="name">Synchronize Approvers</field>
     <field name="type">ir.actions.server</field>
@@ -39,5 +58,12 @@
     <field name="groups_id" eval="[(6, 0, [ref('eedc_role_manager.group_role_manager_admin')])]"/>
     <field name="code">action = model.action_sync_approvers()</field>
 </record>
+
+<menuitem
+            id="res_approval_role_menu_memo"
+            name="User role"
+            action="eedc_role_manager.action_user_role"
+            parent="company_memo.memo_configuration"
+            sequence="15"/>
 
 </odoo>

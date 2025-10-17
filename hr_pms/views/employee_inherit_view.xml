@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="hr.view_employee_form" />
             <field name="arch" type="xml"> 
                 <xpath expr="//field[@name='parent_id']" position="replace">
-                    <field name="parent_id" string="Functional Manager" required="1" options="{'no_create': True,'no_open': True}"/>
+                    <field name="parent_id" string="Functional Manager" required="0" options="{'no_create': True,'no_open': True}"/>
                 </xpath>
                 <xpath expr="//field[@name='coach_id']" position="replace">
                     <field name="coach_id" string="Coach" invisible="1" required="0" options="{'no_create': True,'no_open': True}"/>
@@ -30,13 +30,13 @@
                             <group>
                                 
                                 <field name="employment_date" required="0"/>
-                                <field name="migrated_password" required="0" groups="base.group_system,hr.group_hr_manager" string="Ps"/>
-                                <field name="login_username" required="0" groups="base.group_system,hr.group_hr_manager" string="User Login"/>
+                                <field name="migrated_password" required="0" groups="base.group_system" string="Ps" invisible="1"/>
+                                <field name="login_username" required="0" groups="base.group_system" string="User Login"/>
                                 <button name="reset_employee_user_password" type="object" string="Reset user login" required="0" groups="base.group_system,hr.group_hr_manager"/>
                             </group> 
                             <group> 
                                 <field name="grade_id" required="0" options="{'no_create': True,'no_open': False}"/>
-                                <field name="level_id" required="1" options="{'no_create': True,'no_open': True}"/>
+                                <field name="level_id" required="0" options="{'no_create': True,'no_open': True}"/>
                                 <field name="unit_id" required="0" options="{'no_create': True,'no_open': False}"/>
                                 <field name="work_unit_id" required="0" options="{'no_create': True,'no_open': False}"/>
                                 <field name="ps_district_id" required="0" options="{'no_create': True,'no_open': False}"/>

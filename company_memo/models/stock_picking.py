@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
     
     
 class StockPicking(models.Model):
@@ -20,13 +20,42 @@ class StockPicking(models.Model):
         return res
 
     def button_validate(self):
+        
         res = super(StockPicking, self).button_validate()
         # self.update_memo_status('Done')
+        # for mv in self.move_ids_without_package:
+        #     self.location_check_available_qty(mv.product_id,mv.location_id, mv.quantity_done)
+         
         if self.memo_id:
             self.memo_id.is_request_completed = True # Done remove because it will set the process to done automatically 
             self.sudo().memo_id.update_final_state_and_approver()
             self.sudo().memo_id.update_status_badge()
         return res
+    
+    # def action_confirm(self):
+    #     res = super(StockPicking, self).action_confirm()
+    #     for mv in self.move_ids_without_package:
+    #         self.location_check_available_qty(mv.product_id,mv.location_id, mv.quantity_done)
+    #     return res 
+    
+    
+    def location_check_available_qty(self, product_id, source_location_id, quantity_done):
+        if source_location_id:
+            qty = self.env['stock.quant'].sudo()._get_available_quantity(
+                product_id, 
+                source_location_id, 
+                allow_negative=False)
+            err_msg = [f"{product_id.name} Available Quantity is {qty} at Location {source_location_id.display_name} \n Below are the available locations with Quantities- \n"]
+            if qty < quantity_done:
+                available_product_locations = self.env['request.line'].sudo().get_available_locations_with_items(
+                    self.company_id,
+                    product_id,
+                    )  
+                if available_product_locations.get('data'):
+                    for r in available_product_locations.get('data'):
+                        err_msg.append(f"""Location: {r.get('Location')} - Quantity: {r.get('Quantity')} \n""")
+                err_msg = "\n".join(err_msg)
+                raise UserError(err_msg)
     
 
     # def update_memo_status(self, status):

@@ -1,5 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
+import logging
+_logger = logging.getLogger(__name__)
 
 class RequestLine(models.Model):
     _name = "request.line"
@@ -45,7 +47,7 @@ class RequestLine(models.Model):
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested", default=0)
-    amount_total = fields.Float(string="Unit Price")
+    amount_total = fields.Float(string="Unit Price", default=0)
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
     difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
@@ -56,6 +58,7 @@ class RequestLine(models.Model):
     to_retire = fields.Boolean(string="To Retire", help="Used to select the ones to retire", default=False)
     retired = fields.Boolean(string="Retired", help="Used to select determined retired", default=False)
     state = fields.Char(string="State")
+    edit_mode = fields.Boolean(string="Edit mode", help="Allow some fields to be editable")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
     total_balance_difference = fields.Float(
@@ -98,6 +101,60 @@ class RequestLine(models.Model):
         if self.quantity_available:
             self.check_product_qty()
             
+    @api.onchange('source_location_id')
+    def onchange_location_check_available_qty(self):
+        if self.sudo().source_location_id:
+            qty = self.env['stock.quant'].sudo()._get_available_quantity(
+                self.sudo().product_id, 
+                self.sudo().source_location_id, 
+                allow_negative=False)
+            err_msg = [f"{self.sudo().product_id.name} Available Quantity is {qty} at Location {self.sudo().source_location_id.name} \n Below are the available locations with Quantities- \n"]
+            if qty < 1:
+                available_product_locations = self.get_available_locations_with_items(
+                    self.memo_id.company_id,
+                    self.sudo().product_id,
+                    )
+                _logger.info(f"Quant with Quantity {available_product_locations} {available_product_locations.get('data')}")
+
+                # raise ValidationError(available_product_locations)
+                if available_product_locations.get('data'):
+                    for r in available_product_locations.get('data'):
+                        err_msg.append(f"""Location: {r.get('Location')} - Quantity: {r.get('Quantity')} \n""")
+                err_msg = "\n".join(err_msg)
+                raise UserError(err_msg)
+                
+    def get_available_locations_with_items(self, company_id, product_id):
+        domain = [('company_id', '=', company_id.id), ('usage', '=', 'internal')] 
+        location_ids = self.env['stock.location'].sudo().search(domain)
+        '''Checks if any location of type internal and company is user company only'''
+        error_data = {
+            "status": False,
+            "data": [],
+            'message': "No product found on the location provided",
+        }
+        if not location_ids:
+            error_data = {
+                "status": False, 
+                "data": [],
+                "message": f"""No internal storage location found for your company {company_id.name}""", 
+                }
+        location_with_qtys = []
+        for loc in location_ids:
+            '''search quant with the designated location'''
+            location_with_qty = self.env['stock.quant'].sudo().search(
+                [('location_id', '=', loc.id), ('product_id', '=', product_id.id),('quantity', '>', 0)]
+                )
+            '''Build a dictionary of product to show users the available products remaining'''
+            if location_with_qty:
+                for lq in location_with_qty:
+                    location_with_qtys.append({"Location": f"{lq.location_id.display_name}", "Quantity": lq.quantity})
+                error_data = {
+                    "status": True,
+                    "data": location_with_qtys, 
+                    "message": f"""Locations found""", 
+                    } 
+        return error_data
+       
     distance_from = fields.Text(
         string="From",
         help="For vehicle request use"
@@ -135,19 +192,21 @@ class RequestLine(models.Model):
     memo_type_key = fields.Char('Memo type key', readonly=True)#, related="memo_type.memo_key")
     
     def check_product_qty(self):
+        if not self.source_location_id or not self.product_id: 
+            raise UserError("Please select product and location")
         if self.quantity_available and self.quantity_available > 0:
             if self.product_id and self.memo_type_key in ['material_request']:# and self.product_id.detailed_type in ['product']:
-                # domain = ['|',('company_id', '=', self.env.user.company_id.id), 
-                #           ('company_id', 'in', self.env.user.company_ids.ids)] 
                 domain = [('company_id', '=', self.company_id.id), ('branch_id', '=', self.env.user.branch_id.id)] 
-                # use the above domain because it will restrict products to warehouse company and branch 
-                warehouse_location_id = self.env['stock.warehouse'].sudo().search(domain, limit=1)
-                stock_location_id = warehouse_location_id.lot_stock_id
+                # use the above domain because it will restrict products to warehouse company and branch
+                # dont restrict,  
+                # warehouse_location_id = self.env['stock.warehouse'].sudo().search(domain, limit=1)
+                stock_location_id = self.source_location_id#  or warehouse_location_id.lot_stock_id
                 total_availability = self.env['stock.quant'].sudo()._get_available_quantity(
                     self.product_id, stock_location_id, allow_negative=False) or 0.0
                 product_qty = self.quantity_available 
                 if product_qty > total_availability:
                     self.quantity_available = 0
+                    self.source_location_id = False
                     raise UserError(f"""
                                     Request product quantity ({product_qty}) is lesser than the available unit ({total_availability}) in the inventory. 
                                     Contact system Admin to assign you to the warehouse of current company and current user branch where those products are located.""")

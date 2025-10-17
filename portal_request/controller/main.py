@@ -2,6 +2,7 @@
 import base64
 import json
 import logging
+import ast 
 import random
 from multiprocessing.spawn import prepare
 import urllib.parse
@@ -61,7 +62,12 @@ def format_to_odoo_date(date_str: str) -> str:
         except Exception:
             return
         
-# class Home(main.Home):
+class Home(main.Home):
+    
+    def _login_redirect(self, uid, redirect=None):
+        '''we did this so that every user will be directed to portal page'''
+        return '/' # _get_login_redirect_url(uid, redirect)
+    
     # @http.route('/', type='http', auth="none")
     # def index(self, s_action=None, db=None, **kw):
     # 	# if request.db and request.session.uid and not is_user_internal(request.session.uid):
@@ -127,20 +133,143 @@ class PortalRequest(http.Controller):
     
     
     
+    # @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
+    # def portal_request(self):
+    #     """Request portal for employee / portal users
+    #     """
+    #     # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+    #     memo_configs = request.env['memo.model'].sudo().get_user_configs()
+    #     vals = {
+    #         "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
+    #         "memo_key_ids": [{'id': 0, 'name': ''}],
+    #         "config_type_ids": memo_configs, # self.get_user_configs ,
+    #     }
+    #     return request.render("portal_request.portal_request_template", vals)
+    
     @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
-    def portal_request(self):
+    def portal_request(self, **kw):
         """Request portal for employee / portal users
         """
-        # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
+        
+        memo_type_key = kw.get('memo_type_key', False) or kw.get('memo_type', False)
+        
+        _logger.info(f"=== Portal Request Form (Create New) ===")
+        _logger.info(f"URL params: {kw}")
+        _logger.info(f"Extracted memo_type_key: {memo_type_key}")
+        
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
+        source_location_data_ids = request.env['stock.location'].sudo().search(
+            [('usage', '=', 'internal')]
+        )
+        destination_location_data_ids = request.env['stock.location'].sudo().search(
+            [
+            ('usage', '=', 'internal'),
+            ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
+            ]
+        )
+        
+        _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
+        
+        # memo_type_ids = request.env['memo.type'].sudo().search([
+        #     ('allow_for_publish', '=', True),
+        #     ('active', '=', True)
+        # ])
+        memo_type_ids = memo_configs.mapped('memo_type')
+        
+        selected_memo_type_id = False
+        if memo_type_key:
+            # selected_memo_type = request.env['memo.type'].sudo().search([
+            #     ('memo_key', '=', memo_type_key),
+            #     ('allow_for_publish', '=', True),
+            #     ('active', '=', True)
+            # ], limit=1)
+            selected_memo_type = memo_type_ids.filtered(lambda m: m.memo_key == memo_type_key)
+            
+            if selected_memo_type:
+                selected_memo_type_id = selected_memo_type.id
+                _logger.info(f"✓ Selected memo type: {selected_memo_type.name} (ID: {selected_memo_type_id}, Key: {memo_type_key})")
+            else:
+                _logger.warning(f"✗ No memo type found for key: {memo_type_key}")
+        else:
+            _logger.info("No memo_type_key provided in URL")
+        
         vals = {
-            "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
+            "leave_type_ids": request.env["hr.leave.type"].sudo().search([
+                ('company_id', '=', request.env.user.company_id.id)
+            ]),
             "memo_key_ids": [{'id': 0, 'name': ''}],
-            "config_type_ids": memo_configs, # self.get_user_configs ,
+            "source_location_data_ids": source_location_data_ids,
+            "destination_location_data_ids": destination_location_data_ids,
+            "memo_type_ids": memo_type_ids,
+            "config_type_ids": memo_configs,
+            "selected_memo_type_id": selected_memo_type_id,
+            "preselected_memo_key": memo_type_key,
         }
+        
+        _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
+        
         return request.render("portal_request.portal_request_template", vals)
+
     
-    
+    @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
+    def reset_password(self, **post):
+        data = json.loads(request.httprequest.data)
+        employee_email = data.get('employee_email')
+        staff_num = data.get('staff_number')
+        _logger.info(f'Checking password reset ID No ...{data}')
+        if staff_num:
+            employee = request.env['hr.employee'].sudo().search(
+            [
+                ('employee_number', '=ilike', staff_num),
+                ('active', '=', True)], limit=1)
+            if employee:
+                if not employee.user_id:
+                    return json.dumps({
+                        "status": False,
+                        "message": "No related user found for this employee. Contact admin to linked you to a user", 
+                    })
+                _logger.info(f'MY EMPLOYEE EMAIL IS ...{employee_email} {employee.work_email}' )
+                if employee.work_email == employee_email:
+                    _logger.info(f'Employee email corresponds ...{employee_email} {employee.work_email}' )
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification([employee.id])
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                elif employee_email in [employee.user_id.login]:
+                    _logger.info(f'Employee user login corresponds ...{employee_email} {employee.user_id.login}' )
+                    employee.reset_employee_user_password()
+                    employee.send_credential_notification([employee.id])
+                    return json.dumps({
+                        "status": True,
+                        "message": "Your password reset was successful.. Please check your email", 
+                    })
+                else:
+                    # employee.reset_employee_user_password()
+                    # employee.send_credential_notification()
+                    # if employee.parent_id.work_email:
+                        # '''send to manager's email'''
+                        # return json.dumps({
+                        #     "status": True,
+                        #     "message": "Your password reset was successfully sent to your manager's email", 
+                        # })
+                    # else:
+                    return json.dumps({
+                            "status": False,
+                            "message": "We could not find any related email to send your password. Contact admin to linked you to a user", 
+                        })
+            else:
+                return json.dumps({
+                    "status": False,
+                    "message": "Employee with staff ID provided does not exist. Contact Admin", 
+                })
+        else:
+            return json.dumps({
+                "status": False,
+                "message": "Please provide valid staff number. Contact Admin", 
+            })
+                
     @http.route(['/check_staffid'], type='json', website=True, auth="user", csrf=False)
     def check_staff_num(self, **post):
         """Check staff Identification No.
@@ -204,7 +333,34 @@ class PortalRequest(http.Controller):
                     "message": "Employee with staff ID provided does not exist. Contact Admin", 
                 }
                 
-                
+    @http.route(['/get-stock-location'], type='http', website=True, auth="user", csrf=False)
+    def get_stock_location(self, **post):
+        location_type = post.get('location_type')
+        location_data_ids =None
+        query = request.params.get('q', '')  
+        if location_type == "source":
+            location_data_ids = request.env['stock.location'].sudo().search(
+                [
+                    ('usage', '=', 'internal'),
+                    '|', ('name', 'ilike', query),('display_name', 'ilike', query)
+                ]
+            )
+        else:
+            location_data_ids = request.env['stock.location'].sudo().search(
+                [
+                ('usage', '=', 'internal'),
+                ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
+                '|', ('name', 'ilike', query),('display_name', 'ilike', query),
+                ]
+            )  
+        return json.dumps({
+            "results": [{"id": item.id, "text": f'{item.name}'} for item in location_data_ids],
+            "pagination": {
+                "more": True,
+            }
+        })
+        
+            
     @http.route(['/relieve/reliever'], type='json', website=True, auth="user", csrf=False)
     def reset_relieve_reliever(self, **post):
         user = request.env.user
@@ -276,15 +432,136 @@ class PortalRequest(http.Controller):
     # 			"message": "Please select staff ID. Contact Admin", 
     # 			}
     # ['/get/leave-allocation/<int:leave_type>/<staff_num>/'], 
+    # @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
+    # def get_leave_allocation(self, **post):
+    #     """Check staff Identification No.
+    #     Args:
+    #         staff_num (str): The Id No to be validated
+    #     Returns:
+    #         dict: Response
+    #     """
+    #     _logger.info(f'Checking Staff leave ID No ... {post}')
+    #     staff_num = post.get('staff_num')
+    #     leave_type = post.get('leave_id')
+    #     user = request.env.user
+    #     if staff_num:
+    #         _logger.info('staff number found ...')
+    #         employee = request.env['hr.employee'].sudo().search(
+    #         [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
+    #         if employee:
+    #             _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
+
+    #             # get leave artifacts
+    #             leave_allocation = request.env['hr.leave.allocation'].sudo()
+    #             # Get today's year
+    #             current_year = date.today().year
+    #             # Define the range
+    #             within_this_start_year = date(current_year, 1, 1)    # Jan 1
+    #             within_this_end_year = date(current_year, 12, 31)    # Dec 31
+    #             leave_allocation_id = leave_allocation.search([
+    #                 ('holiday_status_id', '=', int(leave_type)),
+    #                 ('employee_id', '=', employee.id),
+    #                 ('date_from', '>=', within_this_start_year),
+    #                 ('date_from', '<=', within_this_end_year),
+    #                 ('active', '=', True),
+    #                 # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
+    #                 ], limit=1)
+    #             leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
+    #             # _logger.info('staff number found ...')
+    #             _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
+    
+    #             if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
+    #                 return {
+    #                     "status": False,
+    #                     "data": {
+    #                         'number_of_days_display': "",
+    #                     },
+    #                     "message": "No allocation set up for the employee. Contact Admin", 
+    #                     }
+    #             else: # if leave_allocation_id:
+    #                 return {
+    #                     "status": True,
+    #                     "data": {
+    #                         'number_of_days_display': employee.allocation_remaining_display,
+    #                         # 'number_of_days_display': leave_allocation_id.number_of_days_display,
+    #                     },
+    #                     "message": "", 
+    #                 }
+
+    #         else:
+    #             return {
+    #                 "status": False,
+    #                 "data": {
+    #                     'number_of_days_display': "",
+    #                 },
+    #                 "message": "Employee with staff ID provided does not exist. Contact Admin", 
+    #                 }
+    #     return {
+    #             "status": False,
+    #             "data": {
+    #                 'number_of_days_display': "",
+    #             },
+    #             "message": "Please select2 staff ID. Contact Admin", 
+    #             }
+  
+    # @http.route(['/check-overlapping-leave'], type='json', website=True, auth="user", csrf=False)
+    # def check_overlapping_leave(self, **post):
+    #     staff_num = post.get('data').get('staff_num')
+    #     start_date = post.get('data').get('start_date')
+    #     end_date = post.get('data').get('end_date')
+    #     _logger.info(f'posted to check overlapping leave ...{staff_num}, {start_date}, {end_date}')
+
+    #     employee_id = request.env['hr.employee'].sudo().search([
+    #         ('employee_number', '=', staff_num)
+    #         ], limit=1)
+    #     if not any([staff_num, start_date, end_date]):
+    #         return {
+    #                 "status": False,
+    #                 "message": "Please ensure you provide staff number , leave start date and leave end date", 
+    #                 }
+    #     else:
+    #         _logger.info('All fields captured')
+
+    #     if employee_id: 
+    #         st = datetime.strptime(start_date, "%m/%d/%Y")
+    #         ed = datetime.strptime(end_date, "%m/%d/%Y")
+    #         # all_employees = self.employee_id | self.employee_ids
+    #         hr_request = request.env['hr.leave'].sudo().search(
+    #             [
+    #             ('request_date_from', '<=', st),
+    #             ('request_date_to', '>=', ed),
+    #             ('employee_id', '=', employee_id.id),
+    #             # ('state', 'not in', ['draft', 'Refuse']),
+    #             ], 
+    #             limit=1) 
+    #         if hr_request:
+    #             msg = """You can not set two time off that overlap on the same day for the same employee. Existing time off:"""
+    #             return {
+    #                 "status": False,
+    #                 "message": msg, 
+    #                 } 
+    #         else:
+    #             _logger.info('No date inbetween')
+    #             return {
+    #                 "status": True,
+    #                 "message": "", 
+    #                 }
+    #     else:
+    #         msg = """No Employee record found"""
+    #         return {
+    #             "status": False,
+    #             "message": msg, 
+    #             }
+    
     @http.route(['/get/leave-allocation'], type='json', website=True, auth="user", csrf=False)
     def get_leave_allocation(self, **post):
         """Check staff Identification No.
-        Args:
-            staff_num (str): The Id No to be validated
-        Returns:
-            dict: Response
+            Args:
+                staff_num (str): The Id No to be validated
+            Returns:
+                dict: Response
         """
-        _logger.info(f'Checking Staff leave ID No ... {post}')
+        _logger.info(f'Checking Staff leave allocation ... {post}')
         staff_num = post.get('staff_num')
         leave_type = post.get('leave_id')
         user = request.env.user
@@ -294,7 +571,6 @@ class PortalRequest(http.Controller):
             [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
             if employee:
                 _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
-
                 # get leave artifacts
                 leave_allocation = request.env['hr.leave.allocation'].sudo()
                 # Get today's year
@@ -309,11 +585,14 @@ class PortalRequest(http.Controller):
                     ('date_from', '<=', within_this_end_year),
                     ('active', '=', True),
                     # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
-                    ], limit=1)
+                    ])
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
-                _logger.info(f'Lets see what happens ...{leave_type_obj} == > {leave_allocation_id} == {within_this_start_year}   =={within_this_end_year}')
-    
+                number_of_days_display, leaves_taken = 0, 0
+                for lv in leave_allocation_id:
+                    number_of_days_display += lv.number_of_days_display 
+                    leaves_taken += lv.leaves_taken
+                
                 if leave_type_obj.requires_allocation == 'yes' and not leave_allocation_id:
                     return {
                         "status": False,
@@ -326,8 +605,10 @@ class PortalRequest(http.Controller):
                     return {
                         "status": True,
                         "data": {
-                            'number_of_days_display': employee.allocation_remaining_display,
+                            # 'number_of_days_display': employee.allocation_remaining_display,
                             # 'number_of_days_display': leave_allocation_id.number_of_days_display,
+                            # 'number_of_days_display': leave_allocation_id.number_of_days_display - leave_allocation_id.leaves_taken,
+                            'number_of_days_display': number_of_days_display - leaves_taken,
                         },
                         "message": "", 
                     }
@@ -335,67 +616,107 @@ class PortalRequest(http.Controller):
             else:
                 return {
                     "status": False,
-                    "data": {
-                        'number_of_days_display': "",
-                    },
-                    "message": "Employee with staff ID provided does not exist. Contact Admin", 
-                    }
-        return {
-                "status": False,
-                "data": {
-                    'number_of_days_display': "",
-                },
-                "message": "Please select2 staff ID. Contact Admin", 
+                    "data": {'number_of_days_display': ""},
+                    "message": f"No allocation set up for {leave_type_obj.name}. Contact Admin", 
                 }
-  
+            
+                # # CRITICAL FIX: Return the remaining days for THIS SPECIFIC leave type only
+                # remaining_days = leave_allocation_id.number_of_days_display
+                
+                # _logger.info(f'Remaining days for {leave_type_obj.name}: {remaining_days}')
+                
+                # return {
+                #     "status": True,
+                #     "data": {
+                #         'number_of_days_display': remaining_days,
+                #         'leave_type_name': leave_type_obj.name,
+                #         'allocation_id': leave_allocation_id.id,
+                #     },
+                #     "message": "", 
+                # }
+        else:
+            # For leave types that don't require allocation (unlimited leaves)
+            return {
+                "status": True,
+                "data": {
+                    'number_of_days_display': 999,  # Or set a high number for unlimited
+                    'leave_type_name': leave_type_obj.name,
+                    'allocation_id': False,
+                },
+                "message": "", 
+            }
+
+
     @http.route(['/check-overlapping-leave'], type='json', website=True, auth="user", csrf=False)
     def check_overlapping_leave(self, **post):
-        staff_num = post.get('data').get('staff_num')
-        start_date = post.get('data').get('start_date')
-        end_date = post.get('data').get('end_date')
-        _logger.info(f'posted to check overlapping leave ...{staff_num}, {start_date}, {end_date}')
-
+        """Check if employee has overlapping leave dates"""
+        data = post.get('data', {})
+        staff_num = data.get('staff_num')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        _logger.info(f'Checking overlapping leave: Staff={staff_num}, Start={start_date}, End={end_date}')
+        
+        # Validate inputs
+        if not all([staff_num, start_date, end_date]):
+            return {
+                "status": False,
+                "message": "Please provide staff number, leave start date and leave end date", 
+            }
+        
+        # Find employee
         employee_id = request.env['hr.employee'].sudo().search([
             ('employee_number', '=', staff_num)
-            ], limit=1)
-        if not any([staff_num, start_date, end_date]):
+        ], limit=1)
+        
+        if not employee_id:
             return {
-                    "status": False,
-                    "message": "Please ensure you provide staff number , leave start date and leave end date", 
-                    }
-        else:
-            _logger.info('All fields captured')
-
-        if employee_id: 
+                "status": False,
+                "message": "Employee not found", 
+            }
+        
+        try:
+            # Parse dates
             st = datetime.strptime(start_date, "%m/%d/%Y")
             ed = datetime.strptime(end_date, "%m/%d/%Y")
-            # all_employees = self.employee_id | self.employee_ids
-            hr_request = request.env['hr.leave'].sudo().search(
-                [
-                ('request_date_from', '<=', st),
-                ('request_date_to', '>=', ed),
+            
+            # Check for overlapping leaves
+            # A leave overlaps if:
+            # - It starts before or on the new end date AND
+            # - It ends on or after the new start date
+            overlapping_leaves = request.env['hr.leave'].sudo().search([
                 ('employee_id', '=', employee_id.id),
-                # ('state', 'not in', ['draft', 'Refuse']),
-                ], 
-                limit=1) 
-            if hr_request:
-                msg = """You can not set two time off that overlap on the same day for the same employee. Existing time off:"""
+                ('request_date_from', '<=', ed),
+                ('request_date_to', '>=', st),
+                ('state', 'not in', ['cancel', 'refuse']),  # Exclude cancelled/refused
+            ], limit=1)
+            
+            if overlapping_leaves:
+                msg = f"You cannot set overlapping leave dates. Existing leave from {overlapping_leaves.request_date_from.strftime('%m/%d/%Y')} to {overlapping_leaves.request_date_to.strftime('%m/%d/%Y')}"
+                _logger.warning(msg)
                 return {
                     "status": False,
                     "message": msg, 
-                    } 
-            else:
-                _logger.info('No date inbetween')
-                return {
-                    "status": True,
-                    "message": "", 
-                    }
-        else:
-            msg = """No Employee record found"""
+                }
+            
+            _logger.info('No overlapping leave found')
+            return {
+                "status": True,
+                "message": "", 
+            }
+            
+        except ValueError as e:
+            _logger.error(f'Date parsing error: {e}')
             return {
                 "status": False,
-                "message": msg, 
-                }
+                "message": "Invalid date format. Please use MM/DD/YYYY", 
+            }
+        except Exception as e:
+            _logger.error(f'Error checking overlapping leave: {e}')
+            return {
+                "status": False,
+                "message": f"Error: {str(e)}", 
+            }
         
     @http.route(['/check-configured-stage'], type='json', website=True, auth="user", csrf=False)
     def check_configured_leave(self, **post):
@@ -623,8 +944,10 @@ class PortalRequest(http.Controller):
         """Request portal for employee / portal users
         """
         memo_number = request.session.get('memo_ref')
+        memo_id = request.session.get('memo_record_id')
         vals = {
-            "memo_id": memo_number
+            "memo_number": memo_number,
+            "memo_id": memo_id
         }
         # request.session.clear()
         return request.render("portal_request.portal_request_success_template", vals)
@@ -633,11 +956,33 @@ class PortalRequest(http.Controller):
     def get_portal_product(self, **post):
         productItems = json.loads(post.get('productItems'))
         request_type_option = post.get('request_type')
+        source_locationId = post.get('source_locationId')
         _logger.info(f'productitemmms {productItems}')
         query = request.params.get('q', '') 
-        domain = [
+        productItems_List = [int(i) for i in productItems if i]
+        result = []
+        if source_locationId:
+            domain = [
+            ('product_id.id', 'not in', productItems_List),
+            ('location_id', '=', int(source_locationId)), 
+              '|','|', 
+            ('product_id.name', 'ilike', query),
+            ('product_id.default_code', 'ilike', query),
+            ('product_id.barcode', 'ilike', query)
+            ]
+            quants = request.env["stock.quant"].sudo().search(domain)
+            if quants:
+                for item in quants:
+                    result.append(
+                        {
+                            "id": item.product_id.id,
+                            "text": f'{item.product_id.name} {item.product_id.default_code}', 
+                            "qty": item.product_id.qty_available
+                        })
+        else:
+            domain = [
             ('detailed_type', 'in', ['consu', 'product']), 
-               ('id', 'not in', [int(i) for i in productItems]),
+               ('id', 'not in', productItems_List),
             ('company_id', '=', request.env.user.company_id.id), 
                ('active', '=', True), 
               '|','|', 
@@ -645,13 +990,22 @@ class PortalRequest(http.Controller):
             ('default_code', 'ilike', query),
             ('barcode', 'ilike', query)
             ]
-        _logger.info(f'CQUERY {query}')
+            products = request.env["product.product"].sudo().search(domain)
+            if products:
+                for item in products:
+                    result.append(
+                        {
+                            "id": item.id,
+                            "text": f'{item.name} {item.default_code}', 
+                            'qty': item.qty_available
+                        })
 
         if request_type_option and request_type_option == "vehicle_request":
+            result = []
             domain = [
-                           ('is_vehicle_product', '=', True), 
+                        ('is_vehicle_product', '=', True), 
                         ('detailed_type', 'in', ['service']), 
-                           ('id', 'not in', [int(i) for i in productItems]),
+                        ('id', 'not in', productItems_List),
                         ('company_id', '=', request.env.user.company_id.id), 
                         ('active', '=', True), 
                         '|','|', 
@@ -659,10 +1013,18 @@ class PortalRequest(http.Controller):
                         ('default_code', 'ilike', query),
                         ('barcode', 'ilike', query)
                       ]
+            products = request.env["product.product"].sudo().search(domain)
+            if products:
+                for item in products:
+                    result.append(
+                        {
+                            "id": item.id,
+                            "text": f'{item.name} {item.default_code}', 
+                            'qty': item.qty_available
+                        })
         # domain = [('id', 'in', [403, 222, 1000, 5000])]
-        products = request.env["product.product"].sudo().search(domain)
         return json.dumps({
-            "results": [{"id": item.id,"text": f'{item.name} {item.default_code}', 'qty': item.qty_available} for item in products],
+            "results": result , #[{"id": item.id,"text": f'{item.name} {item.default_code}', 'qty': item.qty_available} for item in products],
             "pagination": {
                 "more": True,
             }
@@ -674,12 +1036,32 @@ class PortalRequest(http.Controller):
         query = request.params.get('q', '') 
         domain = [
             ('active', '=', True), 
-            ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id', '=', request.env.user.company_id.id),
+            # ('company_id.user_id.company_ids.ids', 'in', [request.env.user.company_id.id]),
             '|', ('name', 'ilike', query),('employee_number', 'ilike', query),
             ]#, ('id', 'in', available_employees)]
         employees = request.env["hr.employee"].sudo().search(domain)
         return json.dumps({
             "results": [{"id": item.id, "text": f'{item.name} - {item.employee_number}'} for item in employees],
+            "pagination": {
+                "more": True,
+            }
+        })
+        
+    @http.route(['/portal-request-get-vendors'], type='http', website=True, auth="user", csrf=False)
+    def get_vendors(self, **post):
+        available_employees = []
+        query = request.params.get('q', '') 
+        domain = [
+            ('active', '=', True), 
+            # ('company_id', '=', request.env.user.company_id.id),
+            # ('supplier_rank', 'in', [1, '1']),
+            # ('company_id.user_id.company_ids.ids', 'in', [request.env.user.company_id.id]),
+            '|', ('name', 'ilike', query),('vendor_code', 'ilike', query),
+            ]
+        vendors = request.env["res.partner"].sudo().search(domain)
+        return json.dumps({
+            "results": [{"id": item.id, "text": f"{item.name} - {item.vendor_code or ''}"} for item in vendors],
             "pagination": {
                 "more": True,
             }
@@ -692,7 +1074,7 @@ class PortalRequest(http.Controller):
             if request_type_option == "employee":
                 employeeItems = json.loads(post.get('employeeItems'))
                 _logger.info(f'Employeeitemmms {employeeItems}')
-                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems]), 
+                domain = [('active', '=', True), ('id', 'not in', [int(i) for i in employeeItems if i]), 
                           ('company_id', '=', request.env.user.company_id.id)]
                 employees = request.env["hr.employee"].sudo().search(domain)
                 return json.dumps({
@@ -705,7 +1087,7 @@ class PortalRequest(http.Controller):
                 domain = [('active', '=', True), ('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["hr.department"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -723,7 +1105,7 @@ class PortalRequest(http.Controller):
                 domain = [('company_id', '=', request.env.user.company_id.id)]
                 departments = request.env["multi.branch"].sudo().search(domain)
                 return json.dumps({
-                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments],
+                    "results": [{"id": item.id,"text": f'{item.name}'} for item in departments if item],
                     "pagination": {
                         "more": True,
                     }
@@ -841,6 +1223,7 @@ class PortalRequest(http.Controller):
         # params = kwargs.get('params')
         product_id = kwargs.get('product_id')
         qty = kwargs.get('qty') 
+        sourceLocationId = kwargs.get('sourceLocationId') 
         district = kwargs.get('district') 
         request_type = kwargs.get('request_type') 
 
@@ -866,19 +1249,12 @@ class PortalRequest(http.Controller):
                     #  ('branch_id', '=', request.env.user.branch_id.id),
                      ('usage', '=', 'internal')
                 ] 
-                # _logger.info(f'USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}')
-                # warehouse_location_id = request.env['stock.warehouse'].sudo().search(domain, limit=1)
-                # stock_location_id = warehouse_location_id.lot_stock_id
-    
-                # _logger.info(f"""
-                #  USER VALLID warehouse COMP {request.env.user.company_id.name} District LOCATION 
-                #  {request.env.user.branch_id.name} REQUEST TYPE {request_type} check_ qty No ...{qty}"""
-                #  ) 
-
                 # should_bypass_reservation : False
                 if request_type in ['material_request'] and product.detailed_type in ['product']:
-                    location_ids = request.env['stock.location'].sudo().search(domain)
-                    _logger.info(f"WETIN BE LOCATIONS {location_ids}")
+                    LocationObj = request.env['stock.location'].sudo()
+                    location_ids = LocationObj.browse(int(sourceLocationId)) if sourceLocationId else LocationObj.search(domain)
+                    '''Checks if any location of type internal and company is user company only'''
+                    _logger.info(f"Locations found: {location_ids}")
                     if not location_ids:
                         return {
                             "status": False,
@@ -890,59 +1266,58 @@ class PortalRequest(http.Controller):
                     product_qty = float(qty) if qty else 0
                     total_availability = 0
                     for loc in location_ids:
-                        _logger.info(f"WETIN BE LOCATIONS and product {loc}, {product.id}, {product.name}")
+                        _logger.info(f"what is location {loc}, and product {product.id}, {product.name}")
+                        '''search quant with the designated location'''
                         location_with_qty = request.env['stock.quant'].sudo().search(
                             [('location_id', '=', loc.id), ('product_id', '=', product.id),('quantity', '>', 0)
                              ]
                             )
-                        _logger.info(f"WETIN BE LOCATIONS quant {location_with_qty.quantity}")
+                        _logger.info(f"Quant with Quantity {location_with_qty.quantity}")
                         # location_with_qty = loc.mapped('quant_ids').filtered(lambda q: q.available_quantity >= product_qty)
                         if location_with_qty:
+                            '''Quant with Quantit'''
                             for lc_quant in location_with_qty:
                                 total_availability += lc_quant.quantity
                                 if lc_quant.quantity > product_qty: # if any is greater than request qty, use the location
                                     location = loc
                                     break
                                 else:
-                                    location = loc
-                                _logger.info(f"WETIN BE TOTAL AVAILABILITY {location_with_qty.quantity}")
-                                # total_availability += sum([r.available_quantity for r in location_with_qty])
-                            # break
-                    if not location: 
+                                    # '''necessary at least to ensure there is any location of those products'''
+                                    # location = loc
+                                    pass 
+                                _logger.info(f"What is quant quantity {lc_quant.quantity}")
+                    
+                    '''necessary at least to ensure there is any location of those products'''
+                    # if not location: 
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
+                    #         }
+                    if total_availability <= 0: 
+                        '''if no quantity found in all warehouse location'''
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
-                            }
-                    elif product_qty > total_availability: 
+                            "message": """
+                            System could not found any single quantity available in your 
+                            company locations. Kindly request for procurement""", 
+                        }
+                    if product_qty > total_availability: 
                         return {
                             "status": False,
                             "location_id": False,
                             "message": f"""
-                            No store location found: Selected product: ({product_qty}) 
+                            Selected product: ({product_qty}) 
                             quantity is higher than the Available Quantity. 
                             Available quantity is {total_availability}""", 
-                            }
+                        }
                     else:
                         return {
                             "status": True,
                             "message": "",
-                            "location_id": location.id
-        
-                            }
-                    # total_availability = request.env['stock.quant'].sudo()._get_available_quantity(product, stock_location_id, allow_negative=False) or 0.0
-                    # product_qty = float(qty) if qty else 0
-                    # if not location:
-                    # if product_qty > total_availability:
-                    # 	return {
-                    # 		"status": False,
-                    # 		"message": f"Selected product quantity ({product_qty}) is higher than the Available Quantity. Available quantity is {total_availability}", 
-                    # 		}
-                    # else:
-                    # 	return {
-                    # 		"status": True,
-                    # 		"message": "", 
-                    # 		}
+                            "location_id": location and location.id
+                        }
                 else:
                     return {
                             "status": False,
@@ -952,7 +1327,7 @@ class PortalRequest(http.Controller):
             else:
                 return {
                     "status": False,
-                       "location_id": False,
+                    "location_id": False,
                     "message": "The product does not exist on the inventory", 
                     }
         else:
@@ -968,7 +1343,7 @@ class PortalRequest(http.Controller):
     def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
         attachment = request.env['ir.attachment'].sudo()
         attachment_id = attachment.create({
-            'name': f'{title} for {name}',
+            'name': f"{title} for {name}",
             'type': 'binary',
             'datas': datas,
             'res_name': name,
@@ -1032,8 +1407,6 @@ class PortalRequest(http.Controller):
             """
             # memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
             memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
-            # relative_names = request.httprequest.form.getlist('relative_name[]')
-
             _logger.info(f'what is inputfollowers {inputFollowers}')
             # Example: attach them as followers to something
             
@@ -1059,7 +1432,12 @@ class PortalRequest(http.Controller):
                 "leave_start_date": leave_start_date,
                 "leave_end_date": leave_end_date,
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
+                "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
                 "source_location_id": int(post.get("TargetSourceLocation")) if post.get("TargetSourceLocation") else False,
+                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") else False,
+                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") else False,
+                
+                "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
                 "enhancement": True if post.get("enhancement") == "on" else False,
                 "datapatch": True if post.get("datapatch") == "on" else False,
@@ -1097,12 +1475,9 @@ class PortalRequest(http.Controller):
                 _logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
                 if post.get("selectRequestOption") != "employee_update":
                     self.generate_request_line(DataItems, memo_id)
-                else:
-                    # post.get("selectRequestOption") == "employee_update":
+                else: 
                     self.generate_employee_transfer_line(DataItems, memo_id)
-            # else:
-            # 	raise ValidationError("Haaaaaahaaaaaa no dsta item")
-            
+          
             ## generating attachment
             if 'other_docs' in request.params:
                 attached_files = request.httprequest.files.getlist('other_docs')
@@ -1153,9 +1528,10 @@ class PortalRequest(http.Controller):
                     from_website=True
                     )
             request.session['memo_ref'] = memo_id.code
+            request.session['memo_record_id'] = memo_id.id
             return json.dumps({'status': True, 'message': "Form Submitted!"})
         except Exception as ex:
-            _logger.exception("Unexpected Error while sending office memo request: %s" % ex)
+            _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
             return json.dumps({'status': False, 'message': "Form Submitted!"})
     
     def update_request_line(self, DataItems, memo_id):
@@ -1163,19 +1539,13 @@ class PortalRequest(http.Controller):
         for rec in DataItems:
             desc = rec.get('description', '')
             _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
-            request_vals = {
-                    # 'memo_id': memo_id.id,
-                    # 'memo_type': memo_id.memo_type.id,
-                    # 'memo_type_key': memo_id.memo_type_key,
-                    # 'product_id': product_id.id, 
+            request_vals = { 
                     'quantity_available': float(rec.get('qty').replace(',', '')) if rec.get('qty') else 0,
                     'description': BeautifulSoup(desc, features="lxml").get_text(),
                     'used_qty': rec.get('used_qty'),
                     'amount_total': float(rec.get('amount_total').replace(',', '')),
                     'used_amount': rec.get('used_amount'),
-                    'note': rec.get('note'),
-                    # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                    # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
+                    'note': rec.get('note'), 
                     'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
                     'distance_from': rec.get('distance_from'),
                     'distance_to': rec.get('distance_to'),
@@ -1201,25 +1571,26 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec}")
-            
+            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', '')
+            line_dest_location_id = memo_id.dest_location_id.id if memo_id.dest_location_id else rec.get('dest_location_id')
+            _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
-                    'memo_id': memo_id.id,
-                    'memo_type': memo_id.memo_type.id,
-                    'memo_type_key': memo_id.memo_type_key,
-                    # 'product_id': product_id.id, 
-                    'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
-                    'description': BeautifulSoup(desc, features="lxml").get_text(),
-                    'used_qty': rec.get('used_qty'),
-                    'amount_total': rec.get('amount_total'),
-                    'used_amount': rec.get('used_amount'),
-                    'note': rec.get('note'),
-                    'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                    # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
-                    'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
-                    'distance_from': rec.get('distance_from'),
-                    'distance_to': rec.get('distance_to'),
-                }
+                'memo_id': memo_id.id,
+                'memo_type': memo_id.memo_type.id,
+                'memo_type_key': memo_id.memo_type_key,
+                'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
+                'description': BeautifulSoup(desc, features="lxml").get_text(),
+                'used_qty': rec.get('used_qty'),
+                'amount_total': rec.get('amount_total'),
+                'used_amount': rec.get('used_amount'),
+                'note': rec.get('note'),
+                'source_location_id': line_source_location_id,
+                'dest_location_id': line_dest_location_id,
+                'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
+                'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+                'distance_from': rec.get('distance_from'),
+                'distance_to': rec.get('distance_to'),
+            }
             _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
             productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
             product_id = request.env['product.product'].sudo().browse([int(productid)])
@@ -1229,6 +1600,7 @@ class PortalRequest(http.Controller):
                 })
             request.env['request.line'].sudo().create(request_vals)
             counter += 1
+    
 
     def generate_employee_transfer_line(self, DataItems, memo_id):
         counter = 1
@@ -1275,15 +1647,13 @@ class PortalRequest(http.Controller):
             e = 10
         return s, e
     
-    # def get_request_info(self, request):
-    #     """
-    #     Returns context data extracted from :param:`request`.
-
-    #     Heavily based on flask integration for Sentry: https://git.io/vP4i9.
-    #     """
-    #     urlparts = urllib.parse.urlsplit(request.url)
-    #     query_string = urlparts.query
-    #     _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
+    def get_request_info(self, request):
+        """
+        Returns context data extracted from :param:`request`.
+        """
+        urlparts = urllib.parse.urlsplit(request.url)
+        query_string = urlparts.query
+        _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
     @http.route(['/my/requests', '/my/requests/<string:type>', 
                  '/my/requests/param/<path:search_param>',
@@ -1329,7 +1699,7 @@ class PortalRequest(http.Controller):
                         pass 
             return date_val 
         
-        request_id = request.env['memo.model'].sudo()
+        request_id = request.env['memo.model'].sudo()  
         def query_domain(query):
             domain = [
                 ('active', '=', True),
@@ -1382,10 +1752,15 @@ class PortalRequest(http.Controller):
             sessions['end'] = end 
         else:
             requests = False
-        values = {'requests': requests}
+        values = {
+            'requests': requests,
+            'current_memo_type_key': type if type else False,
+            'page_name': 'my_requests',
+            }
         _logger.info(f"Records found {requests} -- valus to render {values}")
         
         return request.render("portal_request.my_portal_request", values)
+    
     
     # def get_leave_days_taken(self, record):
     #     if record and record.leave_end_date and record.leave_start_date:
@@ -1495,7 +1870,12 @@ class PortalRequest(http.Controller):
         leave_allocation_id = leave_allocation.search([
                     ('holiday_status_id', '=', int(requests.leave_type_id.id)),
                     ('employee_id', '=', requests.employee_id.id),
-                    ], limit=1)
+                    ])
+        number_of_days_display, leaves_taken = 0, 0
+        for lv in leave_allocation_id:
+            number_of_days_display += lv.number_of_days_display 
+            leaves_taken += lv.leaves_taken
+        number_of_days_display = number_of_days_display - leaves_taken
         values = {
             'req': requests,
             # 'format_date': lambda date, fmt='%m/%d/%Y': format_date(request.env, date, date_format=fmt),
@@ -1506,7 +1886,8 @@ class PortalRequest(http.Controller):
                'employee_ids': request.env['hr.employee'].sudo().search([('active', '=', True)]),
             "leave_type_ids": request.env["hr.leave.type"].sudo().search([]),
             'record_attachment_ids': memo_attachment_ids,
-            "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            # "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
+            "number_of_days_display": number_of_days_display,#leave_allocation_id.number_of_days_display,
             "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
         }
         return request.render("portal_request.request_form_template", values) 
@@ -1718,32 +2099,34 @@ class PortalRequest(http.Controller):
                POST DATAITEMS {post.get('Dataitem')}""")
         message = []
         if request_record:
-            # leave_start_date = datetime.strptime(post.get("leave_start_date",''), "%m/%d/%Y") if post.get("leave_start_date") else fields.Date.today()
-            # leave_end_date = datetime.strptime(post.get("leave_end_date",''), "%m/%d/%Y") \
-            # 	if post.get("leave_end_date") else leave_start_date + relativedelta(days=1)
             leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
             leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
+            # _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
+            Data_inputFollowers = post.get('inputFollowers') # [{'id': 342233}]
+            _logger.info(f"""SEE FOLLOWERS HERE {post.get('inputFollowers')} ---{type(Data_inputFollowers)}""")
+            inputFollowers = [r.get('id') for r in Data_inputFollowers] if Data_inputFollowers else [] 
             values = {
                 'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
                 'leave_start_date': leave_start_date,
                 'leave_end_date': leave_end_date,
                 "leave_Reliever": int(post.get("leave_Reliever")) if post.get("leave_Reliever") else False,
                 'description': post.get('description'),
+                'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
+                'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
+                'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
+                'users_followers': [(4, fol) for fol in inputFollowers],
+                
             }
             request_record.update(values)
             # updated_request = self.update_request_line(DataItems, request_record)
             for rec in DataItems:
                 desc = rec.get('description', '')
                 _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
-                request_vals = {
-                        # 'memo_id': memo_id.id,
-                        # 'memo_type': memo_id.memo_type.id,
-                        # 'memo_type_key': memo_id.memo_type_key,
-                        # 'product_id': product_id.id, 
+                request_vals = { 
                         'quantity_available': float(rec.get('qty').replace(',', '')) if rec.get('qty') else 0,
                         'description': BeautifulSoup(desc, features="lxml").get_text(),
                         'used_qty': rec.get('used_qty'),
-                        'amount_total': float(rec.get('amount_total').replace(',', '')),
+                        'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
                         'used_amount': rec.get('used_amount'),
                         'note': rec.get('note'),
                         # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
@@ -1754,6 +2137,7 @@ class PortalRequest(http.Controller):
                     }
                 _logger.info(f"UPDATED REQUESTS with VALS =====> {request_vals} ")
                 # productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
+                
                 request_line = request.env['request.line'].sudo().search([('id', '=', int(rec.get('request_line_id'))), ('memo_id', '=', request_record.id)])
                 if not request_line:
                     message=f"No request line with this memo ID {request_record.id} found on the system"

@@ -28,8 +28,10 @@
                             <a id="discardbtn" class="btn btn-danger btn-sm d-none">
                                 Discard
                             </a>
-                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id]">
-                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">Approve</a>
+                            <t t-if="req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [rec.user_id.id for rec in req.stage_id.approver_ids] or req.state in ['Sent', 'Approve', 'Approve2'] and current_user in [req.employee_id.parent_id.user_id.id, req.employee_id.administrative_supervisor_id.user_id.id]">
+                                <a id="approve_request" class="approve_request btn btn-secondary btn-sm">
+                                    Approve
+                                </a>
                                 <a id="refuse_request_btn" class="refuse_request_btn btn btn-secondary btn-sm" data-bs-target="#portal_request_cancel_modal" data-bs-toggle="modal">
                                     Refuse
                                 </a>
@@ -150,6 +152,21 @@
                                                     </div>
                                                 </div>
                                             </div>
+ 
+                                            <div class="col-12 col-md-12 pb-2">
+                                                <strong>Followers:</strong>
+                                                <t t-if="req.users_followers">
+                                                    <t t-foreach="req.users_followers" t-as="fol">
+                                                        <div class="d-flex ps-3 flex-nowrap">
+                                                            <img class="rounded-circle mt-1 o_portal_contact_img" t-att-src="image_data_uri(fol.avatar_1024)" alt="Contact"/>
+                                                            <div class="ms-2">
+                                                                <div class="mt-2"><t t-esc="fol.name"/></div>
+
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                </t>
+                                            </div>
                                         </li>
                                     </ul>
                                 </t>
@@ -165,7 +182,9 @@
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
                                                     <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
-                                                    <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small>
+                                                    <input type="text" class="form-control d-none" id="selectRequestOption" name="selectRequestOption" t-att-value="req.memo_type_key" labelfor=""/>
+
+                                                    <!-- <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small> -->
                                                     <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
                                                     <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
@@ -178,7 +197,6 @@
                                             <!--        <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>-->
                                             <!--    </t>-->
                                             <!--</div>-->
-                                    
                                             <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
@@ -196,6 +214,12 @@
                                                 <strong class="col-md-4">Payment Reference</strong>:
                                                 <span class="col-md-6">
                                                     <input type="text" class="form-control datepicker s_website_form_input" t-attf-value="{{req.payment_reference}}" field_name="payment_reference" id="payment_reference_form" name="payment_reference_form" readonly="true" labelfor="Payment reference"/>
+                                                </span>
+                                            </div> 
+                                            <div class="row mb-4">
+                                                <strong class="col-md-4">Vendor</strong>:
+                                                <span class="col-md-6">
+                                                    <input type="text" class="vendor-cls form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" t-attf-id="{{req.vendor_id.id}}" name="vendor_id_form" readonly="true" required="true" labelfor="Vendor"/>
                                                 </span>
                                             </div> 
                                         </t>
@@ -286,6 +310,57 @@
                                                 </a>
                                             </span>
                                         </div><br/>
+
+                                        <t t-if="req.memo_type_key in ['material_request']">
+                                            <!-- Interdistrict checkbox on top -->
+                                            <div class="row mb-3 d-none">
+                                                <div class="col-md-12">
+                                                    <label for="isInterDistrict" class="form-label fw-bold">Is Inter-district</label>
+                                                    <input type="checkbox"
+                                                        name="isInterDistrict"
+                                                        id="isInterDistrict"
+                                                        class="ms-2" 
+                                                        disabled="true"
+                                                        t-att-checked="req.is_inter_district_transfer and 'checked' or None"/>
+                                                </div>
+                                            </div>
+
+                                            <!-- Source and Destination side by side -->
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="source_location_id" class="form-label fw-bold">Source Location</label>
+                                                    <input field_name="source_location_id"
+                                                        name="source_location_id"
+                                                        t-att-id="req.source_location_id.id"
+                                                        t-att-value="req.source_location_id.name"
+                                                        class="Sourcelocation-cls form-control form-control-sm"
+                                                        disable="true"
+                                                        readonly="readonly"
+                                                        required="required"/>
+
+                                                    <!-- hidden source id -->
+                                                    <input
+                                                        t-att-id="req.source_location_id.id"
+                                                        t-att-value="req.source_location_id.name"
+                                                        class="TargetSourceLocation form-control d-none"
+                                                        name="TargetSourceLocation"/>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label for="destination_location_id" class="form-label fw-bold">Destination Location</label>
+                                                    <input field_name="destination_location_id"
+                                                        t-att-value="req.dest_location_id.name"
+                                                        t-att-id="req.dest_location_id.id"
+                                                        t-att-relation="true"
+                                                        name="destination_location_id"
+                                                        class="destinationlocation-cls form-control form-control-sm"
+                                                        disable="true"
+                                                        readonly="readonly"
+                                                        required="required"/>
+                                                </div>
+                                            </div>
+                                        </t>
+
                                          
                                         <strong class="col-md-4">Description:</strong>
                                         <!-- <div t-if="not is_html_empty(req.description)" class="row mb-4 mb-5" name="descriptionDiv"> -->
@@ -293,6 +368,17 @@
                                             <t t-set="raw_description" t-value="req.description"/>
                                             <textarea class="form-control s_website_form_input" name="description" field_name= "description_id" required="1" id="description" disabled="true" readonly="true" rows="4" labelfor="Description"><t t-esc="description_body"/></textarea>
                                         </div>
+
+                                        <div id="inputFollowers_div" class="d-none s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
+                                                    <span class="s_website_form_label_content">Choose Followers</span>
+                                                </label>
+                                                    <div class="col-sm">
+                                                    <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers"/>
+                                                </div> 
+                                            </div>
+                                        </div> 
                                     </div>
                                 </div>
                                 <div class="row">
@@ -327,14 +413,16 @@
                                                         Description
                                                     </th>
                                                     <th width="10%">
-                                                        <label>Unit Qty</label>
+                                                        <label>Unit / Qty</label>
                                                     </th>
-                                                    <th width="15%">
-                                                        <label>UnitPrice</label>
-                                                    </th>
-                                                    <th width="15%">
-                                                        <label>SubTotal</label>
-                                                    </th>
+                                                    <t t-if="req.memo_type.memo_key not in ['material_request']">
+                                                        <th width="15%">
+                                                            <label>UnitPrice</label>
+                                                        </th>
+                                                        <th width="15%">
+                                                            <label>SubTotal</label>
+                                                        </th>
+                                                    </t>
                                                     <t t-if="req.memo_type.memo_key in ['soe']">
                                                         
                                                         <th width="10%">
@@ -355,7 +443,7 @@
                                                     </t>
                                                     <t t-else="">
                                                         <th width="5%">
-                                                            <label>X</label>
+                                                            <label></label>
                                                         </th>
                                                     </t>
                                                 </tr>
@@ -375,20 +463,28 @@
                                                             </span>
                                                         </th>
                                                         <th width="35%">
-                                                            <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_description" t-att-value="prod.description"/>
+                                                            <!-- <span t-att-id="prod.id"> -->
+                                                            <span class="input-container" t-att-id="prod.id">
+                                                                <textarea t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" 
+                                                                class="form-control productitemrow scroll-textarea" name="product_item_description">
+                                                                <t t-esc="prod.description"/>
+                                                                </textarea>
+                                                                <!-- t-att-value="prod.description"/> -->
+                                                                <button id="expandid" class="expand-btn">↕</button>
                                                             </span>
                                                         </th>
                                                         <th width="5%">
                                                             <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" disable="true" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
                                                         </th>
-                                                        <th width="20%">
-                                                            <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
-                                                        </th>
-                                                        <th width="20%">
-                                                            <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
-                                                        </th>
+                                                        <t t-if="req.memo_type.memo_key not in ['material_request']">
+                                                            <th width="20%">
+                                                                <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
+                                                                <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
+                                                            </th>
+                                                            <th width="20%">
+                                                                <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
+                                                            </th>
+                                                        </t>
                                                         <t t-if="req.memo_type.memo_key in ['soe']">
                                                             <th width="10%">
                                                                 <input type="text" main_name = "used_qty" field_name= "used_qty" t-att-name="prod.used_qty" t-att-id="prod.id" required="required" t-att-value="prod.used_qty" t-att-class="'productinput form-control USEDQTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
@@ -419,7 +515,7 @@
                                                         </t>
                                                         
                                                         <th width="5%">
-                                                            #
+                                                            
                                                         </th>
                                                     </tr>
                                                     <t t-set="total_amount" t-value="total_amount + prod.sub_total_amount"/>
@@ -558,6 +654,8 @@
                                     <t t-set="disable_composer" t-value="ticket.stage_id.fold"/>
                                 </t>
                             </div>  -->
+                            
+                            
                             <t t-if="record_attachment_ids">
                                 <div id="attachment_section" class="card-header container" data-anchor="true">
                                     <div class="row gs-0">
@@ -586,7 +684,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </t>
+                            </t> 
                             <div id="message_thread_section" class="card-header container" data-anchor="true">
                                 <div class="row gs-0">
                                     <div class="col-md">
