@@ -1,6 +1,9 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from datetime import datetime, date
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class HREmployee(models.Model):
     _inherit = "hr.employee"
@@ -80,12 +83,18 @@ class HRContractWizard(models.Model):
                 Please provide contract start date
                 '''
             )
+
             
-            
-class HRContract(models.Model):
+class HrContract(models.Model):
     _inherit = "hr.contract" 
     
-    employee_number = fields.Char(string="Staff ID", related="employee_id.employee_number")
+    structure_id = fields.Many2one(
+        'hr.payroll.structure', 
+        required=False,
+        store=True,
+        string='Salary Structure 1')
+    
+    employee_number = fields.Char(string="Staff ID", store=True,)# related="employee_id.employee_number")
     rsa_number = fields.Char(string="RSA Number")
     prorata = fields.Char(string="Prorata")
     pension = fields.Char(string="PFA")
@@ -123,22 +132,84 @@ class HRContract(models.Model):
     x_emp_type = fields.Char(string='Employee type')
     x_accountno = fields.Char(string='Account No')
     
-    x_pfa2 = fields.Selection([('STANBIC IBTC PENSION MANAGERS','STANBIC IBTC PENSION MANAGERS'),('OAK PENSIONS LIMITED','OAK PENSIONS LIMITED'),('FUG PENSIONS','FUG PENSIONS'),('CRUSADER STERLING PENSIONS','CRUSADER STERLING PENSIONS'),('GUARANTY TRUST PENSION MANAGERS LIMITED','GUARANTY TRUST PENSION MANAGERS LIMITED'),('FIDELITY','FIDELITY') ,('IGI PENSION FUND MANAGERS LTD','IGI PENSION FUND MANAGERS LTD'),('PAL PENSIONS','PAL PENSIONS'),('AXA MANSARD PENSIONS','AXA MANSARD PENSIONS'),('LEADWAY PENSION','LEADWAY PENSION'),('SIGMA PENSIONS LIMITED','SIGMA PENSIONS LIMITED'),('ARM PENSION MANAGERS','ARM PENSION MANAGERS') ,('AIICO','AIICO'),('FIRST GUARANTEE PENSION LIMITED','FIRST GUARANTEE PENSION LIMITED'),(' TANGERINE APT PENSIONS','TANGERINE APT PENSIONS'),('NLPC PFA LTD','NLPC PFA LTD'),('TRUST FUND PENSIONS PLC','TRUST FUND PENSIONS PLC'),('NORRENBERGER PENSIONS','NORRENBERGER PENSIONS') ,('FCMB PENSIONS','FCMB PENSIONS'),('NPF PENSIONS LIMITED','N.P.F. PENSIONS LIMITED'),('PREMIUM PENSION LIMITED','PREMIUM PENSION LIMITED'),('ACCESS PENSIONS LIMITED','ACCESS PENSIONS LIMITED')], 
+    x_pfa2 = fields.Selection([('False','None'),('STANBIC IBTC PENSION MANAGERS','STANBIC IBTC PENSION MANAGERS'),('OAK PENSIONS LIMITED','OAK PENSIONS LIMITED'),('FUG PENSIONS','FUG PENSIONS'),('CRUSADER STERLING PENSIONS','CRUSADER STERLING PENSIONS'),('GUARANTY TRUST PENSION MANAGERS LIMITED','GUARANTY TRUST PENSION MANAGERS LIMITED'),('FIDELITY','FIDELITY') ,('IGI PENSION FUND MANAGERS LTD','IGI PENSION FUND MANAGERS LTD'),('PAL PENSIONS','PAL PENSIONS'),('AXA MANSARD PENSIONS','AXA MANSARD PENSIONS'),('LEADWAY PENSION','LEADWAY PENSION'),('SIGMA PENSIONS LIMITED','SIGMA PENSIONS LIMITED'),('ARM PENSION MANAGERS','ARM PENSION MANAGERS') ,('AIICO','AIICO'),('FIRST GUARANTEE PENSION LIMITED','FIRST GUARANTEE PENSION LIMITED'),(' TANGERINE APT PENSIONS','TANGERINE APT PENSIONS'),('NLPC PFA LTD','NLPC PFA LTD'),('TRUST FUND PENSIONS PLC','TRUST FUND PENSIONS PLC'),('NORRENBERGER PENSIONS','NORRENBERGER PENSIONS') ,('FCMB PENSIONS','FCMB PENSIONS'),('NPF PENSIONS LIMITED','N.P.F. PENSIONS LIMITED'),('PREMIUM PENSION LIMITED','PREMIUM PENSION LIMITED'),('ACCESS PENSIONS LIMITED','ACCESS PENSIONS LIMITED')], 
                                  string='PFA')
     x_banksortcode1 = fields.Char(string='Bank Sort code')
-    x_banksortcode2 = fields.Char(string='Sort Code', help="sort code 2")
-    x_banksortcode = fields.Char(string='Sort code')
+    x_banksortcode2 = fields.Char(string='Bank Sort Code 2', help="sort code 2")
+    x_banksortcode = fields.Char(string='Bank Sort code 3')
     x_RSA_PIN = fields.Char(string='RSA PIN')
     x_district1 = fields.Char(string='District', default=0)
     x_district = fields.Char(string='District', default=0)  
     
+    @api.onchange('employee_id')
+    def onchange_employee(self):
+        if self.employee_id:
+            self.employee_number = self.employee_id.employee_number
+            self.department_id = self.employee_id.department_id.id
+            self.job_id = self.employee_id.job_id.id
+            
+    def action_run_contract(self):
+        active_contract_ids = self.env['hr.contract'].search([('employee_id.active', '=', True)])
+        for ct in active_contract_ids:
+            ct.state = 'open'
 
+    @api.model
+    def create(self, vals_list):
+        """Override create to support import validation and employee mapping."""
+        if isinstance(vals_list, dict):
+            vals_list = [vals_list]
+
+        records = self.env[self._name]
+
+        for vals in vals_list:
+            staff_no = vals.get('employee_number')
+            employee_id = vals.get('employee_id')
+            _logger.info(f"vassss {vals} coooooooooo {vals_list}")
+
+            # 🔹 Only run mapping if employee_number provided and no employee_id yet
+            if staff_no:# and not employee_id:
+                employee = self.env['hr.employee'].sudo().search([
+                    ('employee_number', '=', staff_no)
+                ], limit=1)
+
+                if employee:
+                    vals['employee_id'] = employee.id
+                else:
+                    # optional: auto-create employee
+                    # employee = self.env['hr.employee'].sudo().create({
+                    #     'name': vals.get('name') or f"Employee {staff_no}",
+                    #     'employee_number': staff_no,
+                    # })
+                    # vals['employee_id'] = employee.id
+                    pass 
+
+            # 🔹 Avoid invalid search with False employee_id
+            if vals.get('employee_id'):
+                existing_contract = self.env['hr.contract'].sudo().search([
+                    '|',('employee_id', '=', vals['employee_id']),
+                    ('employee_id.employee_number', '=', vals.get('employee_number')),
+                ], limit=1)
+            else:
+                existing_contract = False
+
+            if existing_contract:
+                # Update existing contract instead of creating
+                existing_contract.sudo().write(vals)
+                records |= existing_contract
+            else:
+                record = super(HrContract, self).create(vals)
+                records |= record
+
+        return records
+
+    
+    
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule" 
     
     struct_id = fields.Many2one(
         'hr.payroll.structure', 
-        required=False,
+        required=True,
         string='Structure')
     
 class HRPayrollStructure(models.Model):

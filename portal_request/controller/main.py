@@ -1319,11 +1319,18 @@ class PortalRequest(http.Controller):
                             "location_id": location and location.id
                         }
                 else:
-                    return {
-                            "status": False,
-                               "location_id": False,
-                            "message": f"Selected product is not a storable product ({product.name})", 
-                            }
+                    if request_type not in ['sale_request']:
+                        return {
+                                "status": False,
+                                "location_id": False,
+                                "message": f"Selected product is not a storable product ({product.name})", 
+                                }
+                    else:
+                        return {
+                                "status": True,
+                                "location_id": False,
+                                "message": "", 
+                                }
             else:
                 return {
                     "status": False,
@@ -1371,14 +1378,11 @@ class PortalRequest(http.Controller):
             existing_order = post.get("existing_order")
             memo_id = False
             if existing_request == "existing":
-                _logger.info(f'existing found')
                 memo_id = request.env['memo.model'].sudo().search([
                 ('employee_id', '=', employee_id.id), 
                 ('code', '=', existing_order)], limit=1)
                 if not memo_id:
-                    _logger.info(f'memo not found')
                     return json.dumps({'status': False, 'message': "No existing request found for the employee"})
-            
             leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
             leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
                 if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
@@ -1405,18 +1409,14 @@ class PortalRequest(http.Controller):
             <b>Description: </b> {post.get("description", "")}<br/>
             <b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
             """
-            # memo_type = request.env['memo.type'].search([('id', '=', post.get("selectedRequestOptionId"))], limit=1)
             memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
-            _logger.info(f'what is inputfollowers {inputFollowers}')
-            # Example: attach them as followers to something
-            
+
             def get_browsed_data(model, recid):
                 data = request.env[f'{model}'].sudo().browse(int(recid))
                 if data:
                     return data 
                 else:
                     return False
-            # follower_ids = [int(id) for id in inputFollowers]
             vals = {
                 "employee_id": employee_id.id,
                 "memo_type": memo_config.memo_type.id,
@@ -1433,9 +1433,9 @@ class PortalRequest(http.Controller):
                 "leave_end_date": leave_end_date,
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
                 "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
-                "source_location_id": int(post.get("TargetSourceLocation")) if post.get("TargetSourceLocation") else False,
-                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") else False,
-                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") else False,
+                "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
+                "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None'] else False,
+                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None'] else False,
                 
                 "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
@@ -1458,7 +1458,6 @@ class PortalRequest(http.Controller):
                 "description": description_body, 
                 "request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
                 "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
-
             }
             _logger.info(f"POST DATA {vals}")
             _logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
@@ -1477,7 +1476,7 @@ class PortalRequest(http.Controller):
                     self.generate_request_line(DataItems, memo_id)
                 else: 
                     self.generate_employee_transfer_line(DataItems, memo_id)
-          
+            
             ## generating attachment
             if 'other_docs' in request.params:
                 attached_files = request.httprequest.files.getlist('other_docs')
@@ -1684,8 +1683,8 @@ class PortalRequest(http.Controller):
             else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
                 else ['leave_request'] if type in ['leave_request'] \
                     else ['employee_update'] if type in ['employee_update'] \
-                        else ['Internal', 'procurement_request', 'vehicle_request', 'material_request'] \
-                            if type in ['Internal', 'procurement_request','server_access' 'vehicle_request', 'material_request'] \
+                        else ['Internal', 'procurement_request', 'sale_request', 'vehicle_request', 'material_request'] \
+                            if type in ['Internal', 'procurement_request', 'server_access', 'sale_request', 'vehicle_request', 'material_request'] \
                                 else all_memo_type_keys
                                 
         def get_date_query(date_query):
@@ -2032,10 +2031,8 @@ class PortalRequest(http.Controller):
                     return {
                             "status": False, 
                             "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
-                            "message": """
-                            Final Approval of this record requires Paid user license. \n \
-                            Please go into office memo application to Approve this record - 
-                            Contact system admin to give you license""", 
+                            "message": """Please go into Click the VIEW AS A CORE USER Button to Approve this record. You can Contact system admin to give you guidance""" 
+                             
                             }
                 current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\

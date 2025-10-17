@@ -34,7 +34,9 @@ odoo.define('portal_request.portal_request', function (require) {
     
     const ItemRequest = [
         'material_request', 
+        'sale_request', 
         'Procurement',
+        'procurement_request',
         'vehicle_request',
         'leave_request',
         'cash_advance',
@@ -45,6 +47,8 @@ odoo.define('portal_request.portal_request', function (require) {
         'material_request', 
         'Procurement',
         'vehicle_request',
+        'procurement_request',
+        'sale_request', 
     ];
     function getSelectedProductItem(valueName){
         // use to compile id no of the checked options for assessors and moderators
@@ -136,7 +140,7 @@ odoo.define('portal_request.portal_request', function (require) {
     // }
 
     function validateLineItems(DataItems){
-        let memo_type_with_line = ['payment_request', 'Payment', 'material_request', 'soe', 'vehicle_request', 'procurement_request', 'employee_update', 'cash_advance'];
+        let memo_type_with_line = ['payment_request', 'Payment', 'material_request', 'soe', 'vehicle_request', 'procurement_request', 'sale_request', 'employee_update', 'cash_advance'];
         // if the memo type in memo_type_with_line
         var selectRequestOption = $('#selectRequestOption'); 
         if ($.inArray(selectRequestOption.val(), memo_type_with_line) !== -1 && DataItems.length < 1){
@@ -1658,6 +1662,15 @@ odoo.define('portal_request.portal_request', function (require) {
                             displayNonLeaveElement()
                              $('#PaymentcashAdvanceDiv').removeClass('d-none');
                             $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#vendor_label').removeClass('d-none'); 
+                            $('#vendor_id').attr("required", false);
+                            $('#vendor_div').removeClass('d-none');
+                            $('#product_form_div').removeClass('d-none');
+                            $('.add_item').removeClass('d-none');
+                        }
+
+                        else if(memo_type_key == "sale_request"){
+                            displayNonLeaveElement()
                             $('#vendor_label').removeClass('d-none'); 
                             $('#vendor_id').attr("required", false);
                             $('#vendor_div').removeClass('d-none');
