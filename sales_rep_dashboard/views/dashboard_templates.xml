@@ -5,33 +5,56 @@
 
       <div class="o_container_sm sales-rep-dashboard container-xxl py-3">
 
+        <!-- ========================= -->
         <!-- Toolbar / Filters -->
-        <div class="dash-toolbar card glassy mb-3 p-3" data-testid="toolbar">
-          <div class="row g-3 align-items-end">
-            <div class="col-sm-4 col-md-3">
-              <label class="form-label small text-muted mb-1">Date From</label>
-              <input type="date" class="form-control" id="srd-date-from" data-testid="date-from"/>
-            </div>
-            <div class="col-sm-4 col-md-3">
-              <label class="form-label small text-muted mb-1">Date To</label>
-              <input type="date" class="form-control" id="srd-date-to" data-testid="date-to"/>
-            </div>
-            <div class="col-auto text-end">
-                <button class="btn btn-outline-secondary" id="srd-export">
-                    <i class="fa fa-download"></i> Export
-                </button>
+        <!-- ========================= -->
+        <div class="dash-toolbar glassy mb-4 p-3 p-md-4">
+            <!-- FILTER ROW -->
+            <div class="filter-row row g-3 align-items-end mb-2">
+                <!-- Date From -->
+                <div class="col-12 col-sm-6 col-md-3">
+                <label class="form-label text-secondary fw-semibold mb-1 small">
+                    <i class="fa fa-calendar"></i> Date From
+                </label>
+                <input type="date" class="form-control filter-input" id="srd-date-from" />
+                </div>
+
+                <!-- Date To -->
+                <div class="col-12 col-sm-6 col-md-3">
+                <label class="form-label text-secondary fw-semibold mb-1 small">
+                    <i class="fa fa-calendar-o"></i> Date To
+                </label>
+                <input type="date" class="form-control filter-input" id="srd-date-to" />
+                </div>
+
+                <!-- Search -->
+                <div class="col-12 col-md-6">
+                <div class="input-wrapper position-relative">
+                    <input
+                    type="text"
+                    class="form-control filter-input ps-5"
+                    id="srd-search"
+                    placeholder="Search order or customer..."
+                    />
+                    <i class="fa fa-search search-icon"></i>
+                </div>
+                </div>
             </div>
 
-            <div class="col-sm-12 col-md-4">
-              <label class="form-label small text-muted mb-1">Search</label>
-              <input type="text" class="form-control" id="srd-search" placeholder="Search order or customer" data-testid="search"/>
+            <!-- ACTION ROW -->
+            <div class="action-row d-flex flex-wrap justify-content-end gap-2">
+                <button class="btn gradient" id="srd-apply">
+                <i class="fa fa-filter me-1"></i> Apply
+                </button>
+                <button class="btn btn-outline-secondary" id="srd-reset">
+                <i class="fa fa-refresh me-1"></i> Reset
+                </button>
+                <button class="btn btn-outline-primary export-btn" id="srd-export">
+                <i class="fa fa-download me-1"></i> Export CSV
+                </button>
             </div>
-            <div class="col-sm-12 col-md-2 d-flex gap-2 justify-content-md-end">
-              <button class="btn gradient px-4 py-2 m-0" id="srd-apply" data-testid="apply">APPLY</button>
-              <button class="btn btn-outline-secondary px-4 py-2 m-0" id="srd-reset" data-testid="reset">RESET</button>
-            </div>
-          </div>
         </div>
+
 
         <!-- User Profile Header -->
         <div class="card glassy mb-4 p-4 profile-header" t-att-data-user="request.env.user.id">
