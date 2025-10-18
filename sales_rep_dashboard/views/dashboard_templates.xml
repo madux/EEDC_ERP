@@ -55,36 +55,70 @@
             </div>
         </div>
 
-
+        <!-- ========================= -->
         <!-- User Profile Header -->
+        <!-- ========================= -->
         <div class="card glassy mb-4 p-4 profile-header" t-att-data-user="request.env.user.id">
             <div class="d-flex align-items-center flex-wrap gap-4">
+                <!-- Avatar -->
                 <div class="profile-avatar">
-                    <img t-att-src="'/web/image/res.users/%s/image_1920' % request.env.user.id"
-                        alt="User" class="rounded-circle shadow-sm" width="80" height="80"/>
+                <img t-att-src="'/web/image/res.users/%s/image_1920' % request.env.user.id"
+                    alt="User" class="rounded-circle shadow-sm" width="90" height="90"/>
                 </div>
-                <div class="flex-grow-1">
-                    <h5 class="fw-bold mb-1">
-                        <t t-esc="request.env.user.name"/> 
-                        <span class="badge bg-success ms-2" style="font-size:0.75rem;">Active</span>
-                    </h5>
-                    <div class="text-muted small">
-                        <t t-if="request.env.user.employee_ids">
-                            <t t-set="emp" t-value="request.env.user.employee_ids[0]"/>
-                            Department: <t t-esc="emp.department_id.name or '—'"/> |
-                            Role: <t t-esc="emp.job_title or '—'"/> |
-                            Manager: <t t-esc="emp.parent_id.name or '—'"/>
-                        </t>
-                        <t t-if="not request.env.user.employee_ids">
-                            Department: — | Role: — | Manager: —
-                        </t>
-                    </div>
-                    <div class="mt-2 text-secondary small">
-                        As of <t t-esc="(datetime.datetime.now()).strftime('%b %d, %Y')"/>
-                    </div>
+
+                <!-- Info -->
+                <div class="flex-grow-1 profile-info">
+                <h4 class="user-name mb-1">
+                    <t t-esc="request.env.user.name"/>
+                    <span class="badge status-badge bg-success ms-2">Active</span>
+                </h4>
+
+                <div class="user-meta text-muted small mb-2">
+                    <t t-if="request.env.user.employee_ids">
+                        <t t-set="emp" t-value="request.env.user.employee_ids[0]"/>
+
+                        <!-- Department -->
+                        <span class="me-3 d-inline-flex align-items-center">
+                        <i class="fa fa-building me-1 text-primary"></i>
+                        <span class="fw-semibold text-secondary me-1">Department:</span>
+                        <span><t t-esc="emp.department_id.name or '—'"/></span>
+                        </span>
+
+                        <!-- Role -->
+                        <span class="me-3 d-inline-flex align-items-center">
+                        <i class="fa fa-id-badge me-1 text-info"></i>
+                        <span class="fw-semibold text-secondary me-1">Role:</span>
+                        <span><t t-esc="emp.job_title or '—'"/></span>
+                        </span>
+
+                        <!-- Manager -->
+                        <span class="d-inline-flex align-items-center">
+                        <i class="fa fa-user-secret me-1 text-purple"></i>
+                        <span class="fw-semibold text-secondary me-1">Manager:</span>
+                        <span><t t-esc="emp.parent_id.name or '—'"/></span>
+                        </span>
+                    </t>
+
+                    <t t-if="not request.env.user.employee_ids">
+                        Department: — | Role: — | Manager: —
+                    </t>
+                </div>
+
+
+                <div class="text-secondary small">
+                    <i class="fa fa-calendar me-1"></i> As of <t t-esc="(datetime.datetime.now()).strftime('%b %d, %Y')"/>
+                </div>
+                </div>
+
+                <!-- TODO: Edit Profile not functional now (future) -->
+                <div class="profile-actions text-md-end ms-auto">
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-edit me-1"></i> Edit Profile
+                </button>
                 </div>
             </div>
         </div>
+
 
 
         <!-- KPI cards -->
