@@ -2,6 +2,7 @@
 <odoo>
   <template id="dashboard_page" name="Sales Rep Dashboard">
     <t t-call="website.layout">
+
       <div class="o_container_sm sales-rep-dashboard container-xxl py-3">
 
         <!-- Toolbar / Filters -->
@@ -15,49 +16,111 @@
               <label class="form-label small text-muted mb-1">Date To</label>
               <input type="date" class="form-control" id="srd-date-to" data-testid="date-to"/>
             </div>
+            <div class="col-auto text-end">
+                <button class="btn btn-outline-secondary" id="srd-export">
+                    <i class="fa fa-download"></i> Export
+                </button>
+            </div>
+
             <div class="col-sm-12 col-md-4">
               <label class="form-label small text-muted mb-1">Search</label>
               <input type="text" class="form-control" id="srd-search" placeholder="Search order or customer" data-testid="search"/>
             </div>
             <div class="col-sm-12 col-md-2 d-flex gap-2 justify-content-md-end">
-              <button class="btn btn-primary gradient" id="srd-apply" data-testid="apply">APPLY</button>
-              <button class="btn btn-outline-secondary" id="srd-reset" data-testid="reset">RESET</button>
+              <button class="btn gradient px-4 py-2 m-0" id="srd-apply" data-testid="apply">APPLY</button>
+              <button class="btn btn-outline-secondary px-4 py-2 m-0" id="srd-reset" data-testid="reset">RESET</button>
             </div>
           </div>
         </div>
 
+        <!-- User Profile Header -->
+        <div class="card glassy mb-4 p-4 profile-header" t-att-data-user="request.env.user.id">
+            <div class="d-flex align-items-center flex-wrap gap-4">
+                <div class="profile-avatar">
+                    <img t-att-src="'/web/image/res.users/%s/image_1920' % request.env.user.id"
+                        alt="User" class="rounded-circle shadow-sm" width="80" height="80"/>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1">
+                        <t t-esc="request.env.user.name"/> 
+                        <span class="badge bg-success ms-2" style="font-size:0.75rem;">Active</span>
+                    </h5>
+                    <div class="text-muted small">
+                        <t t-if="request.env.user.employee_ids">
+                            <t t-set="emp" t-value="request.env.user.employee_ids[0]"/>
+                            Department: <t t-esc="emp.department_id.name or '—'"/> |
+                            Role: <t t-esc="emp.job_title or '—'"/> |
+                            Manager: <t t-esc="emp.parent_id.name or '—'"/>
+                        </t>
+                        <t t-if="not request.env.user.employee_ids">
+                            Department: — | Role: — | Manager: —
+                        </t>
+                    </div>
+                    <div class="mt-2 text-secondary small">
+                        As of <t t-esc="(datetime.datetime.now()).strftime('%b %d, %Y')"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- KPI cards -->
         <div class="row g-3 mb-2">
           <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy p-3" data-testid="kpi-quotations">
-              <div class="kpi-label">Quotations</div>
-              <div class="kpi-value" id="kpi-quotations">0</div>
+            <div class="kpi card glassy quotations">
+                <div class="icon"><i class="fa fa-file-text-o"></i></div>
+                <div>
+                    <div class="kpi-label">Quotations</div>
+                    <div class="kpi-value" id="kpi-quotations">0</div>
+                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy p-3" data-testid="kpi-won">
-              <div class="kpi-label">Sales Won</div>
-              <div class="kpi-value" id="kpi-won">0</div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy p-3" data-testid="kpi-customers">
-              <div class="kpi-label">Customers</div>
-              <div class="kpi-value" id="kpi-customers">0</div>
+
+            <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi card glassy sales-won">
+                <div class="icon"><i class="fa fa-trophy"></i></div>
+                <div>
+                    <div class="kpi-label">Sales Won</div>
+                    <div class="kpi-value" id="kpi-won">0</div>
+                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi card glassy p-3" data-testid="kpi-total-won">
-              <div class="kpi-label">Total Won</div>
-              <div class="kpi-value" id="kpi-total-won">0</div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi card glassy p-3" data-testid="kpi-forecast">
-              <div class="kpi-label">Forecast</div>
-              <div class="kpi-value" id="kpi-forecast">0</div>
+
+            <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi card glassy customers">
+                <div class="icon"><i class="fa fa-users"></i></div>
+                <div>
+                    <div class="kpi-label">Customers</div>
+                    <div class="kpi-value" id="kpi-customers">0</div>
+                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                </div>
             </div>
-          </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi card glassy total-won">
+                <div class="icon"><i class="fa fa-money"></i></div>
+                <div>
+                    <div class="kpi-label">Total Won</div>
+                    <div class="kpi-value" id="kpi-total-won">0</div>
+                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                </div>
+            </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi card glassy forecast">
+                <div class="icon"><i class="fa fa-line-chart"></i></div>
+                <div>
+                    <div class="kpi-label">Forecast</div>
+                    <div class="kpi-value" id="kpi-forecast">0</div>
+                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                </div>
+            </div>
+            </div>
+
         </div>
 
         <!-- Charts grid -->
@@ -65,7 +128,7 @@
           <div class="col-lg-6">
             <div class="card glassy p-3 h-100">
               <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span>Pipeline by Month</span>
+                <span><i class="fa fa-bar-chart"></i> Pipeline by Month</span>
                 <i class="fa fa-line-chart"></i>
               </div>
               <canvas id="chart-pipeline" height="220" data-testid="chart-pipeline"></canvas>
@@ -74,7 +137,7 @@
           <div class="col-lg-3">
             <div class="card glassy p-3 h-100">
               <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span>Top Customers</span>
+                <span><i class="fa fa-users"></i> Top Customers</span>
               </div>
               <canvas id="chart-top-customers" height="220" data-testid="chart-top-customers"></canvas>
             </div>
@@ -82,7 +145,7 @@
           <div class="col-lg-3">
             <div class="card glassy p-3 h-100">
               <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span>Forecast (Next 3 Months)</span>
+                <span><i class="fa fa-line-chart"></i> Forecast (Next 3 Months)</span>
               </div>
               <canvas id="chart-forecast" height="220" data-testid="chart-forecast"></canvas>
             </div>

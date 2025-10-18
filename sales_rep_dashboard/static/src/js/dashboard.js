@@ -1,4 +1,3 @@
-/** Sales Rep Dashboard frontend logic (Odoo 16 backend). */
 odoo.define('sales_rep_dashboard.dashboard', function (require) {
     "use strict";
     const ajax = require('web.ajax');
@@ -54,12 +53,41 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     }
 
     function setKPIs(kpis) {
-        $("#kpi-quotations").text(kpis.quotations);
-        $("#kpi-won").text(kpis.sales_won);
-        $("#kpi-customers").text(kpis.customers);
-        $("#kpi-total-won").text(kpis.total_won.toLocaleString());
-        $("#kpi-forecast").text(kpis.forecast.toLocaleString());
+        animateCountUp("kpi-quotations", kpis.quotations);
+        animateCountUp("kpi-won", kpis.sales_won);
+        animateCountUp("kpi-customers", kpis.customers);
+        animateCountUp("kpi-total-won", kpis.total_won);
+        animateCountUp("kpi-forecast", kpis.forecast);
+
+        // Example dummy change values (you can compute real data later)
+        $("#kpi-quotations-change").text("+8% from yesterday").addClass("text-success");
+        $("#kpi-won-change").text("+5% from yesterday").addClass("text-success");
+        $("#kpi-customers-change").text("+1.2% from yesterday").addClass("text-success");
+        $("#kpi-total-won-change").text("-0.8% from yesterday").addClass("text-danger");
+        $("#kpi-forecast-change").text("+0.5% from yesterday").addClass("text-success");
+
     }
+
+
+    function animateCountUp(element, target, duration = 1000) {
+        const el = document.getElementById(element);
+        const start = parseFloat(el.textContent.replace(/,/g, "")) || 0;
+        const end = target;
+        const range = end - start;
+        const increment = end > start ? 1 : -1;
+        const stepTime = Math.abs(Math.floor(duration / range));
+        let current = start;
+
+        const timer = setInterval(() => {
+            current += increment;
+            el.textContent = current.toLocaleString();
+            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                el.textContent = end.toLocaleString();
+                clearInterval(timer);
+            }
+        }, Math.max(stepTime, 20));
+    }
+
 
     function ensureChart(canvasId, type, data, options) {
         const ctx = document.getElementById(canvasId).getContext("2d");
@@ -68,6 +96,14 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     }
 
     function drawCharts(payload) {
+
+        function getGradient(ctx, color1, color2) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+            return gradient;
+        }
+
         // Pipeline
         if (state.charts.pipeline) state.charts.pipeline.destroy();
         state.charts.pipeline = ensureChart("chart-pipeline", "bar", {
@@ -88,12 +124,33 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             datasets: [{ label: "Total", data: payload.top_customers.values }],
         }, { responsive: true, maintainAspectRatio: false });
 
-        // Forecast curve
-        if (state.charts.forecast) state.charts.forecast.destroy();
-        state.charts.forecast = ensureChart("chart-forecast", "line", {
-            labels: payload.forecast_curve.labels,
-            datasets: [{ label: "Forecast", data: payload.forecast_curve.values, fill: false }],
-        }, { responsive: true, maintainAspectRatio: false });
+        const ctxF = document.getElementById("chart-forecast").getContext("2d");
+        const gradientF = getGradient(ctxF, "rgba(168,85,247,0.4)", "rgba(236,72,153,0.1)");
+
+        state.charts.forecast = new Chart(ctxF, {
+            type: "line",
+            data: {
+                labels: payload.forecast_curve.labels,
+                datasets: [{
+                    label: "Forecast",
+                    data: payload.forecast_curve.values,
+                    borderColor: "#a855f7",
+                    backgroundColor: gradientF,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { type: "time", time: { unit: "month" } },
+                    y: { beginAtZero: true },
+                },
+            },
+        });
+
     }
 
     function fillTable(tbl) {
@@ -125,6 +182,7 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         setKPIs(data.kpis);
         drawCharts(data);
         fillTable(data.table);
+        $(".sales-rep-dashboard canvas").hide().fadeIn(800);
     }
 
     function bindEvents() {
@@ -155,4 +213,22 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         bindEvents();
         refresh();
     });
+
+    // Export
+    $("#srd-export").on("click", function () {
+        const data = $("#srd-tbody tr").map(function () {
+            const cells = $(this).find("td").map((_, td) => $(td).text().trim()).get();
+            return [cells];
+        }).get();
+
+        const csv = ["Order,Customer,Status,Date,Untaxed,Total,Forecast"]
+            .concat(data.map(row => row.join(","))).join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "sales_report.csv";
+        link.click();
+    });
+
 });

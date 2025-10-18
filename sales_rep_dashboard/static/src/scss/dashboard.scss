@@ -1,25 +1,190 @@
-// Soft pastel + glass look to match your screenshots
+// ===============================================
+//  SALES REP DASHBOARD (Frontend)
+// ===============================================
 
+
+// ====== ROOT CONTAINER ======
 .sales-rep-dashboard {
+  background: #f9fafb; // soft gray background
+  padding-bottom: 3rem;
+
+  // ====== GENERIC GLASSY CARD ======
   .glassy {
     background: #fff;
-    border: 1px solid rgba(0,0,0,.05);
-    box-shadow: 0 6px 20px rgba(0,0,0,.06);
-    border-radius: 16px;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  // ====== PROFILE HEADER ======
+  .profile-header {
+    background: linear-gradient(90deg, #ecfdf5, #eef2ff, #fff7ed);
+    border-radius: 1rem;
+    border: none;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+
+    .profile-avatar img {
+      border: 4px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    h5 {
+      color: #1f2937;
+      font-weight: 600;
+    }
+  }
+
+  // ====== KPI CARDS ======
+  .kpi {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.3rem;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    &.quotations .icon {
+      background: linear-gradient(135deg, #fca5a5, #f87171);
+    }
+    &.sales-won .icon {
+      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    }
+    &.customers .icon {
+      background: linear-gradient(135deg, #34d399, #059669);
+    }
+    &.total-won .icon {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    }
+    &.forecast .icon {
+      background: linear-gradient(135deg, #fcd34d, #fbbf24);
+    }
+
+    .kpi-change {
+        font-size: 0.75rem;
+        margin-top: 0.2rem;
+        &.text-success { color: #22c55e; }
+        &.text-danger { color: #ef4444; }
+    }
+
+    canvas {
+        border-radius: 0.75rem;
+        background: #fff;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+    }
+
+
+  }
+
+  // ====== BUTTONS ======
+  .btn {
+    border-radius: 0.6rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &.gradient {
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+      border: none;
+      color: #fff;
+      padding: 0.5rem 1.5rem;
+
+      &:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+    }
+
+    &.btn-outline-secondary {
+      color: #6b7280;
+      border-color: #d1d5db;
+      &:hover {
+        background: #f3f4f6;
+      }
+    }
+  }
+
+  // ====== CARD TITLES ======
+  .card-title {
+    font-weight: 600;
+    color: #1e293b;
+    i {
+      color: #a78bfa;
+      font-size: 1rem;
+      margin-right: 0.25rem;
+    }
+  }
+
+  // ====== TABLE ======
+  table.table {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+
+    thead th {
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+    }
+  }
+
+  // ====== UTILITIES ======
+  .badge {
+    border-radius: 0.5rem;
   }
 
   .gradient {
-    background: linear-gradient(90deg, #a855f7, #22d3ee);
+    background: linear-gradient(90deg, #a855f7, #ec4899);
     border: none;
-    color: #fff;
-    box-shadow: 0 8px 18px rgba(168,85,247,.25);
+    color: white;
   }
 
-  .kpi {
-    .kpi-label { font-size: .8rem; color: #6b7280; }
-    .kpi-value { font-size: 1.6rem; font-weight: 700; color: #111827; }
+  // ====== MEDIA QUERIES ======
+  @media (max-width: 768px) {
+    .kpi {
+      flex-direction: column;
+      text-align: center;
+    }
   }
-
-  .card-title { font-weight: 600; color: #374151; }
-  .table thead th { letter-spacing: .04em; }
 }
