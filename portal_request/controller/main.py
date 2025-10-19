@@ -1318,19 +1318,19 @@ class PortalRequest(http.Controller):
                             "message": "",
                             "location_id": location and location.id
                         }
+                    # else:
+                    #     if request_type not in ['sale_request']:
+                    #         return {
+                    #                 "status": False,
+                    #                 "location_id": False,
+                    #                 "message": f"Selected product is not a storable product ({product.name})", 
+                    #                 }
                 else:
-                    if request_type not in ['sale_request']:
-                        return {
-                                "status": False,
-                                "location_id": False,
-                                "message": f"Selected product is not a storable product ({product.name})", 
-                                }
-                    else:
-                        return {
-                                "status": True,
-                                "location_id": False,
-                                "message": "", 
-                                }
+                    return {
+                            "status": True,
+                            "location_id": False,
+                            "message": "", 
+                            }
             else:
                 return {
                     "status": False,
