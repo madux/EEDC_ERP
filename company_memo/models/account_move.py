@@ -18,7 +18,7 @@ class AccountMoveMemo(models.Model):
         copy=False,
         default=fields.Date.today(),
     )
-    memo_id = fields.Many2one('memo.model', string="Memo Reference")
+    memo_id = fields.Many2one('memo.model', string="Request Reference")
     # district_id = fields.Many2one('hr.district', string="District")
     origin = fields.Char(string="Source")
     stage_invoice_name = fields.Char(
@@ -29,7 +29,7 @@ class AccountMoveMemo(models.Model):
     stage_invoice_required = fields.Boolean(string="Stage invoice required?", store=True,
         help="Used to track if invoice is required based on the stage configuration")
     is_locked = fields.Boolean(string="Is locked", default=False)
-    memo_state = fields.Char(string="Memo state", compute="compute_memo_state")
+    memo_state = fields.Char(string="Request state", compute="compute_memo_state")
     payment_journal_id = fields.Many2one(
         'account.journal', 
         string="Payment Journal", 
@@ -120,7 +120,7 @@ class AccountMove(models.Model):
 class AccountMoveReversal(models.TransientModel):
     _inherit = 'account.move.reversal'
 
-    memo_id = fields.Many2one('memo.model', string="Memo Reference")
+    memo_id = fields.Many2one('memo.model', string="Request Reference")
     # district_id = fields.Many2one('hr.district', string="District")
 
     # def reverse_moves(self):

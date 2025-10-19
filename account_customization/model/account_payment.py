@@ -10,7 +10,7 @@ class AccountPayment(models.Model):
                                   default=True,
                                    help="Used to bypass validations of outstanding/payment reciepts account")
     origin = fields.Char(string='Source')
-    memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    memo_id = fields.Many2one('memo.model', string='Request Reference')
 
     # def _synchronize_from_moves(self, changed_fields):
     #     ''' Update the account.payment regarding its related account.move.

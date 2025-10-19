@@ -5,7 +5,7 @@
             <field name="name">Memo Fleet form</field>
             <field name="model">memo.fleet</field>
             <field name="arch" type="xml">
-                <form string="Memo fleet">
+                <form string="Request fleet">
                     <header>
                         <button name="action_generate_maintenance_line" class="oe_highlight" string="Generate Service Request" type="object"
                         attrs="{'invisible':[('require_maintenance','=', False)]}"/> 

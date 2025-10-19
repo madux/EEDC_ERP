@@ -20,7 +20,7 @@ class HREMployeeTransfer(models.Model):
     )
     memo_id = fields.Many2one(
         "memo.model", 
-        string="Memo ID"
+        string="Request ID"
         )
 
     transfer_date = fields.Date('Initiation Date',
@@ -57,7 +57,7 @@ class HREMployeeTransfer(models.Model):
 class HREmployeeTransferLine(models.Model):
     _name = 'hr.employee.transfer.line'
 
-    memo_id = fields.Many2one('memo.model', string='Memo ref')
+    memo_id = fields.Many2one('memo.model', string='Request ref')
     employee_transfer_id = fields.Many2one('hr.employee.transfer', string='Employee Transfer')
     employee_id = fields.Many2one('hr.employee', string='Employee')
     current_dept_id = fields.Many2one('hr.department', string='Current Department')

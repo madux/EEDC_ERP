@@ -5,7 +5,7 @@
     'author': 'Maach Services',
     'description': """An ERP Requests application use to create requests: 
     It can also be used to send requests.""",
-    'summary': 'Memo application for Companies etc ',
+    'summary': 'ERP Requests application for Companies etc ',
     'category': 'Base',
     # 'live_test_url': "https://www.youtube.com/watch?v=KEjxieAoGeA&feature=youtu.be",
     'License': 'AGPL-3.0',

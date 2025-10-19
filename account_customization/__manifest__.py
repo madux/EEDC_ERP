@@ -1,5 +1,5 @@
 {
-    'name': 'Memo General Account Customization Apps',
+    'name': 'Request General Account Customization Apps',
     'version': '16.0.1',
     'author': "Maduka Sopulu",
     'category': 'ERP',

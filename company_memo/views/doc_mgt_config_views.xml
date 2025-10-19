@@ -15,7 +15,7 @@
                     </group>
                 </group>
                 <notebook>
-                    <page name="memo_config" string="Memo Config">
+                    <page name="memo_config" string="Request Config">
                         <group>
                             <field name="memo_config_ids" widget="one2many_tags">
                                 <tree>
@@ -52,7 +52,7 @@
 
     <menuitem
             id="doc_mgt_config_menu"
-            name="Memo Config"
+            name="Request Config"
             action="company_memo.doc_mgt_config_action"
             groups="documents.group_documents_manager"
             parent="documents.Config"

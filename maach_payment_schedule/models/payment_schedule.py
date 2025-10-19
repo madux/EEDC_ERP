@@ -49,7 +49,7 @@ class PaymentSchedule(models.Model):
         )
     memo_id = fields.Many2one(
         'memo.model', 
-        string="Memo Id"
+        string="Request Id"
         )
     activate_cron = fields.Boolean(
         string="Activate Cron"

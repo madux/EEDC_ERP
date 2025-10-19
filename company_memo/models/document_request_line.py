@@ -63,7 +63,7 @@ class DocumentRequestLine(models.Model):
         store=True,
         )
     
-    memo_state = fields.Char(string="Memo State", compute="compute_memo_state")
+    memo_state = fields.Char(string="Request State", compute="compute_memo_state")
     
     @api.depends('memo_document_request_id')
     def compute_memo_state(self):

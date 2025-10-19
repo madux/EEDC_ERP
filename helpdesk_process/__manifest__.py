@@ -1,5 +1,5 @@
 {
-    'name': 'Memo Helpdesk',
+    'name': 'Request Helpdesk',
     'version': '16.0.1',
     'author': "Maduka Sopulu",
     'category': 'ERP',
