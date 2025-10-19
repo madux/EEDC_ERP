@@ -23,6 +23,9 @@ class SalesRepDashboard(http.Controller):
         """Return KPIs, series, and table for the current user, filtered by dates."""
         env = request.env
         uid = request.uid
+        company = env.user.company_id
+        currency_symbol = company.currency_id.symbol or "₦"
+
 
         # Filters
         today = date.today()
@@ -50,7 +53,7 @@ class SalesRepDashboard(http.Controller):
         won_sum = 0.0
         won_rg = order.read_group(won_domain, ["amount_total:sum"], [])
         if won_rg:
-            won_sum = won_rg[0].get("amount_total_sum", 0.0) or 0.0
+            won_sum = won_rg[0].get("amount_total", 0.0) or 0.0
 
         # Forecasted amount
         # By default: quotations with validity_date in window.
@@ -65,7 +68,7 @@ class SalesRepDashboard(http.Controller):
         forecast_sum = 0.0
         forecast_rg = order.read_group(forecast_domain, ["amount_total:sum"], [])
         if forecast_rg:
-            forecast_sum = forecast_rg[0].get("amount_total_sum", 0.0) or 0.0
+            forecast_sum = forecast_rg[0].get("amount_total", 0.0) or 0.0
 
         # Customers under salesperson
         partner = env["res.partner"]
@@ -89,12 +92,27 @@ class SalesRepDashboard(http.Controller):
             cur = (cur + relativedelta(months=1))
 
         def sum_rg(domain):
-            rg = order.read_group(domain, ["amount_total:sum", "date_order:month"], ["date_order:month"])
+            """Return monthly totals for a given domain"""
+            rg = order.read_group(
+                domain,
+                ["amount_total:sum", "date_order"],
+                ["date_order"]
+            )
             out = {m: 0.0 for m in months}
+
             for row in rg:
-                d = row["date_order:month"]
-                if d:
-                    out[d.strftime("%Y-%m")] = row["amount_total_sum"] or 0.0
+                d = row.get("date_order")
+                if isinstance(d, tuple):
+                    d = d[0]
+                if isinstance(d, str):
+                    try:
+                        d = datetime.strptime(d, "%Y-%m-%d")
+                    except Exception:
+                        continue
+                if isinstance(d, datetime):
+                    key = d.strftime("%Y-%m")
+                    if key in out:
+                        out[key] += row.get("amount_total", 0.0) or 0.0
             return [out[m] for m in months]
 
         pipe_quotation = sum_rg(base_domain + [("state", "in", ["draft", "sent"])])
@@ -102,10 +120,17 @@ class SalesRepDashboard(http.Controller):
 
         # 2) Top customers by won amount (top 5)
         top_rg = order.read_group(
-            won_domain, ["amount_total:sum", "partner_id"], ["partner_id"], limit=5, orderby="amount_total_sum desc"
+            won_domain,
+            ["amount_total:sum", "partner_id"],
+            ["partner_id"],
+            limit=5
         )
-        top_labels = [env["res.partner"].browse(r["partner_id"][0]).name if r.get("partner_id") else "—" for r in top_rg]
-        top_values = [r.get("amount_total_sum", 0.0) or 0.0 for r in top_rg]
+        top_rg.sort(key=lambda r: r.get("amount_total", 0.0) or 0.0, reverse=True)
+        top_labels = [
+            env["res.partner"].browse(r["partner_id"][0]).name if r.get("partner_id") else "—"
+            for r in top_rg
+        ]
+        top_values = [r.get("amount_total", 0.0) or 0.0 for r in top_rg]
 
         # 3) Forecast curve next 3 months (based on validity_date)
         fstart = today.replace(day=1)
@@ -121,7 +146,9 @@ class SalesRepDashboard(http.Controller):
                 ("validity_date", ">=", m_start),
                 ("validity_date", "<=", m_end),
             ], ["amount_total:sum"], [])
-            f_values.append(rg[0]["amount_total_sum"] if rg else 0.0)
+            f_values.append(float(rg[0].get("amount_total") or 0.0) if rg else 0.0)
+
+
 
         # Table (paginated)
         page = int(kw.get("page", 1))
@@ -174,4 +201,5 @@ class SalesRepDashboard(http.Controller):
                 "page_size": page_size,
                 "rows": table,
             },
+            "currency_symbol": currency_symbol,
         }

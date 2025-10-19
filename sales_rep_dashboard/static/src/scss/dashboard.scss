@@ -137,58 +137,160 @@
 
 
   // ===== KPI CARDS =====
-  .kpi {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    text-align: left;
-    padding: 1rem 1.25rem;
-    border-radius: 1rem;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+//   .kpi {
+//     display: flex;
+//     align-items: center;
+//     gap: 1rem;
+//     text-align: left;
+//     padding: 1rem 1.25rem;
+//     border-radius: 1rem;
+//     border: 1px solid #e5e7eb;
+//     background: #fff;
 
-    .icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      background: #e5e7eb;
-      color: #374151;
+//     .icon {
+//       width: 42px;
+//       height: 42px;
+//       border-radius: 0.75rem;
+//       display: flex;
+//       align-items: center;
+//       justify-content: center;
+//       font-size: 1.3rem;
+//       background: #e5e7eb;
+//       color: #374151;
+//     }
+
+//     .kpi-value {
+//       font-size: 1.6rem;
+//       font-weight: 700;
+//       color: #1f2937;
+//     }
+
+//     .kpi-label {
+//       font-size: 0.8rem;
+//       color: #6b7280;
+//       text-transform: uppercase;
+//     }
+
+//     .kpi-change {
+//       font-size: 0.75rem;
+//       margin-top: 0.2rem;
+
+//       &.text-success {
+//         color: #16a34a;
+//       }
+//       &.text-danger {
+//         color: #dc2626;
+//       }
+//     }
+
+//     canvas {
+//       border-radius: 0.75rem;
+//       background: #fff;
+//       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+//     }
+//   }
+    // ===== KPI CARDS =====
+    .kpi {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+        padding: 1.2rem 1.4rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+        transition: all 0.25s ease;
+
+        &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.12);
+        }
+
+        // --- Icon Container ---
+        .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        // --- Texts ---
+        .kpi-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.2;
+        }
+
+        .kpi-change {
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+            font-style: italic;
+
+            &.text-success {
+            color: #22c55e;
+            }
+            &.text-danger {
+            color: #ef4444;
+            }
+        }
+
+        // --- KPI-specific color themes ---
+        &.quotations .icon {
+            background: linear-gradient(135deg, #fca5a5, #f87171);
+        }
+
+        &.sales-won .icon {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        }
+
+        &.customers .icon {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+        &.total-won .icon {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        &.forecast .icon {
+            background: linear-gradient(135deg, #fcd34d, #fbbf24);
+        }
+
+        // --- KPI animations ---
+        .kpi-value[data-animate] {
+            transition: 0.5s ease;
+        }
+
+        // --- Responsive layout ---
+        @media (max-width: 768px) {
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+            .icon {
+            margin-bottom: 0.4rem;
+            }
+        }
     }
 
-    .kpi-value {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
 
-    .kpi-label {
-      font-size: 0.8rem;
-      color: #6b7280;
-      text-transform: uppercase;
-    }
 
-    .kpi-change {
-      font-size: 0.75rem;
-      margin-top: 0.2rem;
 
-      &.text-success {
-        color: #16a34a;
-      }
-      &.text-danger {
-        color: #dc2626;
-      }
-    }
 
-    canvas {
-      border-radius: 0.75rem;
-      background: #fff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
-    }
-  }
 
   // ===== BUTTONS =====
   .btn {
