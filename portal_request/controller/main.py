@@ -1465,10 +1465,10 @@ class PortalRequest(http.Controller):
             DataItems = json.loads(post.get('DataItems'))
             memo_obj = request.env['memo.model']
             if not memo_id:
-                _logger.info("Memo id creating")
+                _logger.info("Request id creating")
                 memo_id = memo_obj.sudo().create(vals)
             else:
-                _logger.info("Memo id updating")
+                _logger.info("Request id updating")
                 memo_id.sudo().write(vals)
             if DataItems:
                 _logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')

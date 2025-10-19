@@ -12,7 +12,7 @@ class RFQUploadWizard(models.TransientModel):
     _name = 'rfq.upload.wizard'
     _description = 'RFQ Upload Wizard'
     
-    memo_id = fields.Many2one('memo.model', string="Memo", required=True, readonly=True)
+    memo_id = fields.Many2one('memo.model', string="Request", required=True, readonly=True)
     rfq_excel_file = fields.Binary(string="RFQ Excel File", required=False)
     rfq_excel_filename = fields.Char(string="Filename")
     

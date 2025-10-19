@@ -37,7 +37,7 @@ class ImportDataWizard(models.TransientModel):
     )
     company_id = fields.Many2one("res.company", "Company", required=True)
     branch_id = fields.Many2one("multi.branch", "District", required=True)
-    memo_config_id = fields.Many2one("memo.config", "Memo Config to use", required=True)
+    memo_config_id = fields.Many2one("memo.config", "Request Config to use", required=True)
     default_employee_id = fields.Many2one("hr.employee", "Employee to use as default", required=True)
     clear_data = fields.Boolean("Clear data")
     
@@ -77,7 +77,7 @@ class ImportDataWizard(models.TransientModel):
         """
         if not self.memo_config_id or not self.memo_config_id.stage_ids:
             raise ValidationError(
-                f"Memo config '{getattr(self.memo_config_id, 'name', '')}' has no stages configured"
+                f"Request config '{getattr(self.memo_config_id, 'name', '')}' has no stages configured"
             )
 
         stages = self.memo_config_id.stage_ids.sorted(key=lambda s: s.sequence)
@@ -219,7 +219,7 @@ class ImportDataWizard(models.TransientModel):
         if self.data_file:
             if not self.memo_config_id.stage_ids:
                 raise ValidationError(
-                    f"Memo config '{self.memo_config_id.name}' does not have stages configured"
+                    f"Request config '{self.memo_config_id.name}' does not have stages configured"
                 )
             
             file_datas = base64.decodestring(self.data_file)

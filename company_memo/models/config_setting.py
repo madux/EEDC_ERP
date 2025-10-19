@@ -28,7 +28,7 @@ class MemoSubStageLine(models.Model):
     code = fields.Char("Name", required=False)
     memo_id = fields.Many2one(
         "memo.model", 
-        string="Memo Ref"
+        string="Request Ref"
         )
     sub_stage_id = fields.Many2one(
         "memo.stage", 
@@ -140,11 +140,11 @@ class MemoStageDocumentLine(models.Model):
     compulsory = fields.Boolean("Compulsory", default=False)
     # memo_stage_id = fields.Many2one(
     #     "memo.stage", 
-    #     string="Memo stage Ref"
+    #     string="Request stage Ref"
     #     )
     memo_document_id = fields.Many2one(
         "memo.model", 
-        string="Memo Ref"
+        string="Request Ref"
         )
     
 
@@ -155,7 +155,7 @@ class MemoStageInvoiceLine(models.Model):
     compulsory = fields.Boolean("Is Compulsory", default=False)
     memo_invoice_id = fields.Many2one(
         "memo.model",
-        string="Memo Ref"
+        string="Request Ref"
         )
     move_type = fields.Selection(
         [
@@ -169,7 +169,7 @@ class MemoStageInvoiceLine(models.Model):
 
 class MemoType(models.Model):
     _name = "memo.type"
-    _description = "Memo Type"
+    _description = "Request Type"
 
     name = fields.Char("Name", required=True)
     memo_key = fields.Char(
@@ -200,7 +200,7 @@ class MemoUserRole(models.Model):
     
 class MemoStage(models.Model):
     _name = "memo.stage"
-    _description = "Memo Stage"
+    _description = "Request Stage"
     _order = 'sequence'
 
     name = fields.Char("Name", required=False)
@@ -308,7 +308,7 @@ class MemoStage(models.Model):
     
 class MemoConfig(models.Model):
     _name = "memo.config"
-    _description = "Memo setting"
+    _description = "Request setting"
     _rec_name = "name"
 
     # memo_type = fields.Selection(
@@ -325,7 +325,7 @@ class MemoConfig(models.Model):
     #     ("cash_advance", "Cash Advance"),
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
-    #     ], string="Memo Type",default="", required=True)
+    #     ], string="Request Type",default="", required=True)
     
     @api.constrains('branch_id', 'department_id', 'company_id')
     def constrain_company_branch_department(self):
@@ -337,7 +337,7 @@ class MemoConfig(models.Model):
 
     memo_type = fields.Many2one(
         'memo.type',
-        string='Memo type',
+        string='Request type',
         required=True,
         copy=False,
         domain=lambda self: self.get_publish_memo_types()
@@ -347,7 +347,7 @@ class MemoConfig(models.Model):
         string="Company",
     )
     publish_to_public = fields.Boolean("Publish", default=True)
-    memo_key = fields.Char("Memo Key", related="memo_type.memo_key")
+    memo_key = fields.Char("Request Key", related="memo_type.memo_key")
     name = fields.Char(
         string='Name', 
         copy=False, 
@@ -539,7 +539,7 @@ class MemoConfig(models.Model):
                             ('memo_key','=', memotype.memo_key)]
                             , limit=1)
                         if not memo_type_id:
-                            raise ValidationError(f'Memo type with key {memotype} on record does not exist. Contact admin to configure')
+                            raise ValidationError(f'Request type with key {memotype} on record does not exist. Contact admin to configure')
                         memo_config_vals = {
                             'active': True,
                             'memo_type': memo_type_id.id,
@@ -612,12 +612,12 @@ class DummyMemoConfig(models.Model):
 
     memo_config_wizard_id = fields.Many2one(
         'memo.assign.stage.wizard',
-        string='Memo Assign Wizard ',
+        string='Request Assign Wizard ',
         )
     
     memo_config_id = fields.Many2one(
         'memo.config',
-        string='Memo config',
+        string='Request config',
         )
     
     memo_stage_ids = fields.Many2many(
@@ -645,7 +645,7 @@ class MemoAssignStages(models.Model):
     dummy_config_ids = fields.One2many(
         'dummy.memo.config',
         'memo_config_wizard_id',
-        string='Memo Config ids',
+        string='Request Config ids',
         )
     
     employee_ids = fields.Many2many(
@@ -684,13 +684,13 @@ class MemoAssignStages(models.Model):
             
 class MemoCategory(models.Model):
     _name = "memo.category"
-    _description = "Memo document Category"
+    _description = "Request document Category"
     _rec_name = "name"
 
     name = fields.Char('Name')
     memo_config_ids = fields.Many2many(
         'memo.config',
-        string='Memo config',
+        string='Request config',
         )
     category_type = fields.Char('Type', placeholder="e.g helpdesk")
     

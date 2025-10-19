@@ -7,7 +7,7 @@ from odoo.exceptions import ValidationError
 class res_users(models.Model):
     _inherit = 'res.users'
 
-    # memo_flag = fields.Boolean("Memo Flag", default=False)
+    # memo_flag = fields.Boolean("Request Flag", default=False)
     user_signature = fields.Binary("Upload User Signature")
     
     

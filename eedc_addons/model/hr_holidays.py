@@ -5,7 +5,7 @@ class HRLeave(models.Model):
     _inherit = "hr.leave"
 
     origin = fields.Char(string='Source')
-    memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    memo_id = fields.Many2one('memo.model', string='Request Reference')
 
     def action_approve(self):
         res = super(HRLeave, self).action_approve()

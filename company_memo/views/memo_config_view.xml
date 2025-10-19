@@ -5,7 +5,7 @@
             <field name="name">Memo User Setting</field>
             <field name="model">memo.config</field>
             <field name="arch" type="xml">
-                <form string="Memo Setting">
+                <form string="Request Setting">
                     <header>
                         <button name="auto_configuration" type="object" class="oe_highlight" string="Auto Configure" confirm="Are you sure? Note this will auto generate all department not yet configured"/>
                         <button name="custom_duplicate" type="object" class="oe_highlight" string="Custom Duplicate"/>
@@ -103,7 +103,7 @@
             <field name="name">Memo Stage Setting</field>
             <field name="model">memo.stage</field>
             <field name="arch" type="xml">
-                <form string="Memo Stage">
+                <form string="Request Stage">
                     <header>
                     </header>
                     <group>
@@ -219,7 +219,7 @@
             <field name="name">Memo type Setting</field>
             <field name="model">memo.type</field>
             <field name="arch" type="xml">
-                <form string="Memo type">
+                <form string="Request type">
                     <header>
                     </header>
                     <group>
@@ -243,7 +243,7 @@
             <field name="type">ir.actions.act_window</field>
             <field name="view_mode">tree,form</field>
         </record>
-        <menuitem id="memo_type_configuration" name="Memo Type(s)"
+        <menuitem id="memo_type_configuration" name="Request Type(s)"
             parent="memo_configuration" action="memo_type_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
         
     </data>
