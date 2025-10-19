@@ -1,297 +1,103 @@
-* {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        .body-emp {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
-        }
+/* Employee Dashboard — reuse Task Manager tokens */
+#portal-dashboard-content .tm-admin-page {
+  /* inherit fonts, shadows, borders from task manager's tm_admin_dashboard.scss */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  letter-spacing: .01em;
+  background: white;
+  color: var(--ad-text, #0f172a);
+}
 
-        .header {
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-            color: white;
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* Optional tweaks for this page only */
+.custom-icon { fill: #94a3b8; transition: fill .2s ease; }
+.custom-icon:hover { fill: #334155; cursor: pointer; }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
+/* Bootstrap progress bars harmonize with theme */
+.progress { background: #e5e7eb; }
+.progress-bar { background: #4f46e5; } /* indigo */
+.progress-bar.bg-success { background: #16a34a; }
 
-        .nav-menu {
-            display: flex;
-            gap: 24px;
-        }
+/* Small responsive spacing helpers */
+@media (max-width: 991.98px) {
+  .tm-ad-toolbar { padding: .85rem 1rem; }
+}
 
-        .nav-item {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
+/* Profile page: tighter vertical rhythm */
+#portal-dashboard-content .tm-card { margin-bottom: 0 !important; min-height: auto; }
+#portal-dashboard-content .tm-card .tm-card-head { padding-bottom: .5rem; }
+#portal-dashboard-content .tm-card .tm-card-body { padding-bottom: .75rem; position: relative; }
+/* Empty state for charts */
+/* .tm-card-body { position: relative; } */
+#portal-dashboard-content .tm-empty-chart{
+min-height: 240px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .25rem;
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+}
+#portal-dashboard-content .tm-empty-icn { font-size: 20px; margin-bottom: .25rem; color: #64748b; }
+#portal-dashboard-content .tm-empty-title { font-weight: 600; color: #0f172a; }
+#portal-dashboard-content .tm-empty-sub { font-size: .9rem; color: #64748b; }
 
-        .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
 
-        .header-right {
-            display: flex;
-            gap: 12px;
-        }
+/* Charts: reduce default min-height a bit so cards don't look bottom-heavy */
+#portal-dashboard-content .tm-card .tm-card-body canvas { min-height: 240px !important; }
 
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
+/* Optional: slightly smaller column gaps */
+#portal-dashboard-content .col-lg-8.d-flex.flex-column.gap-3,
+#portal-dashboard-content .col-lg-4.d-flex.flex-column.gap-3 { gap: .75rem !important; }
 
-        .btn-admin {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
+/* kpis */
+#portal-dashboard-content .tm-kpi .tm-kpi-icon svg { width: 18px; height: 18px; display: block; }
 
-        .btn-contact {
-            background-color: white;
-            color: #4a90e2;
-        }
-        .custom-icon {
-            fill: darkgrey;
-            padding-bottom: 10px;
-            transition: fill 0.3s ease;
-        }
+/* ---------- Profile card polish ---------- */
+#portal-dashboard-content .pf-wrap { gap: 1rem; }
 
-        .custom-icon:hover {
-            fill: #333333; /* darker grey */
-            cursor: pointer;
-        }
-        .main-container-emp {
-            display: flex;
-            min-height: calc(100vh - 60px);
-            padding-left: 40px;
-            padding-right: 40px;
-        }
+/* Avatar with gradient ring */
+#portal-dashboard-content .pf-avatar{
+  position: relative; width: 84px; height: 84px; border-radius: 999px; flex:0 0 84px;
+}
+#portal-dashboard-content .pf-avatar::before{
+  content:""; position:absolute; inset:-2px; border-radius:inherit;
+  background: conic-gradient(#4f46e5, #a855f7, #10b981, #4f46e5);
+  -webkit-mask: radial-gradient(#0000 58%, #000 60%); mask: radial-gradient(#0000 58%, #000 60%);
+}
+#portal-dashboard-content .pf-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
+#portal-dashboard-content .pf-initials{
+  width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:#e5e7eb; color:#334155; font-weight:700; font-size:1.25rem;
+}
 
-        .content-emp {
-            flex: 1;
-            padding: 24px;
-        }
+/* Chips */
+#portal-dashboard-content .pf-badge{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.22rem .6rem; border-radius:999px; font-size:.78rem; font-weight:600;
+  border:1px solid #e5e7eb; background:#f8fafc; color:#334155;
+}
+#portal-dashboard-content .pf-badge .pf-dot{ width:8px; height:8px; border-radius:50%; background:#16a34a; }
+#portal-dashboard-content .pf-badge.-active{ background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
+#portal-dashboard-content .pf-badge.-warn{ background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+#portal-dashboard-content .pf-date{ font-size:.86rem; }
 
-        .metrics-grid-emp {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin-bottom: 24px;
-        }
+/* Details grid */
+#portal-dashboard-content .pf-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .55rem 1.25rem;
+}
+@media (min-width: 768px){
+  #portal-dashboard-content .pf-grid{ grid-template-columns: 1fr 1fr; }
+}
 
-        .metric-card-emp {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: left;
-            position: relative;
-        }
+#portal-dashboard-content .pf-row{ display: grid; grid-template-columns: max-content 1fr; column-gap: .5rem; align-items: baseline; }
+#portal-dashboard-content .pf-row.-span2{ grid-template-columns: max-content 1fr; }
 
-        .metric-number-emp {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .metric-label-emp {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .content-emp-grid {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 24px;
-        }
-
-        .left-panel-emp {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .card-emp {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 24px;
-        }
-
-        .card-emp-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-        }
-
-        .employee-profile {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        .profile-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .profile-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .profile-info p {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .chart-container-emp {
-            height: 300px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            position: relative;
-        }
-
-        .donut-chart {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: conic-gradient(
-                #4a90e2 0deg 108deg,
-                #28a745 108deg 216deg,
-                #ffc107 216deg 288deg,
-                #6f42c1 288deg 360deg
-            );
-            position: relative;
-        }
-
-        .donut-chart::after {
-            content: '30';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .right-panel-emp {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 24px;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .panel-title-emp {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .metric-item-emp {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .metric-item-emp:last-child {
-            border-bottom: none;
-        }
-
-        .metric-label-emp-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .color-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .color-green { background-color: #28a745; }
-        .color-blue { background-color: #4a90e2; }
-        .color-yellow { background-color: #ffc107; }
-        .color-purple { background-color: #6f42c1; }
-        .color-red { background-color: #dc3545; }
-        .color-orange { background-color: #fd7e14; }
-
-        .percentage-bar {
-            width: 60px;
-            height: 4px;
-            background-color: #e9ecef;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .percentage-fill {
-            height: 100%;
-            border-radius: 2px;
-        }
-
-        .percentage-fill.p-80 { width: 80%; background-color: #4a90e2; }
-        .percentage-fill.p-90 { width: 90%; background-color: #28a745; }
-        .percentage-fill.p-0 { width: 0%; background-color: #ffc107; }
-
-        @media (max-width: 1200px) {
-            .content-emp-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .metrics-grid-emp {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid-emp {
-                grid-template-columns: 1fr;
-            }
-            
-            .employee-profile {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-        }
+#portal-dashboard-content .pf-key{ margin:0; color:#64748b; font-weight:600; }
+#portal-dashboard-content .pf-key svg{ width: 16px; height: 16px; }
+#portal-dashboard-content .pf-key .fa{ margin-right:.35rem; }
+#portal-dashboard-content .pf-val{ margin: 0; color:#0f172a; font-weight:500; }
+#portal-dashboard-content .pf-rows { row-gap: .25rem; }

@@ -16,6 +16,21 @@ odoo.define('tm_taskboard.portal_board', function (require) {
             return this._super.apply(this, arguments);
         },
 
+        events: {
+            'click #app-icon': '_openAppGrid',
+            'click #navigateBack': '_goBack',
+        },
+
+        _goBack() {
+            $('.page-section').removeClass('active');
+            $('#portal-dashboard-content').addClass('active');
+        },
+
+        _openAppGrid() {
+            $('.page-section').removeClass('active');
+            $('#website-app-section').addClass('active');
+        },
+
         // -------- data --------
         _fetchBoard: function () {
             this._rpc({ route: '/tm/api/board', params: {} })
