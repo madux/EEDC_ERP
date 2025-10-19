@@ -22,7 +22,7 @@ odoo.define('helpdesk_process.memo_helpdesk_form', function (require) {
     }
 
     function buildMemoConfigOption(data) {
-        console.log("Memo config build loading")
+        console.log("Request config build loading")
         let select = $("#helpdesk_memo_config_id").empty();
         select.append($('<option>', { value: '', text: 'Please select' }));
         $.each(data, function (index, item) {

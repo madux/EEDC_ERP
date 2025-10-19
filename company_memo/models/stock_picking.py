@@ -6,7 +6,7 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
     _order = "id desc"
 
-    memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    memo_id = fields.Many2one('memo.model', string='Request Reference')
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
 

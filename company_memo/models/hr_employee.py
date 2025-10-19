@@ -16,7 +16,7 @@ class HrEmployeeBase(models.AbstractModel):
     administrative_supervisor_id = fields.Many2one('hr.employee', string="Administrative Supervisor")
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
-    leave_reliever_memo_stage_ids = fields.Char(string="Memo stages reliever is assigned")
+    leave_reliever_memo_stage_ids = fields.Char(string="Request stages reliever is assigned")
     maximum_cash_advance_limit = fields.Integer(
         string="Maximum Limit Cash Advance", 
         default=5

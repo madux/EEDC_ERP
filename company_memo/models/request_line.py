@@ -22,7 +22,7 @@ class RequestLine(models.Model):
     
     memo_id = fields.Many2one(
         "memo.model", 
-        string="Memo ID"
+        string="Request ID"
         )
     request_line_id = fields.Integer(
         string="Request line ID",
@@ -182,14 +182,14 @@ class RequestLine(models.Model):
     #     ("cash_advance", "Cash Advance"),
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
-    #     ], string="Memo Type")
+    #     ], string="Request Type")
     memo_type = fields.Many2one(
         'memo.type',
-        string='Memo type',
+        string='Request type',
         required=True,
         copy=False
         )
-    memo_type_key = fields.Char('Memo type key', readonly=True)#, related="memo_type.memo_key")
+    memo_type_key = fields.Char('Request type key', readonly=True)#, related="memo_type.memo_key")
     
     def check_product_qty(self):
         if not self.source_location_id or not self.product_id: 

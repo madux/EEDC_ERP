@@ -19,7 +19,7 @@
 			<field name="model">memo.model</field>
 			<field eval="1" name="priority"/>
 			<field name ="arch" type="xml">
-				<form string="Memo Record">
+				<form string="Request Record">
 				<header>
 					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
 					<button name="confirm_memo_helpdesk" string="Approve" type="object" class="oe_highlight" 
@@ -140,7 +140,7 @@
 										<field name="active" invisible="0" groups="base.group_system"/>
 										<field name="memo_setting_id" invisible="0" force_save="1" 
 										options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
-										<field name="memo_type_key" string="Memo key" invisible="0" force_save="1"/> 
+										<field name="memo_type_key" string="Request key" invisible="0" force_save="1"/> 
 										<field name="to_create_document" invisible="0"/> 
 										<field name="has_sub_stage" invisible="0"/>
 										<field name="state" invisible="0" force_save="1" readonly="0"/>
@@ -257,7 +257,7 @@
 			<field name="view_id" ref="helpdesk_process.memo_type_helpdesk_tree_view"/>
             <field name="domain">[('memo_key', '=', 'helpdesk')]</field>
         </record>
-        <menuitem id="memo_type_helpdesk_configuration" name="Memo Type(s)"
+        <menuitem id="memo_type_helpdesk_configuration" name="Request Type(s)"
             parent="memo_helpdesk_configuration" action="helpdesk_process.memo_type_helpdesk_action" sequence="14" groups="base.group_system,company_memo.mainmemo_manager"/>
         <menuitem id="company_memo_category_configuration" name="Category"
             parent="memo_helpdesk_configuration" action="company_memo.memo_category_action" sequence="11" groups="base.group_system,company_memo.mainmemo_manager"/>

@@ -93,7 +93,7 @@ class Memo_Model(models.Model):
     #     ("cash_advance", "Cash Advance"),
     #     ("soe", "Statement of Expense"),
     #     ("recruitment_request", "Recruitment Request"),
-    #     ], string="Memo Type", required=True)
+    #     ], string="Request Type", required=True)
     memo_material_request_status = fields.Boolean('')
     memo_procurement_request_status = fields.Boolean('')
     memo_awaiting_procurement_request_status = fields.Boolean('')
@@ -127,12 +127,12 @@ class Memo_Model(models.Model):
     
     memo_type = fields.Many2one(
         'memo.type',
-        string='Memo type',
+        string='Request type',
         required=False,
         copy=True,
         domain=lambda self: self.get_publish_memo_types(),
         )
-    memo_type_key = fields.Char('Memo type key', readonly=True)
+    memo_type_key = fields.Char('Request type key', readonly=True)
     name = fields.Char('Subject', size=400)
     requester_name = fields.Char('Legacy Request name')
     code = fields.Char('Code', readonly=True)
@@ -175,7 +175,7 @@ class Memo_Model(models.Model):
     state = fields.Selection([('submit', 'Draft'),
                                 ('Sent', 'Sent'),
                                 ('Approve', 'Waiting For Payment / Confirmation'),
-                                ('Approve2', 'Memo Approved'),
+                                ('Approve2', 'Request Approved'),
                                 ('Done', 'Completed'),
                                 ('Refuse', 'Refused'),
                               ], string='Status', index=True, readonly=True,
@@ -1979,7 +1979,7 @@ class Memo_Model(models.Model):
         self.portal_check_po_config(self.memo_setting_id)
 
     def mail_sending_direct(self, body_msg, email_to=False): 
-        subject = "Memo Notification"
+        subject = "ERP Request Notification"
         email_from = self.env.user.email
         follower_list = [item2.work_email for item2 in self.users_followers if item2.work_email]
         stage_followers_list = [
@@ -2037,7 +2037,7 @@ class Memo_Model(models.Model):
             return False
 
     def complete_memo_transactions(self): # Always available to Some specific groups
-        body = "MEMO COMPLETION NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
+        body = "ERP REQUEST COMPLETION NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
         body_msg = f"""Dear {self.sudo().employee_id.name}, 
         <br/>I wish to notify you that a {type} with description, '{self.name}',\
         from {self.sudo().employee_id.department_id.name or self.user_ids.name} \
@@ -2079,8 +2079,8 @@ class Memo_Model(models.Model):
             raise ValidationError(
                 """You are not Permitted to approve this Memo. Contact the authorized Person"""
                 )
-        '''Memo notication hardcorded'''
-        body = "MEMO APPROVE NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
+        '''Request notication hardcorded'''
+        body = "REQUEST APPROVE NOTIFICATION: -Approved By ;\n %s on %s" %(self.env.user.name,fields.Date.today())
         type = "request"
         body_msg = f"""Dear {self.sudo().employee_id.name}, <br/>I wish to notify you that a {type} with description, '{self.name}',\
                 from {self.sudo().employee_id.department_id.name or self.user_ids.name} department have been approved by {self.env.user.name}.<br/>\
@@ -3087,7 +3087,7 @@ class Memo_Model(models.Model):
             ], limit=1)
         computed_amount_total = sum([rec.amount_total for rec in self.product_ids]) if self.product_ids else 0
         vals = {
-                'name':'Memo Payment',
+                'name':'Request Payment',
                 'view_mode': 'form',
                 'view_id': view_id.id,
                 'view_type': 'form',

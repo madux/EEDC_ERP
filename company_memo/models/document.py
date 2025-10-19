@@ -8,7 +8,7 @@ class Document(models.Model):
     _inherit = 'documents.document'
 
     memo_category_id = fields.Many2one('memo.category', string="Category") 
-    memo_id = fields.Many2one('memo.model', string="Memo") 
+    memo_id = fields.Many2one('memo.model', string="Request") 
     submitted_by = fields.Many2one('hr.employee', string="Submitted By") 
     department_id = fields.Many2one('hr.department', string="Department") 
     submitted_date = fields.Date(

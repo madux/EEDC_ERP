@@ -8,7 +8,7 @@
 			<!-- <field name="context">{'form_no_edit':[('user_ids','in', ['res_users'])]}</field>  -->
 			<field eval="1" name="priority"/>
 			<field name ="arch" type="xml">
-				<form string="Memo Record">
+				<form string="Request Record">
 				<header>
 					<button name="forward_memo" id="forward_memo" string="Forward / Approve" icon="fa-forward" attrs="{'invisible':['|', ('state','in',['Done','Refuse']),('user_is_approver','=',True)]}" type="object" class="oe_highlight fwm"/>
 					<button name="approve_memo" string="Approve" type="object" class="oe_highlight" attrs="{'invisible': ['|', '|', ('memo_type_key','not in',['soe', 'leave_request', 'cash_advance', 'loan', 'Payment', 'server_access', 'material_request','sale_request', 'procurement_request', 'vehicle_request','employee_update', 'Internal']),('state','in',['submit', 'Approve','Done','Refuse']), ('user_is_approver','!=',True)]}"/>
@@ -97,7 +97,7 @@
 								
 								<field name="memo_type" required="1" invisible="1"/> 
 								<!-- attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> -->
-								<field name = "internal_memo_option" string="Memo Option" 
+								<field name = "internal_memo_option" string="Request Option" 
 								attrs="{'invisible': ['|',('memo_type_key', 'not in', ['Internal', 'internal']), ('to_create_document', '=', True)], 'readonly':[('state','not in',['submit'])]}" readonly="0"/>
 								<field name = "partner_ids" string="Reciepients" widget="many2many_tags" 
 								attrs="{'readonly':[('state','not in',['submit'])], 'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', '=', 'selected'), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
@@ -131,7 +131,7 @@
 								/>
 
 								<field name="direct_employee_id" required="0" invisible="1" string= "Through" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
-								<field name="set_staff" string = "Memo With" readonly="1" invisible="1"/>
+								<field name="set_staff" string = "Request With" readonly="1" invisible="1"/>
 								<field name="demo_staff" invisible="1"/>
                                 <field name="to_update_inventory_product" invisible="1"/>
 								<field name="dept_ids" widget="selection" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
@@ -147,7 +147,7 @@
 								<field name="move_id" invisible="1"/>
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 								<field name="active" invisible="1" groups="base.group_system"/>
-								<field name="memo_type_key" string="Memo key" invisible="1" force_save="1"/> 
+								<field name="memo_type_key" string="Request key" invisible="1" force_save="1"/> 
 								<field name="has_sub_stage" invisible="1"/> 
 							</group> 
 							<group name="normal_memo_group2"> 
@@ -203,8 +203,8 @@
 										<field name="request_line_id" string="Request Line ID" invisible="0" column_invisible="0" optional="hide" readonly="1"/> 
 										<field name="memo_type_key" string="memo key" invisible="1" column_invisible="1" force_save="1"/> 
 										<!-- <field name="district_id" string="District" invisible="1"/>  -->
-										<field name="memo_id" string="Memo" invisible="1" force_save="1" column_invisible="1"/> 
-										<field name="memo_type" string="Memo type" invisible="1" force_save="1" column_invisible="1"/> 
+										<field name="memo_id" string="Request" invisible="1" force_save="1" column_invisible="1"/> 
+										<field name="memo_type" string="Request type" invisible="1" force_save="1" column_invisible="1"/> 
 										<field name="product_id" string="Product" force_save="1"
 										options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 										 attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['material_request'])], 
@@ -260,8 +260,8 @@
 							<page name='Invoices' string='Invoices' attrs="{'invisible':['|','|', ('to_create_document', '=', True), ('has_invoice','=','False'), ('memo_type_key','not in', ['Payment', 'procurement', 'procurement_request'])]}">
 								<field name="invoice_ids" context="{'default_move_type': 'in_invoice', 'default_memo_id': active_id}" domain="[('state', '=', 'submit')]" attrs="{'readonly':[('state','in',['Sent', 'Done', 'Approve2'])]}">
 									<tree string="Invoices">
-										<field name="memo_id" string="Memo" invisible="1"/>  
-										<field name="memo_state" string="Memo state" invisible="1"/>  
+										<field name="memo_id" string="Request" invisible="1"/>  
+										<field name="memo_state" string="Request state" invisible="1"/>  
 										<field name="name" string="Description" invisible="0"/>  
 										<field name="partner_id" string="Partner" invisible="0"/> 
 										<field name="move_type" string="Type" invisible="0"/> 
@@ -410,10 +410,10 @@
 								context="{'default_memo_id': active_id, 'default_memo_state': state, 'default_partner_id': client_id, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
                                     <tree string="PO" editable="bottom" create="0" delete="0" no_open="0" decoration-info="state == 'draft'" decoration-primary="state in ['done']" decoration-success="state in ['purchase']" decoration-danger="state == 'draft'" export_xlsx="1">
                                         <field name="selected" string="Verify Vendor" readonly = "0"/> 
-										<field name="memo_state" string="Memo State" column_invisible="1" invisible="1"/> 
+										<field name="memo_state" string="Request State" column_invisible="1" invisible="1"/> 
                                         <field name="memo_type_key" string="memo key" column_invisible="1" invisible="1"/>  
-										<field name="memo_id" string="Memo" column_invisible="1"/> 
-										<field name="memo_type" string="Memo type" column_invisible="1" invisible="1"/> 
+										<field name="memo_id" string="Request" column_invisible="1"/> 
+										<field name="memo_type" string="Request type" column_invisible="1" invisible="1"/> 
 										<field name="name" string="PO Number"/>
 										<field name="state" string="PO Status"/>
 										<field name="receipt_status" string="Receipt Status"/>
@@ -439,10 +439,10 @@
 								<field name="so_ids" force_save="1" readonly="0"
 								context="{'default_memo_id': active_id, 'default_partner_id': customer_id, 'default_memo_state': state, 'default_memo_type': memo_type, 'default_memo_type_key': memo_type_key}">
                                     <tree string="SO" editable="bottom" create="0" delete="0" no_open="0" decoration-info="state == 'draft'" decoration-primary="state in ['done']" decoration-success="state in ['sale']" decoration-danger="state == 'draft'" export_xlsx="1">
-										<field name="memo_state" string="Memo State" column_invisible="1" invisible="1"/> 
+										<field name="memo_state" string="Request State" column_invisible="1" invisible="1"/> 
                                         <field name="memo_type_key" string="memo key" column_invisible="1" invisible="1"/>  
-										<field name="memo_id" string="Memo" column_invisible="1"/> 
-										<field name="memo_type" string="Memo type" column_invisible="1" invisible="1"/> 
+										<field name="memo_id" string="Request" column_invisible="1"/> 
+										<field name="memo_type" string="Request type" column_invisible="1" invisible="1"/> 
 										<field name="name" string="SO Number"/>
 										<field name="state" string="SO Status"/>
 										<field name="invoice_status" string="Invoice Status"/>
@@ -454,7 +454,7 @@
 									</tree>
 								</field>
 							</page>
-							<page name='description' string='Memo Body'>
+							<page name='description' string='Request Body'>
 								<field name="description" string = "More Notes" placeholder="Notes..." widget="html" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								<field name="has_po" invisible="1"/>
 								<field name="has_so" invisible="1"/>
@@ -486,8 +486,8 @@
 												<page name="Invoices" string="Finances">
 													<field name="invoice_ids" context="{'default_move_type': 'in_invoice', 'default_memo_id': active_id, 'form_view_ref': 'account.view_move_form'}">
 														<tree string="Invoices">
-															<field name="memo_id" string="Memo" invisible="1" column_invisible="1"/>  
-															<field name="memo_state" string="Memo state" invisible="1" column_invisible="1"/>  
+															<field name="memo_id" string="Request" invisible="1" column_invisible="1"/>  
+															<field name="memo_state" string="Request state" invisible="1" column_invisible="1"/>  
 															<field name="name" string="#" invisible="0"/>  
 															<field name="partner_id" string="Beneficiary" invisible="0"/> 
 															<field name="move_type" string="Type" invisible="1" column_invisible="1"/> 
@@ -585,7 +585,7 @@
 										<field name="memo_setting_id" string="Request type" invisible="0" force_save="1" readonly="1"/> 
 										<field name="dummy_memo_types" invisible="0" widget="many2many_tags" force_save="1" readonly="1"/>
 										<field name="dummy_memo_config_ids" invisible="0" widget="many2many_tags" force_save="1" readonly="1"/>
-										<field name="memo_type_key" string="Memo key" invisible="0" force_save="1" readonly="1"/> 
+										<field name="memo_type_key" string="Request key" invisible="0" force_save="1" readonly="1"/> 
 										<field name="to_create_document" invisible="0" force_save="1" readonly="1"/> 
 										<field name="computed_stage_ids" invisible="0" widget="many2many_tags" force_save="1" readonly="1"/> 
 									</group>

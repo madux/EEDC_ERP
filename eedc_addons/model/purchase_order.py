@@ -6,7 +6,7 @@ from odoo.exceptions import ValidationError
 #     _inherit = "purchase.order"
 
     # origin = fields.Char(string='Source')
-    # memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    # memo_id = fields.Many2one('memo.model', string='Request Reference')
 
     # def update_memo_status(self, status):
     #     if self.memo_id:

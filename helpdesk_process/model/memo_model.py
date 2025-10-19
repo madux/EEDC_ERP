@@ -19,7 +19,7 @@ class ComplaintResolution(models.Model):
     ], string="Status", default='pending')
     memo_id = fields.Many2one(
         'memo.model', 
-        string='Memo ID'
+        string='Request ID'
         )
 
 

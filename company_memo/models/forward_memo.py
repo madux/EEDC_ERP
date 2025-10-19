@@ -7,7 +7,7 @@ class Forward_Wizard(models.TransientModel):
     _description = "memo forward"
 
     resp = fields.Many2one('res.users', 'Current Sender')
-    memo_record = fields.Many2one('memo.model','Memo Reference',)
+    memo_record = fields.Many2one('memo.model','Request Reference',)
     stage_id = fields.Many2one('memo.stage', string="Stage at Time of Forward", readonly=True)
     description_two = fields.Text('Comment')
     date = fields.Datetime('Date', default=lambda self: fields.datetime.now())#, default=fields.Datetime.now())

@@ -21,7 +21,7 @@ class DocMgtConfigWizard(models.TransientModel):
                                        "memo_config_wizard_rel",
                                        "doc_mgt_config_wizard_id",
                                        "memo_config_ids",
-                                        string="Memo Configurations", 
+                                        string="Request Configurations", 
                                         domain="[('memo_type', '=', memo_type_id)]")
    
     @api.depends('doc_mgt_config_id.memo_type_id')

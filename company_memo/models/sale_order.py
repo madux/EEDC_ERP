@@ -9,16 +9,16 @@ class SaleOrder(models.Model):
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
     origin = fields.Char(string='Source')
-    memo_id = fields.Many2one('memo.model', string='Memo Reference')
+    memo_id = fields.Many2one('memo.model', string='Request Reference')
     code = fields.Char(string='Source')
-    memo_state = fields.Char(string='Memo state')
+    memo_state = fields.Char(string='Request state')
     memo_type = fields.Many2one(
         'memo.type',
-        string='Memo type',
+        string='Request type',
         required=False,
         copy=False
         )
-    memo_type_key = fields.Char('Memo type key', readonly=True)
+    memo_type_key = fields.Char('Request type key', readonly=True)
     
     def update_memo_status(self, status):
         if self.memo_id:

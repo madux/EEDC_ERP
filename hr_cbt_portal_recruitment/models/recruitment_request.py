@@ -29,7 +29,7 @@ class HRJobRecruitmentRequest(models.Model):
 					 },
 				 help='The Job Position you expected to get more hired.',
 				 )
-	memo_id = fields.Many2one('memo.model', string="Memo ID")
+	memo_id = fields.Many2one('memo.model', string="Request ID")
 	recruitment_mode = fields.Selection([('Internal', 'Internal'),
 				('External', 'External'),
 				('Outsourced', 'Outsourced'),

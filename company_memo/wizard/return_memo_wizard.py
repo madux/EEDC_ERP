@@ -11,7 +11,7 @@ class Send_Memo_back(models.Model):
     _name = "memo.back"
 
     resp = fields.Many2one('res.users', 'Responsible')
-    memo_record = fields.Many2one('memo.model','Memo ID',)
+    memo_record = fields.Many2one('memo.model','Request ID',)
     reason = fields.Char('Reason') 
     date = fields.Datetime('Date')
     direct_employee_id = fields.Many2one('hr.employee', 'Direct To')
@@ -72,7 +72,7 @@ class Send_Memo_back(models.Model):
      
 
     def mail_sending_reject(self, msg_body):
-        subject = "Memo Rejection Notification"
+        subject = "Request Rejection Notification"
         email_from = self.env.user.email
         mail_to = self.direct_employee_id.work_email
         initiator = self.memo_record.employee_id.work_email
