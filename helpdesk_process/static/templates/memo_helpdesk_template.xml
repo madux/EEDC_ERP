@@ -3,7 +3,7 @@
         <template id="memo_helpdesk_form_template" name="Ticket Form">
             <t t-call="portal.portal_layout">
                 <t t-set="wrapwrap_classes" t-value="'o_portal_bg_dark'"/>
-                <section id="memo-request-form" class="memo-helpdesk-container s_website_form o_colored_level" data-snippet="s_website_form" data-name="Memo Form">
+                <section id="memo-request-form" class="memo-helpdesk-container s_website_form o_colored_level" data-snippet="s_website_form" data-name="Request Form">
                     <h2 class="text-center" style="color: #138496; margin-bottom: 32px;">Helpdesk Ticket Request</h2>
 
                     <form id="msform" method="post" enctype="multipart/form-data"

@@ -120,13 +120,13 @@ class MemoFleet(models.Model):
         )
     memo_id = fields.Many2one(
         'memo.model',
-        string="Memo ID",
+        string="Request ID",
         )
     
     maintenance_ids = fields.One2many(
         'memo.fleet.maintenance',
         'fleet_id',
-        string="Memo ID",
+        string="Request ID",
         )
     
     driver_assigned = fields.Many2one(

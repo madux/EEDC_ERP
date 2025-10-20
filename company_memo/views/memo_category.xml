@@ -5,7 +5,7 @@
             <field name="name">Memo category Setting</field>
             <field name="model">memo.category</field>
             <field name="arch" type="xml">
-                <form string="Memo category Setting">
+                <form string="Request category Setting">
                     <header>
                     </header>
                     <sheet>
@@ -17,9 +17,9 @@
                                 <field name="category_type" required="1"/> 
                             </group>
                             <notebook>
-                                <page string="Memo Configs" name="mc">
+                                <page string="Request Configs" name="mc">
                                     <field name="memo_config_ids" required="1">
-                                        <tree string="Memo Configs">
+                                        <tree string="Request Configs">
                                             <field name="name" required="1"/> 
                                             <field name="memo_type" required="1"/> 
                                             <field name="memo_key" required="1"/> 

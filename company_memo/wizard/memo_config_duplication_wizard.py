@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 class MemoConfigDuplicationWizard(models.TransientModel):
     _name = 'memo.config.duplication.wizard'
 
-    name = fields.Char(string="Memo Name")
+    name = fields.Char(string="Request Name")
     dept_ids = fields.Many2many('hr.department', string="Departments")
     dummy_memo_stage_ids = fields.Many2many('dummy.memo.stage', 'duplication_wizard_id')
     employees_follow_up_ids = fields.Many2many('hr.employee',

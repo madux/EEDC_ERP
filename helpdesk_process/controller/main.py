@@ -55,12 +55,12 @@ class MemoPortalRequestHelpdesk(http.Controller):
 				"deadline_date": datetime.strptime(post.get("deadline_date",''), "%m/%d/%Y") if post.get("deadline_date") else False, 
 				"request_date": fields.Date.today(),
 			}
-			_logger.info(f"Memo HELPDESK POST DATA {vals}")
+			_logger.info(f"REQUEST HELPDESK POST DATA {vals}")
 			_logger.info("About to create..........................")
 			memo_id = memo.sudo().create(vals)
 			_logger.info(f"  ⇒ new memo record: id={memo_id.id}, code={memo_id.code!r}")
 			memo_id.compute_config_stages_from_website(memo_config_obj)
-			_logger.info(f"Memo GENERATED {memo_id}")
+			_logger.info(f"Request GENERATED {memo_id}")
 			if 'other_docs' in request.params:
 				attached_files = request.httprequest.files.getlist('other_docs')
 				for attachment in attached_files:

@@ -1,5 +1,5 @@
 {
-    'name': 'Memo RFQ Upload',
+    'name': 'Request RFQ Upload',
     'version': '16.0.1',
     'author': "Maduka Sopulu / Paul Ugwu",
     'category': 'ERP',
