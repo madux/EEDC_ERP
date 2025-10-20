@@ -34,7 +34,7 @@ class EhaBranch(models.Model):
     @api.returns('self', lambda value: value.id)
     def _branch_default_get(self):
         return self.env['res.users']._get_default_branch()
-
+    
     @api.model
     def create(self,vals):
         res = super(EhaBranch, self).create(vals)

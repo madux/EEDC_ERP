@@ -212,13 +212,18 @@ class HRSalaryRule(models.Model):
         required=True,
         string='Structure')
     
-class HRPayrollStructure(models.Model):
+class HrPayrollStructure(models.Model):
     _inherit = "hr.payroll.structure" 
     
     clear_rule = fields.Boolean(
         required=False,
-        default=True,
+        default=False,
         string='Clear rule')
+    
+    auto_rule_id = fields.Many2one(
+        'hr.salary.rule', 
+        required=False,
+        string='Auto Rule')
     
     structure_duplicate_ids = fields.Many2many(
         'hr.payroll.structure', 
@@ -228,18 +233,71 @@ class HRPayrollStructure(models.Model):
         required=False,
         string='Structures')
     
-    def action_duplicate_rule(self):
-        # if not self.structure_duplicate_ids:
-        #     raise ValidationError("Please select Structures to duplicate rules")
-        get_structure_ids = self.structure_duplicate_ids if self.structure_duplicate_ids else self.env['hr.payroll.structure'].search([('id', '!=', self.id)])
+    rule_duplicate_ids = fields.Many2many(
+        'hr.salary.rule', 
+        'hr_duplicate_salaray_rule_rels',
+        'struct_id',
+        'rule_id',
+        required=False,
+        string='Rules to Add')
+    
+    rule_ids = fields.Many2many(
+        'hr.salary.rule', 
+        'hr_salary_rule_rels',
+        'struct_id',
+        'rule_id',
+        required=False,
+        string='Rule')
+    
+    def action_add_missing_rule(self):
+        if not self.rule_ids or not self.rule_duplicate_ids:
+            raise ValidationError("Please select structure and rules to add to the structure")
+        get_structure_ids = self.structure_duplicate_ids
+        # if self.structure_duplicate_ids else self.env['hr.payroll.structure'].search([])
         for strucs in get_structure_ids:
             if self.clear_rule:
-                strucs.rule_ids = [(3, sr.id) for sr in strucs.rule_ids]
-            for rule in self.rule_ids:
-                new_rule = rule.copy()
-                strucs.rule_ids = [(4, new_rule.id)]
+                strucs.rule_ids = False 
+            strucs.rule_ids = [(4, r.id) for r in self.rule_duplicate_ids]
         self.structure_duplicate_ids = False
-            
+        self.rule_duplicate_ids = False
         
-                    
+    def action_auto_generate_rule_structure(self):
+        if not self.auto_rule_id:
+            raise ValidationError("Please select the auto rule id")
+        if self.auto_rule_id:
+            structures = self.env['hr.payroll.structure'].search([])
+            for str in structures:
+                if str.mapped('rule_ids').filtered(
+                    lambda sr: sr.id == self.auto_rule_id.id
+                ):
+                    self.structure_duplicate_ids = [(4, str.id)]
     
+    # def action_duplicate_rule(self):
+    #     # if not self.structure_duplicate_ids:
+    #     #     raise ValidationError("Please select Structures to duplicate rules")
+    #     get_structure_ids = self.structure_duplicate_ids if self.structure_duplicate_ids else self.env['hr.payroll.structure'].search([('id', '!=', self.id)])
+    #     for strucs in get_structure_ids:
+    #         if self.clear_rule:
+    #             strucs.rule_ids = [(3, sr.id) for sr in strucs.rule_ids]
+    #         for rule in self.rule_ids:
+    #             new_rule = rule.copy()
+    #             strucs.rule_ids = [(4, new_rule.id)]
+    #     self.structure_duplicate_ids = False
+        
+    @api.model
+    def create(self, vals):
+        if vals['name']:
+            rules = []
+            name = vals['name'].strip()
+            existing = self.env['hr.payroll.structure'].search([('name', '=', name)], limit=1)
+            if existing:
+                xml_rule = vals.get('rule_ids')
+                rule_id = xml_rule[0][2][0] # [(<Command.SET: 6>, 0, [19487])]
+                rules.append(rule_id)
+                record = existing
+            else:
+                record = super(HrPayrollStructure, self).create(vals)
+        _logger.info(f'Data generated for update {record.id} - {record.name}')
+        for r in rules:
+            record.write({"rule_ids": [(4, r)]})
+        return record 

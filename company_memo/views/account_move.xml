@@ -10,10 +10,12 @@
                 <xpath expr="//field[@name='move_type']" position="replace">
                 </xpath>
                 <xpath expr="//field[@name='ref']" position="after">
-                    <field name="memo_id" readonly="1" force_save="1"/>
+                    <field name="memo_id" readonly="1" force_save="1" string="Request Ref"/>
+					<field name="memo_state" invisible="1"/>
                     <field name="origin" required="0"/>
                     <field name="payment_journal_id" required="0"/>
                     <field name="move_type" required="0" invisible="1"/>
+                    <!-- <field name="lock_fields_from_memo" required="0" invisible="0"/> -->
                 </xpath>
                 <xpath expr="//field[@name='payment_journal_id']" position="after">
                     <field name="move_type" required="0" invisible="0" readonly="0"/>
@@ -40,7 +42,13 @@
                         <field name="example_preview" attrs="{'invisible': [('example_invalid', '=', True)]}"/>
                     </div>
                 </xpath>
+                <xpath expr="//field[@name='invoice_line_ids']" position="attributes">
+					<attribute name="attrs">{'readonly': [('memo_state', '!=', 'submit')]}</attribute> 
+				</xpath>
+                
             </field>
         </record>
     </data>
 </odoo>
+
+ 

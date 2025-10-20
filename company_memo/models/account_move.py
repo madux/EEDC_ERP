@@ -10,6 +10,10 @@ from odoo import http
 class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
 
+    lock_fields_from_memo = fields.Boolean(
+        string='locks field',
+        default=False
+    )
     invoice_date = fields.Date(
         string='Invoice/Bill Date',
         readonly=True,
@@ -83,6 +87,10 @@ class AccountMove(models.Model):
     _inherit = 'account.move.line'
 
     code = fields.Char(string="Code")
+    lock_fields_from_memo = fields.Boolean(
+        string='locks field',
+        related="move_id.lock_fields_from_memo"
+    )
     
     # _sql_constraints = [
     #     (
