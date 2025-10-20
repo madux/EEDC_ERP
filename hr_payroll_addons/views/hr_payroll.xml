@@ -84,11 +84,27 @@
 		<field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
 		<field name="arch" type="xml">
 			<field name="country_id" position="after">
+				<field name="auto_rule_id"/>
 				<field name="structure_duplicate_ids" widget="many2many_tags"/>
-				<field name="clear_rule"/>
-				<button name="action_duplicate_rule" string="Duplicate Rule" type="object" class="oe_highlight" confirm="Are you sure want to duplicate"/>
+				<field name="rule_duplicate_ids" widget="many2many_tags"/>
+				<field name="clear_rule" help="Note: this will clear all rules in selected structure"/>
+				<button name="action_auto_generate_rule_structure" string="Auto Generate Structure" type="object" class="oe_highlight" help="Used to generate all structures with the rule to update"/>
+				<button name="action_add_missing_rule" string="Add Missing Rule" type="object" class="oe_highlight" confirm="Are you sure want to duplicate"/>
 			
 			</field>
+			<xpath expr="//page[@name='salary_rules']" position="replace">
+				<page name="salary_rules" string="Salary Rules">
+					<field name="rule_ids" attrs="{'readonly': [('id', '=', False)]}">
+						<tree>
+						<field name="name"/>
+						<field name="code"/>
+						<field name="category_id"/>
+						<field name="sequence" invisible="1"/>
+						<field name="partner_id"/>
+						</tree>
+					</field>
+					</page>
+			</xpath>
 		</field>
 	</record>
 </odoo>

@@ -2568,6 +2568,7 @@ class Memo_Model(models.Model):
                             'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
                             'product_id': pr.product_id.id if pr.product_id else None,
                             'tax_ids': False,
+                            'lock_fields_from_memo': False,
                     }) for pr in self.product_ids],
                 })
             self.move_id = inv.id
