@@ -32,5 +32,6 @@ class AccountMoveLine(models.Model):
                     # raise UserError(_("Any journal item on a receivable account must have a due date and vice versa."))
             if line.move_id.is_purchase_document(include_receipts=True):
                 if (line.display_type == 'payment_term') ^ (account_type == 'liability_payable'):
-                    pass # raise UserError(_("Any journal item on a payable account must have a due date and vice versa."))
+                    pass 
+                    # raise UserError(_("Any journal item on a payable account must have a due date and vice versa."))
     
