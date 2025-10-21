@@ -44,7 +44,7 @@ class Memo_Model(models.Model):
         current_month = datetime.now().strftime('%Y/%m')
         
         # result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
-        result.code =   vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
+        result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         return result
     
     def _compute_attachment_number(self):
@@ -615,11 +615,15 @@ class Memo_Model(models.Model):
                 raise ValidationError("Please enter request lines")
         
         '''Check for lines without qty'''
-        if self.memo_type_key in ['material_request']:
-            
+        if self.memo_type_key in ['material_request', 'procurement_request', 'cash_advance']:
             for ln in self.product_ids:
                 if ln.quantity_available < 1:
                     raise UserError(f"{ln.product_id.name} must have product unit greater than 0")
+                
+        # if self.memo_type_key in ['soe']:
+        #     for ln in self.product_ids:
+        #         if ln.used_qty < 1 or ln.used_amount < 1:
+        #             raise UserError(f"{ln.product_id.name} used Quantity and used amount must be greater than 0")
         
         invoice_list = ['Payment']
         if self.memo_type_key in invoice_list and not self.product_ids:
@@ -2496,6 +2500,25 @@ class Memo_Model(models.Model):
             raise ValidationError(f"No cash advance / asset account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and select the cash advance account...")
         return account_id
     
+    def get_cashadvance_debit_account(self, pr, journal_id=False):
+        '''pr: line'''
+        account_id = None
+        company_expense_account_id = self.company_id.default_cash_advance_account_id
+        account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"No default cash advance account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the cash advance account..")
+        return account_id
+    
+    def get_cashadvance_credit_account(self, journal_id=False):
+        '''pr: line'''
+        account_id = None
+        company_expense_account_id = self.company_id.default_bank_cash_account_id
+        account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
+        if not account_id:
+            raise ValidationError(f"{self.company_id.name} does not have default bank account to use on credit line . System admin should go to the company configuration and set the default bank account or set the journal default account...")
+        return account_id
+    
+    
     def get_soe_expense_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
@@ -2514,28 +2537,106 @@ class Memo_Model(models.Model):
             raise ValidationError(f"No default cash advance found to use on credit lines for company {self.company_id.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
         return account_id
                     
-    def generate_move_entries(self):
+    # def generate_move_entries(self):
+    #     is_config_approver = self.determine_if_user_is_config_approver()
+    #     if is_config_approver:
+    #         """Check if the user is enlisted as the approver for memo type
+    #         if approver is an account officer, system generates move and open the exact record"""
+    #         view_id = self.env.ref('account.view_move_form').id
+    #         journal_id = self.env['account.journal'].sudo().search(
+    #          [('company_id', '=', self.company_id.id),
+    #         '|',('type', '=', 'purchase'),
+    #          ('code', '=', 'BILL'),
+    #          ], limit=1)
+    #         if not journal_id:
+    #             raise UserError(f"""
+    #                             You do have any journal set to the current company {self.company_id.name} 
+    #                             with type in 'purchase' or journal code set as 'BILL'
+    #                             """
+    #                             )
+    #         account_move = self.env['account.move'].sudo()
+    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+    #         if not inv:
+    #             partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
+    #             # partner_id = self.employee_id.user_id.partner_id
+    #             inv = account_move.create({ 
+    #                 'memo_id': self.id,
+    #                 'ref': self.code,
+    #                 'origin': self.code,
+    #                 'partner_id': partner_id.id,
+    #                 'company_id': self.company_id.id,
+    #                 'currency_id': self.company_id.currency_id.id,
+    #                 'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
+    #                 # Do not set default name to account move name, because it
+    #                 # is unique 
+    #                 'name': f"{self.id}/ {self.code}",
+    #                 'move_type': 'in_receipt',
+    #                 'invoice_date': fields.Date.today(),
+    #                 'invoice_date_due': fields.Date.today(),
+    #                 'date': fields.Date.today(),
+    #                 'journal_id': journal_id.id,
+	# 			    'branch_id': self.employee_id.branch_id.id,
+    #                 'invoice_line_ids': [(0, 0, {
+    #                         'name': pr.product_id.name if pr.product_id else pr.description,
+    #                         'ref': f'{self.code}: {pr.product_id.name or pr.description}',
+    #                         'account_id': self.get_move_line_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
+    #                         # 'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
+    #                         # 'account_id': self.memo_setting_id.expense_account_id.id if self.memo_setting_id.expense_account_id else pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id and pr.product_id.property_account_expense_id or pr.product_id.categ_id.property_account_expense_categ_id else journal_id.default_account_id.id,
+    #                         'price_unit': pr.amount_total,
+    #                         'quantity': pr.quantity_available,
+    #                         'discount': 0.0,
+    #                         'code': pr.code,
+    #                         'company_id': self.company_id.id,
+	# 			            'branch_id': self.employee_id.user_id.branch_id.id,
+    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
+    #                         'product_id': pr.product_id.id if pr.product_id else None,
+    #                         'tax_ids': False,
+    #                         'lock_fields_from_memo': False,
+    #                 }) for pr in self.product_ids],
+    #             })
+    #         self.move_id = inv.id
+    #         return self.record_to_open(
+    #         "account.move", 
+    #         view_id,
+    #         inv.id,
+    #         f"Journal Entry - {inv.name}"
+    #         )
+    #     else:
+    #         raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
+    
+    # TODO Take to easypayFix
+    invoice_status = fields.Char(string="Account status", compute="compute_move_state")
+    @api.depends('move_id')
+    def compute_move_state(self):
+        for rec in self:
+            if rec.move_id:
+                rec.invoice_status = rec.move_id.state
+            else:
+                rec.invoice_status = 'Not Posted'
+                
+    def generate_move_entries(self): 
+        '''thi will generate cash advance move'''
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].sudo().search(
-             [('company_id', '=', self.company_id.id),
-            '|',('type', '=', 'purchase'),
-             ('code', '=', 'BILL'),
+            [
+                ('company_id', '=', self.company_id.id),
+                ('type', 'in', ['bank', 'general']),
              ], limit=1)
             if not journal_id:
-                raise UserError(f"""
-                                You do have any journal set to the current company {self.company_id.name} 
-                                with type in 'purchase' or journal code set as 'BILL'
-                                """
-                                )
+                raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            # delete the invoice to recreate if error
+            if inv and inv.state == 'cancel':
+                inv.unlink() # delete the invoice to recreate if error
+                inv = False
+            #### deleted the found invoice
             if not inv:
                 partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
-                # partner_id = self.employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
@@ -2546,32 +2647,36 @@ class Memo_Model(models.Model):
                     'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
-                    'name': f"{self.id}/ {self.code}",
-                    'move_type': 'in_receipt',
+                    'name': f"{self.code}", # /{self.id}", # /{fields.Date.today().month}/{fields.Date.today().year}",
+                    'move_type': 'entry',
                     'invoice_date': fields.Date.today(),
                     'invoice_date_due': fields.Date.today(),
                     'date': fields.Date.today(),
                     'journal_id': journal_id.id,
 				    'branch_id': self.employee_id.branch_id.id,
-                    'invoice_line_ids': [(0, 0, {
+                    'line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-                            'account_id': self.get_move_line_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
-                            # 'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-                            # 'account_id': self.memo_setting_id.expense_account_id.id if self.memo_setting_id.expense_account_id else pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id and pr.product_id.property_account_expense_id or pr.product_id.categ_id.property_account_expense_categ_id else journal_id.default_account_id.id,
                             'price_unit': pr.amount_total,
                             'quantity': pr.quantity_available,
-                            'discount': 0.0,
+                            'account_id': self.get_cashadvance_debit_account(pr, journal_id).id, # or journal_id.default_account_id.id,
+                            'debit': pr.sub_total_amount if pr.sub_total_amount > 0 else pr.amount_total * pr.quantity_available, 
                             'code': pr.code,
-                            'company_id': self.company_id.id,
-				            'branch_id': self.employee_id.user_id.branch_id.id,
-                            'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-                            'product_id': pr.product_id.id if pr.product_id else None,
-                            'tax_ids': False,
-                            'lock_fields_from_memo': False,
-                    }) for pr in self.product_ids],
+                    }) for pr in self.product_ids] + [(0, 0, {
+                                                            'name': 'Cash Advance for Credit balance',
+                                                            'account_id': self.get_cashadvance_credit_account(journal_id).id,
+                                                            'credit': sum([r.sub_total_amount for r in self.product_ids]),
+                                                            'debit': 0.00,
+                                                            })],
                 })
-            self.move_id = inv.id
+            else:
+                self.move_id = inv.id
+                if inv.state == ['posted', 'post']:
+                    '''check if the related invoice entry has been posted 
+                    but record hasnt been set to the done or final stage'''
+                    ms = self.memo_setting_id
+                    if ms.stage_ids and self.stage_id.id != ms.stage_ids[-1].id:
+                        self.update_final_state_and_approver(False, False, False)
             return self.record_to_open(
             "account.move", 
             view_id,
