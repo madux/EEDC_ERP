@@ -232,9 +232,9 @@
 										<field name="note" string="Note" invisible="0" force_save="1" optional="hide"/>  
 										<field name="driver_assigned" string="Driver" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('parent.memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 								
-										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'required':[('parent.edit_mode','=',True)], 'readonly':[('parent.edit_mode','=',False), ('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['recruitment_request', 'soe', 'material_request','employee_update', 'cash_advance', 'server_access'])]}"
+										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'required':[('parent.edit_mode','=',True)], 'readonly':[('parent.edit_mode','=',False), ('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])]}"
 										optional="show"/> 
-                                        <field name="dest_location_id" string="Destination Location" optional="show" force_save="1" attrs="{'readonly':[('parent.edit_mode','=',False),('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'server_access'])]}"/>
+                                        <field name="dest_location_id" string="Destination Location" optional="show" force_save="1" attrs="{'readonly':[('parent.edit_mode','=',False),('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])]}"/>
 										<field name="distance_from" string="From" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 
@@ -596,6 +596,7 @@
 										<field name="state" invisible="0" force_save="1" readonly="1"/>
 										<field name="user_is_approver" invisible="0" force_save="1" readonly="1"/> 
 										<field name="is_request_completed" invisible="0" force_save="1" readonly="1"/> 
+										<field name="move_id" invisible="0" force_save="1" readonly="1"/>
 									</group>
 								</group>
 							</page>
@@ -611,19 +612,21 @@
 		<record model="ir.ui.view" id="tree_memo_model_view2">
 			<field name="name">ERP Requests Tree</field>
 			<field name="model">memo.model</field>
-			<field name="priority">50</field>
+			<field name="priority">1</field>
 			<field name="arch" type="xml">
 				<tree string="ERP Requests">
 					<field name="date"/> 
 					<field name="name"/>
-					<field name="employee_id"/>
+					<field name="code"/> 
+					<field name="employee_id" string="Requester"/>
 					<field name="memo_type" string="Request type"/>
 					<field name="set_staff" string = "Assigned to?"/>
-					<field name="code"/> 
 					<field name="state" invisible="0" optional="hide"/>
-					<field name="stage_id" optional="hide"/>
+					<field name="stage_id" optional="show"/>
 					<field name="status_progress" widget="progressbar" string="Progress(%)" optional="show"/>
-					<field name="branch_id" invisible="0" optional="hide"/>
+					<field name="branch_id" invisible="0" optional="show"/>
+					<field name="company_id" invisible="0" optional="hide"/>
+					<field name="invoice_status" invisible="0" optional="show"/>
 				</tree>
 			</field>
 		</record>
@@ -706,6 +709,7 @@
 			<field name="res_model">memo.model</field>
 			<field name="type">ir.actions.act_window</field>
 		   <field name="domain">[('memo_type_key','not in',['helpdesk'])]</field>
+		   <field name="view_id" ref="company_memo.tree_memo_model_view2"/>
 			<!-- <field name="context">{'search_default_project_type_grp': 1, 'search_default_building_type_grp': 1}</field>
 			<field name="search_view_id" ref="view_building_type_search_filter"/> -->
 			 <field name="view_mode">tree,form</field>

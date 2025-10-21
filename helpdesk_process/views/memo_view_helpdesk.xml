@@ -167,6 +167,7 @@
 					<field name="date"/> 
 					<field name="name"/>
 					<field name="code"/> 
+					<field name="employee_id" string="Requester"/>
 					<field name="memo_type" string="Category"/>
 					<field name="set_staff" string = "Assigned to?"/>
 					<field name="complaint_start_date"/>
