@@ -46,7 +46,7 @@ class RequestLine(models.Model):
         string="Description"
         )
     # district_id = fields.Many2one("hr.district", string="District ID")
-    quantity_available = fields.Float(string="Qty Requested", default=0)
+    quantity_available = fields.Float(string="Qty Requested", default=1)
     amount_total = fields.Float(string="Unit Price", default=0)
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
@@ -98,8 +98,9 @@ class RequestLine(models.Model):
     
     @api.onchange('quantity_available')
     def onchange_quantity_available(self):
-        if self.quantity_available:
-            self.check_product_qty()
+        if self.memo_type_key in ['material_request', 'procurement_request']:
+            if self.quantity_available:
+                self.check_product_qty()
             
     @api.onchange('source_location_id')
     def onchange_location_check_available_qty(self):
