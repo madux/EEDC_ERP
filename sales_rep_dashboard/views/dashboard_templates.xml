@@ -119,123 +119,195 @@
             </div>
         </div>
 
-
-
         <!-- KPI cards -->
-        <div class="row g-3 mb-2">
-          <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy quotations">
-                <div class="icon"><i class="fa fa-file-text-o"></i></div>
-                <div>
+        <div class="row g-3 mb-4">
+            <!-- Quotations Card -->
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="kpi-card kpi-quotations">
+                <div class="kpi-icon-wrapper">
+                    <i class="fa fa-file-text-o"></i>
+                </div>
+                <div class="kpi-content">
                     <div class="kpi-label">Quotations</div>
                     <div class="kpi-value" id="kpi-quotations">0</div>
-                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                    <div class="kpi-change positive" id="kpi-quotations-change">
+                    <i class="fa fa-arrow-up"></i>
+                    <span>+0%</span>
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
 
+            <!-- Sales Won Card -->
             <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy sales-won">
-                <div class="icon"><i class="fa fa-trophy"></i></div>
-                <div>
+                <div class="kpi-card kpi-sales-won">
+                <div class="kpi-icon-wrapper">
+                    <i class="fa fa-trophy"></i>
+                </div>
+                <div class="kpi-content">
                     <div class="kpi-label">Sales Won</div>
                     <div class="kpi-value" id="kpi-won">0</div>
-                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                    <div class="kpi-change positive" id="kpi-won-change">
+                    <i class="fa fa-arrow-up"></i>
+                    <span>+0%</span>
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
 
+            <!-- Customers Card -->
             <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi card glassy customers">
-                <div class="icon"><i class="fa fa-users"></i></div>
-                <div>
+                <div class="kpi-card kpi-customers">
+                <div class="kpi-icon-wrapper">
+                    <i class="fa fa-users"></i>
+                </div>
+                <div class="kpi-content">
                     <div class="kpi-label">Customers</div>
                     <div class="kpi-value" id="kpi-customers">0</div>
-                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                    <div class="kpi-change positive" id="kpi-customers-change">
+                    <i class="fa fa-arrow-up"></i>
+                    <span>+0%</span>
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
 
+            <!-- Total Won Card -->
             <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi card glassy total-won">
-                <div class="icon"><i class="fa fa-money"></i></div>
-                <div>
+                <div class="kpi-card kpi-total-won">
+                <div class="kpi-icon-wrapper">
+                    <i class="fa fa-money"></i>
+                </div>
+                <div class="kpi-content">
                     <div class="kpi-label">Total Won</div>
-                    <div class="kpi-value" id="kpi-total-won">0</div>
-                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                    <div class="kpi-value" id="kpi-total-won">₦0</div>
+                    <div class="kpi-change positive" id="kpi-total-won-change">
+                    <i class="fa fa-arrow-up"></i>
+                    <span>+0%</span>
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
 
+            <!-- Forecast Card -->
             <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi card glassy forecast">
-                <div class="icon"><i class="fa fa-line-chart"></i></div>
-                <div>
+                <div class="kpi-card kpi-forecast">
+                <div class="kpi-icon-wrapper">
+                    <i class="fa fa-line-chart"></i>
+                </div>
+                <div class="kpi-content">
                     <div class="kpi-label">Forecast</div>
-                    <div class="kpi-value" id="kpi-forecast">0</div>
-                    <div class="kpi-change text-success small" id="kpi-quotations-change">+0%</div>
+                    <div class="kpi-value" id="kpi-forecast">₦0</div>
+                    <div class="kpi-change positive" id="kpi-forecast-change">
+                    <i class="fa fa-arrow-up"></i>
+                    <span>+0%</span>
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
-
         </div>
 
         <!-- Charts grid -->
-        <div class="row g-3 mb-3">
-          <div class="col-lg-6">
-            <div class="card glassy p-3 h-100">
-              <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span><i class="fa fa-bar-chart"></i> Pipeline by Month</span>
-                <i class="fa fa-line-chart"></i>
-              </div>
-              <canvas id="chart-pipeline" height="220" data-testid="chart-pipeline"></canvas>
+        <div class="row g-3 mb-4">
+            <!-- Pipeline Chart -->
+            <div class="col-lg-6">
+                <div class="chart-card chart-pipeline">
+                <div class="chart-header">
+                    <div class="chart-title">
+                    <div class="chart-title-icon">
+                        <i class="fa fa-bar-chart"></i>
+                    </div>
+                    <span>Pipeline by Month</span>
+                    </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chart-pipeline" height="220" data-testid="chart-pipeline"></canvas>
+                </div>
+                </div>
             </div>
-          </div>
-          <div class="col-lg-3">
-            <div class="card glassy p-3 h-100">
-              <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span><i class="fa fa-users"></i> Top Customers</span>
-              </div>
-              <canvas id="chart-top-customers" height="220" data-testid="chart-top-customers"></canvas>
+
+            <!-- Top Customers Chart -->
+            <div class="col-lg-3">
+                <div class="chart-card chart-customers">
+                <div class="chart-header">
+                    <div class="chart-title">
+                    <div class="chart-title-icon">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <span>Top Customers</span>
+                    </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chart-top-customers" height="220" data-testid="chart-top-customers"></canvas>
+                </div>
+                </div>
             </div>
-          </div>
-          <div class="col-lg-3">
-            <div class="card glassy p-3 h-100">
-              <div class="card-title d-flex justify-content-between align-items-center mb-2">
-                <span><i class="fa fa-line-chart"></i> Forecast (Next 3 Months)</span>
-              </div>
-              <canvas id="chart-forecast" height="220" data-testid="chart-forecast"></canvas>
+
+            <!-- Forecast Chart -->
+            <div class="col-lg-3">
+                <div class="chart-card chart-forecast">
+                <div class="chart-header">
+                    <div class="chart-title">
+                    <div class="chart-title-icon">
+                        <i class="fa fa-line-chart"></i>
+                    </div>
+                    <span>Forecast</span>
+                    </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chart-forecast" height="220" data-testid="chart-forecast"></canvas>
+                    <div class="chart-badge">Next 3 Months</div>
+                </div>
+                </div>
             </div>
-          </div>
         </div>
 
         <!-- Sales table -->
-        <div class="card glassy p-0" data-testid="sales-table">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="small text-uppercase text-muted">
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th class="text-end">Untaxed</th>
-                  <th class="text-end">Total</th>
-                  <th>Forecast</th>
-                </tr>
-              </thead>
-              <tbody id="srd-tbody"></tbody>
-            </table>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center p-3">
-            <div class="small text-muted" id="srd-pager-info">0–0 of 0</div>
-            <div class="btn-group">
-              <button class="btn btn-outline-secondary btn-sm" id="srd-prev">Prev</button>
-              <button class="btn btn-outline-secondary btn-sm" id="srd-next">Next</button>
+        <div class="table-card" data-testid="sales-table">
+            <!-- Table Header -->
+            <div class="table-header">
+                <div class="table-title">
+                <div class="table-title-icon">
+                    <i class="fa fa-table"></i>
+                </div>
+                <span>Recent Orders</span>
+                </div>
             </div>
-          </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="modern-table">
+                <thead>
+                    <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-end">Untaxed</th>
+                    <th class="text-end">Total</th>
+                    <th>Forecast</th>
+                    </tr>
+                </thead>
+                <tbody id="srd-tbody">
+                    <!-- Dynamic rows will be inserted here -->
+                </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer with Pagination -->
+            <div class="table-footer">
+                <div class="table-info" id="srd-pager-info">0–0 of 0</div>
+                <div class="pagination-controls">
+                <button class="pagination-btn" id="srd-prev">
+                    <i class="fa fa-chevron-left"></i> Previous
+                </button>
+                <button class="pagination-btn" id="srd-next">
+                    Next <i class="fa fa-chevron-right"></i>
+                </button>
+                </div>
+            </div>
         </div>
+
 
       </div>
     </t>

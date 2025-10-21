@@ -2,23 +2,29 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     "use strict";
 
     const ajax = require('web.ajax');
+
+    // ============================================================
+    // STATE MANAGEMENT
+    // ============================================================
     let state = {
         date_from: null,
         date_to: null,
         page: 1,
         page_size: 20,
         charts: { pipeline: null, topCustomers: null, forecast: null },
-        currency_symbol: "₦", // default fallback
+        currency_symbol: "₦",
     };
 
-    // ------------------------------------------------------------
+    // ============================================================
     // UTILITY HELPERS
-    // ------------------------------------------------------------
-
+    // ============================================================
     function fmtMoney(v, cur) {
         if (v == null) return "-";
         try {
-            return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD" }).format(v);
+            return new Intl.NumberFormat(undefined, { 
+                style: "currency", 
+                currency: cur || "USD" 
+            }).format(v);
         } catch (e) {
             return (cur || "") + " " + v.toFixed(2);
         }
@@ -26,21 +32,28 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
 
     function pill(state) {
         const map = {
-            draft: "Quotation", sent: "Quotation Sent", sale: "Sales Order",
-            done: "Done", cancel: "Cancelled"
+            draft: "Quotation", 
+            sent: "Quotation Sent", 
+            sale: "Sales Order",
+            done: "Done", 
+            cancel: "Cancelled"
         };
         const label = map[state] || state;
         const classes = {
-            draft: "bg-secondary", sent: "bg-info", sale: "bg-success",
-            done: "bg-success", cancel: "bg-danger"
+            draft: "bg-secondary", 
+            sent: "bg-info", 
+            sale: "bg-success",
+            done: "bg-success", 
+            cancel: "bg-danger"
         }[state] || "bg-light text-dark";
+        
         return `<span class="badge ${classes} rounded-pill">${_.escape(label)}</span>`;
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // DATA FETCHING
-    // ------------------------------------------------------------
-
+    // ============================================================
+    
     async function fetchData() {
         const payload = {
             date_from: state.date_from,
@@ -49,14 +62,16 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             page_size: state.page_size,
         };
         const res = await ajax.jsonRpc("/sales_rep_dashboard/data", "call", payload);
-        if (res.currency_symbol) state.currency_symbol = res.currency_symbol;
+        if (res.currency_symbol) {
+            state.currency_symbol = res.currency_symbol;
+        }
         return res;
     }
 
-    // ------------------------------------------------------------
-    // KPI DISPLAY + ANIMATION
-    // ------------------------------------------------------------
-
+    // ============================================================
+    // KPI DISPLAY & ANIMATION
+    // ============================================================
+    
     function setKPIs(kpis) {
         animateKPI("kpi-quotations", kpis.quotations);
         animateKPI("kpi-won", kpis.sales_won);
@@ -64,6 +79,7 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         animateKPI("kpi-total-won", kpis.total_won);
         animateKPI("kpi-forecast", kpis.forecast);
 
+        // Update change indicators (you can calculate real percentages from backend)
         $("#kpi-quotations-change").text("+8% from yesterday").addClass("text-success");
         $("#kpi-won-change").text("+5% from yesterday").addClass("text-success");
         $("#kpi-customers-change").text("+1.2% from yesterday").addClass("text-success");
@@ -71,7 +87,6 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         $("#kpi-forecast-change").text("+0.5% from yesterday").addClass("text-success");
     }
 
-    // --- Enhanced KPI animation (handles ₦, $, €, decimals, etc.)
     function animateKPI(id, newValue, duration = 1000) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -83,8 +98,14 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
 
         if (current === target) {
             el.innerText = currencySymbol
-                ? `${currencySymbol}${target.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-                : target.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                ? `${currencySymbol}${target.toLocaleString(undefined, { 
+                    minimumFractionDigits: 0, 
+                    maximumFractionDigits: 2 
+                })}`
+                : target.toLocaleString(undefined, { 
+                    minimumFractionDigits: 0, 
+                    maximumFractionDigits: 2 
+                });
             return;
         }
 
@@ -97,98 +118,66 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             count++;
             const value = current + (diff * count) / steps;
             const formatted = currencySymbol
-                ? `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-                : value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                ? `${currencySymbol}${value.toLocaleString(undefined, { 
+                    minimumFractionDigits: 0, 
+                    maximumFractionDigits: 2 
+                })}`
+                : value.toLocaleString(undefined, { 
+                    minimumFractionDigits: 0, 
+                    maximumFractionDigits: 2 
+                });
             el.innerText = formatted;
-            if (count >= steps) clearInterval(timer);
+            
+            if (count >= steps) {
+                clearInterval(timer);
+            }
         }, stepTime);
     }
 
-    // ------------------------------------------------------------
-    // CHARTS
-    // ------------------------------------------------------------
-
-    function ensureChart(canvasId, type, data, options) {
-        const ctx = document.getElementById(canvasId).getContext("2d");
-        return new Chart(ctx, { type, data, options });
+    // ============================================================
+    // CHART RENDERING
+    // ============================================================
+    
+    function getGradient(ctx, color1, color2) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, color1);
+        gradient.addColorStop(1, color2);
+        return gradient;
     }
 
-    // function drawCharts(payload) {
-    //     function getGradient(ctx, color1, color2) {
-    //         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    //         gradient.addColorStop(0, color1);
-    //         gradient.addColorStop(1, color2);
-    //         return gradient;
-    //     }
+    function recreateChart(key, id, type, data, options) {
+        // Destroy existing chart if present
+        if (state.charts[key]) {
+            state.charts[key].destroy();
+            state.charts[key] = null;
+        }
 
-    //     // Pipeline
-    //     if (state.charts.pipeline) state.charts.pipeline.destroy();
-    //     state.charts.pipeline = ensureChart("chart-pipeline", "bar", {
-    //         labels: payload.pipeline.labels,
-    //         datasets: [
-    //             { label: "Quotations", data: payload.pipeline.quotations },
-    //             { label: "Won", data: payload.pipeline.won },
-    //         ],
-    //     }, { responsive: true, maintainAspectRatio: false });
+        const canvas = document.getElementById(id);
+        if (!canvas) {
+            console.error("Canvas not found:", id);
+            return;
+        }
 
-    //     // Top customers
-    //     if (state.charts.topCustomers) state.charts.topCustomers.destroy();
-    //     state.charts.topCustomers = ensureChart("chart-top-customers", "bar", {
-    //         labels: payload.top_customers.labels,
-    //         datasets: [{ label: "Total", data: payload.top_customers.values }],
-    //     }, { responsive: true, maintainAspectRatio: false });
+        // Set explicit dimensions to prevent resize issues
+        const parent = canvas.parentElement;
+        if (parent) {
+            canvas.width = parent.clientWidth;
+            canvas.height = 220;
+        }
 
-    //     // Forecast chart
-    //     const ctxF = document.getElementById("chart-forecast").getContext("2d");
-    //     const gradientF = getGradient(ctxF, "rgba(168,85,247,0.4)", "rgba(236,72,153,0.1)");
-    //     if (state.charts.forecast) state.charts.forecast.destroy();
+        const ctx = canvas.getContext("2d");
+        state.charts[key] = new Chart(ctx, { type, data, options });
+    }
 
-    //     state.charts.forecast = new Chart(ctxF, {
-    //         type: "line",
-    //         data: {
-    //             labels: payload.forecast_curve.labels,
-    //             datasets: [{
-    //                 label: "Forecast",
-    //                 data: payload.forecast_curve.values,
-    //                 borderColor: "#a855f7",
-    //                 backgroundColor: gradientF,
-    //                 fill: true,
-    //                 tension: 0.4,
-    //                 borderWidth: 2,
-    //             }],
-    //         },
-    //         options: {
-    //             responsive: true,
-    //             maintainAspectRatio: false,
-    //             scales: { x: { type: "time", time: { unit: "month" } }, y: { beginAtZero: true } },
-    //         },
-    //     });
-    // }
+    const COMMON_CHART_OPTIONS = {
+        responsive: false,  // Disable responsive to stop resize observer
+        maintainAspectRatio: false,
+        animation: false,
+        events: []  // Disable all events to prevent interactions that trigger redraws
+    };
 
     function drawCharts(payload) {
-        // Reusable helper for safe chart re-creation
-        console.log("Redrawing charts once...");
-
-        function recreateChart(key, id, type, data, options) {
-            if (state.charts[key]) {
-                state.charts[key].destroy();
-                state.charts[key] = null;
-            }
-            const canvas = document.getElementById(id);
-            if (!canvas) return;
-            const ctx = canvas.getContext("2d");
-            state.charts[key] = new Chart(ctx, { type, data, options });
-        }
-
-        // Gradient helper
-        function getGradient(ctx, color1, color2) {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, color1);
-            gradient.addColorStop(1, color2);
-            return gradient;
-        }
-
-        // --- Pipeline (Quotations vs Won)
+        // Pipeline Chart (Bar Chart: Quotations vs Won)
         recreateChart("pipeline", "chart-pipeline", "bar", {
             labels: payload.pipeline.labels,
             datasets: [
@@ -204,30 +193,94 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
                 },
             ],
         }, {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false, // prevents continuous redraw
-            plugins: { legend: { position: "bottom" } },
+            ...COMMON_CHART_OPTIONS,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        generateLabels: function(chart) {
+                            return Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    grid: { display: true }
+                },
+                y: {
+                    type: 'linear',
+                    min: 0,
+                    max: 1000,
+                    ticks: {
+                        stepSize: 200,
+                        callback: function(value) {
+                            return value;
+                        }
+                    },
+                    grid: { display: true }
+                }
+            }
         });
 
-        // --- Top Customers
+        // Top Customers Chart (Bar Chart)
         recreateChart("topCustomers", "chart-top-customers", "bar", {
-            labels: payload.top_customers.labels,
+            labels: payload.top_customers.labels.length > 0
+                ? payload.top_customers.labels
+                : ["No Data"],
             datasets: [{
                 label: "Total",
-                data: payload.top_customers.values,
+                data: payload.top_customers.values.length > 0
+                    ? payload.top_customers.values
+                    : [0],
                 backgroundColor: "#f59e0b",
             }],
         }, {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            plugins: { legend: { display: false } },
+            ...COMMON_CHART_OPTIONS,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    grid: { display: true }
+                },
+                y: {
+                    type: 'linear',
+                    min: 0,
+                    max: 1000,
+                    ticks: {
+                        stepSize: 200,
+                        callback: function(value) {
+                            return value;
+                        }
+                    },
+                    grid: { display: true }
+                }
+            }
         });
 
-        // --- Forecast Chart
-        const ctxF = document.getElementById("chart-forecast").getContext("2d");
-        const gradientF = getGradient(ctxF, "rgba(168,85,247,0.4)", "rgba(236,72,153,0.1)");
+        // Forecast Chart (Line Chart)
+        const ctxF = document.getElementById("chart-forecast");
+        if (!ctxF) {
+            console.error("Forecast canvas not found!");
+            return;
+        }
+
+        // Set explicit dimensions
+        const parentF = ctxF.parentElement;
+        if (parentF) {
+            ctxF.width = parentF.clientWidth;
+            ctxF.height = 220;
+        }
+
+        const gradientF = getGradient(
+            ctxF.getContext("2d"),
+            "rgba(168,85,247,0.4)",
+            "rgba(236,72,153,0.1)"
+        );
+
         recreateChart("forecast", "chart-forecast", "line", {
             labels: payload.forecast_curve.labels,
             datasets: [{
@@ -240,63 +293,97 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
                 borderWidth: 2,
             }],
         }, {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
+            ...COMMON_CHART_OPTIONS,
             scales: {
-                x: { title: { display: true, text: "Month" } },
-                y: { beginAtZero: true, title: { display: true, text: "Amount" } },
+                x: {
+                    type: 'category',
+                    title: { display: true, text: "Month" },
+                    grid: { display: true }
+                },
+                y: {
+                    type: 'linear',
+                    min: 0,
+                    max: 1000,
+                    title: { display: true, text: "Amount" },
+                    ticks: {
+                        stepSize: 200,
+                        callback: function(value) {
+                            return value;
+                        }
+                    },
+                    grid: { display: true }
+                }
             },
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false }
+            }
         });
     }
 
-
-    // ------------------------------------------------------------
-    // TABLE + PAGINATION
-    // ------------------------------------------------------------
-
+    // ============================================================
+    // TABLE & PAGINATION
+    // ============================================================
+    
     function fillTable(tbl) {
         const $tb = $("#srd-tbody").empty();
-        tbl.rows.forEach(r => {
+        
+        if (tbl.rows.length === 0) {
+            // Show empty state
             $tb.append(`
                 <tr>
-                    <td><a href="#action=281&model=sale.order&id=${r.id}" class="text-decoration-none">${_.escape(r.name)}</a></td>
-                    <td>${_.escape(r.partner || "")}</td>
-                    <td>${pill(r.state)}</td>
-                    <td>${_.escape(r.date_order || "")}</td>
-                    <td class="text-end">${r.amount_untaxed?.toLocaleString()}</td>
-                    <td class="text-end">${r.amount_total?.toLocaleString()}</td>
-                    <td>${_.escape(r.validity_date || "")}</td>
+                    <td colspan="7" class="p-0">
+                        <div class="table-empty-state">
+                            <i class="fa fa-inbox"></i>
+                            <h5>No orders found</h5>
+                            <p>There are no orders matching your criteria. Try adjusting your filters.</p>
+                        </div>
+                    </td>
                 </tr>
             `);
-        });
+        } else {
+            tbl.rows.forEach(r => {
+                $tb.append(`
+                    <tr>
+                        <td><a href="#action=281&model=sale.order&id=${r.id}" class="order-link">${_.escape(r.name)}</a></td>
+                        <td>${_.escape(r.partner || "")}</td>
+                        <td>${pill(r.state)}</td>
+                        <td>${_.escape(r.date_order || "")}</td>
+                        <td class="text-end">${r.amount_untaxed?.toLocaleString()}</td>
+                        <td class="text-end fw-semibold">${r.amount_total?.toLocaleString()}</td>
+                        <td>${_.escape(r.validity_date || "—")}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        // Update pagination info
         const start = (tbl.page - 1) * tbl.page_size + 1;
         const end = Math.min(tbl.page * tbl.page_size, tbl.total);
-        $("#srd-pager-info").text(`${start}-${end} of ${tbl.total}`);
+        $("#srd-pager-info").text(`Showing ${start}-${end} of ${tbl.total}`);
+        
+        // Update pagination button states
         $("#srd-prev").prop("disabled", tbl.page <= 1);
         $("#srd-next").prop("disabled", end >= tbl.total);
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // CORE REFRESH LOGIC
-    // ------------------------------------------------------------
-
+    // ============================================================
+    
     async function refresh() {
         const data = await fetchData();
         setKPIs(data.kpis);
         drawCharts(data);
         fillTable(data.table);
-        // $(".sales-rep-dashboard canvas").hide().fadeIn(800);
         $(".sales-rep-dashboard canvas").css("opacity", 1);
-
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // EVENT BINDINGS
-    // ------------------------------------------------------------
-
+    // ============================================================
+    
     function bindEvents() {
+        // Apply date filter
         $("#srd-apply").on("click", function () {
             state.date_from = $("#srd-date-from").val() || null;
             state.date_to = $("#srd-date-to").val() || null;
@@ -304,20 +391,32 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             refresh();
         });
 
+        // Reset filters
         $("#srd-reset").on("click", function () {
             $("#srd-date-from, #srd-date-to, #srd-search").val("");
-            state = Object.assign(state, { date_from: null, date_to: null, page: 1 });
+            state = Object.assign(state, { 
+                date_from: null, 
+                date_to: null, 
+                page: 1 
+            });
             refresh();
         });
 
+        // Previous page
         $("#srd-prev").on("click", function () {
-            if (state.page > 1) { state.page--; refresh(); }
+            if (state.page > 1) {
+                state.page--;
+                refresh();
+            }
         });
 
+        // Next page
         $("#srd-next").on("click", function () {
-            state.page++; refresh();
+            state.page++;
+            refresh();
         });
 
+        // Export to CSV
         $("#srd-export").on("click", function () {
             const data = $("#srd-tbody tr").map(function () {
                 const cells = $(this).find("td").map((_, td) => $(td).text().trim()).get();
@@ -335,10 +434,10 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         });
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // INITIALIZATION
-    // ------------------------------------------------------------
-
+    // ============================================================
+    
     $(document).ready(function () {
         if (!$(".sales-rep-dashboard").length) return;
         bindEvents();
