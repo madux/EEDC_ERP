@@ -83,7 +83,8 @@
             ('approver_id.user_id.id','=', user.id),
             ('approver_ids.user_id','=', user.id),
              ('memo_setting_id.approver_ids.user_id.id','=', user.id), 
-            ('create_uid','=', user.id),  
+            ('create_uid','=', user.id),
+            ('stage_id.approver_ids.user_id','=', user.id), 
             ]</field>
         </record>
         <record id="memo_root_see_all_record" model="ir.rule">
