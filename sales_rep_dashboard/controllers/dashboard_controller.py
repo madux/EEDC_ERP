@@ -31,13 +31,21 @@ class SalesRepDashboard(http.Controller):
         today = date.today()
         date_from = _date(kw.get("date_from")) 
         date_to   = _date(kw.get("date_to"))   
+        search_term = (kw.get("search") or "").strip()
 
         # Build domain common pieces
         base_domain = [("user_id", "=", uid)]
+        # date filters
         if date_from:
             base_domain.append(("date_order", ">=", datetime.combine(date_from, datetime.min.time())))
         if date_to:
             base_domain.append(("date_order", "<=", datetime.combine(date_to, datetime.max.time())))
+            
+        # search filter
+        if search_term:
+            base_domain.append("|")
+            base_domain.append(("name", "ilike", search_term))
+            base_domain.append(("partner_id.name", "ilike", search_term))
 
 
         order = env["sale.order"]

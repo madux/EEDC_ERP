@@ -37,6 +37,7 @@
                     placeholder="Search order or customer..."
                     />
                     <i class="fa fa-search search-icon"></i>
+                    <i class="fa fa-times clear-icon" id="srd-clear-search"></i>
                 </div>
                 </div>
             </div>

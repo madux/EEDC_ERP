@@ -8,6 +8,14 @@
     background: #f9fafb; // light neutral background
     padding-bottom: 3rem;
 
+    // ===== SEARCH HIGHLIGHT =====
+    mark.highlight {
+        background: #fef3c7; // warm yellow
+        color: #92400e; // deep amber text
+        padding: 0 2px;
+        border-radius: 3px;
+    }
+
     // ===== GENERIC CARD STYLE =====
     .glassy {
         background: #fff;
@@ -433,6 +441,27 @@
       font-size: 0.85rem;
       pointer-events: none;
     }
+
+    .clear-icon {
+        position: absolute;
+        top: 50%;
+        right: 0.9rem;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: #6b7280;
+        }
+
+        &.visible {
+            display: block;
+        }
+    }
+
   }
 
   // --- Action Buttons ---

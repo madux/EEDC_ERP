@@ -9,6 +9,7 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     let state = {
         date_from: null,
         date_to: null,
+        search: "",
         page: 1,
         page_size: 20,
         charts: { pipeline: null, topCustomers: null, forecast: null },
@@ -18,6 +19,12 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     // ============================================================
     // UTILITY HELPERS
     // ============================================================
+
+    // Escape RegExp for highlight safety
+    _.escapeRegExp = function (string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
     function fmtMoney(v, cur) {
         if (v == null) return "-";
         try {
@@ -60,6 +67,7 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             date_to: state.date_to,
             page: state.page,
             page_size: state.page_size,
+            search: state.search || "",
         };
         const res = await ajax.jsonRpc("/sales_rep_dashboard/data", "call", payload);
         if (res.currency_symbol) {
@@ -170,10 +178,10 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
     }
 
     const COMMON_CHART_OPTIONS = {
-        responsive: false,  // Disable responsive to stop resize observer
+        responsive: false,  
         maintainAspectRatio: false,
         animation: false,
-        events: []  // Disable all events to prevent interactions that trigger redraws
+        events: []  
     };
 
     function drawCharts(payload) {
@@ -328,31 +336,46 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         const $tb = $("#srd-tbody").empty();
         
         if (tbl.rows.length === 0) {
-            // Show empty state
+            const searchText = state.search ? _.escape(state.search) : "";
+            const customMessage = state.search
+                ? `<p class="no-result-msg">No results found for "<strong>${searchText}</strong>".</p>`
+                : `<p class="no-result-msg">There are no orders matching your criteria. Try adjusting your filters.</p>`;
+
             $tb.append(`
                 <tr>
                     <td colspan="7" class="p-0">
                         <div class="table-empty-state">
                             <i class="fa fa-inbox"></i>
                             <h5>No orders found</h5>
-                            <p>There are no orders matching your criteria. Try adjusting your filters.</p>
+                            ${customMessage}
                         </div>
                     </td>
                 </tr>
             `);
         } else {
             tbl.rows.forEach(r => {
-                $tb.append(`
-                    <tr>
-                        <td><a href="#action=281&model=sale.order&id=${r.id}" class="order-link">${_.escape(r.name)}</a></td>
-                        <td>${_.escape(r.partner || "")}</td>
-                        <td>${pill(r.state)}</td>
-                        <td>${_.escape(r.date_order || "")}</td>
-                        <td class="text-end">${r.amount_untaxed?.toLocaleString()}</td>
-                        <td class="text-end fw-semibold">${r.amount_total?.toLocaleString()}</td>
-                        <td>${_.escape(r.validity_date || "—")}</td>
-                    </tr>
-                `);
+                function highlightMatch(text, query) {
+                    if (!query) return _.escape(text || "");
+                    const regex = new RegExp(`(${_.escapeRegExp(query)})`, "ig");
+                    return _.escape(text || "").replace(regex, "<mark class='highlight'>$1</mark>");
+                }
+
+                tbl.rows.forEach(r => {
+                    const orderName = highlightMatch(r.name, state.search);
+                    const partnerName = highlightMatch(r.partner, state.search);
+                    $tb.append(`
+                        <tr>
+                            <td><a href="#action=281&model=sale.order&id=${r.id}" class="order-link">${orderName}</a></td>
+                            <td>${partnerName}</td>
+                            <td>${pill(r.state)}</td>
+                            <td>${_.escape(r.date_order || "")}</td>
+                            <td class="text-end">${r.amount_untaxed?.toLocaleString()}</td>
+                            <td class="text-end fw-semibold">${r.amount_total?.toLocaleString()}</td>
+                            <td>${_.escape(r.validity_date || "—")}</td>
+                        </tr>
+                    `);
+                });
+
             });
         }
 
@@ -397,6 +420,7 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             state = Object.assign(state, { 
                 date_from: null, 
                 date_to: null, 
+                search: "",
                 page: 1 
             });
             refresh();
@@ -432,7 +456,41 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
             link.download = "sales_report.csv";
             link.click();
         });
+
+        // Live search (debounced)
+        let searchTimer;
+        $("#srd-search").on("input", function () {
+            clearTimeout(searchTimer);
+            const value = $(this).val().trim();
+            searchTimer = setTimeout(() => {
+                state.search = value;
+                state.page = 1;
+                refresh();
+            }, 400); 
+        });
+
+        // Toggle clear icon visibility
+        $("#srd-search").on("input", function () {
+            clearTimeout(searchTimer);
+            const value = $(this).val().trim();
+            $("#srd-clear-search").toggleClass("visible", !!value);
+            searchTimer = setTimeout(() => {
+                state.search = value;
+                state.page = 1;
+                refresh();
+            }, 400);
+        });
+    
+        // Clear search when clicking "×"
+        $("#srd-clear-search").on("click", function () {
+            $("#srd-search").val("");
+            $(this).removeClass("visible");
+            state.search = "";
+            state.page = 1;
+            refresh();
+        });
     }
+
 
     // ============================================================
     // INITIALIZATION
