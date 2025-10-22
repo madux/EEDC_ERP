@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _, SUPERUSER_ID
+from odoo.exceptions import ValidationError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -58,7 +59,12 @@ class UserRole(models.Model):
     )
     limit_to_user_context = fields.Boolean(
         string='Limit to User Context',
-        help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/branches."
+        help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/districts."
+    )
+    
+    limit_to_role_context = fields.Boolean(
+        string='Limit to Role Context',
+        help="If checked, the user will only be assigned as an approver in the role's allowed companies/districts. User's own companies/district will be ignored."
     )
     
     color = fields.Integer(string='Color Index', default=0,
@@ -74,6 +80,12 @@ class UserRole(models.Model):
     _sql_constraints = [
         ('name_uniq', 'unique (name)', 'Role name must be unique!')
     ]
+    
+    @api.constrains('limit_to_user_context', 'limit_to_role_context')
+    def _check_context_limits(self):
+        for role in self:
+            if role.limit_to_user_context and role.limit_to_role_context:
+                raise ValidationError(_('A role cannot have both "Limit to User Context" and "Limit to Role Context" enabled.'))
     
     def action_view_users(self):
         """Smart button action to view users with this role."""
@@ -144,7 +156,7 @@ class UserRole(models.Model):
                         users_to_sync_permissions |= added_users
                         newly_added_users |= added_users
             
-        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context', 'user_ids']):
+        if any(field in vals for field in ['is_request_approver', 'company_ids', 'branch_ids', 'limit_to_user_context', 'limit_to_role_context', 'user_ids']):
             users_to_sync_approvals = self.user_ids
             
             if 'user_ids' in vals:

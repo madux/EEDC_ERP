@@ -32,11 +32,13 @@
                     <group>
                         <group>
                             <field name="description" placeholder="Describe the purpose of this role..."/>
-                            <field name="limit_to_user_context"/>
-                            <!-- <field name="active"/> -->
+                            <field name="is_request_approver"/>
                         </group>
                         <group>
-                            <field name="is_request_approver"/>
+                            <field name="limit_to_user_context" 
+                                attrs="{'invisible': ['|', ('is_request_approver', '=', False), ('limit_to_role_context', '=', True)]}"/>
+                            <field name="limit_to_role_context" 
+                                attrs="{'invisible': ['|', ('is_request_approver', '=', False), ('limit_to_user_context', '=', True)]}"/>
                         </group>
                     </group>
                     
@@ -44,22 +46,19 @@
                         <page string="Permissions">
                             <group>
                                 <field name="group_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Add security groups..."/>
-                                <!-- <field name="company_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Add companies..."/> -->
+                                    options="{'no_create': True}" 
+                                    placeholder="Add security groups..."/>
                             </group>
                             <separator string="Location"/>
                             <group string="Company Context">
                                 <field name="company_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Leave empty for all companies"/>
+                                    options="{'no_create': True}" 
+                                    placeholder="Leave empty for all companies"/>
                             </group>
                             <group string="Branch Context">
                                 <field name="branch_ids" widget="many2many_tags" 
-                                       options="{'no_create': True}" 
-                                       placeholder="Leave empty for all branches"/>
+                                    options="{'no_create': True}" 
+                                    placeholder="Leave empty for all branches"/>
                             </group>
                         </page>
                         
@@ -68,8 +67,10 @@
                                 <tree>
                                     <field name="name"/>
                                     <field name="login"/>
-                                    <field name="branch_id" string="District"/>
-                                    <field name="company_id"/>
+                                    <field name="branch_id" string="District" attrs="{'column_invisible': [('parent.limit_to_role_context', '=', True)]}"/>
+                                    <field name="company_id" attrs="{'column_invisible': [('parent.limit_to_role_context', '=', True)]}"/>
+                                    <field name="branch_ids" string="Districts" widget="many2many_tags" attrs="{'column_invisible': [('parent.limit_to_role_context', '=', False)]}"/>
+                                    <field name="company_ids" widget="many2many_tags" attrs="{'column_invisible': [('parent.limit_to_role_context', '=', False)]}"/>
                                 </tree>
 
                                 <form string="User Details">

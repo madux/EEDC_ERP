@@ -227,6 +227,7 @@ class ResUsers(models.Model):
         return result
 
     
+    
     def _sync_approvals_from_roles(self):
         """
         Synchronize memo.stage approver lists based on user's roles, companies and branches.
@@ -264,17 +265,19 @@ class ResUsers(models.Model):
             
             if approval_roles:
                 context_limited_roles = approval_roles.filtered('limit_to_user_context')
-                cross_scope_roles = approval_roles - context_limited_roles
+                role_limited_roles = approval_roles.filtered('limit_to_role_context')
+                cross_scope_roles = approval_roles - context_limited_roles - role_limited_roles
                 
                 _logger.info(f"Context limited roles: {context_limited_roles.mapped('name')}")
+                _logger.info(f"Role limited roles: {role_limited_roles.mapped('name')}")
                 _logger.info(f"Cross scope roles: {cross_scope_roles.mapped('name')}")
                 
                 for role in context_limited_roles:
                     _logger.info(f"Processing context-limited role: {role.name}")
-                    _logger.info(f"User company_id: {user.company_id.name if user.company_id else 'None'}")
-                    _logger.info(f"User branch_id: {user.branch_id.name if hasattr(user, 'branch_id') and user.branch_id else 'None'}")
-                    _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
-                    _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
+                    # _logger.info(f"User company_id: {user.company_id.name if user.company_id else 'None'}")
+                    # _logger.info(f"User branch_id: {user.branch_id.name if hasattr(user, 'branch_id') and user.branch_id else 'None'}")
+                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
                     
                     domain = [('approval_role_ids', 'in', [role.id])]
                     
@@ -297,6 +300,35 @@ class ResUsers(models.Model):
                     user_context_stages = MemoStage.search(domain)
                     _logger.info(f"Found {len(user_context_stages)} stages for context-limited role {role.name}: {user_context_stages.mapped('name')}")
                     stages_user_should_approve |= user_context_stages
+                
+                for role in role_limited_roles:
+                    _logger.info(f"Processing role-limited role: {role.name}")
+                    # _logger.info(f"User allowed companies: {user.company_ids.mapped('name')}")
+                    # _logger.info(f"User allowed branches: {user.branch_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
+                    
+                    domain = [('approval_role_ids', 'in', [role.id])]
+                    
+                    applicable_companies = user.company_ids & role.company_ids if role.company_ids else user.company_ids           
+                    
+                    if applicable_companies:
+                        domain.append(('memo_config_id.company_id', 'in', applicable_companies.ids))
+                    else:
+                        _logger.info(f"Skipping role {role.name} - no company intersection between user and role and also no allowed companies set")
+                        
+                      
+                    if role.branch_ids:
+                        applicable_branches = role.branch_ids & user.branch_ids if user.branch_ids else False
+                        if not applicable_branches:
+                            _logger.info(f"Skipping role {role.name} - user has no branches that intersect with role's allowed branches")
+                            continue
+                        domain.append(('memo_config_id.branch_id', 'in', applicable_branches.ids))
+                    
+                    _logger.info(f"Searching for stages with domain: {domain}")
+                    role_context_stages = MemoStage.search(domain)
+                    _logger.info(f"Found {len(role_context_stages)} stages for role-limited role {role.name}: {role_context_stages.mapped('name')}")
+                    stages_user_should_approve |= role_context_stages
                 
                 if cross_scope_roles:
                     _logger.info(f"Processing cross-scope roles: {cross_scope_roles.mapped('name')}")
@@ -367,8 +399,6 @@ class ResUsers(models.Model):
             
             actual_current_stages = current_stages.filtered(lambda s: employee in s.approver_ids)
 
-            # stages_to_add = stages_user_should_approve - current_stages
-            # stages_to_remove = current_stages - stages_user_should_approve
             stages_to_add = stages_user_should_approve - actual_current_stages
             stages_to_remove = actual_current_stages - stages_user_should_approve
             
