@@ -29,15 +29,16 @@ class SalesRepDashboard(http.Controller):
 
         # Filters
         today = date.today()
-        date_from = _date(kw.get("date_from")) if kw.get("date_from") else (today.replace(day=1))
-        date_to   = _date(kw.get("date_to"))   if kw.get("date_to")   else today
+        date_from = _date(kw.get("date_from")) 
+        date_to   = _date(kw.get("date_to"))   
 
         # Build domain common pieces
-        base_domain = [
-            ("user_id", "=", uid),
-            ("date_order", ">=", datetime.combine(date_from, datetime.min.time())),
-            ("date_order", "<=", datetime.combine(date_to, datetime.max.time())),
-        ]
+        base_domain = [("user_id", "=", uid)]
+        if date_from:
+            base_domain.append(("date_order", ">=", datetime.combine(date_from, datetime.min.time())))
+        if date_to:
+            base_domain.append(("date_order", "<=", datetime.combine(date_to, datetime.max.time())))
+
 
         order = env["sale.order"]
 
@@ -56,15 +57,18 @@ class SalesRepDashboard(http.Controller):
             won_sum = won_rg[0].get("amount_total", 0.0) or 0.0
 
         # Forecasted amount
-        # By default: quotations with validity_date in window.
-        # If you use a custom expected close date field, replace 'validity_date' below.
         forecast_domain = [
             ("user_id", "=", uid),
             ("state", "in", ["draft", "sent"]),
             ("validity_date", "!=", False),
-            ("validity_date", ">=", datetime.combine(date_from, datetime.min.time())),
-            ("validity_date", "<=", datetime.combine(date_to, datetime.max.time())),
         ]
+
+        # Apply date filters only if provided
+        if date_from:
+            forecast_domain.append(("validity_date", ">=", datetime.combine(date_from, datetime.min.time())))
+        if date_to:
+            forecast_domain.append(("validity_date", "<=", datetime.combine(date_to, datetime.max.time())))
+
         forecast_sum = 0.0
         forecast_rg = order.read_group(forecast_domain, ["amount_total:sum"], [])
         if forecast_rg:
@@ -82,14 +86,19 @@ class SalesRepDashboard(http.Controller):
         def month_key(d):
             return d.strftime("%Y-%m")
 
-        # build buckets for last 6 months including current
+        # Build monthly buckets
         months = []
-        cur = date_from.replace(day=1)
-        end_anchor = date_to.replace(day=1)
-        # ensure at least 6 monthly buckets (nice chart)
+        # use safe defaults if dates not given
+        start_anchor = date_from or (today - relativedelta(months=5))
+        end_anchor = date_to or today
+        cur = start_anchor.replace(day=1)
+        end_anchor = end_anchor.replace(day=1)
+
+        # Ensure at least 6 months of data
         while len(months) < 6 or cur <= end_anchor:
             months.append(cur.strftime("%Y-%m"))
             cur = (cur + relativedelta(months=1))
+
 
         def sum_rg(domain):
             """Return monthly totals for a given domain"""
