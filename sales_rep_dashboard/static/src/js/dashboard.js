@@ -184,148 +184,167 @@ odoo.define('sales_rep_dashboard.dashboard', function (require) {
         events: []  
     };
 
+    function showChartEmptyState(id, message = "No data available") {
+        const wrapper = document.querySelector(`#${id}`)?.parentElement;
+        // only insert if the wrapper exists and we haven’t already inserted an empty state
+        if (!wrapper || wrapper.querySelector(".chart-empty-state")) return;
+
+        wrapper.innerHTML = `
+            <div class="chart-empty-state">
+                <i class="fa fa-chart-bar"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
     function drawCharts(payload) {
-        // Pipeline Chart (Bar Chart: Quotations vs Won)
-        recreateChart("pipeline", "chart-pipeline", "bar", {
-            labels: payload.pipeline.labels,
-            datasets: [
-                {
-                    label: "Quotations",
-                    data: payload.pipeline.quotations,
-                    backgroundColor: "#3b82f6",
-                },
-                {
-                    label: "Won",
-                    data: payload.pipeline.won,
-                    backgroundColor: "#22c55e",
-                },
-            ],
-        }, {
-            ...COMMON_CHART_OPTIONS,
+        // Common options shared across charts
+        const COMMON_CHART_OPTIONS = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 800,
+                easing: "easeOutQuart",
+            },
             plugins: {
                 legend: {
                     position: "bottom",
                     labels: {
-                        generateLabels: function(chart) {
-                            return Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                        }
-                    }
-                }
+                        usePointStyle: true,
+                        padding: 15,
+                        font: { family: "Inter, sans-serif", size: 12 },
+                    },
+                },
+                tooltip: {
+                    backgroundColor: "rgba(17, 24, 39, 0.9)",
+                    titleFont: { size: 13, weight: "600" },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    displayColors: false,
+                    cornerRadius: 8,
+                },
             },
             scales: {
                 x: {
-                    type: 'category',
-                    grid: { display: true }
+                    grid: { display: false },
+                    ticks: { color: "#6b7280", font: { size: 11 } },
                 },
                 y: {
-                    type: 'linear',
-                    min: 0,
-                    max: 1000,
+                    grid: { color: "rgba(0,0,0,0.05)", drawBorder: false },
                     ticks: {
-                        stepSize: 200,
-                        callback: function(value) {
-                            return value;
-                        }
+                        color: "#9ca3af",
+                        font: { size: 11 },
+                        callback: (value) => value.toLocaleString(),
                     },
-                    grid: { display: true }
-                }
-            }
-        });
-
-        // Top Customers Chart (Bar Chart)
-        recreateChart("topCustomers", "chart-top-customers", "bar", {
-            labels: payload.top_customers.labels.length > 0
-                ? payload.top_customers.labels
-                : ["No Data"],
-            datasets: [{
-                label: "Total",
-                data: payload.top_customers.values.length > 0
-                    ? payload.top_customers.values
-                    : [0],
-                backgroundColor: "#f59e0b",
-            }],
-        }, {
-            ...COMMON_CHART_OPTIONS,
-            plugins: {
-                legend: { display: false }
+                },
             },
-            scales: {
-                x: {
-                    type: 'category',
-                    grid: { display: true }
-                },
-                y: {
-                    type: 'linear',
-                    min: 0,
-                    max: 1000,
-                    ticks: {
-                        stepSize: 200,
-                        callback: function(value) {
-                            return value;
-                        }
-                    },
-                    grid: { display: true }
-                }
-            }
-        });
+        };
 
-        // Forecast Chart (Line Chart)
-        const ctxF = document.getElementById("chart-forecast");
-        if (!ctxF) {
-            console.error("Forecast canvas not found!");
-            return;
+        // ===== PIPELINE BY MONTH =====
+        const pipeCanvas = document.getElementById("chart-pipeline");
+        if (pipeCanvas) {
+            const ctx = pipeCanvas.getContext("2d");
+            const gradientBlue = ctx.createLinearGradient(0, 0, 0, 220);
+            gradientBlue.addColorStop(0, "rgba(59,130,246,0.9)");
+            gradientBlue.addColorStop(1, "rgba(59,130,246,0.2)");
+            const gradientGreen = ctx.createLinearGradient(0, 0, 0, 220);
+            gradientGreen.addColorStop(0, "rgba(16,185,129,0.9)");
+            gradientGreen.addColorStop(1, "rgba(16,185,129,0.2)");
+
+            // ✅ fixed logic
+            const hasPipelineData =
+                payload.pipeline.labels.length > 0 &&
+                (payload.pipeline.quotations.some(v => v > 0) ||
+                payload.pipeline.won.some(v => v > 0));
+
+            if (!hasPipelineData) {
+                showChartEmptyState("chart-pipeline", "No pipeline data found");
+            } else {
+                recreateChart("pipeline", "chart-pipeline", "bar", {
+                    labels: payload.pipeline.labels,
+                    datasets: [
+                        {
+                            label: "Quotations",
+                            data: payload.pipeline.quotations,
+                            backgroundColor: gradientBlue,
+                            borderRadius: 6,
+                            barPercentage: 0.45,
+                        },
+                        {
+                            label: "Won",
+                            data: payload.pipeline.won,
+                            backgroundColor: gradientGreen,
+                            borderRadius: 6,
+                            barPercentage: 0.45,
+                        },
+                    ],
+                }, COMMON_CHART_OPTIONS);
+            }
         }
 
-        // Set explicit dimensions
-        const parentF = ctxF.parentElement;
-        if (parentF) {
-            ctxF.width = parentF.clientWidth;
-            ctxF.height = 220;
+        // ===== TOP CUSTOMERS =====
+        const topCanvas = document.getElementById("chart-top-customers");
+        if (topCanvas) {
+            const ctx = topCanvas.getContext("2d");
+            const gradientOrange = ctx.createLinearGradient(0, 0, 0, 220);
+            gradientOrange.addColorStop(0, "rgba(245,158,11,0.9)");
+            gradientOrange.addColorStop(1, "rgba(245,158,11,0.2)");
+
+            const hasTopCustomers =
+                payload.top_customers.values.length > 0 &&
+                payload.top_customers.values.some(v => v > 0);
+
+            if (!hasTopCustomers) {
+                showChartEmptyState("chart-top-customers", "No customer data available");
+            } else {
+                recreateChart("topCustomers", "chart-top-customers", "bar", {
+                    labels: payload.top_customers.labels,
+                    datasets: [
+                        {
+                            label: "Total Amount",
+                            data: payload.top_customers.values,
+                            backgroundColor: gradientOrange,
+                            borderRadius: 6,
+                            barPercentage: 0.55,
+                        },
+                    ],
+                }, COMMON_CHART_OPTIONS);
+            }
         }
 
-        const gradientF = getGradient(
-            ctxF.getContext("2d"),
-            "rgba(168,85,247,0.4)",
-            "rgba(236,72,153,0.1)"
-        );
+        // ===== FORECAST (Smooth Line Chart) =====
+        const forecastCanvas = document.getElementById("chart-forecast");
+        if (forecastCanvas) {
+            const ctx = forecastCanvas.getContext("2d");
+            const gradientPurple = ctx.createLinearGradient(0, 0, 0, 220);
+            gradientPurple.addColorStop(0, "rgba(168,85,247,0.5)");
+            gradientPurple.addColorStop(1, "rgba(168,85,247,0.05)");
 
-        recreateChart("forecast", "chart-forecast", "line", {
-            labels: payload.forecast_curve.labels,
-            datasets: [{
-                label: "Forecast",
-                data: payload.forecast_curve.values,
-                borderColor: "#a855f7",
-                backgroundColor: gradientF,
-                fill: true,
-                tension: 0.4,
-                borderWidth: 2,
-            }],
-        }, {
-            ...COMMON_CHART_OPTIONS,
-            scales: {
-                x: {
-                    type: 'category',
-                    title: { display: true, text: "Month" },
-                    grid: { display: true }
-                },
-                y: {
-                    type: 'linear',
-                    min: 0,
-                    max: 1000,
-                    title: { display: true, text: "Amount" },
-                    ticks: {
-                        stepSize: 200,
-                        callback: function(value) {
-                            return value;
-                        }
-                    },
-                    grid: { display: true }
-                }
-            },
-            plugins: {
-                legend: { display: false }
+            const hasForecastData =
+                payload.forecast_curve.values.length > 0 &&
+                payload.forecast_curve.values.some(v => v > 0);
+
+            if (!hasForecastData) {
+                showChartEmptyState("chart-forecast", "No forecast data available");
+            } else {
+                recreateChart("forecast", "chart-forecast", "line", {
+                    labels: payload.forecast_curve.labels,
+                    datasets: [
+                        {
+                            label: "Forecast (Next 3 Months)",
+                            data: payload.forecast_curve.values,
+                            fill: true,
+                            backgroundColor: gradientPurple,
+                            borderColor: "#8b5cf6",
+                            pointBackgroundColor: "#a855f7",
+                            pointRadius: 4,
+                            tension: 0.4,
+                            borderWidth: 2.2,
+                        },
+                    ],
+                }, COMMON_CHART_OPTIONS);
             }
-        });
+        }
     }
 
     // ============================================================

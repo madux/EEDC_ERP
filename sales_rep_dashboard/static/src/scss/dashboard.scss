@@ -965,3 +965,34 @@
         }
     }
 }
+
+.chartjs-render-monitor {
+  animation: fadeInChart 0.6s ease-out;
+}
+
+.chartjs-tooltip {
+  font-family: "Inter", sans-serif !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chart-empty-state {
+  color: #9ca3af;
+  text-align: center;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+    color: #a855f7;
+  }
+
+  p {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}

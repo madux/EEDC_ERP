@@ -97,7 +97,7 @@ class SalesRepDashboard(http.Controller):
         # Build monthly buckets
         months = []
         # use safe defaults if dates not given
-        start_anchor = date_from or (today - relativedelta(months=5))
+        start_anchor = date_from or (today - relativedelta(months=6))
         end_anchor = date_to or today
         cur = start_anchor.replace(day=1)
         end_anchor = end_anchor.replace(day=1)
@@ -107,29 +107,17 @@ class SalesRepDashboard(http.Controller):
             months.append(cur.strftime("%Y-%m"))
             cur = (cur + relativedelta(months=1))
 
-
         def sum_rg(domain):
             """Return monthly totals for a given domain"""
-            rg = order.read_group(
-                domain,
-                ["amount_total:sum", "date_order"],
-                ["date_order"]
-            )
+            records = order.search(domain)
             out = {m: 0.0 for m in months}
-
-            for row in rg:
-                d = row.get("date_order")
-                if isinstance(d, tuple):
-                    d = d[0]
-                if isinstance(d, str):
-                    try:
-                        d = datetime.strptime(d, "%Y-%m-%d")
-                    except Exception:
-                        continue
-                if isinstance(d, datetime):
-                    key = d.strftime("%Y-%m")
+            
+            for rec in records:
+                if rec.date_order:
+                    key = rec.date_order.strftime("%Y-%m")
                     if key in out:
-                        out[key] += row.get("amount_total", 0.0) or 0.0
+                        out[key] += rec.amount_total or 0.0
+            
             return [out[m] for m in months]
 
         pipe_quotation = sum_rg(base_domain + [("state", "in", ["draft", "sent"])])
