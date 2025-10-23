@@ -5,6 +5,8 @@ from odoo.exceptions import ValidationError, UserError
 class StockPicking(models.Model):
     _inherit = "stock.picking"
     _order = "id desc"
+    _check_company_auto = False
+
 
     memo_id = fields.Many2one('memo.model', string='Request Reference')
     legacy_id = fields.Integer(string="legacy_id")

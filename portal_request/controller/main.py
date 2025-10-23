@@ -838,7 +838,7 @@ class PortalRequest(http.Controller):
             domain = [
                 ('employee_id.employee_number', '=', staff_num),
                 ('active', '=', True),
-                ('employee_id.user_id', '=', user.id),
+                ('employee_id.user_id.id', '=', user.id),
                 ('code', '=ilike', existing_order) 
             ]
             if request_type == "soe":
@@ -849,6 +849,7 @@ class PortalRequest(http.Controller):
             else:
                 domain += [('state', 'in', ['submit'])]
             memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
+            _logger.info(f"DOMAAAN {domain}")
             if memo_request: 
                 if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
                     return {
@@ -2031,7 +2032,7 @@ class PortalRequest(http.Controller):
                     return {
                             "status": False, 
                             "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
-                            "message": """Please go into Click the VIEW AS A CORE USER Button to Approve this record. You can Contact system admin to give you guidance""" 
+                            "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
                              
                             }
                 current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals

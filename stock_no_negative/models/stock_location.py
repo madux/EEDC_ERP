@@ -7,6 +7,7 @@ from odoo import fields, models
 
 class StockLocation(models.Model):
     _inherit = "stock.location"
+    _check_company_auto = False
 
     allow_negative_stock = fields.Boolean(
         help="Allow negative stock levels for the stockable products "
