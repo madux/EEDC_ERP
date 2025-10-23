@@ -2195,8 +2195,8 @@ class Memo_Model(models.Model):
         if not self.is_inter_district_transfer:
             if not self.sudo().source_location_id.company_id.id == self.company_id.id:
                 raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
-        if not self.dest_location_id.company_id.id == self.company_id.id:
-            raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
+            if not self.sudo().dest_location_id.company_id.id == self.company_id.id:
+                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
         
         for ln in self.product_ids:
             """Enforce to disallow stock move that has no products qty in the location"""
@@ -2609,8 +2609,8 @@ class Memo_Model(models.Model):
     @api.depends('move_id')
     def compute_move_state(self):
         for rec in self:
-            if rec.move_id:
-                rec.invoice_status = rec.move_id.state
+            if rec.sudo().move_id:
+                rec.invoice_status = rec.sudo().move_id.state
             else:
                 rec.invoice_status = 'Not Posted'
                 

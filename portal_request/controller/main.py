@@ -2031,7 +2031,7 @@ class PortalRequest(http.Controller):
                     return {
                             "status": False, 
                             "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
-                            "message": """Please go into Click the VIEW AS A CORE USER Button to Approve this record. You can Contact system admin to give you guidance""" 
+                            "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
                              
                             }
                 current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
