@@ -838,7 +838,7 @@ class PortalRequest(http.Controller):
             domain = [
                 ('employee_id.employee_number', '=', staff_num),
                 ('active', '=', True),
-                ('employee_id.user_id', '=', user.id),
+                ('employee_id.user_id.id', '=', user.id),
                 ('code', '=ilike', existing_order) 
             ]
             if request_type == "soe":
@@ -849,6 +849,7 @@ class PortalRequest(http.Controller):
             else:
                 domain += [('state', 'in', ['submit'])]
             memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
+            _logger.info(f"DOMAAAN {domain}")
             if memo_request: 
                 if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
                     return {
