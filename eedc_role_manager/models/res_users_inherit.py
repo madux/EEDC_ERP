@@ -165,7 +165,7 @@ class ResUsers(models.Model):
                         user.login or user.name, user.id
                     )
             
-            # === Normal group sync (rest stays the same) ===
+            # === Normal group sync ===
             current_ownerships = ownership_model.search([('user_id', '=', user.id)])
             groups_managed_by_roles = current_ownerships.mapped('group_id')
             
@@ -227,237 +227,6 @@ class ResUsers(models.Model):
         return result
 
     
-    # def _sync_approvals_from_roles(self):
-    #     """
-    #     Synchronize memo.stage approver lists based on user's roles, companies and branches.
-    #     """
-    #     MemoStage = self.env['memo.stage']
-    #     ownership_model = self.env['user.role.approval.ownership']
-        
-    #     employees = self.env['hr.employee'].search([('user_id', 'in', self.ids)])
-        
-    #     for employee in employees:
-    #         user = employee.user_id
-    #         _logger.info(f"Processing user: {user.name} with employee: {employee.name}")
-            
-    #         approval_roles = user.role_ids.filtered('is_request_approver')
-    #         _logger.info(f"Approval roles {approval_roles}....")
-
-    #         stages_user_should_approve = self.env['memo.stage']
-    #         if approval_roles:
-    #             potential_stages = MemoStage.search([('approval_role_ids', 'in', approval_roles.ids)])
-    #             for stage in potential_stages:
-    #                 stage_config = stage.memo_config_id
-    #                 stage_company = stage_config.company_id
-    #                 stage_branch = stage_config.branch_id
-    #                 _logger.info(f"Stages: {stage.name}.....")
-
-    #                 matching_roles = approval_roles & stage.approval_role_ids
-    #                 if not matching_roles:
-    #                     continue
-
-    #                 should_approve = False
-    #                 for role in matching_roles:
-    #                     role_allows_company = True
-    #                     if stage_company and role.company_ids:
-    #                         if stage_company not in role.company_ids:
-    #                             role_allows_company = False
-
-    #                     role_allows_branch = True
-    #                     if stage_branch:
-    #                         if role.branch_ids:
-    #                             if stage_branch not in role.branch_ids:
-    #                                 role_allows_branch = False
-    #                         else:
-    #                             if not user.branch_ids or stage_branch not in user.branch_ids:
-    #                                 role_allows_branch = False
-    #                     else:
-    #                         if role.branch_ids and user.branch_ids and not (role.branch_ids & user.branch_ids):
-    #                             role_allows_branch = False
-    #                         if role.branch_ids and not user.branch_ids:
-    #                             role_allows_branch = False
-
-    #                     if role_allows_company and role_allows_branch:
-    #                         should_approve = True
-    #                         break
-
-    #                 if should_approve:
-    #                     stages_user_should_approve |= stage
-
-    #         current_ownerships = ownership_model.search([
-    #             ('user_id', '=', user.id),
-    #             ('employee_id', '=', employee.id)
-    #         ])
-    #         current_stages = current_ownerships.mapped('stage_id')
-
-    #         stages_to_add = stages_user_should_approve - current_stages
-    #         stages_to_remove = current_stages - stages_user_should_approve
-
-    #         for stage in stages_to_add:
-    #             if employee not in stage.approver_ids:
-    #                 stage.write({'approver_ids': [(4, employee.id)]})
-
-    #             existing = ownership_model.search([
-    #                 ('user_id', '=', user.id),
-    #                 ('employee_id', '=', employee.id),
-    #                 ('stage_id', '=', stage.id)
-    #             ], limit=1)
-    #             if not existing:
-    #                 granting_roles = approval_roles.filtered(lambda r: r in stage.approval_role_ids)
-    #                 ownership_model.create({
-    #                     'user_id': user.id,
-    #                     'employee_id': employee.id,
-    #                     'stage_id': stage.id,
-    #                     'role_ids': [(6, 0, granting_roles.ids)]
-    #                 })
-
-    #         for stage in stages_to_remove:
-    #             if employee in stage.approver_ids:
-    #                 stage.write({'approver_ids': [(3, employee.id)]})
-    #         if stages_to_remove:
-    #             ownership_model.search([
-    #                 ('user_id', '=', user.id),
-    #                 ('employee_id', '=', employee.id),
-    #                 ('stage_id', 'in', stages_to_remove.ids)
-    #             ]).unlink()
-
-    #         remaining_ownerships = ownership_model.search([
-    #             ('user_id', '=', user.id),
-    #             ('employee_id', '=', employee.id),
-    #             ('stage_id', 'in', stages_user_should_approve.ids)
-    #         ])
-    #         for ownership in remaining_ownerships:
-    #             granting_roles = approval_roles.filtered(lambda r: r in ownership.stage_id.approval_role_ids)
-    #             ownership.write({'role_ids': [(6, 0, granting_roles.ids)]})
-
-    #     return True
-    
-    # def _sync_approvals_from_roles(self):
-    #     """
-    #     Synchronize memo.stage approver lists based on user's roles, companies and branches.
-    #     """
-    #     MemoStage = self.env['memo.stage']
-    #     ownership_model = self.env['user.role.approval.ownership']
-        
-    #     employees = self.env['hr.employee'].search([('user_id', 'in', self.ids)])
-        
-    #     for employee in employees:
-    #         user = employee.user_id
-    #         _logger.info(f"Processing user: {user.name} with employee: {employee.name}")
-            
-    #         approval_roles = user.role_ids.filtered('is_request_approver')
-    #         _logger.info(f"Approval roles {approval_roles}....")
-
-    #         stages_user_should_approve = self.env['memo.stage']
-            
-    #         if approval_roles:
-    #             context_limited_roles = approval_roles.filtered('limit_to_user_context')
-    #             cross_scope_roles = approval_roles - context_limited_roles
-                
-    #             for role in context_limited_roles:
-    #                 domain = [('approval_role_ids', 'in', [role.id])]
-                    
-    #                 if user.company_id:
-    #                     domain.append(('memo_config_id.company_id', '=', user.company_id.id))
-    #                     if role.company_ids and user.company_id not in role.company_ids:
-    #                         continue
-                    
-    #                 if user.branch_id:
-    #                     domain.append(('memo_config_id.branch_id', '=', user.branch_id.id))
-    #                     if role.branch_ids and user.branch_id not in role.branch_ids:
-    #                         continue
-                    
-    #                 user_context_stages = MemoStage.search(domain)
-    #                 stages_user_should_approve |= user_context_stages
-                
-    #             if cross_scope_roles:
-    #                 potential_stages = MemoStage.search([('approval_role_ids', 'in', cross_scope_roles.ids)])
-                    
-    #                 for stage in potential_stages:
-    #                     stage_config = stage.memo_config_id
-    #                     stage_company = stage_config.company_id
-    #                     stage_branch = stage_config.branch_id
-    #                     _logger.info(f"Stages: {stage.name}.....")
-
-    #                     matching_roles = cross_scope_roles & stage.approval_role_ids
-    #                     if not matching_roles:
-    #                         continue
-
-    #                     should_approve = False
-    #                     for role in matching_roles:
-    #                         role_allows_company = True
-    #                         if stage_company and role.company_ids:
-    #                             if stage_company not in role.company_ids:
-    #                                 role_allows_company = False
-
-    #                         role_allows_branch = True
-    #                         if stage_branch:
-    #                             if role.branch_ids:
-    #                                 if stage_branch not in role.branch_ids:
-    #                                     role_allows_branch = False
-    #                             else:
-    #                                 if not user.branch_ids or stage_branch not in user.branch_ids:
-    #                                     role_allows_branch = False
-    #                         else:
-    #                             if role.branch_ids and user.branch_ids and not (role.branch_ids & user.branch_ids):
-    #                                 role_allows_branch = False
-    #                             if role.branch_ids and not user.branch_ids:
-    #                                 role_allows_branch = False
-
-    #                         if role_allows_company and role_allows_branch:
-    #                             should_approve = True
-    #                             break
-
-    #                     if should_approve:
-    #                         stages_user_should_approve |= stage
-
-    #         current_ownerships = ownership_model.search([
-    #             ('user_id', '=', user.id),
-    #             ('employee_id', '=', employee.id)
-    #         ])
-    #         current_stages = current_ownerships.mapped('stage_id')
-
-    #         stages_to_add = stages_user_should_approve - current_stages
-    #         stages_to_remove = current_stages - stages_user_should_approve
-
-    #         for stage in stages_to_add:
-    #             if employee not in stage.approver_ids:
-    #                 stage.write({'approver_ids': [(4, employee.id)]})
-
-    #             existing = ownership_model.search([
-    #                 ('user_id', '=', user.id),
-    #                 ('employee_id', '=', employee.id),
-    #                 ('stage_id', '=', stage.id)
-    #             ], limit=1)
-    #             if not existing:
-    #                 granting_roles = approval_roles.filtered(lambda r: r in stage.approval_role_ids)
-    #                 ownership_model.create({
-    #                     'user_id': user.id,
-    #                     'employee_id': employee.id,
-    #                     'stage_id': stage.id,
-    #                     'role_ids': [(6, 0, granting_roles.ids)]
-    #                 })
-
-    #         for stage in stages_to_remove:
-    #             if employee in stage.approver_ids:
-    #                 stage.write({'approver_ids': [(3, employee.id)]})
-    #         if stages_to_remove:
-    #             ownership_model.search([
-    #                 ('user_id', '=', user.id),
-    #                 ('employee_id', '=', employee.id),
-    #                 ('stage_id', 'in', stages_to_remove.ids)
-    #             ]).unlink()
-
-    #         remaining_ownerships = ownership_model.search([
-    #             ('user_id', '=', user.id),
-    #             ('employee_id', '=', employee.id),
-    #             ('stage_id', 'in', stages_user_should_approve.ids)
-    #         ])
-    #         for ownership in remaining_ownerships:
-    #             granting_roles = approval_roles.filtered(lambda r: r in ownership.stage_id.approval_role_ids)
-    #             ownership.write({'role_ids': [(6, 0, granting_roles.ids)]})
-
-    #     return True
     
     def _sync_approvals_from_roles(self):
         """
@@ -496,17 +265,19 @@ class ResUsers(models.Model):
             
             if approval_roles:
                 context_limited_roles = approval_roles.filtered('limit_to_user_context')
-                cross_scope_roles = approval_roles - context_limited_roles
+                role_limited_roles = approval_roles.filtered('limit_to_role_context')
+                cross_scope_roles = approval_roles - context_limited_roles - role_limited_roles
                 
                 _logger.info(f"Context limited roles: {context_limited_roles.mapped('name')}")
+                _logger.info(f"Role limited roles: {role_limited_roles.mapped('name')}")
                 _logger.info(f"Cross scope roles: {cross_scope_roles.mapped('name')}")
                 
                 for role in context_limited_roles:
                     _logger.info(f"Processing context-limited role: {role.name}")
-                    _logger.info(f"User company_id: {user.company_id.name if user.company_id else 'None'}")
-                    _logger.info(f"User branch_id: {user.branch_id.name if hasattr(user, 'branch_id') and user.branch_id else 'None'}")
-                    _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
-                    _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
+                    # _logger.info(f"User company_id: {user.company_id.name if user.company_id else 'None'}")
+                    # _logger.info(f"User branch_id: {user.branch_id.name if hasattr(user, 'branch_id') and user.branch_id else 'None'}")
+                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
                     
                     domain = [('approval_role_ids', 'in', [role.id])]
                     
@@ -521,9 +292,6 @@ class ResUsers(models.Model):
                             if user.branch_id not in role.branch_ids:
                                 _logger.info(f"Skipping role {role.name} - user branch {user.branch_id.name} not in role's allowed branches")
                             domain.append(('memo_config_id.branch_id', '=', user.branch_id.id))
-                        # if role.branch_ids and user.branch_id not in role.branch_ids:
-                        #     _logger.info(f"Skipping role {role.name} - user branch {user.branch_id.name} not in role's allowed branches")
-                        #     continue
                         else:
                             _logger.info(f"Skipping role {role.name} - role has branch restrictions but user has no branch assigned")
                             continue
@@ -532,6 +300,35 @@ class ResUsers(models.Model):
                     user_context_stages = MemoStage.search(domain)
                     _logger.info(f"Found {len(user_context_stages)} stages for context-limited role {role.name}: {user_context_stages.mapped('name')}")
                     stages_user_should_approve |= user_context_stages
+                
+                for role in role_limited_roles:
+                    _logger.info(f"Processing role-limited role: {role.name}")
+                    # _logger.info(f"User allowed companies: {user.company_ids.mapped('name')}")
+                    # _logger.info(f"User allowed branches: {user.branch_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
+                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
+                    
+                    domain = [('approval_role_ids', 'in', [role.id])]
+                    
+                    applicable_companies = user.company_ids & role.company_ids if role.company_ids else user.company_ids           
+                    
+                    if applicable_companies:
+                        domain.append(('memo_config_id.company_id', 'in', applicable_companies.ids))
+                    else:
+                        _logger.info(f"Skipping role {role.name} - no company intersection between user and role and also no allowed companies set")
+                        
+                      
+                    if role.branch_ids:
+                        applicable_branches = role.branch_ids & user.branch_ids if user.branch_ids else False
+                        if not applicable_branches:
+                            _logger.info(f"Skipping role {role.name} - user has no branches that intersect with role's allowed branches")
+                            continue
+                        domain.append(('memo_config_id.branch_id', 'in', applicable_branches.ids))
+                    
+                    _logger.info(f"Searching for stages with domain: {domain}")
+                    role_context_stages = MemoStage.search(domain)
+                    _logger.info(f"Found {len(role_context_stages)} stages for role-limited role {role.name}: {role_context_stages.mapped('name')}")
+                    stages_user_should_approve |= role_context_stages
                 
                 if cross_scope_roles:
                     _logger.info(f"Processing cross-scope roles: {cross_scope_roles.mapped('name')}")
@@ -602,8 +399,6 @@ class ResUsers(models.Model):
             
             actual_current_stages = current_stages.filtered(lambda s: employee in s.approver_ids)
 
-            # stages_to_add = stages_user_should_approve - current_stages
-            # stages_to_remove = current_stages - stages_user_should_approve
             stages_to_add = stages_user_should_approve - actual_current_stages
             stages_to_remove = actual_current_stages - stages_user_should_approve
             
