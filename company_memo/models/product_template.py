@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError
 
 class productTemplate(models.Model):
     _inherit = "product.template"
+    _check_company_auto = False
 
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")

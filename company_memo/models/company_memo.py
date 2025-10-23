@@ -704,7 +704,7 @@ class Memo_Model(models.Model):
                     raise UserError(
                         """Please ensure all PO picking / receipts are marked done before vendor bill is generated \n 1) Please go under purchase order tab \n 2) Click view button \n. 3) Click on the Receive button. \n 4) On the new page click Validate. (If stock pickings are shown, ensure to either cancel or validate the records.)""")
         if self.stage_id.require_bill_payment: 
-            po_without_invoice_payment = self.mapped('po_ids').filtered(
+            po_without_invoice_payment = self.sudo().mapped('po_ids').filtered(
                     lambda st: st.selected and st.invoice_status not in ['invoiced']
                     # lambda st: not st.invoice_ids
                 )
@@ -2196,7 +2196,7 @@ class Memo_Model(models.Model):
             if not self.sudo().source_location_id.company_id.id == self.company_id.id:
                 raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
             if not self.sudo().dest_location_id.company_id.id == self.company_id.id:
-                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from')
+                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from. This is an inter district transfer. Kindly click on the is inter district checkbox. ')
         
         for ln in self.product_ids:
             """Enforce to disallow stock move that has no products qty in the location"""

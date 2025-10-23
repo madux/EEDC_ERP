@@ -626,7 +626,7 @@
 					<field name="status_progress" widget="progressbar" string="Progress(%)" optional="show"/>
 					<field name="branch_id" invisible="0" optional="show"/>
 					<field name="company_id" invisible="0" optional="hide"/>
-					<field name="invoice_status" invisible="0" optional="show"/>
+					<!-- <field name="invoice_status" invisible="0" optional="show"/> -->
 				</tree>
 			</field>
 		</record>

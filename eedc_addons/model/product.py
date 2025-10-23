@@ -5,6 +5,7 @@ from odoo.osv import expression
 
 class productProduct(models.Model):
     _inherit = "product.product"
+    _check_company_auto = False
     
     def _get_domain_locations(self):
         '''
