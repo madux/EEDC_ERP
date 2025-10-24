@@ -15,16 +15,16 @@ from psycopg2 import IntegrityError
 _logger = logging.getLogger(__name__)
 
 
-class ImportRecords(models.TransientModel):
-    _name = 'hr.import_record.wizard'
+class Payroll(models.TransientModel):
+    _name = 'hr.import_payroll.wizard'
 
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
     import_type = fields.Selection([
-            ('employee', 'Employee import'),
-            ('update', 'Employee Update'),
-            ('email', 'Employee Email Update'),
+            ('payroll', 'payroll'),
+            ('update', 'Update'),
+            ('email', 'Email Update'),
             ('appraisal', 'Appraisal Setup'),
         ],
         string='Import Type', required=True, index=True,
@@ -318,7 +318,19 @@ class ImportRecords(models.TransientModel):
             
         except Exception as e:
             _logger.error(f"Failed to safely update groups for user {user.login}: {e}")
-     
+    
+    # def ensure_user_has_company(self, user, company_id):
+    #     """Ensure `user` has company_id in company_ids, and set company_id after that.
+    #        Always add to company_ids before writing company_id to avoid 'not allowed companies' error.
+    #     """
+    #     if not user or not company_id:
+    #         return
+    #     try:
+    #         if company_id not in user.company_ids.ids:
+    #             user.sudo().write({'company_ids': [(4, company_id)]})
+    #         user.sudo().write({'company_id': company_id})
+    #     except Exception as e:
+    #         _logger.error(f"Failed to ensure company {company_id} on user {user.id}: {e}")
     def ensure_user_has_company(self, user, company_id):
         """Ensure user has company_id in company_ids, and set company_id after that.
         IMPORTANT: Don't change user groups here to avoid user type conflicts.
@@ -447,8 +459,12 @@ class ImportRecords(models.TransientModel):
                             
                 else:
                     employee_id = False 
-            return employee_id 
+            return employee_id
         
+        # reviewer_group = self.env.ref("hr_pms.group_pms_reviewer")
+        # officer_group = self.env.ref("hr_pms.group_pms_officer_id")
+        # supervisor_group = self.env.ref("hr_pms.group_pms_supervisor")
+        # manager_group = self.env.ref("hr_pms.group_pms_manager_id")
         def generate_emp_appraiser(employee, appraiser_code, type):
             appraiser = self.env['hr.employee'].sudo().search(['|', 
             ('employee_number', '=', appraiser_code), 
@@ -519,7 +535,119 @@ class ImportRecords(models.TransientModel):
                     employee_id.sudo().write({'migrated_password': new_password})
                 except Exception as e:
                     _logger.error(f"Failed to reset password for user {user_id.login}: {e}")
- 
+
+       
+        
+        # def create_employee(vals):
+        #     """Create employee and safely link a user if available.
+
+        #     vals: dict expected to contain keys like:
+        #         fullname, first_name, middle_name, last_name, staff_number,
+        #         district, branch_id, gender, department_id, unit_id, sub_unit_id,
+        #         employment_date, grade_id, level_id, hr_region_id, email, private_email,
+        #         work_phone, phone, job_id, company_id
+        #     """
+        #     try:
+        #         employee_vals = {
+        #             'name': vals.get('fullname'),
+        #             'first_name': vals.get('first_name'),
+        #             'middle_name': vals.get('middle_name'),
+        #             'last_name': vals.get('last_name'),
+        #             'employee_number': vals.get('staff_number'),
+        #             'ps_district_id': vals.get('district'),
+        #             'branch_id': vals.get('branch_id'),
+        #             'gender': vals.get('gender'),
+        #             'department_id': vals.get('department_id'),
+        #             'unit_id': vals.get('unit_id'),
+        #             'work_unit_id': vals.get('sub_unit_id'),
+        #             'employment_date': vals.get('employment_date'),
+        #             'grade_id': vals.get('grade_id'),
+        #             'level_id': vals.get('level_id'),
+        #             'hr_region_id': vals.get('hr_region_id'),
+        #             'work_email': vals.get('email'),
+        #             'private_email': vals.get('private_email'),
+        #             'work_phone': vals.get('work_phone'),
+        #             'mobile_phone': vals.get('work_phone'),
+        #             'phone': vals.get('phone'),
+        #             'job_id': vals.get('job_id'),
+        #             'company_id': vals.get('company_id'),
+        #         }
+
+        #         employee_id = self.env['hr.employee'].sudo().create(employee_vals)
+        #         _logger.info("Created employee: %s with ID: %s", employee_id.name, employee_id.id)
+
+        #         if not employee_id or not employee_id.exists():
+        #             _logger.error("Employee creation failed - employee does not exist after creation")
+        #             return False
+
+        #         user_vals = {
+        #             'fullname': vals.get('fullname'),
+        #             'staff_number': vals.get('staff_number'),
+        #             'email': vals.get('email'),
+        #             'private_email': vals.get('private_email'),
+        #             'company_id': vals.get('company_id'),
+        #             'branch_id': vals.get('branch_id'),
+        #         }
+
+        #         user, password = generate_user(user_vals)
+
+        #         if user:
+        #             try:
+        #                 try:
+        #                     target_company_id = employee_id.company_id.id if employee_id and employee_id.company_id else vals.get('company_id')
+        #                 except Exception:
+        #                     target_company_id = vals.get('company_id')
+
+        #                 conflict = self.env['hr.employee'].sudo().search([
+        #                     ('user_id', '=', user.id),
+        #                     ('company_id', '=', target_company_id)
+        #                 ], limit=1)
+
+        #                 if conflict and conflict.id != (employee_id.id if employee_id else False):
+        #                     _logger.warning(
+        #                         "Skipping linking: user %s (id=%s) is already linked to employee %s (id=%s) for company %s",
+        #                         getattr(user, 'login', str(user.id)), getattr(user, 'id', user),
+        #                         getattr(conflict, 'name', '?'), getattr(conflict, 'id', '?'),
+        #                         target_company_id
+        #                     )
+        #                 else:
+        #                     try:
+        #                         employee_id.sudo().write({'user_id': user.id})
+        #                     except IntegrityError as ie:
+        #                         _logger.warning(
+        #                             "IntegrityError linking user %s to employee %s: %s",
+        #                             getattr(user, 'login', user.id), getattr(employee_id, 'id', '?'), ie
+        #                         )
+        #                     except Exception as e:
+        #                         _logger.exception("Error linking user to employee: %s", e)
+
+        #                     employee_id.refresh()
+        #                     if employee_id.user_id and employee_id.user_id.id == user.id:
+        #                         _logger.info(
+        #                             "Successfully linked user %s (ID: %s) to employee %s (ID: %s)",
+        #                             getattr(user, 'login', user.id), getattr(user, 'id', '?'),
+        #                             getattr(employee_id, 'name', '?'), getattr(employee_id, 'id', '?')
+        #                         )
+        #                         if password:
+        #                             try:
+        #                                 reset_employee_user_password(employee_id, user)
+        #                                 _logger.info("Password set for new user %s", getattr(user, 'login', user.id))
+        #                             except Exception as e:
+        #                                 _logger.warning("Failed to set password for user %s: %s", getattr(user, 'login', user.id), e)
+        #                     else:
+        #                         _logger.info("User %s was not linked to employee %s after write attempt", getattr(user, 'login', user.id), getattr(employee_id, 'id', '?'))
+
+        #             except Exception as outer_e:
+        #                 _logger.error("Unexpected error while attempting to link user to employee: %s\n%s", outer_e, traceback.format_exc())
+        #         else:
+        #             _logger.warning("Failed to create/find user for employee %s", employee_id.name)
+
+        #         return employee_id
+
+        #     except Exception as e:
+        #         _logger.error("Error in create_employee: %s\n%s", e, traceback.format_exc())
+        #         return False
+        
         def create_employee(vals):
             """
             Create an hr.employee from vals and safely link or create a user.
@@ -635,7 +763,19 @@ class ImportRecords(models.TransientModel):
 
             User = self.env['res.users'].sudo()
             existing = User.search(['|', ('login', '=', email), ('login', '=', staff_number)], limit=1)
-            
+            # existing_staff_id = User.search(['|', ('login', '=', staff_number), ('login', '=', staff_number)], limit=1)
+            # existing_email = User.search([('login', '=', email)])
+            # if existing_email and existing_staff_id:
+            #     existing_email.write({'active': False})
+            #     existing = existing_staff_id
+            #     existing.write({'login': login})
+            # elif existing_staff_id and not existing_email:
+            #     existing = existing_staff_id
+            #     existing.write({'login': login})
+            # elif existing_email and not existing_staff_id:
+            #     existing = existing_email
+            # else:
+            #     return False, False
             if existing:
                 _logger.info("Existing user found for login %s (id=%s). Reusing.", login, existing.id)
                 try:
@@ -677,6 +817,7 @@ class ImportRecords(models.TransientModel):
 
             _logger.error("Unable to create user for %s (tried login(s) around %s).", fullname, login)
             return False, False
+        
         
         batch_size = self.batch_size or 500
         total_rows = sheet.nrows - 1
@@ -785,38 +926,6 @@ class ImportRecords(models.TransientModel):
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
-            
-        # elif self.import_type == "payroll":
-        #     batch_num = 0
-        #     for batch_data in self.stream_excel_rows(sheet, batch_size):
-        #         for row in batch_data:
-        #             row_label = row[0] if row and len(row) > 0 else 'Unknown'
-        #             try:
-        #                 with self.env.cr.savepoint():
-        #                     statcd	pridno	prname	statname	distname	dbirth	empstat	phone1	postaddr	semail	lgarea	state	nation	statcode	mstatus	wifename1	wifename2	wifename3	wifename4	wifephone1	wifephone2	wifephone3	wifephone4	childname1	childname2	childname3	childname4	childsex1	childsex2	childsex3	childsex4	cdbirth1	cdbirth2	cdbirth3	cdbirth4	sex	paddress	instit1	instit2	qualif1	qualif2	qualif3	qualif4	qualif5	qyear1	qyear2	qyear3	qyear4	qyear5	nkin	nkaddr	nkphone	nkrelate	deptcode	deptdesc	unitdesc	gldept	empdate	grad_le	design	jobtitle	effdate	ann_comp	bas_pay	ann_pay	bankcode	bank	sortc	bankacc	pfadesc	rsa	locatdate	empsigdte	hrsigndte
-        #                     staff_id = row[1]
-        #                     staff_name = row[2]
-        #                     state = row[3]
-        #                     district = row[4]
-        #                     dob = row[5]
-        #                     contract_type = row[6]
-        #                     phone = row[7]
-        #                     address = row[8]
-        #                     email = row[9]
-        #                     lga = row[10]
-        #                     state = row[11]
-        #                     nationality = row[12]
-        #                     marital_status = row[13]
-        #                     wife = row[14]
-        #                     wife_phone = row[19] or row[21] or row[23]
-        #                     gender = 'male' if row[36] and row[36] in ['m', 'M'] else 'female' if row[36] and row[36] in ['f', 'F'] else 'other',
-        #                     annual_pay = row[62]
-        #                     sex = row[36]
-        #                     wife = row[14]
-        #                     wife = row[14]
-        #                     wife = row[14]
-        #                     lga = row[10]
-        #                     lga = row[10]
 
         elif self.import_type == "update":
             batch_num = 0

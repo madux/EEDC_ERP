@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
+    _check_company_auto = False
     
     is_vehicle_product = fields.Boolean("Is vehicle", default=False)
     vehicle_plate_number = fields.Char("Vehicle Plate Number")

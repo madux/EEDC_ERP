@@ -20,6 +20,7 @@ class StockPicking(models.Model):
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
+    _check_company_auto = False
     
     
     override_stock_lot = fields.Boolean("Dis-Allow Lot/Serial", default=True)

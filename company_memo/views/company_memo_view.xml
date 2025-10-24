@@ -175,7 +175,7 @@
 								<field name="status_progress" widget="progressbar" string="Progress(%)"/>
 								<!-- <field name="code"/>  -->
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
-                                <field name="is_inter_district_transfer" readonly="1" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
+                                <field name="is_inter_district_transfer" readonly="0" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
 								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
                                 <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
                                 <field name="picking_type_id" string="Operation Type" force_save="1" 
@@ -626,7 +626,7 @@
 					<field name="status_progress" widget="progressbar" string="Progress(%)" optional="show"/>
 					<field name="branch_id" invisible="0" optional="show"/>
 					<field name="company_id" invisible="0" optional="hide"/>
-					<field name="invoice_status" invisible="0" optional="show"/>
+					<!-- <field name="invoice_status" invisible="0" optional="show"/> -->
 				</tree>
 			</field>
 		</record>
