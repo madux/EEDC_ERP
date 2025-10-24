@@ -297,6 +297,19 @@
                 <field name="domain_force">[(1, '=', 1)]</field>
             </record>
 
+            <record id="holdco_see_subco_memos_for_payment" model="ir.rule">
+                <field name="name">HoldCo: See SubCo Memos for Payment Processing</field>
+                <field name="model_id" ref="company_memo.model_memo_model"/>
+                <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                <field name="domain_force">[
+                    '|',
+                    ('employee_id.user_id', '=', user.id),
+                    '|',
+                    ('users_followers.user_id', '=', user.id),
+                    ('stage_id.approver_ids.user_id', '=', user.id)
+                ]</field>
+            </record>
+
             
 <record id="user_see_res_lga_company_related_record_16" model="ir.rule">
                 <field name="name">res.lga: Normal users see company related</field>
