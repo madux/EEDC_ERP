@@ -44,6 +44,20 @@
             <field name="domain_force">['|',('branch_id.id', '=', user.branch_id.id),('branch_id.id', 'in', user.branch_ids.ids)]</field>
         </record>
 
+        <record id="subco_see_holdco_payments_via_memo" model="ir.rule">
+            <field name="name">SubCo: See HoldCo Payments for Own Memos</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="domain_force">[
+                '|',
+                ('branch_id.id', '=', user.branch_id.id),
+                '|',
+                ('memo_reference.employee_id.user_id', '=', user.id),
+                ('memo_reference.users_followers.user_id', '=', user.id)
+            ]</field>
+        </record>
+
+
         <record id="branch_user_see_only_account_batch_payment" model="ir.rule">
             <field name="name">branch: Internal users See only related branch batch payments</field>
             <field name="model_id" ref="account_batch_payment.model_account_batch_payment"/>
@@ -131,6 +145,19 @@
             <field name="model_id" ref="account.model_account_move"/>
             <field name="domain_force">['|',('branch_id.id', '=', user.branch_id.id),('branch_id.id', 'in', user.branch_ids.ids)]</field>
             <!-- <field name="groups" eval="[(4, ref('account.group_account_invoice'),(4, ref('account.group_account_readonly'))]"/> -->
+        </record>
+
+        <record id="subco_see_holdco_moves_via_memo" model="ir.rule">
+            <field name="name">SubCo: See HoldCo Journal Entries for Own Memos</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="domain_force">[
+                '|',
+                ('branch_id.id', '=', user.branch_id.id),
+                '|',
+                ('memo_id.employee_id.user_id', '=', user.id),
+                ('memo_id.users_followers.user_id', '=', user.id)
+            ]</field>
         </record>
 
     </odoo>
