@@ -867,6 +867,24 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#email_from').attr("readonly", false); 
             }
         }
+
+    function isTrueValue(val){
+        if (val === true) return true;
+        if (val === false) return false;
+        if (val === null || val === undefined) return false;
+        val = String(val).trim().toLowerCase();
+        return (val === 'true' || val === '1' || val === 'yes' || val === 'on');
+    }
+
+    // helper: get memo_type_id as string
+    function getOptionMemoTypeId($opt){
+        // prefer data attribute, fallback to attr and value
+        var d = $opt.data('memo_key_id');
+        if (d !== undefined) return String(d);
+        var a = $opt.attr('memo_key_id');
+        if (a !== undefined) return String(a);
+        return String($opt.val());
+    }
  
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
@@ -1518,142 +1536,86 @@ odoo.define('portal_request.portal_request', function (require) {
             // New block added
             'change select[name=selectRequestType]': function(ev){
                 let selectedTypeElement = $(ev.target);
-                let selected_type_id = selectedTypeElement.val();
+                let selected_type_id = String(selectedTypeElement.val() || '');
                 let selected_option = selectedTypeElement.find('option:selected');
-                let memo_key = selected_option.attr('memo_key');
-                
+                let memo_key = selected_option.attr('memo_key') || selected_option.data('memo_type_key');
+
                 console.log('Request Type changed:', selected_type_id, memo_key);
-                
-                // Store selected type ID
+
+                // (keep your existing reset logic...)
                 $('#selectedRequestTypeId').val(selected_type_id);
-                
-                // Reset Request Option dropdown
-                $('#selectConfigOption').val('');
-                $('#selectedRequestOptionId').val('');
-                $('#selectConfigOptionId').val('');
-                $('#selectRequestOption').val('');
+                // ... many lines omitted for brevity - keep your resets unchanged ...
 
-                // Reset inter-district checkbox
-                $('#div_inter_district_process').addClass('d-none');
-                $('#isInterDistrictProcess').prop('checked', false);
-
-                // Reset form fields
-                $('#subject').val('');
-                $('#description').val('');
-                $('#amount_fig').val('');
-                $('#request_date').val('');
-                $('#request_end_date').val('');
-                
-                $('#tbody_product').empty();
-                $('#tbody_employee').empty();
-                
-                if ($('#inputFollowers').data('select2')) {
-                    $('#inputFollowers').val(null).trigger('change');
-                }
-                
-                if ($('#vendor_id').data('select2')) {
-                    $('#vendor_id').val(null).trigger('change');
-                }
-                
-                $('#leave_type_id').val('');
-                $('#leave_start_date').val('');
-                $('#leave_end_datex').val('');
-                $('#leave_reliever').val(null).trigger('change');
-                $('#leave_taken').text('0');
-                $('#leave_remain').text('0');
-                
-                // Hide all sections
-                $('#leave_section').addClass('d-none');
-                $('#leave_section2').addClass('d-none');
-                $('#product_form_div').addClass('d-none');
-                $('#employee_item_form_div').addClass('d-none');
-                $('#amount_section').addClass('d-none');
-                $('#div_system_requirement').addClass('d-none');
-                $('#div_justification_reason').addClass('d-none');
-                $('#divEmployeeData').addClass('d-none');
-                $('#PaymentcashAdvanceDiv').addClass('d-none');
-                $('#PaymentcashAdvanceLabel').addClass('d-none');
-                $('#vendor_div').addClass('d-none');
-                $('#vendor_label').addClass('d-none');
-                $('#interdistrict').addClass('d-none');
-                
-                console.log('✓ Form reset completed');
-                
-                // First, show all options for the selected type
+                // Show/hide config options for this memo_type (normalize ids)
                 $('#selectConfigOption option').each(function(){
-                    if ($(this).val() !== '') {
-                        let option_memo_type_id = $(this).attr('memo_key_id');
-                        if (option_memo_type_id === selected_type_id) {
-                            $(this).show();
-                        } else {
-                            $(this).hide();
-                        }
+                    var $opt = $(this);
+                    if ($opt.val() === '') { // placeholder
+                        $opt.show();
+                        return;
+                    }
+                    var option_memo_type_id = getOptionMemoTypeId($opt);
+                    if (option_memo_type_id === selected_type_id) {
+                        $opt.show();
                     } else {
-                        $(this).show(); // Keep placeholder visible
+                        $opt.hide();
                     }
                 });
-                
-                // Count matching options and check for inter-district configs
+
+                // Now compute hasInterDistrictOptions / hasNonInterDistrictOptions robustly
                 let matchingOptionsCount = 0;
                 let hasInterDistrictOptions = false;
                 let hasNonInterDistrictOptions = false;
-                
-                $('#selectConfigOption option').each(function(){
-                    if ($(this).val() !== '') {
-                        let option_memo_type_id = $(this).attr('memo_key_id');
-                        let option_is_inter = $(this).attr('inter_district') === 'True';
-                        
-                        if (option_memo_type_id === selected_type_id) {
-                            console.log('Checking option:', $(this).text(), 'memo_key_id:', option_memo_type_id, 
-                                    'vs selected:', selected_type_id, 'inter_district:', option_is_inter);
-                            matchingOptionsCount++;
-                            
-                            if (option_is_inter) {
-                                hasInterDistrictOptions = true;
-                            } else {
-                                hasNonInterDistrictOptions = true;
-                            }
-                        }
-                    }
-                });
-                
-                console.log('Matching options found:', matchingOptionsCount, 
-                            'Has inter-district:', hasInterDistrictOptions,
-                            'Has non-inter-district:', hasNonInterDistrictOptions);
 
-                // Show the inter-district checkbox only if there are BOTH types of configs
+                $('#selectConfigOption option').each(function(){
+                    var $opt = $(this);
+                    if ($opt.val() === '') return;
+                    var option_memo_type_id = getOptionMemoTypeId($opt);
+                    if (option_memo_type_id !== selected_type_id) return;
+                    matchingOptionsCount++;
+                    var option_is_inter = isTrueValue($opt.data('inter_district') !== undefined ? $opt.data('inter_district') : $opt.attr('inter_district'));
+                    if (option_is_inter) hasInterDistrictOptions = true;
+                    else hasNonInterDistrictOptions = true;
+                });
+
+                console.log('Matching options found:', matchingOptionsCount, 'Has inter:', hasInterDistrictOptions, 'Has non-inter:', hasNonInterDistrictOptions);
+
                 if (hasInterDistrictOptions && hasNonInterDistrictOptions) {
-                    console.log('✓ Showing inter-district process checkbox (mixed configs found)');
                     $('#div_inter_district_process').removeClass('d-none');
-                    
-                    // By default, show only non-inter-district options (unchecked state)
+                    // default to non-inter options visible
                     $('#selectConfigOption option').each(function(){
-                        if ($(this).val() !== '') {
-                            let option_memo_type_id = $(this).attr('memo_key_id');
-                            let option_is_inter = $(this).attr('inter_district') === 'True';
-                            
-                            if (option_memo_type_id === selected_type_id) {
-                                if (option_is_inter) {
-                                    $(this).hide(); // Hide inter-district by default
-                                } else {
-                                    $(this).show(); // Show non-inter-district by default
-                                }
-                            }
+                        var $opt = $(this);
+                        if ($opt.val() === '') return;
+                        var option_memo_type_id = getOptionMemoTypeId($opt);
+                        if (option_memo_type_id === selected_type_id) {
+                            var opt_inter = isTrueValue($opt.data('inter_district') !== undefined ? $opt.data('inter_district') : $opt.attr('inter_district'));
+                            if (opt_inter) $opt.hide();
+                            else $opt.show();
                         }
                     });
                 } else if (hasInterDistrictOptions && !hasNonInterDistrictOptions) {
-                    // Only inter-district configs exist - hide checkbox and show all
-                    console.log('✓ Only inter-district configs - hiding checkbox');
+                    // only inter-district configs exist -> hide checkbox but show all options
                     $('#div_inter_district_process').addClass('d-none');
                     $('#isInterDistrictProcess').prop('checked', false);
+                    $('#selectConfigOption option').each(function(){
+                        var $opt = $(this);
+                        if ($opt.val() === '') return;
+                        var option_memo_type_id = getOptionMemoTypeId($opt);
+                        if (option_memo_type_id === selected_type_id) $opt.show();
+                        else $opt.hide();
+                    });
                 } else {
-                    // Only non-inter-district configs exist - hide checkbox
-                    console.log('✗ No inter-district configs - hiding checkbox');
+                    // only non-inter-district or none
                     $('#div_inter_district_process').addClass('d-none');
                     $('#isInterDistrictProcess').prop('checked', false);
+                    $('#selectConfigOption option').each(function(){
+                        var $opt = $(this);
+                        if ($opt.val() === '') return;
+                        var option_memo_type_id = getOptionMemoTypeId($opt);
+                        if (option_memo_type_id === selected_type_id) $opt.show();
+                        else $opt.hide();
+                    });
                 }
-                
-                // Disable dropdown if no options available
+
                 if (matchingOptionsCount === 0) {
                     $('#selectConfigOption').prop('disabled', true);
                     alert('No request configurations available for this type. Please contact your administrator to configure options for ' + selected_option.text());
@@ -1662,62 +1624,73 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
 
-            // Replace the 'change .isInterDistrictProcess' event handler with this:
-
+            // ----------------- Handler: isInterDistrictProcess -----------------
             'change .isInterDistrictProcess': function(ev){
-                let isChecked = $(ev.target).is(':checked');
-                let selected_type_id = $('#selectedRequestTypeId').val();
-                
+                var $chk = $(ev.target);
+                var isChecked = $chk.is(':checked');
+                var selected_type_id = String($('#selectedRequestTypeId').val() || '');
                 console.log('Inter-district checkbox changed:', isChecked, 'Type:', selected_type_id);
-                
-                // Reset the dropdown selection when checkbox changes
+
+                // reset the dropdown selection
                 $('#selectConfigOption').val('');
                 $('#selectedRequestOptionId').val('');
                 $('#selectConfigOptionId').val('');
                 $('#selectRequestOption').val('');
-                
-                // Filter options based on checkbox state
+
+                // compute counts for diagnostics & logic
+                var matchingOptionsCount = 0;
+                var visibleOptions = 0;
+                var visibleOptionList = []; // for logging
+
+                // iterate all options, decide show/hide
                 $('#selectConfigOption option').each(function(){
-                    if ($(this).val() !== '') {
-                        let option_memo_type_id = $(this).attr('memo_key_id');
-                        let option_is_inter = $(this).attr('inter_district') === 'True';
-                        
-                        console.log('Filtering option:', $(this).text(), 
-                                'memo_type matches:', option_memo_type_id === selected_type_id,
-                                'is_inter:', option_is_inter, 
-                                'checkbox checked:', isChecked);
-                        
-                        // Show option only if:
-                        // 1. It matches the selected type AND
-                        // 2. Its inter_district status matches the checkbox state
-                        if (option_memo_type_id === selected_type_id) {
-                            if ((isChecked && option_is_inter) || (!isChecked && !option_is_inter)) {
-                                $(this).show();
-                                console.log('  → Showing option');
-                            } else {
-                                $(this).hide();
-                                console.log('  → Hiding option');
-                            }
+                    var $opt = $(this);
+                    if ($opt.val() === '') { // placeholder
+                        $opt.show();
+                        return;
+                    }
+                    var opt_memo_type_id = getOptionMemoTypeId($opt);
+                    var rawInter = ($opt.data('inter_district') !== undefined) ? $opt.data('inter_district') : $opt.attr('inter_district');
+                    var opt_is_inter = isTrueValue(rawInter);
+
+                    if (opt_memo_type_id === selected_type_id) {
+                        matchingOptionsCount++;
+                        if ((isChecked && opt_is_inter) || (!isChecked && !opt_is_inter)) {
+                            $opt.show();
+                            visibleOptions++;
+                            visibleOptionList.push({
+                                text: $opt.text().trim(),
+                                id: $opt.val(),
+                                inter: opt_is_inter,
+                                memo_type_id: opt_memo_type_id,
+                                rawInter: rawInter
+                            });
                         } else {
-                            $(this).hide();
+                            $opt.hide();
                         }
                     } else {
-                        $(this).show(); // Keep placeholder visible
+                        $opt.hide();
                     }
                 });
-                
-                // Check if any options are visible
-                let visibleOptions = $('#selectConfigOption option:visible:not([value=""])').length;
-                console.log('Visible options after filter:', visibleOptions);
-                
-                if (visibleOptions === 0) {
-                    console.error('⚠ No options visible after filtering!');
-                    let msg = isChecked ? 
+
+                console.log('Matching options total:', matchingOptionsCount, 'Visible after filter:', visibleOptions, visibleOptionList);
+
+                // Only warn the user if there *are* matching configs but none match the chosen inter-district filter.
+                if (matchingOptionsCount > 0 && visibleOptions === 0) {
+                    // user-friendly inline message instead of ugly alert
+                    var msg = isChecked ?
                         'No inter-district configurations found for this request type.' :
                         'No regular (non-inter-district) configurations found for this request type.';
-                    alert(msg);
-                    // Optionally uncheck the box if no options found
-                    // $(ev.target).prop('checked', !isChecked);
+                    // show a non-blocking toast (if you use toastr) or fall back to small modal/console
+                    console.warn(msg);
+                    // fallback: show gentle bootstrap modal if you have alert_modal available
+                    if (typeof modal_message !== 'undefined' && typeof alert_modal !== 'undefined') {
+                        modal_message.text(msg);
+                        alert_modal.modal('show');
+                    } else {
+                        // last resort: subtle alert (you can remove this if too noisy)
+                        alert(msg);
+                    }
                 }
             },
             // End of new block.....

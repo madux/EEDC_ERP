@@ -247,9 +247,12 @@
                                                     <select name="selectConfigOption" id="selectConfigOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="config_type_ids" t-as="ct">
-                                                            <option t-att-value="ct.id" t-att-id="ct.id" t-att-memo_key_id="ct.memo_type.id"
-                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'">
-                                                                <span t-esc="ct.name"/>
+                                                            <option t-att-value="ct.id"
+                                                                    t-att-id="ct.id"
+                                                                    t-att-data-memo_key_id="ct.memo_type.id"
+                                                                    t-att-data-memo_type_key="ct.memo_key"
+                                                                    t-att-data-inter_district="'True' if ct.inter_district else 'False'">
+                                                                <t t-esc="ct.name"/>
                                                             </option>
                                                             <t t-if="ct.inter_district"> (Inter-District)</t>
                                                         </t> 
