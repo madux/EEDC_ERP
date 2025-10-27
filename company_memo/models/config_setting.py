@@ -454,6 +454,8 @@ class MemoConfig(models.Model):
         string="Expense Account"
         )
     
+    inter_district = fields.Boolean(default=False, string="Inter-Company/District")
+    
     payment_processing_company_id = fields.Many2one(
         'res.company',
         string='Payment Processing Company',

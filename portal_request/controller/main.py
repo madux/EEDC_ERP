@@ -176,6 +176,9 @@ class PortalRequest(http.Controller):
         # ])
         memo_type_ids = memo_configs.mapped('memo_type')
         
+        has_inter_district_configs = any(config.inter_district for config in memo_configs)
+        _logger.info(f"Has inter-district configs: {has_inter_district_configs}")
+        
         selected_memo_type_id = False
         if memo_type_key:
             # selected_memo_type = request.env['memo.type'].sudo().search([
@@ -204,6 +207,7 @@ class PortalRequest(http.Controller):
             "config_type_ids": memo_configs,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
+            "has_inter_district_configs": has_inter_district_configs,
         }
         
         _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
