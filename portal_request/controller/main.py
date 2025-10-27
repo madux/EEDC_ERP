@@ -6,7 +6,7 @@ import ast
 import random
 from multiprocessing.spawn import prepare
 import urllib.parse
-from odoo import http, fields
+from odoo import http, fields, _
 from odoo.exceptions import ValidationError
 from odoo.tools import consteq, plaintext2html
 from odoo.http import request
@@ -176,6 +176,9 @@ class PortalRequest(http.Controller):
         # ])
         memo_type_ids = memo_configs.mapped('memo_type')
         
+        has_inter_district_configs = any(config.inter_district for config in memo_configs)
+        _logger.info(f"Has inter-district configs: {has_inter_district_configs}")
+        
         selected_memo_type_id = False
         if memo_type_key:
             # selected_memo_type = request.env['memo.type'].sudo().search([
@@ -204,6 +207,7 @@ class PortalRequest(http.Controller):
             "config_type_ids": memo_configs,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
+            "has_inter_district_configs": has_inter_district_configs,
         }
         
         _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
@@ -1818,6 +1822,7 @@ class PortalRequest(http.Controller):
                                                   len(pdf)), 
             ('Content-Disposition', 'inline; filename={}'.format(invoice and invoice.id or payment and payment.id))]
             return request.make_response(pdf, headers=pdfhttpheaders)
+    
 
     @http.route(['/check-employee-still-onleave'], type='json', website=True, auth="user", csrf=False)
     def employee_still_on_leave(self, **post):
@@ -2121,10 +2126,10 @@ class PortalRequest(http.Controller):
                 desc = rec.get('description', '')
                 _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
                 request_vals = { 
-                        'quantity_available': float(rec.get('qty').replace(',', '')) if rec.get('qty') else 0,
+                        'quantity_available': float(str(rec.get('qty')).replace(',', '').strip()) if rec.get('qty') else 0,
                         'description': BeautifulSoup(desc, features="lxml").get_text(),
                         'used_qty': rec.get('used_qty'),
-                        'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
+                        # 'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
                         'used_amount': rec.get('used_amount'),
                         'note': rec.get('note'),
                         # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
@@ -2133,6 +2138,14 @@ class PortalRequest(http.Controller):
                         'distance_from': rec.get('distance_from'),
                         'distance_to': rec.get('distance_to'),
                     }
+                
+                _amt = rec.get('amount_total')
+                if _amt not in (None, ''):
+                    try:
+                        request_vals['amount_total'] = float(str(_amt).replace(',', '').strip())
+                    except Exception:
+                        _logger.warning('Could not parse amount_total for memo %s line %s: %s', request_record.id, rec.get('request_line_id'), _amt)
+                        request_vals['amount_total'] = 0.0
                 _logger.info(f"UPDATED REQUESTS with VALS =====> {request_vals} ")
                 # productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
                 

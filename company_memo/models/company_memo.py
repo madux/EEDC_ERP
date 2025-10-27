@@ -209,6 +209,53 @@ class Memo_Model(models.Model):
         string="Payment Cash advance ID", 
         compute="compute_cash_advance_payment_reference")
     
+    
+    payment_processing_company_id = fields.Many2one(
+        'res.company',
+        string='Payment Processing Company',
+        compute='_compute_payment_processing_company',
+        store=True,
+        help="Company that will actually process the payment (may differ from memo company)"
+    )
+    
+    payment_processing_branch_id = fields.Many2one(
+        'multi.branch',
+        string='Payment Processing Branch',
+        compute='_compute_payment_processing_company',
+        store=True,
+    )
+    
+    stock_processing_company_id = fields.Many2one(
+        'res.company',
+        string='Stock Processing Company',
+    )
+    
+    stock_processing_branch_id = fields.Many2one(
+        'multi.branch',
+        string='Stock Processing Branch',
+    )
+    
+    
+    
+    @api.depends('memo_setting_id', 'stage_id', 'stage_id.approver_ids')
+    def _compute_payment_processing_company(self):
+        for rec in self:
+            if rec.memo_setting_id.payment_processing_company_id:
+                rec.payment_processing_company_id = rec.memo_setting_id.payment_processing_company_id
+                rec.payment_processing_branch_id = rec.memo_setting_id.payment_processing_branch_id
+            elif rec.stage_id and rec.stage_id.is_approved_stage and rec.stage_id.approver_ids:
+                approver = rec.stage_id.approver_ids[0]
+                rec.payment_processing_company_id = approver.company_id
+                rec.payment_processing_branch_id = approver.user_id.branch_id
+            else:
+                rec.payment_processing_company_id = rec.company_id
+                rec.payment_processing_branch_id = rec.branch_id
+                
+            # rec.stock_processing_company_id = rec.company_id
+            # rec.stock_processing_branch_id = rec.branch_id
+            
+    
+    
     @api.depends('payment_reference')
     def compute_cash_advance_payment_reference(self):
         '''if cash advance reference, system computes and update with existing
@@ -2503,38 +2550,42 @@ class Memo_Model(models.Model):
     def get_cashadvance_debit_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
-        company_expense_account_id = self.company_id.default_cash_advance_account_id
+        payment_company = self.payment_processing_company_id or self.company_id
+        company_expense_account_id = payment_company.default_cash_advance_account_id
         account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
         if not account_id:
-            raise ValidationError(f"No default cash advance account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the cash advance account..")
+            raise ValidationError(f"No default cash advance account found for company {payment_company} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the cash advance account..")
         return account_id
     
     def get_cashadvance_credit_account(self, journal_id=False):
         '''pr: line'''
         account_id = None
-        company_expense_account_id = self.company_id.default_bank_cash_account_id
+        payment_company = self.payment_processing_company_id or self.company_id
+        company_expense_account_id = payment_company.default_bank_cash_account_id
         account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
         if not account_id:
-            raise ValidationError(f"{self.company_id.name} does not have default bank account to use on credit line . System admin should go to the company configuration and set the default bank account or set the journal default account...")
+            raise ValidationError(f"{payment_company.name} does not have default bank account to use on credit line . System admin should go to the company configuration and set the default bank account or set the journal default account...")
         return account_id
     
     
     def get_soe_expense_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
-        company_expense_account_id = self.company_id.account_default_debit_account_id
+        payment_company = self.payment_processing_company_id or self.company_id
+        company_expense_account_id = payment_company.account_default_debit_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
-            raise ValidationError(f"No default expense account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the default expense account or set the journal default expense account...")
+            raise ValidationError(f"No default expense account found for company {payment_company.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and set the default expense account or set the journal default expense account...")
         return account_id
     
     def get_soe_credit_account(self, journal_id=False):
         '''pr: line'''
         account_id = None
-        company_expense_account_id = self.company_id.default_cash_advance_account_id
+        payment_company = self.payment_processing_company_id or self.company_id
+        company_expense_account_id = payment_company.default_cash_advance_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
-            raise ValidationError(f"No default cash advance found to use on credit lines for company {self.company_id.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
+            raise ValidationError(f"No default cash advance found to use on credit lines for company {payment_company.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
         return account_id
                     
     # def generate_move_entries(self):
@@ -2618,16 +2669,32 @@ class Memo_Model(models.Model):
         '''thi will generate cash advance move'''
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
-            """Check if the user is enlisted as the approver for memo type
+            """Check if the user is enlisted as the approver for request type
             if approver is an account officer, system generates move and open the exact record"""
+            
+            payment_company = self.payment_processing_company_id or self.company_id
+            payment_branch = self.payment_processing_branch_id or self.branch_id
+            
+            current_user_company = self.env.user.company_id
+            
+            _logger.info(
+                f"Payment Processing Details:\n"
+                f"  Request ID: {self.code}\n"
+                f"  Request Company: {self.company_id.name}\n"
+                f"  Payment Will Be In: {payment_company.name}\n"
+                f"  Payment Branch: {payment_branch.name}\n"
+                f"  Current User: {self.env.user.name}\n"
+                f"  User Company: {current_user_company.name}"
+            )
+            
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].sudo().search(
             [
-                ('company_id', '=', self.company_id.id),
+                ('company_id', '=', payment_company.id),
                 ('type', 'in', ['bank', 'general']),
              ], limit=1)
             if not journal_id:
-                raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
+                raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             # delete the invoice to recreate if error
@@ -2642,9 +2709,9 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
-                    'company_id': self.company_id.id,
-                    'currency_id': self.company_id.currency_id.id,
-                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
+                    'company_id': payment_company.id,
+                    'currency_id': payment_company.currency_id.id,
+                    'branch_id': payment_branch.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.code}", # /{self.id}", # /{fields.Date.today().month}/{fields.Date.today().year}",
@@ -2653,7 +2720,8 @@ class Memo_Model(models.Model):
                     'invoice_date_due': fields.Date.today(),
                     'date': fields.Date.today(),
                     'journal_id': journal_id.id,
-				    'branch_id': self.employee_id.branch_id.id,
+				    # 'branch_id': self.employee_id.branch_id.id,
+                    
                     'line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
@@ -2711,6 +2779,9 @@ class Memo_Model(models.Model):
                         'code': rec.code,
                         'to_retire': True if not rec.retired else False,
                     }) for rec in car.mapped('product_ids').filtered(lambda s: not s.retired)]
+                _logger.info(
+                    f"SOE will retire to: {car.payment_processing_company_id.name or car.company_id.name}"
+                )
             else:
                 raise ValidationError('you have already retired all the items in the selected cash advance reference')
     
@@ -2746,19 +2817,39 @@ class Memo_Model(models.Model):
         if is_config_approver:
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
+            
+            if not self.cash_advance_reference:
+                raise ValidationError("No cash advance reference found for retirement")
+            
+            original_advance = self.cash_advance_reference
+            payment_company = original_advance.payment_processing_company_id or \
+                            original_advance.company_id
+            _logger.info(
+                f"  SOE Processing:\n"
+                f"  SOE Request: {self.code}\n"
+                f"  SOE Company: {self.company_id.name}\n"
+                f"  Original Advance: {original_advance.code}\n"
+                f"  Original Company: {original_advance.company_id.name}\n"
+                f"  Payment Company: {payment_company.name}\n"
+                f"  Retiring to: {payment_company.name}"
+            )
+            
             view_id = self.env.ref('account.view_move_form').id
             journal_id = self.env['account.journal'].sudo().search(
             [
-                ('company_id', '=', self.company_id.id),
+                ('company_id', '=', payment_company.id),
                 ('type', 'in', ['bank', 'general']),
                 # ('type', '=', 'general'),
             #  ('code', '=', 'INV')
              ], limit=1)
             if not journal_id:
-                raise UserError(f"No Bank / Miscellaneous journal configured for company: {self.company_id.name} Contact admin to setup before proceeding")
+                raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-            cashadvance_account_to_credit =self.cash_advance_reference.move_id.line_ids[0].account_id.id if self.cash_advance_reference.move_id.line_ids and self.cash_advance_reference.move_id.line_ids[0].account_id else False
+            if inv and inv.state == 'cancel':
+                inv.unlink()
+                inv = False
+            cashadvance_account_to_credit =original_advance.move_id.line_ids[0].account_id.id if original_advance.move_id.line_ids and original_advance.move_id.line_ids[0].account_id else False
             if not inv:
                 partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
@@ -2766,9 +2857,9 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
-                    'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
-                    'company_id': self.sudo().company_id.id,
-                    'currency_id': self.sudo().company_id.currency_id.id,
+                    'branch_id': original_advance.payment_processing_branch_id.id or original_advance.branch_id.id,
+                    'company_id': payment_company.id,
+                    'currency_id': payment_company.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.id}/{self.code}",
@@ -2807,6 +2898,7 @@ class Memo_Model(models.Model):
             # )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
+        
         
     # def generate_soe_entries(self):
     #     is_config_approver = self.determine_if_user_is_config_approver()
@@ -3187,7 +3279,9 @@ class Memo_Model(models.Model):
             """)
         view_id = self.env.ref('account.view_account_payment_form')
         if (self.memo_type.memo_key != "Payment"): # or (self.amountfig < 1):
-            raise ValidationError("(1) Memo type must be 'Payment'\n (2) Amount must be greater than one to proceed with payment")
+            raise ValidationError("(1) Request type must be 'Payment'\n (2) Amount must be greater than one to proceed with payment")
+        
+        payment_company = self.payment_processing_company_id or self.company_id
         account_payment_existing = self.env['account.payment'].search([
             ('memo_reference', '=', self.id)
             ], limit=1)
@@ -3209,7 +3303,8 @@ class Memo_Model(models.Model):
                         'default_partner_id':self.vendor_id.id or self.client_id.id or self.sudo().employee_id.user_id.partner_id.id, 
                         'default_memo_reference': self.id,
                         'default_communication': self.name,
-                        'default_currency_id': self.env.user.company_id.currency_id.id,
+                        'default_currency_id': payment_company.currency_id.id or self.env.user.company_id.currency_id.id,
+                        'default_company_id': payment_company.id,
                 },
                 'domain': [],
             })
