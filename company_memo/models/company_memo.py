@@ -3437,6 +3437,10 @@ class Memo_Model(models.Model):
         if self.memo_type.memo_key == "material_request":
             view_id = self.sudo().env.ref('stock.view_picking_form').id
             return self.record_to_open('stock.picking', view_id)
+        
+        if self.memo_type.memo_key in ["payment_request", "Payment"]:
+            view_id = self.sudo().env.ref('account.view_move_form').id
+            return self.record_to_open('account.move', view_id)
              
         elif self.memo_type.memo_key == "procurement_request":
             tree_view = self.env.ref('purchase.purchase_order_tree').id

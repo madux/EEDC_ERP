@@ -112,6 +112,7 @@ class ImportProductWizard(models.TransientModel):
                 code = str(int(code)) if type(code) == float else code 
                 product = self.env['product.product'].search([
                     ('default_code', '=', code), 
+                    ('company_id', '=', self.company_id.id), 
                     ], limit = 1)
                 if product:
                     product_id = product.id
@@ -122,67 +123,10 @@ class ImportProductWizard(models.TransientModel):
         def create_product(vals):
             prod_obj = self.env['product.product']
             default_code = vals.get('default_code')
-            prod_rec = prod_obj.search([('default_code', '=', default_code)], limit = 1)
+            prod_rec = prod_obj.search([('default_code', '=', default_code),('company_id', '=', self.company_id.id)], limit = 1)
             product_id = prod_obj.sudo().create(vals).id if not prod_rec else prod_rec.id
             return product_id
-        
-        # def create_stock_quant(product_id, qty):
-        #     if qty <= 0:
-        #         return
-        #     quant = self.env['stock.quant']
-        #     _logger.info(f"ABOUT TO CREATE QUANT RECORD {qty} - {qty}")
-        #     values = {
-        #         'product_id': product_id,
-        #         'location_id': self.location_id.id,
-        #         'company_id': self.company_id.id,
-        #         # 'quantity': qty,
-        #         'inventory_quantity': qty,
-        #         # 'available_quantity': qty,
-        #     }
-        #     quants = quant.sudo().create(values) 
-        #     # quants.action_apply_inventory()
-        
-        # def create_stock_quant(product, qty):
-        #     if qty <= 0:
-        #         return
-                
-        #     product_id = product.id if hasattr(product, 'id') else product
-            
-        #     existing_quant = self.env['stock.quant'].search([
-        #         ('product_id', '=', product_id),
-        #         ('location_id', '=', self.location_id.id),
-        #         ('company_id', '=', self.company_id.id),
-        #     ], limit=1)
-            
-        #     if existing_quant:
-        #         existing_quant.sudo().write({
-        #             'quantity': qty,
-        #             'reserved_quantity': 0,
-        #         })
-        #         _logger.info(f"Updated existing quant for product {product_id} with qty {qty}")
-        #     else:
-        #         quant_vals = {
-        #             'product_id': product_id,
-        #             'location_id': self.location_id.id,
-        #             'company_id': self.company_id.id,
-        #             'quantity': qty,
-        #             'reserved_quantity': 0,
-        #         }
-        #         new_quant = self.env['stock.quant'].sudo().create(quant_vals)
-        #         _logger.info(f"Created new quant for product {product_id} with qty {qty}")
-        
-        # def create_stock_quant(product_id, qty):
-        #     if qty <= 0:
-        #         return
-            
-        #     change_qty_wizard = self.env['stock.change.quantity'].create({
-        #         'product_id': product_id,
-        #         'new_quantity': qty,
-        #         'location_id': self.location_id.id,
-        #     })
-        #     change_qty_wizard.change_product_qty()
-        #     _logger.info(f"Set quantity for product {product_id} to {qty}")
-            
+         
         def create_stock_quant(product, location, qty):
             if qty <= 0:
                 return
