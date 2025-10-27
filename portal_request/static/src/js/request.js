@@ -1579,7 +1579,7 @@ odoo.define('portal_request.portal_request', function (require) {
             },
 
             // Request Type
-             'change select[name=selectRequestType]': function(ev){
+            'change select[name=selectRequestType]': function(ev){
                 var self = this;
                 var selectedTypeElement = $(ev.target);
                 var selected_type_id = String(selectedTypeElement.val() || '');
@@ -1598,37 +1598,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#div_inter_district_process').addClass('d-none');
                 $('#isInterDistrictProcess').prop('checked', false);
 
-                $('#subject').val('');
-                $('#description').val('');
-                $('#amount_fig').val('');
-                $('#request_date').val('');
-                $('#request_end_date').val('');
-                $('#tbody_product').empty();
-                $('#tbody_employee').empty();
-                
-                if ($('#inputFollowers').data('select2')) {
-                    $('#inputFollowers').val(null).trigger('change');
-                }
-                if ($('#vendor_id').data('select2')) {
-                    $('#vendor_id').val(null).trigger('change');
-                }
-                
-                $('#leave_type_id').val('');
-                $('#leave_start_date').val('');
-                $('#leave_end_datex').val('');
-                if ($('#leave_reliever').data('select2')) {
-                    $('#leave_reliever').val(null).trigger('change');
-                }
-                $('#leave_taken').text('0');
-                $('#leave_remain').text('0');
-                
-                $('#leave_section, #leave_section2, #product_form_div, #employee_item_form_div').addClass('d-none');
-                $('#amount_section, #div_system_requirement, #div_justification_reason').addClass('d-none');
-                $('#divEmployeeData, #PaymentcashAdvanceDiv, #PaymentcashAdvanceLabel').addClass('d-none');
-                $('#vendor_div, #vendor_label').addClass('d-none');
-                
-                $('#interdistrict').addClass('d-none');
-                $('#isInterDistrict').prop('checked', false);
+                clearAllElement();
 
                 var info = self.populateConfigOptionsForType(selected_type_id, false);
                 
@@ -2318,8 +2288,7 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#justification_reason').val('');
 
         $('#PaymentcashAdvanceDiv').addClass('d-none');
-        $('#PaymentcashAdvanceLabel').addClass('d-none');
-        
+        $('#PaymentcashAdvanceLabel').addClass('d-none'); 
         $('#PaymentcashAdvance').val('');
 
         $('#vendor_label').addClass('d-none');
@@ -2335,8 +2304,27 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#destination_location_id').attr("required", false);
         $('#inter-destination-location-div').addClass('d-none');
         $('#inter-source-location-div').addClass('d-none');
-        // $('#isInterDistrictProcess').prop('checked', false);
-        // $('#div_inter_district_process').addClass('d-none');
+
+        $('#leave_type_id').val('');
+        $('#leave_start_date').val('');
+        $('#leave_end_datex').val('');
+        $('#leave_taken').text('0');
+        $('#leave_remain').text('0');
+        
+        $('#leave_section, #leave_section2, #product_form_div, #employee_item_form_div').addClass('d-none');
+        $('#amount_section, #div_system_requirement, #div_justification_reason').addClass('d-none');
+        $('#divEmployeeData, #PaymentcashAdvanceDiv, #PaymentcashAdvanceLabel').addClass('d-none');
+        $('#vendor_div, #vendor_label').addClass('d-none');
+        
+         if ($('#inputFollowers').data('select2')) {
+            $('#inputFollowers').val(null).trigger('change');
+        }
+        if ($('#vendor_id').data('select2')) {
+            $('#vendor_id').val(null).trigger('change');
+        }
+        if ($('#leave_reliever').data('select2')) {
+            $('#leave_reliever').val(null).trigger('change');
+        }
     }
     var form = $('#msform')[0];
 // return PortalRequestWidget;
