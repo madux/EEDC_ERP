@@ -43,7 +43,7 @@
                     </div>
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']" position="attributes">
-					<attribute name="attrs">{'readonly': [('memo_state', '!=', 'submit')]}</attribute> 
+					<attribute name="attrs">{'readonly': [('memo_state', 'not in', ['submit', False])]}</attribute>
 				</xpath>
                 
             </field>

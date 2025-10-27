@@ -617,8 +617,9 @@ class Memo_Model(models.Model):
         '''Check for lines without qty'''
         if self.memo_type_key in ['material_request', 'procurement_request', 'cash_advance']:
             for ln in self.product_ids:
-                if ln.quantity_available < 1:
-                    raise UserError(f"{ln.product_id.name} must have product unit greater than 0")
+                if not ln.omit_record:
+                    if ln.quantity_available < 1:
+                        raise UserError(f"{ln.product_id.name} must have product unit greater than 0")
                 
         # if self.memo_type_key in ['soe']:
         #     for ln in self.product_ids:
@@ -1542,8 +1543,14 @@ class Memo_Model(models.Model):
                 )
         if self.memo_type.memo_key == "Payment" and self.request_total_amount <= 0:
             raise ValidationError("Payment amount must be greater than 0.0")
-        elif self.memo_type.memo_key == "material_request" and not self.product_ids:
-            raise ValidationError("Please add request line") 
+        elif self.memo_type.memo_key == "material_request":
+            if not self.product_ids:
+                raise ValidationError("Please add request line") 
+            if not self.mapped('product_ids').filtered(lambda s: not s.omit_record):
+                raise ValidationError("Please add request line without omitted box checked") 
+        
+        
+        
         # elif self.memo_type.memo_key == "soe":
         #     if self.mapped('product_ids').filtered(lambda x: x.used_qty < 1 and x.used_amount > 1)
         #     raise ValidationError("Please add request line") 
@@ -1678,6 +1685,7 @@ class Memo_Model(models.Model):
     def generate_sub_stage_artifacts(self, stage_id):
         sub_stage_ids = stage_id.sub_stage_ids
         self.has_sub_stage = True if stage_id.sub_stage_ids else False
+        _logger.info('TRYY93')
         self.sudo().write({
                 'memo_sub_stage_ids': [(3, exist_stage.id) for exist_stage in self.memo_sub_stage_ids],
                 })
@@ -1828,6 +1836,7 @@ class Memo_Model(models.Model):
         stage_invoice_line = stage_id.mapped('required_invoice_line')
         stage_document_line = stage_id.mapped('required_document_line')
         invoices, documents= [], []
+        _logger.info('TRY1')
         if stage_invoice_line:
             # if not self.client_id:
             #     raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
@@ -1842,6 +1851,8 @@ class Memo_Model(models.Model):
                     invoices.append(invid.id)
 
         if stage_document_line:
+            _logger.info('TRY2')
+            
             for stage_doc in stage_document_line:
                 already_existing_stage_document_line = obj.mapped('attachment_ids').filtered(
                     lambda exist: exist.stage_document_name == stage_doc.name)
@@ -1857,6 +1868,7 @@ class Memo_Model(models.Model):
                         code=code
                         )
                     documents.append(docid.id)
+                    
         return invoices, documents
     
     def update_status_badge(self):
@@ -1892,38 +1904,50 @@ class Memo_Model(models.Model):
             # updating the next stage
             approver_ids = self.get_next_stage_artifact(self.stage_id)[0] 
             next_stage_id= default_stage or self.get_next_stage_artifact(self.stage_id)[1] 
+            _logger.info('TESTINGxxx 002')
             self.stage_id = next_stage_id
             invoices, documents = self.generate_required_artifacts(self.stage_id, self, self.code)
             self.sudo().write({
                 'invoice_ids': [(4, iv) for iv in invoices],
                 'attachment_ids': [(4, dc) for dc in documents]
                 })
-            self.generate_sub_stage_artifacts(self.stage_id)
+            _logger.info('TRYY11')
+            
+            self.generate_sub_stage_artifacts(self.sudo().stage_id)
             # determining the stage to update the already existing state used to hide or display some components
-            if self.stage_id:
+           
+            if self.sudo().stage_id:
+                _logger.info('TRYY3')
                 if self.stage_id.is_approved_stage:
                     if self.memo_type_key in ['material_request']: 
                         # for now open material request location to set location of your stock move 
+                        _logger.info('TRY3')
                         self.enable_edit_mode()
-                        
+                        _logger.info('TRY4')
                     if self.memo_type.memo_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                         self.state = "Approve"
                     else:
+                        _logger.info('TRY4')
                         self.state = "Approve2"
                 # important: users_followers must be required in for them to see the records.
+                _logger.info('TRY5')
                 if self.sudo().stage_id.approver_ids:
                     self.sudo().update({
                         'users_followers': [(4, appr.id) for appr in self.sudo().stage_id.approver_ids],
                         'set_staff': assigned_to if assigned_to else self.sudo().stage_id.approver_ids[0].id # FIXME To be reviewed
                         })
+            _logger.info('TRY6')
             if self.memo_setting_id and self.memo_setting_id.stage_ids:
                 ms = self.memo_setting_id.stage_ids
                 last_stage = ms[-1]
                 '''if id of next stage is the same with the id of the last stage of memo setting stages, 
                 write stage to done'''
+                _logger.info('TRY7')
+                
                 random_memo_approver_ids = [rec.id for rec in self.sudo().memo_setting_id.approver_ids if rec]
                 if last_stage.id == next_stage_id:
                     employee_user_id = self.env['hr.employee'].sudo().search([('user_id', '=', self.env.uid)], limit=1)
+                    _logger.info('TRY8')
                     approver_ids = last_stage.approver_id.ids or random_memo_approver_ids
                     vals = {
                         'state': 'Done',
@@ -1933,7 +1957,10 @@ class Memo_Model(models.Model):
                         vals.update({
                             'approver_ids': [(4, appr) for appr in approver_ids],
                             })
+                    _logger.info('TRY10')
+                    
                     self.sudo().write(vals)
+            _logger.info('SSGGOV 002')
                     
     def lock_artifacts_from_modification(self):
         attachments = self.mapped('attachment_ids')
@@ -2093,13 +2120,17 @@ class Memo_Model(models.Model):
                 Yours Faithfully<br/>{self.env.user.name}"""
         users = self.env['res.users'].sudo().browse([self.env.uid])
         '''Update the stage'''
+        _logger.info('TESTING 001')
+
         self.update_final_state_and_approver()
         self.sudo().write({'res_users': [(4, users.id)]})
         '''Generate memo artificate'''
         return self.generate_memo_artifacts(body_msg, body)
   
     def generate_memo_artifacts(self, body_msg, body):
+        _logger.info('TESTING 003')
         if self.memo_type.memo_key == "material_request":
+            _logger.info('TESTING 004')
             return self.generate_stock_material_request(body_msg, body)
         elif self.memo_type.memo_key == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
@@ -2184,74 +2215,325 @@ class Memo_Model(models.Model):
               },
         }
     is_inter_district_transfer = fields.Boolean("Is inter district transfer")
-    def generate_stock_material_request(self, body_msg, body):
+    external_stock_picking_id = fields.Many2one('stock.picking', "External stock picking id")
+    
+    def validate_stock_location_lines(self):
+        for count, ln in enumerate(self.product_ids, 1):
+            if not ln.omit_record:
+                if self.is_inter_district_transfer:
+                    if not ln.sudo().source_location_id.company_id.id == self.source_location_id.company_id.id:
+                        raise ValidationError(f"""Source Location at line {count} does not relate to company where this request is sourcing from. Kindly select location that relates to {self.company_id.name}""")
+            
+    def generate_internal_transfer(self):
         user = self.env.user
+        lc_views = ['view', 'transit', 'inventory']
+        tvi_locations = self.env['stock.location'].sudo().search([
+            ('company_id', '=', user.company_id.id),
+            ('usage', 'in', lc_views),
+            ])
         if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
             raise ValidationError('Please enter the source or destination location and or operation type')
-        # if self.sudo().dest_location_id and self.sudo().dest_location_id.branch_id.id not in self.employee_id.user_id.branch_id.id:
-        #     raise ValidationError("Destination location Branch does not correspond to the requester's branch")
-        if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
-            raise ValidationError(f'Operation type does not relate to the company {self.company_id.name} this request was initiated from')
+        if not self.is_inter_district_transfer:
+            if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
+                raise ValidationError(f'Operation type does not relate to {self.company_id.name} where this request is sourcing from')
+        # if not self.is_inter_district_transfer:
+        
+        destination_id = False 
         if not self.is_inter_district_transfer:
             if not self.sudo().source_location_id.company_id.id == self.company_id.id:
-                raise ValidationError(f'Source Location does not relate to the company {self.company_id.name} this request was initiated from')
-            if not self.sudo().dest_location_id.company_id.id == self.company_id.id:
-                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from. This is an inter district transfer. Kindly click on the is inter district checkbox. ')
+                raise ValidationError(f'Source Location does not relate to {self.company_id.name} where this request is sourcing from')
         
+            if not self.sudo().dest_location_id.company_id.id == self.company_id.id:
+                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request is directed to. If this is an inter district transfer. Kindly click on the is inter district checkbox. ')
+            if self.sudo().picking_type_id.code in ['internal', 'outgoing'] and self.sudo().dest_location_id.usage not in ['internal']:
+                raise ValidationError(f'Destination location must be internal locations')
+            destination_id = self.sudo().dest_location_id
+        else:
+            if not tvi_locations: 
+                '''Use tvi_locations as destination location'''
+                raise ValidationError(f'No View, loss or transit location found as Destination location for inter district transfer.')
+            destination_id = tvi_locations[0]
+            if not self.sudo().dest_location_id.company_id.id == self.employee_id.company_id.id:
+                raise ValidationError(f'''Destination location does not relate to the requesters' company {self.employee_id.company_id.name} this request is going to''')
+            
+            if self.sudo().picking_type_id.company_id.id == self.sudo().dest_location_id.company_id.id:
+                raise ValidationError(f'''Picking type company should not be the same as destination location company''')
+            if self.sudo().dest_location_id.company_id.id == self.sudo().source_location_id.company_id.id:
+                raise ValidationError(f'''This is an inter company transfer, source location company and destination location cannot be the same''')
+            if user.company_id.id == self.sudo().company_id.id:
+                raise ValidationError(f'''You cannot approve the internal material request because you do not belong to company where it was originated''')
+            
         for ln in self.product_ids:
-            """Enforce to disallow stock move that has no products qty in the location"""
-            ln.onchange_location_check_available_qty()
+            """
+                Enforce to disallow stock move that has no products qty in the location
+                if Omit checked, system should not trigger validation on omitted records"""
+            if not ln.omit_record:
+                ln.onchange_location_check_available_qty()
+                self.validate_stock_location_lines()
         
         stock_picking_type_out = self.sudo().picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
-        existing_picking = stock_picking.search([('memo_id', '=', self.id)], limit=1)
+        existing_picking = stock_picking.search([('origin', '=', self.code)], limit=1)
         
         warehouse_location_id = self.env['stock.warehouse'].sudo().search([
             ('company_id', '=', self.company_id.id) 
         ], limit=1)
+        if existing_picking and existing_picking.state in ['draft', 'cancel']:
+            # existing_picking.unlink()
+            existing_picking = False 
         if not existing_picking:
-            # for mm in self.product_ids:
             vals = {
                 'scheduled_date': fields.Date.today(),
                 'picking_type_id': stock_picking_type_out.id,
                 'location_id': self.source_location_id.id,
-                'location_dest_id': self.dest_location_id.id,
+                'location_dest_id': destination_id.id,
                 'branch_id': self.employee_id.user_id.branch_id.id,
                 'origin': self.code,
                 'memo_id': self.id,
+                'is_inter_district_transfer': True if self.is_inter_district_transfer else False,
+                'company_id': self.company_id.id or self.source_location_id.company_id.id,
                 'partner_id': self.employee_id.user_id.partner_id.id,
                 'move_ids_without_package': [(0, 0, {
                                 'name': self.code,
                                 'picking_type_id': stock_picking_type_out.id,
                                 'location_id': mm.source_location_id.id or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
-                                'location_dest_id': self.dest_location_id.id or stock_picking_type_out.default_location_src_id.id, # or destination_location_id.id,
+                                'location_dest_id': destination_id,
                                 'product_id': mm.sudo().product_id.id,
+                                # 'product_id': mm.sudo().product_id.id,
                                 'product_uom_qty': mm.quantity_available,
+                                'quantity_done': mm.quantity_available,
                                 'date_deadline': self.date_deadline,
-                }) for mm in self.product_ids]
+                                'company_id': self.company_id.id or self.source_location_id.company_id.id,
+                }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
             }
             stock = stock_picking.sudo().create(vals)
+            stock.company_id = self.company_id.id
+            for r in stock.move_ids_without_package:
+                r.company_id = self.company_id.id
         else:
             stock = existing_picking
+        self.stock_picking_id = stock.id
+        return stock
+    
+    def generate_internal_transfer_for_interdistrict(self):
+        user = self.env.user
+        lc_views = ['customer']
+        tvi_locations = self.env['stock.location'].sudo().search([
+            ('company_id', '=', user.company_id.id),
+            ('usage', 'in', lc_views),
+            ])
+        if not self.sudo().dest_location_id or not self.sudo().source_location_id or not self.sudo().picking_type_id:
+            raise ValidationError('Please enter the source or destination location and or operation type')
+        
+        destination_id = False 
+        
+        if self.is_inter_district_transfer:
+            if not tvi_locations: 
+                '''Use tvi_locations as destination location'''
+                raise ValidationError(f'No customer location found as Destination location for inter district transfer.')
+            destination_id = tvi_locations[0]
+            if not self.sudo().dest_location_id.company_id.id == self.employee_id.company_id.id:
+                raise ValidationError(f'''Destination location does not relate to the requesters' company {self.employee_id.company_id.name} this request is going to''')
+            
+            if self.sudo().picking_type_id.company_id.id == self.sudo().dest_location_id.company_id.id:
+                raise ValidationError(f'''Picking type company should not be the same as destination location company''')
+            if self.sudo().dest_location_id.company_id.id == self.sudo().source_location_id.company_id.id:
+                raise ValidationError(f'''This is an inter company transfer, source location company and destination location cannot be the same''')
+            
+        for ln in self.product_ids:
+            """
+                Enforce to disallow stock move that has no products qty in the location
+                if Omit checked, system should not trigger validation on omitted records"""
+            if not ln.omit_record:
+                ln.onchange_location_check_available_qty()
+                self.validate_stock_location_lines()
+        
+        stock_picking_type_out = self.sudo().picking_type_id # self.env.ref('stock.picking_type_out')
+        stock_picking = self.env['stock.picking'].sudo()
+        existing_picking = stock_picking.search([('origin', '=', self.code)], limit=1)
+        
+        # warehouse_location_id = self.env['stock.warehouse'].sudo().search([
+        #     ('company_id', '=', self.company_id.id) 
+        # ], limit=1)
+        if existing_picking and existing_picking.state in ['draft', 'cancel']:
+            for r in existing_picking:
+                existing_picking.unlink()
+            existing_picking = False 
+        # raise ValidationError(existing_picking)
+        if not existing_picking:
+            company_id = self.source_location_id.company_id or user.company_id 
+            vals = {
+                'scheduled_date': fields.Date.today(),
+                'picking_type_id': stock_picking_type_out.id,
+                'location_id': self.source_location_id.id,
+                'location_dest_id': destination_id.id,
+                'branch_id': self.env.user.branch_id.id,
+                'origin': self.code,
+                'memo_id': self.id,
+                'is_inter_district_transfer': True if self.is_inter_district_transfer else False,
+                'company_id': company_id.id,
+                'partner_id': self.env.user.partner_id.id,
+                'move_ids_without_package': [(0, 0, {
+                                'name': self.code,
+                                'picking_type_id': stock_picking_type_out.id,
+                                'location_id': mm.source_location_id.id, # or stock_picking_type_out.default_location_src_id.id or mm.source_location_id.id or warehouse_location_id.lot_stock_id.id,
+                                'location_dest_id': destination_id,
+                                'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                # 'product_id': mm.sudo().product_id.id,
+                                'product_uom_qty': mm.quantity_available,
+                                'quantity_done': mm.quantity_available,
+                                'date_deadline': self.date_deadline,
+                                'company_id': company_id.id,
+                }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
+            }
+            stock = stock_picking.sudo().create(vals)
+            stock.company_id = company_id.id
+            for r in stock.move_ids_without_package:
+                r.company_id = company_id.id
+        else:
+            stock = existing_picking
+        self.stock_picking_id = stock.id
+        return stock
+    
+    def get_approvers(self):
+        ms = self.sudo().memo_setting_id.mapped('stage_ids').filtered(
+            lambda s: s.is_approved_stage
+        )
+        if ms and ms.approver_ids:
+            if self.env.user.id in [r.user_id.id for r in ms.sudo().approver_ids]:
+                return True 
+        return False 
+    
+    def view_generate_stock_material_request(self):
+        return self.generate_stock_material_request()
+    
+    def generate_stock_material_request(self, body_msg="", body=""):
+        _logger.info('TESTING 002')
+        if not self.get_approvers():
+            raise ValidationError('You are not allowed to validate this record')
+        if not self.is_inter_district_transfer:
+            stock = self.generate_internal_transfer()  # main / first entry for the requesting company
+        else:
+            stock = self.generate_internal_transfer_for_interdistrict()
+            self.generate_interdistrict_stock_material_request() # second entry for the requesting company
+            
         self.update_memo_type_approver()
-        self.mail_sending_direct(body_msg)
-        is_config_approver = self.determine_if_user_is_config_approver()
-        if is_config_approver:
-            """Check if the user is enlisted as the approver for memo type"""
-            view_id = self.env.ref('stock.view_picking_form').id
-            ret = {
-                'name': "Stock Request",
-                'view_mode': 'form',
-                'view_id': view_id,
-                'view_type': 'form',
-                'res_model': 'stock.picking',
-                'res_id': stock.id,
-                'type': 'ir.actions.act_window',
-                'domain': [],
-                'target': 'current'
-                }
-            return ret
+        if body_msg:
+            self.mail_sending_direct(body_msg)
+        # is_config_approver = self.determine_if_user_is_config_approver() or self.get_approvers()
+        # if is_config_approver:
+        self.stock_picking_id = stock.id
+        # raise ValidationError(f'{stock.name} and piv {self.stock_picking_id.id}')
+        """Check if the user is enlisted as the approver for memo type"""
+        view_id = self.env.ref('stock.view_picking_form').id
+        ret = {
+            'name': "Stock Request",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'stock.picking',
+            'res_id': stock.id,
+            'type': 'ir.actions.act_window',
+            'domain': [],
+            'target': 'current'
+            }
+        return ret
 
+    def generate_inter_move_product(self, product, company):
+        if product:
+            product_code = product.code
+            ProductObj = self.env['product.product'].sudo()
+            product = ProductObj.search(
+                ['|', 
+                 ('default_code', '=', product_code), 
+                 ('barcode', '=', product_code),
+                 ('company_id', '=', company.id)
+                 ])
+            if product:
+                product = product 
+            else:
+                product = ProductObj.create({
+                    'name': product.name,
+                    'default_code': product.name,
+                    'barcode': product.name,
+                    
+                })
+            return product
+        else:
+            raise ValidationError("No product line found to process")
+           
+    def generate_interdistrict_stock_material_request(self):
+        user = self.env.user
+        lc_views = ['supplier']
+        tvi_locations = self.env['stock.location'].sudo().search([
+            ('company_id', '=', self.employee_id.company_id.id), # the company of the requester
+            ('usage', 'in', lc_views),
+            ])
+        dest_location = self.sudo().dest_location_id
+        if not dest_location:
+            raise ValidationError('Please enter the source or destination location and or operation type')
+        if self.sudo().source_location_id.company_id.id == self.company_id.id:
+            raise ValidationError(f'Source Location company cannot be the same as company {self.company_id.name} where this request was initiated from')
+        source_id = False 
+        if not self.is_inter_district_transfer:
+            if not dest_location.company_id.id == self.company_id.id:
+                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from. Maybe this is an inter district transfer. Kindly click on the is inter district checkbox. ')
+            source_id =  self.sudo().source_location_id
+        else:
+            if not tvi_locations: 
+                '''Use tvi_locations as destination location'''
+                raise ValidationError(f'supplier location found as source location for inter district transfer.')
+            source_id = tvi_locations[0]
+            if not dest_location.company_id.id == self.employee_id.company_id.id:
+                raise ValidationError(f'''Destination location company must be related to the requesters' company {self.employee_id.company_id.name} this request is going to''')
+        company_id = self.employee_id.company_id or dest_location.company_id
+        stock_picking_type = self.env['stock.picking.type'].sudo().search(
+            [('code', '=', 'incoming'), ('company_id', '=', company_id.id)], limit=1)
+        
+        stock_picking_type_out = self.sudo().picking_type_id  
+        stock_picking = self.env['stock.picking'].sudo()
+        # existing_picking = stock_picking.search([('origin', '=', f"INTER/{self.code}")], limit=1)
+        
+        # warehouse_location_id = self.env['stock.warehouse'].sudo().search([
+        #     ('company_id', '=', self.company_id.id) 
+        # ], limit=1)
+        if self.external_stock_picking_id and self.external_stock_picking_id.state in ['draft', 'cancel']:
+            self.sudo().external_stock_picking_id.unlink()
+            existing_picking = False 
+        existing_picking = self.external_stock_picking_id
+        if not existing_picking:
+            vals = {
+                'scheduled_date': fields.Date.today(),
+                'picking_type_id': stock_picking_type.id,
+                'location_id': source_id.id,
+                'location_dest_id': dest_location.id,
+                'branch_id': self.employee_id.user_id.branch_id.id,
+                'origin': f"INTER/{self.code}",
+                'memo_id': self.id,
+                'company_id': company_id.id,
+                'partner_id': self.employee_id.user_id.partner_id.id,
+                'is_inter_district_transfer': True,
+                'move_ids_without_package': [(0, 0, {
+                                'name': self.code,
+                                'picking_type_id': stock_picking_type_out.id,
+                                'location_id': source_id or stock_picking_type_out.default_location_src_id.id,
+                                'location_dest_id': dest_location,
+                                'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                'product_uom_qty': mm.quantity_available,
+                                'quantity_done': mm.quantity_available,
+                                'date_deadline': self.date_deadline,
+                                'company_id': company_id.id,
+                                
+                }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
+            }
+            stock = stock_picking.with_context(default_company_id=company_id.id).sudo().create(vals)
+            stock.company_id = company_id.id
+            for r in stock.move_ids_without_package:
+                r.company_id = company_id.id
+        else:
+            stock = existing_picking
+        self.external_stock_picking_id = stock.id
+        
     def generate_stock_procurement_request(self, body_msg, body):
         """
         Check po record if already create, popup the wizard, 
@@ -2356,6 +2638,23 @@ class Memo_Model(models.Model):
                 if self.dest_location_id.id == self.source_location_id.id:
                     self.source_location_id = False
                     raise ValidationError("Destination location and source location cannot be the same")
+                # if self.is_inter_district_transfer:
+                #     if self.dest_location_id.company_id.id != self.company_id.id:
+                #         self.dest_location_id = False
+                #         raise ValidationError("Destination location company must be the same as company since this is an inter company transfer")
+                # else:
+                #     if self.dest_location_id.company_id.id != self.company_id.id:
+                #         self.dest_location_id = False
+                #         raise ValidationError("Destination location company must be the same as company since this is an internal transfer")
+            
+            for des in self.product_ids:
+                des.dest_location_id = self.dest_location_id.id
+                
+    @api.onchange('source_location_id')
+    def on_change_of_source_location_id(self):
+        if self.source_location_id:
+            for des in self.product_ids:
+                des.source_location_id = self.source_location_id.id
                  
     def generate_vehicle_request(self, body_msg):
         # generate fleet asset
@@ -2363,29 +2662,30 @@ class Memo_Model(models.Model):
         self.vehicle_trip_ids = False
         fleet_trips, unavailable_fleets = [], []
         for count, line in enumerate(self.product_ids, 1):
-            self.check_driver_assignment()
-            available = self.check_available_fleet_before_assignment(line.product_id)
-            if available:
-                vals= {'memo_id': self.id,
-                        'vehicle_assigned': line.product_id.id,
-                        'driver_assigned': line.driver_assigned.id,
-                        'source_location_id': line.distance_from,
-                        'source_destination_id': line.distance_to,
-                        'active': True,
-                        'code': self.code + str(self.id) + str(count), # REF00701
-                }
-                if line.fleet_id:
-                    fleet_id = line.fleet_id
-                    line.fleet_id.update(vals)
+            if not line.omit_record:
+                self.check_driver_assignment()
+                available = self.check_available_fleet_before_assignment(line.product_id)
+                if available:
+                    vals= {'memo_id': self.id,
+                            'vehicle_assigned': line.product_id.id,
+                            'driver_assigned': line.driver_assigned.id,
+                            'source_location_id': line.distance_from,
+                            'source_destination_id': line.distance_to,
+                            'active': True,
+                            'code': self.code + str(self.id) + str(count), # REF00701
+                    }
+                    if line.fleet_id:
+                        fleet_id = line.fleet_id
+                        line.fleet_id.update(vals)
+                    else:
+                        fleet_id = Fleet.create(vals)
+                        line.update({
+                            'fleet_id': fleet_id.id
+                            })
+                    self.vehicle_trip_ids = [(4, fleet_id.id)]
+                    fleet_trips.append(fleet_id.id)
                 else:
-                    fleet_id = Fleet.create(vals)
-                    line.update({
-                        'fleet_id': fleet_id.id
-                        })
-                self.vehicle_trip_ids = [(4, fleet_id.id)]
-                fleet_trips.append(fleet_id.id)
-            else:
-                unavailable_fleets.append(line.product_id.vehicle_plate_number or line.product_id.name)
+                    unavailable_fleets.append(line.product_id.vehicle_plate_number or line.product_id.name)
         unavail_fleets = '\n,'.join(unavailable_fleets)
         warning_message = f"""Warning : The requested fleets with name / Reg number are (is) not available: See below; {unavail_fleets} """ if unavail_fleets else '',
         self.state = 'Done'
@@ -2517,7 +2817,6 @@ class Memo_Model(models.Model):
         if not account_id:
             raise ValidationError(f"{self.company_id.name} does not have default bank account to use on credit line . System admin should go to the company configuration and set the default bank account or set the journal default account...")
         return account_id
-    
     
     def get_soe_expense_account(self, pr, journal_id=False):
         '''pr: line'''

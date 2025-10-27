@@ -1083,7 +1083,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 let sourceLocationId = $('#source_location_id')
 				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
 				if($(ev.target)){
-					$('#TargetSourceLocation').val($('#source_location_id').val())
+					$('#TargetSourceLocation').val($(ev.target).val())
 				}else{
 					$('.destinationlocation-cls').val('')
 					$('.destinationlocation-cls').addClass('is-invalid')
@@ -1159,7 +1159,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             'qty': selectedproductQty,
                             'district': $("#selectDistrict").val(),
                             'request_type': $("#selectRequestOption").val(),
-                            'sourceLocationId': $("#TargetSourceLocation").val() || $("#source_location_id").val(),
+                            'sourceLocationId': $("#source_location_id").val() || $("#TargetSourceLocation").val(),
+                            'is_interdistrict': $("#source_location_id").val() || $("#TargetSourceLocation").val(),
                         }
                     }).then(function(data){
                         if(!data.status){
@@ -1170,13 +1171,14 @@ odoo.define('portal_request.portal_request', function (require) {
                             modal_message.text(data.message)
                         }else{
                             let location_id = data.location_id
+                            console.log(`location line qty found is ${location_id}`)
                             qty_elm.attr('required', false);
                             qty_elm.removeClass("is-invalid");
                             qty_elm.attr('name', selectedproductQty);
                             qty_elm.attr('value', selectedproductQty);
                             qty_elm.attr('location_id', location_id);
                             compute_total_amount();
-                            $('#TargetSourceLocation').val(data.location_id)
+                            $('#TargetSourceLocation').val(location_id)
                         }
                     })
                 }
@@ -1983,25 +1985,12 @@ odoo.define('portal_request.portal_request', function (require) {
                     var formData = new FormData(form);
                     console.log('formData is ==>', formData)
                     var DataItems = []
-                    // $(`#tbody_product > tr.prod_row > th > input.productinput`).each(
-                    //     function(){
-                    //         let id = $(this).attr('id');
-                    //         let qty = $(this).val();
-                    //         if(setProductdata.includes(parseInt(id))){
-                    //             let prod_data = {
-                    //                 'product_id': id, 
-                    //                 'qty': qty,
-                    //             } 
-                    //             DataItems.push(prod_data)
-                    //         }
-                    //     }
-                    // )
                     let selectRequestOptionValue = $('#selectRequestOption').val()
                     if(selectRequestOptionValue != 'employee_update'){
                         $(`#tbody_product > tr.prod_row`).each(function(){
                             var row_co = $(this).attr('row_count') 
                             var list_item = {
-                                    'product_id': '', 
+                                'product_id': '', 
                                 'description': '',
                                 'qty': '',
                                 'amount_total': '',
@@ -2029,7 +2018,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                         list_item['qty'] = $(this).val()
                                     }
                                     if($(this).attr('location_id')){
-                                        list_item['location_id'] = $(this).val()
+                                        list_item['location_id'] = $(this).attr('location_id');
                                         list_item['dest_location_id'] = $('#destination_location_id').val()
                                     }
 									 

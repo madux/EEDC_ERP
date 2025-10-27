@@ -6,9 +6,20 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+class StockPicking(models.Model):
+    _inherit = "stock.picking"
+    _description = "Stock picking -"
+    
+    company_id = fields.Many2one(
+        'res.company',
+        string="Company ID",
+        store=True,
+        default=False,
+    )
+
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
-    _description = "HR model - multi_company"
+    _description = "HR employee - multi_company"
 
     company_id = fields.Many2one(
         'res.company',

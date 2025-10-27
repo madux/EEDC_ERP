@@ -252,6 +252,8 @@ class StockRoute(models.Model):
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
+    _check_company_auto = False
+    
     branch_id = fields.Many2one('multi.branch', string='Branch',)
 
     def assign_picking(self):
@@ -267,6 +269,7 @@ class StockMove(models.Model):
                 ('location_id', '=', move.location_id.id),
                 ('location_dest_id', '=', move.location_dest_id.id),
                 ('picking_type_id', '=', move.picking_type_id.id),
+                ('company_id', '=', move.location_id.company_id.id),
                 ('printed', '=', False),
                 ('state', 'in', ['draft', 'confirmed', 'waiting', 'partially_available', 'assigned'])], limit=1)
             if not picking:

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default system parameter -->
+    <record id="param_check_company_strict" model="ir.config_parameter">
+        <field name="key">check.company.strict</field>
+        <field name="value">True</field>
+    </record>
+</odoo>

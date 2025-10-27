@@ -181,7 +181,7 @@
                                                 <h5>
                                                     <strong><span t-field="req.name"/></strong>
                                                     <a t-att-id="req.id" class="record_id"/>
-                                                    <small class="text-muted"> Request code:<span t-field="req.code"/> </small>
+                                                    <small class="text-muted"><span t-field="req.code"/> </small>
                                                     <input type="text" class="form-control d-none" id="selectRequestOption" name="selectRequestOption" t-att-value="req.memo_type_key" labelfor=""/>
 
                                                     <!-- <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small> -->

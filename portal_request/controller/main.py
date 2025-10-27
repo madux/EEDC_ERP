@@ -1225,6 +1225,7 @@ class PortalRequest(http.Controller):
         product_id = kwargs.get('product_id')
         qty = kwargs.get('qty') 
         sourceLocationId = kwargs.get('sourceLocationId') 
+        is_interdistrict = kwargs.get('is_interdistrict') 
         district = kwargs.get('district') 
         request_type = kwargs.get('request_type') 
 
@@ -1235,7 +1236,7 @@ class PortalRequest(http.Controller):
         Returns:
             dict: Response
         """
-        _logger.info(f'Checking product for {product_id}, REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
+        _logger.info(f'Checking product for {product_id},INTERDISTRICT {is_interdistrict}, SOURCE LOCATION {sourceLocationId} REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
         if product_id:# and type(product_id) in [int]:
             product = request.env['product.product'].sudo().search(
             [
@@ -1244,15 +1245,29 @@ class PortalRequest(http.Controller):
                 ('id', '=', int(product_id)),
             ], 
             limit=1) 
+            LocationObj = request.env['stock.location'].sudo()
             if product:
-                domain = [
-                    ('company_id', '=', request.env.user.company_id.id),
-                    #  ('branch_id', '=', request.env.user.branch_id.id),
-                     ('usage', '=', 'internal')
-                ] 
+                is_interdistrict = True if is_interdistrict in ['on', 'On', 'On', 'true', False] else False
+                if not is_interdistrict:
+                    domain = [
+                        ('company_id', '=', request.env.user.company_id.id),
+                        ('usage', '=', 'internal')
+                    ] 
+                else:
+                    if not sourceLocationId:
+                        return {
+                            "status": False,
+                            "location_id": False,
+                            "message": f"""Source location for interdistrict transfer must be provided""", 
+                            }
+                    src = LocationObj.browse(int(sourceLocationId))
+                    domain = [
+                        ('company_id', '=', src.company_id.id),
+                        ('usage', '=', 'internal')
+                    ] 
                 # should_bypass_reservation : False
                 if request_type in ['material_request'] and product.detailed_type in ['product']:
-                    LocationObj = request.env['stock.location'].sudo()
+                    sourceLocationId = False if sourceLocationId in [False, 'false', 'False'] else sourceLocationId 
                     location_ids = LocationObj.browse(int(sourceLocationId)) if sourceLocationId else LocationObj.search(domain)
                     '''Checks if any location of type internal and company is user company only'''
                     _logger.info(f"Locations found: {location_ids}")
@@ -1260,8 +1275,8 @@ class PortalRequest(http.Controller):
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": f"""No internal storage location found for your company {request.env.user.company_id.name}
-                               and district ({request.env.user.branch_id.name})""", 
+                            "message": f"""No internal storage source location found for request you wanted to make.
+                               Contact store officer for Assistance""", 
                             }
                     location = False
                     product_qty = float(qty) if qty else 0
@@ -1270,7 +1285,10 @@ class PortalRequest(http.Controller):
                         _logger.info(f"what is location {loc}, and product {product.id}, {product.name}")
                         '''search quant with the designated location'''
                         location_with_qty = request.env['stock.quant'].sudo().search(
-                            [('location_id', '=', loc.id), ('product_id', '=', product.id),('quantity', '>', 0)
+                            [('location_id', '=', loc.id),
+                             ('location_id.usage', '=', 'internal'), 
+                             ('product_id', '=', product.id),
+                            #  ('quantity', '>', 0)
                              ]
                             )
                         _logger.info(f"Quant with Quantity {location_with_qty.quantity}")
@@ -1289,12 +1307,6 @@ class PortalRequest(http.Controller):
                                 _logger.info(f"What is quant quantity {lc_quant.quantity}")
                     
                     '''necessary at least to ensure there is any location of those products'''
-                    # if not location: 
-                    #     return {
-                    #         "status": False,
-                    #         "location_id": False,
-                    #         "message": f"No store location found for your district: {request.env.user.branch_id.name}", 
-                    #         }
                     if total_availability <= 0: 
                         '''if no quantity found in all warehouse location'''
                         return {
@@ -1319,13 +1331,6 @@ class PortalRequest(http.Controller):
                             "message": "",
                             "location_id": location and location.id
                         }
-                    # else:
-                    #     if request_type not in ['sale_request']:
-                    #         return {
-                    #                 "status": False,
-                    #                 "location_id": False,
-                    #                 "message": f"Selected product is not a storable product ({product.name})", 
-                    #                 }
                 else:
                     return {
                             "status": True,
@@ -1344,10 +1349,7 @@ class PortalRequest(http.Controller):
                 "location_id": False,
                 "message": "Please ensure you select a product line", 
                 }
-
-    # total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
-    # total_availability = request.env['stock.quant']._get_available_quantity(move.product_id, move.location_id) if move.product_id else 0.0
-    
+ 
     def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
         attachment = request.env['ir.attachment'].sudo()
         attachment_id = attachment.create({
