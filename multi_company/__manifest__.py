@@ -13,12 +13,14 @@
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
         # 'security/ir.model.access.csv',
+        'data/ir_config_parameter_data.xml',
         'security/security.xml',
         'security/rule.xml',
         'data/res_company_data.xml',
         'data/multi_branch.xml',
         'data/stock_location.xml',
         'views/report_filters.xml',
+        'views/res_config_settings_view.xml',
         
     ],
     # 'assets': {'web.assets_backend': [

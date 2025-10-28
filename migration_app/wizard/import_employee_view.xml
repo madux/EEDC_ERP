@@ -8,6 +8,10 @@
                     <header>
                         Import 
                     </header>
+                    <div class="oe_edit_only alert alert-info" role="alert">
+                        Click to <a href="https://docs.google.com/spreadsheets/d/11M0mHKeVKsCN0JJFxE4chwIGohHE475MkoBsS11nBLI/edit?usp=sharing" target="_blank">See template </a><br/>
+                        <br/>
+                    </div>
                     <group>
                         
                         <field name="filename" invisible="1"/> 
@@ -31,7 +35,7 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">hr.import_record.wizard</field>
             <field name="view_mode">form</field>
-            <field name="target">new</field>
+            <field name="target">current</field>
         </record>
         <record id="hr_migration_confirm_dialog_view" model="ir.ui.view">
             <field name="name">hr.migration.confirm.dialog</field>

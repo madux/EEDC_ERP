@@ -19,7 +19,8 @@
 					<button name="complete_memo_transactions" string="Generate &amp; Confirm Entries" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|','|',('state','not in',['Done']),('is_request_completed','=', True), ('memo_type_key','not in',['material_request', 'procurement_request', 'vehicle_request']),('user_is_approver','=', False)]}"/>
 					<button name="generate_move_entries" string="Create &amp; Post Cash Advance Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate?" attrs="{'invisible':['|','|', ('state','not in',['Approve', 'Done']), ('memo_type_key','not in',['cash_advance']),('user_is_approver','=', False)]}"/>
 					<button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve2', 'Approve','Done']), ('memo_type_key','not in',['soe']),('user_is_approver','=', False)]}"/>
-                    <button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('to_update_inventory_product','!=', True), ('memo_type_key','not in',['soe'])]}"/>
+                    <button name="view_generate_stock_material_request" string="View / Generate Transfer" type="object" class="oe_highlight" confirm="Are you sure you want to generate transfer?" attrs="{'invisible':['|',('memo_type_key','not in',['material_request']), ('state','!=', 'Done')]}"/>
+					<button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('to_update_inventory_product','!=', True), ('memo_type_key','not in',['soe'])]}"/>
 					<button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
 					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
 					<button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object"/>
@@ -176,12 +177,15 @@
 								<!-- <field name="code"/>  -->
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
                                 <field name="is_inter_district_transfer" readonly="0" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
-								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])], 'readonly':[('state','in', ['Done'])]}"/> 
-                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
+
+								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
+                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
                                 <field name="picking_type_id" string="Operation Type" force_save="1" 
-								domain="[('code', '=', ['internal', 'outgoing'])]" 
+								domain="[('code', 'in', ['internal', 'outgoing'])]" 
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
-								attrs="{'invisible':[('memo_type_key','not in', ['material_request'])],'readonly':[('state','in', ['Done'])]}"/> 
+								attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
+                                <field name="external_stock_picking_id" readonly="1" attrs="{'invisible':[('is_inter_district_transfer','=', False)]}"/> 
+                                <field name="stock_picking_id" readonly="1" attrs="{'invisible':[('is_inter_district_transfer','=', False)]}"/> 
 								   
 								<field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
@@ -199,6 +203,8 @@
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
 									<tree string="Items" editable="bottom" no_open="1">
 										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
+										<field name="omit_record" string="Omit" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])], 'invisible': [('memo_type_key', 'not in', ['material_request'])]}"/> 
+										
 										<field name="state" string="State" invisible="1"/> 
 										<field name="request_line_id" string="Request Line ID" invisible="0" column_invisible="0" optional="hide" readonly="1"/> 
 										<field name="memo_type_key" string="memo key" invisible="1" column_invisible="1" force_save="1"/> 
@@ -597,6 +603,8 @@
 										<field name="user_is_approver" invisible="0" force_save="1" readonly="1"/> 
 										<field name="is_request_completed" invisible="0" force_save="1" readonly="1"/> 
 										<field name="move_id" invisible="0" force_save="1" readonly="1"/>
+										<field name="payment_processing_company_id" invisible="0" force_save="1" readonly="0"/>
+										<field name="payment_processing_branch_id" invisible="0" force_save="1" readonly="0"/>
 									</group>
 								</group>
 							</page>
@@ -620,9 +628,9 @@
 					<field name="code"/> 
 					<field name="employee_id" string="Requester"/>
 					<field name="memo_type" string="Request type"/>
-					<field name="set_staff" string = "Assigned to?"/>
+					<field name="set_staff" string = "Assigned to?" widget="badge"/>
 					<field name="state" invisible="0" optional="hide"/>
-					<field name="stage_id" optional="show"/>
+					<field name="stage_id" optional="show" widget="badge"/>
 					<field name="status_progress" widget="progressbar" string="Progress(%)" optional="show"/>
 					<field name="branch_id" invisible="0" optional="show"/>
 					<field name="company_id" invisible="0" optional="hide"/>

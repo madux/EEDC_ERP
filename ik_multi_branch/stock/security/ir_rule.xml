@@ -71,9 +71,10 @@
             (4, ref('ik_multi_branch.account_major_user')),
             (4, ref('stock.group_stock_manager')),
             ]"/>
-            <field name="domain_force">['|',
+            <field name="domain_force">['|','|',
             ('company_id', 'in', user.company_ids.ids),
-            ('company_id', '=', user.company_id.id)]
+            ('company_id', '=', user.company_id.id),
+            ('company_id', '=', False)]
             </field>
         </record> 
 

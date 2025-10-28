@@ -11,14 +11,19 @@ class StockPicking(models.Model):
     memo_id = fields.Many2one('memo.model', string='Request Reference')
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
-
+    is_inter_district_transfer = fields.Boolean("Is inter district transfer")
+    
     def _action_done(self):
         res = super(StockPicking, self)._action_done()
         # self.update_memo_status('Done')
-        if self.memo_id:
+        if self.sudo().memo_id and self.sudo().memo_id.code == self.origin:
+            memo_id = self.sudo().memo_id
             # self.memo_id.is_request_completed = True # Done remove because it will set the process to done automatically 
             self.sudo().memo_id.update_final_state_and_approver()
             self.sudo().memo_id.update_status_badge()
+            if memo_id.external_stock_picking_id and memo_id.external_stock_picking_id.state not in ['done']:
+                external_stock_picking_id = memo_id.external_stock_picking_id
+                external_stock_picking_id._action_done()
         return res
 
     def button_validate(self):
@@ -28,10 +33,14 @@ class StockPicking(models.Model):
         # for mv in self.move_ids_without_package:
         #     self.location_check_available_qty(mv.product_id,mv.location_id, mv.quantity_done)
          
-        if self.memo_id:
-            self.memo_id.is_request_completed = True # Done remove because it will set the process to done automatically 
+        if self.sudo().memo_id and self.sudo().memo_id.code == self.origin:
+            memo_id = self.sudo().memo_id
+            memo_id.is_request_completed = True # Dont remove because it will set the process to done automatically 
             self.sudo().memo_id.update_final_state_and_approver()
             self.sudo().memo_id.update_status_badge()
+            if memo_id.external_stock_picking_id and memo_id.external_stock_picking_id.state not in ['done']:
+                external_stock_picking_id = memo_id.external_stock_picking_id
+                external_stock_picking_id.button_validate()
         return res
     
     # def action_confirm(self):
@@ -80,5 +89,8 @@ class StockImmediateTransfer(models.TransientModel):
         for transfer in self.immediate_transfer_line_ids:
             transfer.picking_id.memo_id.is_request_completed = True
             transfer.sudo().picking_id.memo_id.update_status_badge()
+            if transfer.picking_id.memo_id and transfer.picking_id.memo_id.external_stock_picking_id:
+                external_stock_picking_id = transfer.picking_id.memo_id.external_stock_picking_id
+                external_stock_picking_id.button_validate()
         return res
 

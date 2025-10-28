@@ -61,6 +61,8 @@ class RequestLine(models.Model):
     edit_mode = fields.Boolean(string="Edit mode", help="Allow some fields to be editable")
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
+    
+    omit_record = fields.Boolean(string="Exclude", help="Check this to avoid registry to inventory")
     total_balance_difference = fields.Float(
         string="Balance Diff", 
         compute="compute_balance_difference",
@@ -105,15 +107,26 @@ class RequestLine(models.Model):
     @api.onchange('source_location_id')
     def onchange_location_check_available_qty(self):
         if self.sudo().source_location_id:
+            pr = self.sudo().product_id
+            product = self.env['product.product'].search([
+                # '|', ('default_code', 'in', [pr.default_code, pr.barcode]),
+                ('default_code', 'in', [pr.default_code, pr.barcode]),
+                ('company_id', '=', self.sudo().source_location_id.company_id.id)
+                ], limit=1)
+            if not product:
+                raise ValidationError(f"{pr.name} cannot be found.. in {self.sudo().source_location_id.company_id.name}")
             qty = self.env['stock.quant'].sudo()._get_available_quantity(
-                self.sudo().product_id, 
+                # self.sudo().product_id, 
+                product,
                 self.sudo().source_location_id, 
                 allow_negative=False)
-            err_msg = [f"{self.sudo().product_id.name} Available Quantity is {qty} at Location {self.sudo().source_location_id.name} \n Below are the available locations with Quantities- \n"]
+            err_msg = [f"{product.name} Available Quantity is {qty} at Location {self.sudo().source_location_id.name} \n Check omit box to avoid inventory move of this item. Below are the available locations with Quantities- \n"]
             if qty < 1:
                 available_product_locations = self.get_available_locations_with_items(
-                    self.memo_id.company_id,
-                    self.sudo().product_id,
+                    # self.memo_id.company_id,
+                    self.sudo().source_location_id.company_id,
+                    product,
+                    # self.sudo().product_id,
                     )
                 _logger.info(f"Quant with Quantity {available_product_locations} {available_product_locations.get('data')}")
 
