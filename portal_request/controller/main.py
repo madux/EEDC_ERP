@@ -1265,6 +1265,7 @@ class PortalRequest(http.Controller):
                             "message": f"""Source location for interdistrict transfer must be provided""", 
                             }
                     src = LocationObj.browse(int(sourceLocationId))
+                    _logger.info(f'setting inter source location domain as {src}')
                     domain = [
                         ('company_id', '=', src.company_id.id),
                         ('usage', '=', 'internal')
@@ -1330,6 +1331,7 @@ class PortalRequest(http.Controller):
                             Available quantity is {total_availability}""", 
                         }
                     else:
+                        _logger.info(f"Location outcome is {location}")
                         return {
                             "status": True,
                             "message": "",

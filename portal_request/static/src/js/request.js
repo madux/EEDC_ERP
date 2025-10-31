@@ -338,9 +338,8 @@ odoo.define('portal_request.portal_request', function (require) {
 
     function buildProductRow(memo_type){ 
         // for new request: building each line of item 
-        let lastRow_count = getOrAssignRowNumber()
-        // console.log("what is memo type ==", memo_type)
-        // console.log(`lastrowcount ${lastRow_count}`)
+        let default_source_location = $('#source_location_id').val() || $('#TargetSourceLocation').val() || 0
+        let lastRow_count = getOrAssignRowNumber() 
         $(`#tbody_product`).append(
             `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
                 <th width="5%">
@@ -357,7 +356,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea placeholder="Start typing" name="description" id="${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required': ''}" class="DescFor form-control" labelfor="Description"/> 
                 </th>
                 <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}">
-                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" location_id="" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
+                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''} QTY${lastRow_count}" location_id="${default_source_location}" required="${$.inArray(memo_type, ['vehicle_request']) == 2 ? '': 'required'}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
                 </th>
                 <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''}">
                     <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '': 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none': ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
