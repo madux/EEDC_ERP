@@ -2168,11 +2168,11 @@ odoo.define('portal_request.portal_request', function (require) {
                         console.log("sssXMLREQUEST Successful====", DataItems);
                         let $btn = $('.button_req_submit');
                         let $btnHtml = $btn.html()
-                        // $btn.attr('disabled', 'disabled');
-                        // $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                        // $.blockUI({
-                        //     'message': '<h2 class="card-name">Please wait ...</h2>'
-                        // });
+                        $btn.attr('disabled', 'disabled');
+                        $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                        $.blockUI({
+                            'message': '<h2 class="card-name">Please wait ...</h2>'
+                        });
                         $.ajax({
                             type: "POST",
                             enctype: 'multipart/form-data',
@@ -2192,10 +2192,10 @@ odoo.define('portal_request.portal_request', function (require) {
                                 $("#tbody_product").empty()
                                 $("#tbody_employee").empty()
                                 console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                // window.location.href = `/portal-success`;
-                                // $btn.attr('disabled', false);
-                                // $btn.html($btnHtml)
-                                // $.unblockUI()
+                                window.location.href = `/portal-success`;
+                                $btn.attr('disabled', false);
+                                $btn.html($btnHtml)
+                                $.unblockUI()
                                 console.log("XMLREQUEST Successful====", DataItems);
                             }
                         }).catch(function(err) {
