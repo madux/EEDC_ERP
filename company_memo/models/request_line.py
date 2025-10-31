@@ -109,12 +109,16 @@ class RequestLine(models.Model):
         if self.sudo().source_location_id:
             pr = self.sudo().product_id
             product = self.env['product.product'].search([
-                # '|', ('default_code', 'in', [pr.default_code, pr.barcode]),
+                # '|', ('id', 'in', self.product_id.id),
                 ('default_code', 'in', [pr.default_code, pr.barcode]),
                 ('company_id', '=', self.sudo().source_location_id.company_id.id)
                 ], limit=1)
             if not product:
-                raise ValidationError(f"{pr.name} cannot be found.. in {self.sudo().source_location_id.company_id.name}")
+                raise ValidationError(f"""
+                    {pr.name} - {pr.default_code} cannot be found.. 
+                    in {self.sudo().source_location_id.company_id.name}
+                    Ensure that the product is assigned to a company
+                    """)
             qty = self.env['stock.quant'].sudo()._get_available_quantity(
                 product,
                 self.sudo().source_location_id, 
@@ -127,8 +131,6 @@ class RequestLine(models.Model):
                     product,
                     )
                 _logger.info(f"Quant with Quantity {available_product_locations} {available_product_locations.get('data')}")
-
-                # raise ValidationError(available_product_locations)
                 if available_product_locations.get('data'):
                     for r in available_product_locations.get('data'):
                         err_msg.append(f"""Location: {r.get('Location')} - Quantity: {r.get('Quantity')} \n""")

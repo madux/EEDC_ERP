@@ -2494,24 +2494,26 @@ class Memo_Model(models.Model):
         if product:
             product_code = product.code
             ProductObj = self.env['product.product'].sudo()
-            product = ProductObj.search(
+            existing_product = ProductObj.search(
                 ['|', 
-                 ('default_code', '=', product_code), 
-                 ('barcode', '=', product_code),
-                 ('company_id', '=', company.id)
-                 ])
-            if product:
-                product = product 
-                
+                ('default_code', '=', product_code), 
+                ('barcode', '=', product_code), 
+                ('company_id', '=', company.id)
+                ], limit=1  # Add limit for performance
+            )
+            
+            if existing_product:
+                return existing_product
             else:
-                _logger.info('CREATING PRODUCT 22')
-                product = ProductObj.create({
+                _logger.info('CREATING PRODUCT: %s', product.name)
+                # Use the ORIGINAL product parameter, not the search result
+                new_product = ProductObj.create({
                     'name': product.name,
-                    'default_code': product.name,
-                    'barcode': product.name,
-                    
+                    'default_code': product.code,  # Use code instead of name
+                    'barcode': product.code,       # Use code instead of name
+                    'company_id': company.id,      # Set company_id
                 })
-            return product
+                return new_product
         else:
             raise ValidationError("No product line found to process")
            
