@@ -294,7 +294,7 @@
                                                             </label>
                                                             <div class="mb-2 mt-2 text-muted">
                                                                 <!-- TARGETTTLOCATION: -->
-                                                                <input id="TargetSourceLocation" class="form-control d-none" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
+                                                                <input id="TargetSourceLocation" class="form-control" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
                                                                 <select name="source_location_id" id="source_location_id" required="" data-init="" class="form-control Sourcelocation-cls" labelfor="Source Location">
                                                                     <option disabled="true" selected="true" value="">.. Select ..</option>
                                                                     <t t-foreach="source_location_data_ids" t-as="key">
@@ -758,10 +758,9 @@
                                                             <th id="retirement_sub_total" width="10%">
                                                                 <label>Used Subtotal</label>
                                                             </th>
-                                                            
                                                             <!-- 9 -->
                                                             <th id="note_label" width="20%">
-                                                                <label>Note</label>
+                                                                <label>More Details</label>
                                                             </th>
                                                             <!-- 10 -->
                                                             <th class="d-none" id="distance_from" width="20%">
@@ -771,11 +770,10 @@
                                                             <th class="d-none" id="distance_to" width="20%">
                                                                 <label>Distance to</label>
                                                             </th>
-                                                            <!-- 11 -->
+                                                            <!-- 12 -->
                                                             <th id="delete_label" width="5%">
                                                                 <label>X</label>
                                                             </th>
-                                                            
                                                         </tr>
                                                     </thead>
                                                     <!-- <tbody id="attachment2_table_body" name="attachment2_table_body"> -->
@@ -836,7 +834,7 @@
                                                             <td width="10%">
                                                             </td>
                                                             <td width="10%">
-                                                                Total - 
+                                                                Total: 
                                                             </td>
                                                             <td width="20%">
                                                                 <span name="all_total_amount" id="all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0.00</span>

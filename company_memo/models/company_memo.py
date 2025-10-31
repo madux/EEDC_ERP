@@ -421,12 +421,16 @@ class Memo_Model(models.Model):
     
     @api.depends('leave_end_date')
     def get_leave_days_taken(self):
-        for rec in self:
-            if rec.leave_start_date and rec.leave_end_date:
-                duration = rec.leave_end_date - rec.leave_start_date
-                rec.leave_duration = duration.days
-            else:
-                rec.leave_duration = 0
+        leave_duration = self.env['hr.leave']._get_number_of_days(
+            self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
+        self.leave_duration = leave_duration
+        
+        # for rec in self:
+        #     if rec.leave_start_date and rec.leave_end_date:
+        #         duration = rec.leave_end_date - rec.leave_start_date
+        #         rec.leave_duration = duration.days
+        #     else:
+        #         rec.leave_duration = 0
                 
     def set_reliever_to_act_as_employee_on_leave(
         self, employee_on_leave_id, leave_reliever_id):
@@ -2498,7 +2502,9 @@ class Memo_Model(models.Model):
                  ])
             if product:
                 product = product 
+                
             else:
+                _logger.info('CREATING PRODUCT 22')
                 product = ProductObj.create({
                     'name': product.name,
                     'default_code': product.name,
