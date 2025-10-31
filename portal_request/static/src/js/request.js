@@ -318,7 +318,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             <input type="number" value="${elm.sub_total_amount}" name="retireSubTotal" id="${elm.sub_total_amount-lastRow_count}" main_name = "retireSubTotal" class="retireSubTotal${lastRow_count} form-control ${memo_type == 'soe' ? '': 'd-none'}}" labelfor="Retire Subtotal" readonly="true" disabled="true"/> 
                         </th>
                         <th width="45%">
-                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note"/> 
+                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note" placeholder="type more reason..."/> 
                         </th>
                         <th width="5%">
                             <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field fa fa-trash-o p-3 ${memo_type == 'soe' ? 'd-none': ''}"></a>
@@ -2038,15 +2038,11 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 });
                 if (list_of_fields.length > 0){
-                    // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
-                    // alert(`Validation: Please ensure the following fields are filled.. ${list_of_fields}`)
                     let message = `Validation: Please ensure the following fields are filled.. ${list_of_fields}`
                     modal_message.text(message)
                     alert_modal.modal('show');
                     return false;
                 }else{
-                    
-
                     var current_btn = $(ev.target);
                     var form = $('#msform')[0];
                     // FormData object 
@@ -2069,6 +2065,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 'code': 'mef00981',
                                 'request_line_id': '',
                                 'distance_from': '',
+                                'distance_to': '',
                                 'distance_to': '',
                             }
                             // input[type='text'], input[type='number']
@@ -2172,11 +2169,11 @@ odoo.define('portal_request.portal_request', function (require) {
                         console.log("sssXMLREQUEST Successful====", DataItems);
                         let $btn = $('.button_req_submit');
                         let $btnHtml = $btn.html()
-                        $btn.attr('disabled', 'disabled');
-                        $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                        $.blockUI({
-                            'message': '<h2 class="card-name">Please wait ...</h2>'
-                        });
+                        // $btn.attr('disabled', 'disabled');
+                        // $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                        // $.blockUI({
+                        //     'message': '<h2 class="card-name">Please wait ...</h2>'
+                        // });
                         $.ajax({
                             type: "POST",
                             enctype: 'multipart/form-data',
@@ -2196,10 +2193,10 @@ odoo.define('portal_request.portal_request', function (require) {
                                 $("#tbody_product").empty()
                                 $("#tbody_employee").empty()
                                 console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                window.location.href = `/portal-success`;
-                                $btn.attr('disabled', false);
-                                $btn.html($btnHtml)
-                                $.unblockUI()
+                                // window.location.href = `/portal-success`;
+                                // $btn.attr('disabled', false);
+                                // $btn.html($btnHtml)
+                                // $.unblockUI()
                                 console.log("XMLREQUEST Successful====", DataItems);
                             }
                         }).catch(function(err) {

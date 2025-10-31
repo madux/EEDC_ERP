@@ -2502,7 +2502,9 @@ class Memo_Model(models.Model):
                  ])
             if product:
                 product = product 
+                
             else:
+                _logger.info('CREATING PRODUCT 22')
                 product = ProductObj.create({
                     'name': product.name,
                     'default_code': product.name,
