@@ -116,7 +116,6 @@ class RequestLine(models.Model):
             if not product:
                 raise ValidationError(f"{pr.name} cannot be found.. in {self.sudo().source_location_id.company_id.name}")
             qty = self.env['stock.quant'].sudo()._get_available_quantity(
-                # self.sudo().product_id, 
                 product,
                 self.sudo().source_location_id, 
                 allow_negative=False)
@@ -126,7 +125,6 @@ class RequestLine(models.Model):
                     # self.memo_id.company_id,
                     self.sudo().source_location_id.company_id,
                     product,
-                    # self.sudo().product_id,
                     )
                 _logger.info(f"Quant with Quantity {available_product_locations} {available_product_locations.get('data')}")
 
