@@ -38,7 +38,8 @@
                                 <field name="payable_account_id"/>
                                 <field name="advance_account_id"/>
                                 <field name="expense_account_id"/>
-                                <field name="inter_district"/>
+                                <field name="inter_district_request" string="Is inter Company / district Material Request"/>
+                                <field name="inter_district" string="Is inter Company / district Payment"/>
                                 <field name="payment_processing_company_id" attrs="{'invisible': [('inter_district', '=', False)]}"/>
                                 <field name="payment_processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)]}"/>
 

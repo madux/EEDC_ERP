@@ -7,6 +7,13 @@ class productProduct(models.Model):
     _inherit = "product.product"
     _check_company_auto = False
     
+    def set_products_to_no_tracking(self):
+        self.env.cr.execute("""
+            UPDATE product_template
+            SET tracking = 'none'
+        """)
+        self.env.cr.commit()  # optional if you’re running in manual mode
+    
     def _get_domain_locations(self):
         '''
         Parses the context and returns a list of location_ids based on it.

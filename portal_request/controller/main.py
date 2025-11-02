@@ -339,24 +339,74 @@ class PortalRequest(http.Controller):
                 
     @http.route(['/get-stock-location'], type='http', website=True, auth="user", csrf=False)
     def get_stock_location(self, **post):
+        user = request.env.user
         location_type = post.get('location_type')
+        is_inter_company = post.get('is_inter_company')
+        selected_location_id = post.get('selected_source')
+        selectedOption_id = post.get('selectedOption_id')
+        
+        
         location_data_ids =None
-        query = request.params.get('q', '')  
-        if location_type == "source":
-            location_data_ids = request.env['stock.location'].sudo().search(
-                [
+        query = request.params.get('q', '') 
+        is_inter_company2 = request.params.get('is_inter_company') 
+        branch_ids = [user.branch_id.id] + user.branch_ids.ids
+        company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+        stockObj = request.env['stock.location'].sudo()
+        _logger.info(f"Search locations : params Selected location : {selected_location_id}, ==> is intercompany : {is_inter_company} SELECTED OPTION {selectedOption_id} - location type:  {location_type}, QUERY ==> {query}")
+        is_inter_company = False if is_inter_company in [False, 'false', 'Off', 'OFF'] else True 
+        if not is_inter_company:
+            
+            if location_type == "source":
+                domain = [
                     ('usage', '=', 'internal'),
-                    '|', ('name', 'ilike', query),('display_name', 'ilike', query)
-                ]
-            )
+                    ('branch_id.id', 'in', branch_ids),
+                    ('company_id.id', 'in', company_ids),
+                    ('name', 'ilike', query)
+                    ]
+                if selected_location_id:
+                    domain.append(('id', '!=', selected_location_id))
+                location_data_ids = stockObj.search(domain)
+                
+            else:
+                domain=[
+                    ('usage', '=', 'internal'),
+                    ('branch_id.id', 'in', branch_ids),
+                    ('company_id.id', 'in', company_ids),
+                    ('name', 'ilike', query)
+                    ]
+                if selected_location_id:
+                    domain.append(('id', '!=', selected_location_id))
+                location_data_ids = stockObj.search(domain)
         else:
-            location_data_ids = request.env['stock.location'].sudo().search(
-                [
-                ('usage', '=', 'internal'),
-                ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
-                '|', ('name', 'ilike', query),('display_name', 'ilike', query),
-                ]
-            )  
+            if location_type == "source":
+                '''returns all locations if it is not interdistrict or intercompany'''
+                if selectedOption_id:
+                    option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
+                    all_branches = [option.branch_id.id]
+                else:
+                    all_branches = request.env['multi.branch'].sudo().search([])
+                    all_branches = all_branches.ids
+                
+                domain = [
+                        ('usage', '=', 'internal'),
+                        ('branch_id', 'in', all_branches),
+                        ('name', 'ilike', query)
+                    ]
+                if selected_location_id:
+                    domain.append(('id', '!=', selected_location_id))
+                location_data_ids = stockObj.search(domain)
+                
+            else:
+                domain=[
+                    ('usage', '=', 'internal'),
+                    ('branch_id.id', 'in', branch_ids),
+                    ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
+                    ('name', 'ilike', query)
+                    ]
+                if selected_location_id:
+                    domain.append(('id', '!=', selected_location_id))
+                location_data_ids = stockObj.search(domain)
+                 
         return json.dumps({
             "results": [{"id": item.id, "text": f'{item.name}'} for item in location_data_ids],
             "pagination": {
@@ -723,7 +773,7 @@ class PortalRequest(http.Controller):
             }
         
     @http.route(['/check-configured-stage'], type='json', website=True, auth="user", csrf=False)
-    def check_configured_leave(self, **post):
+    def check_configured_memo_config(self, **post):
         staff_num = post.get('staff_num')
         request_option = post.get('request_option')
         request_config_option = post.get('request_config_option')
@@ -772,6 +822,9 @@ class PortalRequest(http.Controller):
                     return {
                         "status": True,
                         "message": "", 
+                        "data": {
+                            'inter_district_request': memo_setting_id.inter_district_request,
+                        }
                         }
             # else:
             # 	msg = """
@@ -1579,8 +1632,11 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', 0)
+            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', 0) 
+            line_source_location_id = False if line_source_location_id in ['false', False, 'none', None] else line_source_location_id
             line_dest_location_id = memo_id.dest_location_id.id if memo_id.dest_location_id else rec.get('dest_location_id')
+            line_dest_location_id = False if line_dest_location_id in ['false', False, 'none', None] else line_dest_location_id
+            
             _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
                 'memo_id': memo_id.id,
@@ -1599,7 +1655,7 @@ class PortalRequest(http.Controller):
                 'distance_from': rec.get('distance_from'),
                 'distance_to': rec.get('distance_to'),
             }
-            _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} ")
+            _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} == valxxx [{request_vals}]")
             productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
             product_id = request.env['product.product'].sudo().browse([int(productid)])
             if product_id:

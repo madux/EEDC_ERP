@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE xml>
+<odoo>
+    <data noupdate="0"> 
+
+        <record id="user_rule_see_import_products" model="ir.rule">
+            <field name="name">User see only own migration data</field>
+            <field name="model_id" ref="migration_app.model_import_product_wizard"/>
+            <field name="groups" eval="[(6, 0, [ref('eedc_addons.user_group_see_products')])]"/>
+            <!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]" /> -->
+             <field name="domain_force">['|', '|',  '|',  '|',
+             ('company_id', '=', False), 
+             ('company_id', '=', user.company_id.id), 
+             ('company_id.id', 'in', user.company_ids.ids), 
+             ('company_id', '=', company_id), 
+             ('create_uid', '=', user.id)]</field>
+        </record> 
+        <record id="admin_rule_see_import_products" model="ir.rule">
+            <field name="name">User see only own migration data</field>
+            <field name="model_id" ref="migration_app.model_import_product_wizard"/>
+            <field name="groups" eval="[(6, 0, [ref('base.group_system')])]"/>
+            <!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]" /> -->
+             <field name="domain_force">
+             [(1,'=',1)]
+             </field>
+        </record> 
+
+        <!-- menu items -->
+    </data>
+</odoo>

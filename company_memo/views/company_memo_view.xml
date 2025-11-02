@@ -176,17 +176,18 @@
 								<field name="status_progress" widget="progressbar" string="Progress(%)"/>
 								<!-- <field name="code"/>  -->
 								<field name = "res_users" widget="many2many_tags" required="0" readonly="1"/>  
-                                <field name="is_inter_district_transfer" readonly="0" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
+                                <field name="is_inter_district_transfer" readonly="0" attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']),('user_is_approver','!=',True)]}"/> 
 
-								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
-                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
+								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_quick_create&quot;: True}"
+								 attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
+                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: False, &quot; no_quick_create&quot;: True}" 
+								attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True), ('state','not in',['Done'])]}"/> 
                                 <field name="picking_type_id" string="Operation Type" force_save="1" 
 								domain="[('code', 'in', ['internal', 'outgoing'])]" 
-								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
-								attrs="{'invisible':[('memo_type_key','not in', ['material_request'])]}"/> 
-                                <field name="external_stock_picking_id" readonly="1" attrs="{'invisible':[('is_inter_district_transfer','=', False)]}"/> 
-                                <field name="stock_picking_id" readonly="1" attrs="{'invisible':[('is_inter_district_transfer','=', False)]}"/> 
-								   
+								options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"
+								attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']),('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
+                                <field name="external_stock_picking_id" readonly="1" attrs="{'invisible':['|', ('is_inter_district_transfer','=', False), ('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
+                                <field name="stock_picking_id" readonly="1" attrs="{'invisible':['|', ('is_inter_district_transfer','=', False), ('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
 								<field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="user_is_approver" invisible="1" readonly="0"/>
@@ -203,7 +204,7 @@
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}">
 									<tree string="Items" editable="bottom" no_open="1">
 										<field name="to_retire" string="To Retire" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
-										<field name="omit_record" string="Omit" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])], 'invisible': [('memo_type_key', 'not in', ['material_request'])]}"/> 
+										<field name="omit_record" string="Omit" attrs="{'column_invisible': ['|', ('parent.user_is_approver','=',False), ('parent.memo_type_key', 'not in', ['material_request'])], 'invisible': [('memo_type_key', 'not in', ['material_request'])]}"/> 
 										
 										<field name="state" string="State" invisible="1"/> 
 										<field name="request_line_id" string="Request Line ID" invisible="0" column_invisible="0" optional="hide" readonly="1"/> 
@@ -237,10 +238,9 @@
                                         <field name="difference_in_amount" optional="hide" force_save="1" sum="Difference" attrs="{'column_invisible': [('parent.memo_type_key', 'not in', ['soe'])], 'readonly': ['|', ('memo_type_key', 'not in', ['soe']),('state','in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'not in', ['soe'])]}"/> 
 										<field name="note" string="Note" invisible="0" force_save="1" optional="hide"/>  
 										<field name="driver_assigned" string="Driver" force_save="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('parent.memo_type_key', 'not in', ['vehicle_request'])]}"/> 
-								
-										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'required':[('parent.edit_mode','=',True)], 'readonly':[('parent.edit_mode','=',False), ('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])]}"
+										<field name="source_location_id" string="Source Location" force_save="1" attrs="{'required':[('parent.edit_mode','=',True)], 'readonly':[('parent.edit_mode','=',False), ('state','not in',['submit','Refuse'])], 'column_invisible': ['|','|', ('parent.edit_mode','=',False),('parent.user_is_approver','=',False), ('parent.memo_type_key', 'not in', ['material_request'])]}"
 										optional="show"/> 
-                                        <field name="dest_location_id" string="Destination Location" optional="show" force_save="1" attrs="{'readonly':[('parent.edit_mode','=',False),('state','not in',['submit','Refuse'])], 'column_invisible': [('parent.memo_type_key', 'not in', ['material_request'])]}"/>
+                                        <field name="dest_location_id" string="Destination Location" optional="show" force_save="1" attrs="{'readonly':[('parent.edit_mode','=',False),('state','not in',['submit','Refuse'])], 'column_invisible': ['|', '|', ('parent.edit_mode','=',False), ('parent.user_is_approver','=',False), ('parent.memo_type_key', 'not in', ['material_request'])]}"/>
 										<field name="distance_from" string="From" force_save="1" attrs="{'readonly':[('state','not in',['submit'])], 
 										'column_invisible': [('memo_type_key', 'not in', ['vehicle_request'])], 'invisible': [('memo_type_key', 'not in', ['vehicle_request'])]}"/> 
 										<field name="distance_to" string="To" force_save="1" attrs="{'readonly':[('state','not in',['submit','Refuse'])], 

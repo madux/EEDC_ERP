@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE xml>
+<odoo>
+    <data noupdate="0">
+        <record model="ir.module.category" id="inventory_super_users_category">
+           <field name="name">Super Inventory</field>
+           <field name="description">Inventory Super User To see all product creations and features</field>
+           <field name="sequence">33</field>
+        </record>
+        <record id="user_group_see_products" model="res.groups">
+            <field name="name">Inventory Super User</field>
+            <field name="category_id" ref="inventory_super_users_category"/>
+			<!-- <field name="implied_ids" eval="[(4, ref('base.group_user'))]" /> -->
+            
+        </record>
+
+        <!-- menu items -->
+        <menuitem id="menu_eedc_addons_inventory_import_product_wizard" name="Import / Update Products" groups="base.group_system,user_group_see_products" sequence="12" parent="stock.menu_stock_root" action="migration_app.action_import_product_wizard"/> 
+
+        <record id="stock.menu_stock_inventory_control" model="ir.ui.menu">
+        	<field name="groups_id" eval="[(6, 0, [ref('eedc_addons.user_group_see_products')])]"/>
+        </record>
+
+        <record id="stock.menu_product_in_config_stock" model="ir.ui.menu">
+        	<field name="groups_id" eval="[(6, 0, [ref('eedc_addons.user_group_see_products')])]"/>
+        </record>
+
+        <record id="purchase.menu_procurement_partner_contact_form" model="ir.ui.menu">
+        	<field name="groups_id" eval="[(6, 0, [ref('eedc_addons.user_group_see_products')])]"/>
+        </record>
+    </data>
+</odoo>
