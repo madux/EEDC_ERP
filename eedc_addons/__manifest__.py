@@ -4,10 +4,12 @@
     'author': "Maduka Sopulu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize base modules',
-    'depends': ['base', 'hr', 'hr_pms', 'company_memo', 'stock_no_negative', 'purchase', 'hr_holidays', 'ik_multi_branch'],#, 'hr_payroll_addons'],
+    'depends': ['base', 'hr', 'hr_pms', 'company_memo', 'stock_no_negative', 'purchase', 
+                'hr_holidays', 'ik_multi_branch'],#, 'hr_payroll_addons'],
     'description': "ODOO Base Extension to customize base modules ",
     "data": [
         'security/ir.model.access.csv',
+        'security/security.xml',
         'views/base_view.xml',
         'views/hr_employee_transfer_view.xml',
         'views/hr_employee_inherit.xml',

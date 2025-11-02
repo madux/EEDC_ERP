@@ -842,26 +842,54 @@ class Memo_Model(models.Model):
                 return True
             
     def get_user_configs(self):
-        # employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
-        #     [('user_id', '=', self.env.uid)], limit=1)
         user = self.env.user
-        employee = self.env['hr.employee'].sudo().search(
-            [('user_id', '=', self.env.uid)], limit=1)
+        employee = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+
+        branch_ids = [employee.user_id.branch_id.id] + employee.user_id.branch_ids.ids
+        company_ids = [employee.user_id.company_id.id] + employee.user_id.company_ids.ids
+
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
             ('publish_to_public', '=', True),
-            # ('department_id', '=', employee.department_id.id),
-            ('branch_id', '=', employee.user_id.branch_id.id),
-            ('company_id', '=', employee.user_id.company_id.id),
-            ])
-        _logger.info(f'THis is configs == > {memo_configs}')
-        memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
+        ])
+
         for r in memo_configs:
-            if r.stage_ids:
-                initiation_stage = r.stage_ids[0]
-                if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
-                    memo_configs = memo_configs - r
+            # Case 1: normal relationship — same branch/company
+            is_related = (r.branch_id.id in branch_ids or r.company_id.id in company_ids)
+
+            # Case 2: inter-district or request but unrelated branch
+            is_inter_district_case = (
+                (r.inter_district or r.inter_district_request)
+                and (r.branch_id.id not in branch_ids)
+            )
+
+            # Keep if either is true; otherwise remove
+            if not (is_related or is_inter_district_case):
+                memo_configs -= r
+
         return memo_configs
+            
+    # def get_user_configs(self):
+    #     # employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
+    #     #     [('user_id', '=', self.env.uid)], limit=1)
+    #     user = self.env.user
+    #     employee = self.env['hr.employee'].sudo().search(
+    #         [('user_id', '=', self.env.uid)], limit=1)
+    #     memo_configs = self.env['memo.config'].sudo().search([
+    #         ('active', '=', True),
+    #         ('publish_to_public', '=', True),
+    #         # ('department_id', '=', employee.department_id.id),
+    #         ('branch_id', '=', employee.user_id.branch_id.id),
+    #         ('company_id', '=', employee.user_id.company_id.id),
+    #         ])
+    #     _logger.info(f'THis is configs == > {memo_configs}')
+    #     memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
+    #     for r in memo_configs:
+    #         if r.stage_ids:
+    #             initiation_stage = r.stage_ids[0]
+    #             if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
+    #                 memo_configs = memo_configs - r
+    #     return memo_configs
     
     @api.model
     def default_get(self, fields):
@@ -2462,18 +2490,20 @@ class Memo_Model(models.Model):
         _logger.info('TESTING 002')
         if not self.get_approvers():
             raise ValidationError('You are not allowed to validate this record')
-        if not self.is_inter_district_transfer:
-            stock = self.generate_internal_transfer()  # main / first entry for the requesting company
-        else:
-            stock = self.generate_internal_transfer_for_interdistrict()
-            self.generate_interdistrict_stock_material_request() # second entry for the requesting company
+        self.generate_external_internal_stock_material_request()
+        # if not self.is_inter_district_transfer:
+        #     stock = self.generate_internal_transfer()  # main / first entry for the requesting company
+        # else:
+        #     stock = self.generate_internal_transfer_for_interdistrict()
+        #     self.generate_external_interdistrict_stock_material_request() # second entry for the requesting company
+        
             
         self.update_memo_type_approver()
         if body_msg:
             self.mail_sending_direct(body_msg)
         # is_config_approver = self.determine_if_user_is_config_approver() or self.get_approvers()
         # if is_config_approver:
-        self.stock_picking_id = stock.id
+        # self.stock_picking_id = stock.id
         # raise ValidationError(f'{stock.name} and piv {self.stock_picking_id.id}')
         """Check if the user is enlisted as the approver for memo type"""
         view_id = self.env.ref('stock.view_picking_form').id
@@ -2483,7 +2513,7 @@ class Memo_Model(models.Model):
             'view_id': view_id,
             'view_type': 'form',
             'res_model': 'stock.picking',
-            'res_id': stock.id,
+            'res_id': self.stock_picking_id.id,
             'type': 'ir.actions.act_window',
             'domain': [],
             'target': 'current'
@@ -2517,78 +2547,219 @@ class Memo_Model(models.Model):
         else:
             raise ValidationError("No product line found to process")
            
-    def generate_interdistrict_stock_material_request(self):
+    def generate_external_internal_stock_material_request(self):
         user = self.env.user
-        lc_views = ['supplier']
-        tvi_locations = self.env['stock.location'].sudo().search([
-            ('company_id', '=', self.employee_id.company_id.id), # the company of the requester
-            ('usage', 'in', lc_views),
-            ])
         dest_location = self.sudo().dest_location_id
         if not dest_location:
             raise ValidationError('Please enter the source or destination location and or operation type')
-        if self.sudo().source_location_id.company_id.id == self.company_id.id:
-            raise ValidationError(f'Source Location company cannot be the same as company {self.company_id.name} where this request was initiated from')
-        source_id = False 
-        if not self.is_inter_district_transfer:
-            if not dest_location.company_id.id == self.company_id.id:
-                raise ValidationError(f'Destination location does not relate to the company {self.company_id.name} this request was initiated from. Maybe this is an inter district transfer. Kindly click on the is inter district checkbox. ')
-            source_id =  self.sudo().source_location_id
-        else:
-            if not tvi_locations: 
-                '''Use tvi_locations as destination location'''
-                raise ValidationError(f'supplier location found as source location for inter district transfer.')
-            source_id = tvi_locations[0]
-            if not dest_location.company_id.id == self.employee_id.company_id.id:
-                raise ValidationError(f'''Destination location company must be related to the requesters' company {self.employee_id.company_id.name} this request is going to''')
-        company_id = self.employee_id.company_id or dest_location.company_id
-        stock_picking_type = self.env['stock.picking.type'].sudo().search(
-            [('code', '=', 'incoming'), ('company_id', '=', company_id.id)], limit=1)
         
-        stock_picking_type_out = self.sudo().picking_type_id  
+        '''check if this is inter company transfer'''
+        source_loc_id = False
+        destination_loc_id = False 
         stock_picking = self.env['stock.picking'].sudo()
-        # existing_picking = stock_picking.search([('origin', '=', f"INTER/{self.code}")], limit=1)
+        if self.sudo().source_location_id.company_id.id != dest_location.company_id.id: # not in [self.company_id.id, self.source_location_id.company_id.id] and self.source_location_id.branch_id.id :
+            '''this condition means that it is inter company transfer'''
+            if self.sudo().picking_type_id.company_id.id != self.sudo().source_location_id.company_id.id:
+                raise ValidationError("Your picking type company must be the same as source location company ")
+            
+            if self.sudo().picking_type_id.code not in ['outgoing']:
+                '''ensure the picking type company is not the same as destination company'''
+                raise ValidationError("Your picking type must be set as delivery orders ")
+            
+            if self.sudo().picking_type_id.company_id.id == dest_location.company_id.id:
+                '''ensure the picking type company is not the same as destination company'''
+                raise ValidationError("Your picking type company must not be the same as destination location company ")
+            
+            if self.sudo().source_location_id.id == dest_location.id:
+                '''ensure the source is not the same as destination location'''
+                raise ValidationError("Source location and destination location cannot be the same")
+            
+            '''Get external source location for inter company'''
+            vendor_source_loc_id = self.env['stock.location'].search([('usage','=', 'supplier'), ('company_id','=', dest_location.company_id.id)], limit=1)
+            if not vendor_source_loc_id:
+                raise ValidationError(f"To create external move for inter company transfer, ensure {dest_location.company_id.name} has location set as vendor location")
+            
+            source_loc_id = vendor_source_loc_id # location of the issuing company e.g ekwulobia
+            
+            '''Get external destination location for inter company'''
+            destination_loc_id = dest_location  # location of the recieving company e.g mainpower distribution
+            
+            '''Got stock picking for the external company move'''
+            stock_picking_type_in = self.env['stock.picking.type'].sudo().search(
+            [('code', '=', 'incoming'), ('company_id', '=', dest_location.company_id.id)], limit=1)
+            
+            stock_picking_type_out = self.env['stock.picking.type'].sudo().search(
+            [('code', '=', 'outgoing'), ('company_id', '=', dest_location.company_id.id)], limit=1)
+            
+            if not (stock_picking_type_in):
+                raise ValidationError(f'System can not find any receipt picking type set for {dest_location.company_id.name}')
+            
+            if not (stock_picking_type_out):
+                raise ValidationError(f'System can not find any outgoing picking type set for {dest_location.company_id.name}')
+            
+            '''checks if an external move has be created earlier, if found and state is in draft and cancel, delete it and recreate'''
+            ##########################################################
+            existing_picking = False
+            
+            if self.external_stock_picking_id and self.external_stock_picking_id.state in ['draft', 'cancel']:
+                self.sudo().external_stock_picking_id.unlink()
+                existing_picking = False
+                
+            existing_picking = self.external_stock_picking_id
+            if not existing_picking:
+                company_id = destination_loc_id.company_id
+                vals = {
+                    'scheduled_date': fields.Date.today(),
+                    'picking_type_id': stock_picking_type_in.id,
+                    'location_id': vendor_source_loc_id.id,
+                    'location_dest_id': destination_loc_id.id,
+                    'branch_id': destination_loc_id.branch_id.id,
+                    'origin': f"INTER-CO/{self.code}",
+                    # 'memo_id': self.id,
+                    'company_id': company_id.id,
+                    # 'partner_id': self.employee_id.user_id.partner_id.id,
+                    'is_inter_district_transfer': True,
+                    'move_ids_without_package': [(0, 0, {
+                                    'name': self.code,
+                                    'picking_type_id': stock_picking_type_out.id,
+                                    'location_id': vendor_source_loc_id.id or stock_picking_type_out.default_location_src_id.id,
+                                    'location_dest_id': dest_location.id,
+                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_uom_qty': mm.quantity_available,
+                                    'quantity_done': mm.quantity_available,
+                                    'date_deadline': self.date_deadline,
+                                    'company_id': company_id.id,
+                                    
+                    }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
+                }
+                stock = stock_picking.with_context(default_company_id=company_id.id).sudo().create(vals)
+                stock.company_id = company_id.id
+                for r in stock.move_ids_without_package:
+                    r.company_id = company_id.id
+            else:
+                stock = existing_picking
+            self.external_stock_picking_id = stock.id 
+            
+            
+            ##########################################################
+            # this will also create internal stock transfer
+            '''generate internal stock transfer'''
+            '''Get customer delivery location for inter company'''
+            customer_destination_loc_id = self.env['stock.location'].search([('usage','=', 'customer'), ('company_id','=', self.source_location_id.company_id.id)], limit=1)
+            if not customer_destination_loc_id:
+                raise ValidationError("To create move for inter company transfer, ensure you have a location with usage set as customer location")
+            existing_picking = False
+            if self.stock_picking_id and self.stock_picking_id.state in ['draft', 'cancel']:
+                self.sudo().stock_picking_id.unlink()
+            existing_picking = self.stock_picking_id
+            
+            if not existing_picking:
+                company_id = self.source_location_id.company_id
+                vals = {
+                    'scheduled_date': fields.Date.today(),
+                    'picking_type_id': self.picking_type_id.id,
+                    'location_id': self.source_location_id.id,
+                    'location_dest_id': customer_destination_loc_id.id,
+                    'branch_id': self.source_location_id.branch_id.id,
+                    'origin': f"{self.code}",
+                    # 'memo_id': self.id,
+                    'company_id': company_id.id,
+                    # 'partner_id': self.employee_id.user_id.partner_id.id,
+                    'is_inter_district_transfer': False,
+                    'move_ids_without_package': [(0, 0, {
+                                    'name': self.code,
+                                    'picking_type_id': stock_picking_type_out.id,
+                                    'location_id': self.source_location_id.id,
+                                    'location_dest_id': customer_destination_loc_id.id,
+                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_uom_qty': mm.quantity_available,
+                                    'quantity_done': mm.quantity_available,
+                                    'date_deadline': self.date_deadline,
+                                    'company_id': company_id.id,
+                                    
+                    }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
+                }
+                existing_picking = stock_picking.with_context(default_company_id=company_id.id).sudo().create(vals)
+                existing_picking.company_id = company_id.id
+                for r in existing_picking.move_ids_without_package:
+                    r.company_id = company_id.id
+            else:
+                existing_picking = existing_picking
+            self.stock_picking_id = existing_picking.id
         
-        # warehouse_location_id = self.env['stock.warehouse'].sudo().search([
-        #     ('company_id', '=', self.company_id.id) 
-        # ], limit=1)
-        if self.external_stock_picking_id and self.external_stock_picking_id.state in ['draft', 'cancel']:
-            self.sudo().external_stock_picking_id.unlink()
-            existing_picking = False 
-        existing_picking = self.external_stock_picking_id
-        if not existing_picking:
-            vals = {
-                'scheduled_date': fields.Date.today(),
-                'picking_type_id': stock_picking_type.id,
-                'location_id': source_id.id,
-                'location_dest_id': dest_location.id,
-                'branch_id': self.employee_id.user_id.branch_id.id,
-                'origin': f"INTER/{self.code}",
-                'memo_id': self.id,
-                'company_id': company_id.id,
-                'partner_id': self.employee_id.user_id.partner_id.id,
-                'is_inter_district_transfer': True,
-                'move_ids_without_package': [(0, 0, {
-                                'name': self.code,
-                                'picking_type_id': stock_picking_type_out.id,
-                                'location_id': source_id or stock_picking_type_out.default_location_src_id.id,
-                                'location_dest_id': dest_location,
-                                'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
-                                'product_uom_qty': mm.quantity_available,
-                                'quantity_done': mm.quantity_available,
-                                'date_deadline': self.date_deadline,
-                                'company_id': company_id.id,
-                                
-                }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
-            }
-            stock = stock_picking.with_context(default_company_id=company_id.id).sudo().create(vals)
-            stock.company_id = company_id.id
-            for r in stock.move_ids_without_package:
-                r.company_id = company_id.id
-        else:
-            stock = existing_picking
-        self.external_stock_picking_id = stock.id
-        
+         # this is internal or inter district transfer
+                
+        else:  #elif self.sudo().source_location_id.company_id.id == dest_location.company_id.id: # this is internal or inter district transfer
+            
+            if self.sudo().source_location_id.branch_id.id != dest_location.branch_id.id:
+                '''this condition means that it probably is an inter district transfer'''
+                if self.sudo().picking_type_id.code not in ['outgoing']:
+                    raise ValidationError("Your picking type must be set as delivery orders ")
+                # if self.sudo().source_location_id.branch_id.id == dest_location.branch_id.id:
+                #     '''ensure the source branch is not the same as destination location branch'''
+                #     raise ValidationError("Source location district / branch and destination location  district / branch cannot be the same: This looks like an inter-district transfer")
+                if self.sudo().source_location_id.company_id.id != dest_location.company_id.id:
+                    '''ensure the source is the same as destination location'''
+                    raise ValidationError("""
+                        Source and destination location company must be the same: This looks like an inter-district transfer
+                        """)
+                
+                if (self.sudo().picking_type_id.company_id.id not in [self.sudo().source_location_id.company_id.id, dest_location.company_id.id]):
+                    '''Ensure the picking type company is the same as source and destination company'''
+                    raise ValidationError("Your picking type company must be the same as source & destination location company ")
+                 
+            else:
+                if self.sudo().picking_type_id.code not in ['internal']:
+                    raise ValidationError("Your picking type must be set as internal transfer ")
+                if self.sudo().source_location_id.usage != 'internal' or dest_location.usage != 'internal':
+                    '''ensure source and destination type is set as internal for internal transfer.'''
+                    raise ValidationError("""
+                        Source and destination must be internal location.
+                        """)
+                    
+            '''checks if an external move has be created earlier, if found and state is in draft and cancel, delete it and recreate'''
+            existing_picking = False
+            
+            if self.stock_picking_id and self.stock_picking_id.state in ['draft', 'cancel']:
+                self.sudo().stock_picking_id.unlink()
+            existing_picking = self.stock_picking_id
+            
+            if not existing_picking:
+                company_id = self.sudo().source_location_id.company_id
+                vals = {
+                    'scheduled_date': fields.Date.today(),
+                    'picking_type_id': self.sudo().picking_type_id.id,
+                    'location_id': self.sudo().source_location_id.id,
+                    'location_dest_id': dest_location.id,
+                    'branch_id': self.sudo().source_location_id.branch_id.id,
+                    'origin': f"{self.code}",
+                    # 'memo_id': self.id,
+                    'company_id': company_id.id,
+                    # 'partner_id': self.employee_id.user_id.partner_id.id,
+                    'is_inter_district_transfer': True,
+                    'move_ids_without_package': [(0, 0, {
+                                    'name': self.code,
+                                    'picking_type_id': self.sudo().picking_type_id.id,
+                                    'location_id': self.sudo().source_location_id.id,
+                                    'location_dest_id': dest_location.id,
+                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_uom_qty': mm.quantity_available,
+                                    'quantity_done': mm.quantity_available,
+                                    'date_deadline': self.date_deadline,
+                                    'company_id': company_id.id,
+                                    
+                    }) for mm in self.mapped('product_ids').filtered(lambda s: not s.omit_record)]
+                }
+                stock = stock_picking.with_context(default_company_id=company_id.id).sudo().create(vals)
+                stock.company_id = company_id.id
+                for r in stock.move_ids_without_package:
+                    r.company_id = company_id.id
+            else:
+                stock = existing_picking
+            self.stock_picking_id = stock.id
+            
+            
+            
     def generate_stock_procurement_request(self, body_msg, body):
         """
         Check po record if already create, popup the wizard, 

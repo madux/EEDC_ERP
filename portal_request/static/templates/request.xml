@@ -283,6 +283,7 @@
                                                         <div class="col-sm" id="interdistrict-checkbox-div">
                                                             <div class="mb-2 mt-2 text-muted">
                                                                 <input type="checkbox" name="isInterDistrict" id="isInterDistrict" class="isInterDistrict"/>
+                                                                <input type="checkbox" name="is_inter_district_transfer_config" id="is_inter_district_transfer_config" class="d-none"/>
                                                                 <label for="isInterDistrict">Is Inter-district</label>
                                                             </div>
                                                         </div>
@@ -294,16 +295,18 @@
                                                             </label>
                                                             <div class="mb-2 mt-2 text-muted">
                                                                 <!-- TARGETTTLOCATION: -->
-                                                                <input id="TargetSourceLocation" class="form-control" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
-                                                                <select name="source_location_id" id="source_location_id" required="" data-init="" class="form-control Sourcelocation-cls" labelfor="Source Location">
+                                                                <input id="TargetSourceLocation" class="form-control d-none" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
+                                                                
+                                                                <input id="source_location_id" name="source_location_id" labelfor="source_location_id" class="form-control Sourcelocation-cls"/>
+                                                                <!-- <select name="source_location_id" id="source_location_id" required="" data-init="" class="form-control Sourcelocation-cls" labelfor="Source Location">
                                                                     <option disabled="true" selected="true" value="">.. Select ..</option>
-                                                                    <t t-foreach="source_location_data_ids" t-as="key">
-                                                                        <!-- <option t-att-value="key.memo_key"> -->
+                                                                    <t t-foreach="source_location_data_ids" t-as="key"> 
                                                                         <option t-att-value="key.id" t-att-id="key.id">
                                                                             <span t-esc="key.display_name"/>
                                                                         </option>
                                                                     </t>
-                                                                </select>
+                                                                </select> -->
+
                                                             </div>
                                                         </div>
                                                         <div class="col-sm d-none" id="inter-destination-location-div">
@@ -312,15 +315,16 @@
                                                                 <span class="s_website_form_mark"> *</span>
                                                             </label>
                                                             <div class="mb-2 mt-2 text-muted">
+                                                                <input id="destination_location_id" name="destination_location_id" labelfor="source_location_id" class="form-control destinationlocation-cls"/>
 
-                                                                <select name="destination_location_id" id="destination_location_id" required="" data-init="" class="form-control destinationlocation-cls" labelfor="Destination Location">
+                                                                <!-- <select name="destination_location_id" id="destination_location_id" required="" data-init="" class="form-control destinationlocation-cls" labelfor="Destination Location">
                                                                     <option disabled="true" selected="true" value="">.. Select ..</option>
                                                                     <t t-foreach="destination_location_data_ids" t-as="key">
                                                                         <option t-att-value="key.id" t-att-id="key.id">
                                                                             <span t-esc="key.display_name"/>
                                                                         </option>
                                                                     </t>
-                                                                </select>
+                                                                </select> -->
                                                             </div>
                                                         </div>
                                                     </div>
