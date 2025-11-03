@@ -35,7 +35,7 @@
                         <separator string="Queries"/>
                         <field name="employee_query_history" 
                             required="1" options="{'no_quick_create':True}">
-                            <tree string="-" delete="false" create="false">
+                            <tree string="-" delete="true" create="true">
                                 <field name="name" required="1"/>
                                 <field name="employee_id" required="1"/>
                                 <field name="query_date" required="1"/>
@@ -65,7 +65,7 @@
 
                         <field name="employee_warning_history" 
                             required="1" options="{'no_quick_create':True}">
-                            <tree string="-" delete="false" create="false">
+                            <tree string="-" delete="true" create="true">
                                 <field name="name" required="1"/>
                                 <field name="employee_id" required="1"/>
                                 <field name="warning_date" required="1"/>

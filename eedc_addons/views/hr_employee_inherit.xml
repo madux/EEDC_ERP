@@ -129,7 +129,7 @@
                 <xpath expr="//li[@id='last_login']" position="inside">
                      <li t-if="record.parent_id.raw_value" class="o_text_overflow"><strong>Manager: </strong><field name="parent_id"/></li>
                      <li t-if="record.company_id.raw_value" class="o_text_overflow"><strong>Company: </strong><field name="company_id"/></li>
-                     <li t-if="record.branch_id.raw_value" class="o_text_overflow"><strong>District: </strong><field name="branch_id"/></li>
+                     <li t-if="record.branch_id.raw_value" class="o_text_overflow"><strong>District: </strong><field name="branch_id"/></li>, 
                      <li t-if="record.employee_number.raw_value" class="o_text_overflow"><strong>Staff ID: </strong><field name="employee_number"/></li>
                 </xpath>
             </field>
