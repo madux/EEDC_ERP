@@ -345,7 +345,6 @@ class PortalRequest(http.Controller):
         selected_location_id = post.get('selected_source')
         selectedOption_id = post.get('selectedOption_id')
         
-        
         location_data_ids =None
         query = request.params.get('q', '') 
         is_inter_company2 = request.params.get('is_inter_company') 
@@ -382,7 +381,7 @@ class PortalRequest(http.Controller):
                 '''returns all locations if it is not interdistrict or intercompany'''
                 if selectedOption_id:
                     option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
-                    all_branches = [option.branch_id.id]
+                    all_branches = [option.payment_processing_branch_id.id]
                 else:
                     all_branches = request.env['multi.branch'].sudo().search([])
                     all_branches = all_branches.ids
@@ -823,7 +822,7 @@ class PortalRequest(http.Controller):
                         "status": True,
                         "message": "", 
                         "data": {
-                            'inter_district_request': memo_setting_id.inter_district_request,
+                            'inter_district_request': memo_setting_id.inter_district,
                         }
                         }
             # else:

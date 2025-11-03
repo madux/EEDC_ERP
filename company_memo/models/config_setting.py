@@ -329,11 +329,8 @@ class MemoConfig(models.Model):
     
     @api.constrains('branch_id', 'department_id', 'company_id')
     def constrain_company_branch_department(self):
-        if self.inter_district_request or self.inter_district_request:
-            pass 
-        else:
-            if self.branch_id.company_id and self.branch_id.company_id.id != self.company_id.id:
-                raise ValidationError(f"District - {self.branch_id.name} must match the company selected: {self.company_id.name}") 
+        if self.branch_id.company_id and self.branch_id.company_id.id != self.company_id.id:
+            raise ValidationError(f"District - {self.branch_id.name} must match the company selected: {self.company_id.name}") 
 
     def get_publish_memo_types(self):
         return [('allow_for_publish', '=', True)]
@@ -459,10 +456,7 @@ class MemoConfig(models.Model):
     
     inter_district = fields.Boolean(default=False, string="Inter-Company/District")
     inter_district_request = fields.Boolean(default=False, string="Is inter Company / district Material Request")
-    # alternative_district = fields.Many2one(
-    #     "multi.branch", 
-    #     string="Expense Account"
-    #     )
+     
     payment_processing_company_id = fields.Many2one(
         'res.company',
         string='Payment Processing Company',
