@@ -1632,7 +1632,7 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', 0) 
+            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', False) 
             line_source_location_id = False if line_source_location_id in ['false', False, 'none', None, 0] else line_source_location_id
             line_dest_location_id = memo_id.dest_location_id.id if memo_id.dest_location_id else rec.get('dest_location_id')
             line_dest_location_id = False if line_dest_location_id in ['false', False, 'none', None, 0] else line_dest_location_id
