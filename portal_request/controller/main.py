@@ -1496,8 +1496,8 @@ class PortalRequest(http.Controller):
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
                 "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
                 "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
-                "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None'] else False,
-                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None'] else False,
+                "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
+                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
                 
                 "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
@@ -1632,10 +1632,10 @@ class PortalRequest(http.Controller):
         counter = 1
         for rec in DataItems:
             desc = rec.get('description', '')
-            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id', 0) 
-            line_source_location_id = False if line_source_location_id in ['false', False, 'none', None, 0] else line_source_location_id
+            line_source_location_id = memo_id.source_location_id.id or rec.get('location_id') 
+            line_source_location_id = False if line_source_location_id in ['false', False, 'none', None, 0, '0'] else line_source_location_id
             line_dest_location_id = memo_id.dest_location_id.id if memo_id.dest_location_id else rec.get('dest_location_id')
-            line_dest_location_id = False if line_dest_location_id in ['false', False, 'none', None, 0] else line_dest_location_id
+            line_dest_location_id = False if line_dest_location_id in ['false', False, 'none', None, 0, '0'] else line_dest_location_id
             
             _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
             request_vals = {
