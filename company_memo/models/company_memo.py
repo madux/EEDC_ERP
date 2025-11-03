@@ -855,18 +855,21 @@ class Memo_Model(models.Model):
 
         for r in memo_configs:
             # Case 1: normal relationship — same branch/company
-            is_related = (r.branch_id.id in branch_ids) # or r.company_id.id in company_ids)
+            is_related = (r.branch_id.id in branch_ids and r.company_id.id in company_ids) # or r.company_id.id in company_ids)
 
             # Case 2: inter-district or request but unrelated branch
-            is_inter_district_case = (
-                (r.inter_district or r.inter_district_request)
-                and (r.branch_id.id not in branch_ids)
-            )
+            # is_inter_district_case = (
+            #     (r.inter_district or r.inter_district_request)
+            #     and (r.branch_id.id not in branch_ids)
+            # )
 
-            # Keep if either is true; otherwise remove
-            if not (is_related or is_inter_district_case):
+            # # Keep if either is true; otherwise remove
+            # if not (is_related or is_inter_district_case):
+            if r.branch_id.id in branch_ids and r.company_id.id in company_ids:
+                pass
+            else:
                 memo_configs -= r
-
+        _logger.info(f" found configs---{memo_configs}")
         return memo_configs
             
     # def get_user_configs(self):
