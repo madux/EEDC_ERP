@@ -1559,7 +1559,7 @@ class PortalRequest(http.Controller):
                 # return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
 
             stage_obj = request.env['memo.stage'].sudo().search([('id', '=', next_stage_id)])
-            approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id]
+            approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id] if employee_id.parent_id else []
             follower_ids = [(4, r) for r in approver_ids]
             user_ids = [(4, request.env.user.id)]
             if employee_id.administrative_supervisor_id:

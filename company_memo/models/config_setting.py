@@ -329,8 +329,11 @@ class MemoConfig(models.Model):
     
     @api.constrains('branch_id', 'department_id', 'company_id')
     def constrain_company_branch_department(self):
-        if self.branch_id.company_id and self.branch_id.company_id.id != self.company_id.id:
-            raise ValidationError(f"District - {self.branch_id.name} must match the company selected: {self.company_id.name}") 
+        if self.inter_district_request or self.inter_district_request:
+            pass 
+        else:
+            if self.branch_id.company_id and self.branch_id.company_id.id != self.company_id.id:
+                raise ValidationError(f"District - {self.branch_id.name} must match the company selected: {self.company_id.name}") 
 
     def get_publish_memo_types(self):
         return [('allow_for_publish', '=', True)]

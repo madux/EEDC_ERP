@@ -715,7 +715,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               cache: true
             },
-            minimumInputLength: 2,
+            minimumInputLength: 1,
             multiple: false,
             placeholder: 'Search for a Products',
             allowClear: true,
@@ -847,7 +847,7 @@ odoo.define('portal_request.portal_request', function (require) {
               },
               cache: true
             },
-            minimumInputLength: 2,
+            minimumInputLength: 1,
             multiple: false,
             placeholder: 'Search for Source location',
             allowClear: true,
@@ -2320,6 +2320,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             }
                         }).catch(function(err) {
                             console.log(err);
+                            $btn.attr('disabled', false);
+                            $btn.html($btnHtml)
+                            $.unblockUI()
                             alert(err);
                         }).then(function() {
                             console.log(".")

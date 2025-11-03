@@ -847,15 +847,15 @@ class Memo_Model(models.Model):
 
         branch_ids = [employee.user_id.branch_id.id] + employee.user_id.branch_ids.ids
         company_ids = [employee.user_id.company_id.id] + employee.user_id.company_ids.ids
-
+        
         memo_configs = self.env['memo.config'].sudo().search([
             ('active', '=', True),
-            ('publish_to_public', '=', True),
+            ('publish_to_public', '=', True), 
         ])
 
         for r in memo_configs:
             # Case 1: normal relationship — same branch/company
-            is_related = (r.branch_id.id in branch_ids or r.company_id.id in company_ids)
+            is_related = (r.branch_id.id in branch_ids) # or r.company_id.id in company_ids)
 
             # Case 2: inter-district or request but unrelated branch
             is_inter_district_case = (
