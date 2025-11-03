@@ -459,7 +459,10 @@ class MemoConfig(models.Model):
     
     inter_district = fields.Boolean(default=False, string="Inter-Company/District")
     inter_district_request = fields.Boolean(default=False, string="Is inter Company / district Material Request")
-    
+    expense_account_id = fields.Many2one(
+        "multi.branch", 
+        string="Expense Account"
+        )
     payment_processing_company_id = fields.Many2one(
         'res.company',
         string='Payment Processing Company',
