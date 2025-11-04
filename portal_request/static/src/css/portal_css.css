@@ -302,7 +302,8 @@
     font-size: 14px;
     padding: 0.25rem 0.5rem;
     text-align: center;
-    -moz-appearance: textfield;
+    appearance: textfield;
+    -webkit-appearance: textfield;
     width: 50px !important;
     height: 31px !important;
     border: 1px solid #dee2e6;
@@ -310,11 +311,17 @@
     border-right: none;
     line-height: 1.5;
     vertical-align: middle;
+    margin: 0;
 }
+
 .page-input::-webkit-outer-spin-button,
 .page-input::-webkit-inner-spin-button {
-    -webkit-appearance: none; /* Remove spinner in Chrome/Safari */
+    -webkit-appearance: none;
     margin: 0;
+}
+
+.page-input[type="number"] {
+    -moz-appearance: textfield;
 }
 
 .page-input:focus {
@@ -333,8 +340,10 @@
     height: 31px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     line-height: 1;
     vertical-align: middle;
+    margin: 0;
 }
 
 .pagination-total {
@@ -347,8 +356,10 @@
     height: 31px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     line-height: 1;
     vertical-align: middle;
+    margin: 0;
 }
 
 .pagination-input-group {
@@ -356,22 +367,78 @@
     align-items: center;
     vertical-align: middle;
     height: 31px;
-}
-
-.header-flex .ms-lg-2 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.header-flex .btn-group {
     margin: 0;
 }
 
-/* Search Input Elongated */
+.pagination-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    height: 31px;
+}
+
+.pagination-btn {
+    height: 31px !important;
+    min-height: 31px !important;
+    width: 31px !important;
+    padding: 0 !important;
+    line-height: 31px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+.pagination-btn:first-child {
+    border-radius: 4px 0 0 4px !important;
+}
+
+.pagination-btn:last-child {
+    border-radius: 0 4px 4px 0 !important;
+}
+
+.pagination-btn i {
+    margin: 0;
+    font-size: 12px;
+}
+
+.header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+    background: #f4eaea;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+}
+
+.header-flex .btn {
+    margin-right: 0.5rem;
+    height: 31px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+}
+
+.header-flex form {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.thumbnail-btn {
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
 .header-flex .input-group {
-    min-width: 300px;  /* Elongated search */
+    min-width: 300px;
 }
 
 .header-flex .input-group .form-control {

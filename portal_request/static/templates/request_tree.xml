@@ -27,63 +27,64 @@
                                     <i class="fa fa-plus"/> Create New Request
                             </a>
 
-                            <div class="btn-group">
+                            <div class="pagination-controls">
+                                <!-- Previous Button -->
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_prev" 
                                     t-attf-href="/my/requests/{{current_memo_type_key}}/page/prev" 
-                                    class="btn btn-secondary btn-sm p3"
+                                    class="btn btn-secondary btn-sm pagination-btn"
                                     title="Previous">
                                         <i class="fa fa-chevron-left"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
+                                    <button t-else="" class="btn btn-secondary btn-sm pagination-btn" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
                                         <i class="fa fa-chevron-left"/>
                                     </button>
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_prev" 
                                     href="/my/requests/page/prev" 
-                                    class="btn btn-secondary btn-sm p3"
+                                    class="btn btn-secondary btn-sm pagination-btn"
                                     title="Previous">
                                         <i class="fa fa-chevron-left"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
+                                    <button t-else="" class="btn btn-secondary btn-sm pagination-btn" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
                                         <i class="fa fa-chevron-left"/>
                                     </button>
                                 </t>
-                            </div>
 
-                            <div class="pagination-input-group">
-                                <input type="number" 
-                                    id="page_input" 
-                                    class="page-input" 
-                                    t-att-value="current_page"
-                                    t-att-data-type="current_memo_type_key or ''"
-                                    t-att-min="1"
-                                    t-att-max="total_pages"/>
-                                <span class="pagination-separator">/</span>
-                                <span class="pagination-total" t-esc="total_pages"/>
-                            </div>
+                                <!-- Page Input Group -->
+                                <div class="pagination-input-group">
+                                    <input type="number" 
+                                        id="page_input" 
+                                        class="page-input" 
+                                        t-att-value="current_page"
+                                        t-att-data-type="current_memo_type_key or ''"
+                                        t-att-min="1"
+                                        t-att-max="total_pages"/>
+                                    <span class="pagination-separator">/</span>
+                                    <span class="pagination-total" t-esc="total_pages"/>
+                                </div>
 
-                            <div class="btn-group">
+                                <!-- Next Button -->
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_next" 
                                     t-attf-href="/my/requests/{{current_memo_type_key}}/page/next" 
-                                    class="btn btn-secondary btn-sm p3"
+                                    class="btn btn-secondary btn-sm pagination-btn"
                                     title="Next">
                                         <i class="fa fa-chevron-right"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
+                                    <button t-else="" class="btn btn-secondary btn-sm pagination-btn" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
                                         <i class="fa fa-chevron-right"/>
                                     </button>
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_next" 
                                     href="/my/requests/page/next" 
-                                    class="btn btn-secondary btn-sm p3"
+                                    class="btn btn-secondary btn-sm pagination-btn"
                                     title="Next">
                                         <i class="fa fa-chevron-right"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
+                                    <button t-else="" class="btn btn-secondary btn-sm pagination-btn" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
                                         <i class="fa fa-chevron-right"/>
                                     </button>
                                 </t>
