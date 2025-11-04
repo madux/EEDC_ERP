@@ -1692,23 +1692,42 @@ class PortalRequest(http.Controller):
                 })
             counter += 1
 
+    # def get_pagination(self, page):
+    #     sessions = request.session  
+    #     session_start_limit = sessions.get('start')
+    #     session_end_limit = sessions.get('end')
+    #     if page == "next":
+    #         s = session_end_limit 
+    #         e = session_end_limit + 10
+    #     elif page == 'prev': 
+    #         # e.g start 20 , end 30
+    #         s = session_start_limit - 10
+    #         e = session_end_limit - 10
+    #         # sessions['start'] = s 
+    #         # sessions['end'] = e
+    #     else:
+    #         s = 0 
+    #         e = 10
+    #     return s, e
+    
     def get_pagination(self, page):
-        sessions = request.session  
-        session_start_limit = sessions.get('start')
-        session_end_limit = sessions.get('end')
-        if page == "next":
-            s = session_end_limit 
-            e = session_end_limit + 10
-        elif page == 'prev': 
-            # e.g start 20 , end 30
-            s = session_start_limit - 10
-            e = session_end_limit - 10
-            # sessions['start'] = s 
-            # sessions['end'] = e
+        """Helper method to handle pagination logic"""
+        sessions = request.session
+        PAGE_SIZE = 10
+        
+        if page == 'next':
+            start = sessions.get('start', 0) + PAGE_SIZE
+            end = sessions.get('end', PAGE_SIZE) + PAGE_SIZE
+        elif page == 'prev':
+            start = max(0, sessions.get('start', 0) - PAGE_SIZE)
+            end = sessions.get('end', PAGE_SIZE) - PAGE_SIZE
+            if end < PAGE_SIZE:
+                end = PAGE_SIZE
         else:
-            s = 0 
-            e = 10
-        return s, e
+            start = sessions.get('start', 0)
+            end = sessions.get('end', PAGE_SIZE)
+        
+        return start, end
     
     def get_request_info(self, request):
         """
@@ -1718,22 +1737,35 @@ class PortalRequest(http.Controller):
         query_string = urlparts.query
         _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
-    @http.route(['/my/requests', '/my/requests/<string:type>', 
-                 '/my/requests/param/<path:search_param>',
-                 '/my/requests/param', 
-                 '/my/requests/page/<string:page>'], 
+    @http.route([
+        '/my/requests', 
+        '/my/requests/<string:type>', 
+        '/my/requests/<string:type>/page/<string:page>',
+        '/my/requests/<string:type>/jump/<int:page_num>',
+        '/my/requests/param/<path:search_param>',
+        '/my/requests/param', 
+        '/my/requests/page/<string:page>'], 
                 type='http', auth="user", website=True)
-    def my_requests(self, type=False, page=False):
+    def my_requests(self, type=False, page=False, page_num=None, search_param=None, **kw):
         """This route is used to call the requesters or user records for display
         page: the pagination index: prev or next
         type: material_request
         """
         user = request.env.user
         sessions = request.session
+        
+        PAGE_SIZE = 10
+        
         # self.get_request_info(request)
-        if not page: 
+        if page_num:
+            start = (page_num - 1) * PAGE_SIZE
+            end = page_num * PAGE_SIZE
+            sessions['start'] = start
+            sessions['end'] = end
+        elif not page: 
             sessions['start'] = 0 
-            sessions['end'] = 10
+            sessions['end'] = PAGE_SIZE
+            
         search_input_query2 = request.params.get('search')
         _logger.info(f"Search sest {search_input_query2} {request.params.get('searchme')}, search_input_panel == {request.params.get('search_input_panel')}")
         
@@ -1762,7 +1794,7 @@ class PortalRequest(http.Controller):
                         pass 
             return date_val 
         
-        request_id = request.env['memo.model'].sudo()  
+        memo_obj = request.env['memo.model'].sudo()   
         def query_domain(query):
             domain = [
                 ('active', '=', True),
@@ -1790,8 +1822,10 @@ class PortalRequest(http.Controller):
                 ('stage_id.approver_ids.user_id.id','=', user.id),
                 
             ]
-        if search_input_query or search_param or search_input_panel:
-            qry_param = search_input_query or search_param or search_input_panel
+        # if search_input_query or search_param or search_input_panel:
+        if search_input_query:
+            # qry_param = search_input_query or search_param or search_input_panel
+            qry_param = search_input_query
             _logger.info(f"DOMAIN TO USE 1 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel}")
             domain = query_domain(qry_param)
             if type:
@@ -1799,30 +1833,55 @@ class PortalRequest(http.Controller):
             date_search = get_date_query(qry_param)
             if date_search:
                 domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        if type and not search_input_query and not search_param and not search_input_panel: 
+        if type and not search_input_query and not search_param and not search_input_panel: #look at this more
             domain = domain_type
             
         # if not type and not search_input_query and not search_param and not search_input_panel:
         #     _logger.info(f"DOMAIN TO USE 3 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel} DOMAIN: {domain}")
-        #     domain = [('id', '=', 0)]    
+        #     domain = [('id', '=', 0)]
+        total_count = memo_obj.search_count(domain)
+            
         start, end = self.get_pagination(page)# if page else False, False
-        _logger.info(f"and domain is {domain} Session storage is {sessions.get('start')} {sessions.get('end')}")
-        requests = request_id.search(domain)
+        if page_num:
+            max_pages = (total_count + PAGE_SIZE - 1) // PAGE_SIZE if total_count > 0 else 1
+            if page_num < 1:
+                page_num = 1
+                start = 0
+                end = PAGE_SIZE
+            elif page_num > max_pages:
+                page_num = max_pages
+                start = (page_num - 1) * PAGE_SIZE
+                end = page_num * PAGE_SIZE
         
-        if requests:
-            requests = requests[start:end]# if page else request_id.search(domain)
+        _logger.info(f"Pagination: start={start}, end={end}, total={total_count}")
+        
+        memo_records = memo_obj.search(domain, order='create_date desc', limit=PAGE_SIZE, offset=start)
+    
+        if memo_records:
             sessions['start'] = start
-            sessions['end'] = end 
-        else:
-            requests = False
+            sessions['end'] = min(start + PAGE_SIZE, total_count)
+        
+        current_page = (start // PAGE_SIZE) + 1 if start >= 0 else 1
+        total_pages = (total_count + PAGE_SIZE - 1) // PAGE_SIZE if total_count > 0 else 1
+        has_prev = start > 0
+        has_next = (start + PAGE_SIZE) < total_count
+        
         values = {
-            'requests': requests,
+            'requests': memo_records,
+            'memo_requests': memo_records,
             'current_memo_type_key': type if type else False,
             'page_name': 'my_requests',
-            }
-        _logger.info(f"Records found {requests} -- valus to render {values}")
+            'current_page': current_page,
+            'total_pages': total_pages,
+            'total_count': total_count,
+            'has_prev': has_prev,
+            'has_next': has_next,
+            'page_size': PAGE_SIZE,
+        }
+        _logger.info(f"Rendering with current_page={current_page}, total_pages={total_pages}, has {len(memo_records)} records")
         
         return request.render("portal_request.my_portal_request", values)
+    
     
     
     # def get_leave_days_taken(self, record):

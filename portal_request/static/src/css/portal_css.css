@@ -294,3 +294,64 @@
 .select2-tags::placeholder {
     color: #6c757d;
 }
+
+
+/* Pagination feature*/
+
+/* Odoo-style pagination */
+.odoo-pagination {
+    margin: 0;
+    padding: 0;
+}
+
+.odoo-pagination .btn {
+    min-width: 31px;
+    height: 31px;
+    padding: 0.25rem 0.5rem;
+    font-size: 14px;
+}
+
+.page-input {
+    font-size: 14px;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    -moz-appearance: textfield; /* Remove spinner in Firefox */
+}
+
+.page-input::-webkit-outer-spin-button,
+.page-input::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Remove spinner in Chrome/Safari */
+    margin: 0;
+}
+
+.page-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    outline: none;
+}
+
+.pagination-input-group {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.header-flex {
+    display: flex;
+    padding: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .header-flex {
+        flex-direction: column;
+    }
+    
+    .odoo-pagination {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+}

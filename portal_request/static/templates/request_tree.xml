@@ -2,74 +2,11 @@
     <data>
         <template id="my_portal_request" name="My Requests">
             <t t-call="portal.portal_layout" id="search_request_section">
-                <!-- <t t-set="breadcrumbs_searchbar" t-value="True"/>
-                <t t-call="portal.portal_searchbar">
-                    <t t-set="title">Requests</t>
-                </t> -->
-                
                 <section id="search_request_section">
                     <section id="website-app-section">  
                         <t t-call="portal_request.website_app_page"/>
                     </section>
-                    <!-- <section id="website-app-section" class="page-section">   -->
                     
-                    <!-- <nav t-attf-class="navbar navbar-light navbar-expand-lg border py-0 mb-2 o_portal_navbar {{classes if classes else ''}} {{'mt-3 rounded' if breadcrumbs_searchbar else 'border-top-0' }}">
-                        <t t-set="title">Requests</t>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#o_portal_navbar_content" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle filters">
-                            <span class="navbar-toggler-icon small"/>
-                        </button>
- 
-                        <div class="collapse navbar-collapse" id="o_portal_navbar_content">
-                            <div class="nav flex-column flex-lg-row ms-auto p-0 mb-3 mb-lg-0 mt-1 mt-lg-0">
-                                '''<div>
-                                    <span class="small me-1 navbar-text">Sort By:</span>
-                                    <div class="btn-group">
-                                        <button id="portal_searchbar_sortby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
-                                            <t t-esc="searchbar_sortings[sortby].get('label', 'Newest')"/>
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="portal_searchbar_sortby">
-                                            <t t-foreach="searchbar_sortings" t-as="option">
-                                                <a t-att-href="request.httprequest.path + '?' + keep_query('*', sortby=option)"
-                                                t-attf-class="dropdown-item#{sortby == option and ' active' or ''}">
-                                                    <span t-esc="searchbar_sortings[option].get('label')"/>
-                                                </a>
-                                            </t>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ms-lg-2">
-                                    <span class="small me-1 navbar-text">Filter By:</span>
-                                    <div class="btn-group">
-                                        <button id="portal_searchbar_filters" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
-                                            <t t-esc="searchbar_filters.get(filterby,searchbar_filters.get('all')).get('label', 'All')"/>
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="portal_searchbar_filters">
-                                            <t t-foreach="searchbar_filters" t-as="option">
-                                                <a t-att-href="default_url + '?' + keep_query('*', filterby=option)"
-                                                t-attf-class="dropdown-item#{filterby == option and ' active' or ''}">
-                                                    <span t-esc="searchbar_filters[option].get('label')"/>
-                                                </a>
-                                            </t>
-                                        </div>
-                                    </div>
-                                </div>  
-                                <div class="ms-lg-2">
-                                    <span class="small me-1 navbar-text">Group By:</span>
-                                    <div class="btn-group">
-                                        <button id="portal_searchbar_groupby" data-bs-toggle="dropdown" class="btn btn-secondary btn-sm dropdown-toggle">
-                                            Group
-                                            <t t-esc="searchbar_groupby[groupby].get('label', 'None')"/>
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="portal_searchbar_groupby">
-                                            <t t-foreach="searchbar_groupby" t-as="option">
-                                                <a t-att-href="default_url + '?' + keep_query('*', groupby=option)"
-                                                t-attf-class="dropdown-item#{groupby == option and ' active' or ''}">
-                                                    <span t-esc="searchbar_groupby[option].get('label')"/>
-                                                </a>
-                                            </t>
-                                        </div>
-                                    </div>
-                                </div> '''' -->
                     <div class="header-flex">
                         <div class="ms-lg-2">
                             <svg id="app-icon" xmlns="http://www.w3.org/2000/svg" width="30" height="30" class="bi bi-grid-fill thumbnail-btn custom-icon" viewBox="0 0 16 16">
@@ -78,10 +15,7 @@
                             <a id="previous" href="/" class="btn btn-secondary btn-sm p3">
                                 Back
                             </a>
-                            <!-- <a id="previous" href="/portal-request" class="btn btn-secondary btn-sm p3">
-                                Create New
-                            </a> -->
-                                <!-- Create New button with memo_type_key parameter -->
+                            
                             <a t-if="current_memo_type_key" 
                                 t-attf-href="/portal-request?memo_type_key={{current_memo_type_key}}" 
                                 class="btn btn-primary">
@@ -94,50 +28,76 @@
                             </a>
 
                             <div class="btn-group">
-                                <a id="previous" href="/my/requests/page/prev" class="btn btn-secondary btn-sm p3">
-                                    Prev
-                                </a>
+                                <t t-if="current_memo_type_key">
+                                    <a t-if="has_prev" 
+                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/prev" 
+                                    class="btn btn-secondary btn-sm p3">
+                                        Prev
+                                    </a>
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
+                                        Prev
+                                    </button>
+                                </t>
+                                <t t-else="">
+                                    <a t-if="has_prev" 
+                                    href="/my/requests/page/prev" 
+                                    class="btn btn-secondary btn-sm p3">
+                                        Prev
+                                    </a>
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
+                                        Prev
+                                    </button>
+                                </t>
                             </div>
+
+                            <div class="pagination-input-group d-inline-flex align-items-center">
+                                <input type="number" 
+                                    id="page_input" 
+                                    class="page-input" 
+                                    t-att-value="current_page"
+                                    t-att-data-type="current_memo_type_key or ''"
+                                    t-att-min="1"
+                                    t-att-max="total_pages"/>
+                                <span class="pagination-separator">/</span>
+                                <span class="pagination-total" t-esc="total_pages"/>
+                            </div>
+
                             <div class="btn-group">
-                                <a id="previous" href="/my/requests/page/next" class="btn btn-secondary btn-sm p3">
-                                    Next
-                                </a>
+                                <t t-if="current_memo_type_key">
+                                    <a t-if="has_next" 
+                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/next" 
+                                    class="btn btn-secondary btn-sm p3">
+                                        Next
+                                    </a>
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
+                                        Next
+                                    </button>
+                                </t>
+                                <t t-else="">
+                                    <a t-if="has_next" 
+                                    href="/my/requests/page/next" 
+                                    class="btn btn-secondary btn-sm p3">
+                                        Next
+                                    </a>
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
+                                        Next
+                                    </button>
+                                </t>
                             </div>
                         </div>
                         <t t-out="0"/>
-                        <!-- <form class="o_portal_search_panel o_search_form ms-lg-4 col-xl-4 col-md-5" method="get" class="o_searchbar_form"> -->
-                        <!-- <form method="get" class="o_searchbar_form"> -->
+                        
                         <form method="get">
                             <div class="input-group input-group-sm w-100">
-                                <!-- ///<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"/>
-                                <div class="dropdown-menu" role="menu">
-                                    <t t-foreach='searchbar_inputs' t-as='input'>
-                                        <a t-att-href="'#' + input_value['input']"
-                                            t-attf-class="dropdown-item#{search_in == input_value['input'] and ' active' or ''}">
-                                            <span t-out="input_value['label']"/>
-                                        </a>
-                                    </t>
-                                </div>//// -->
-                                <!-- <input type="text" class="o_search_query form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/> -->
                                 <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/>
                                 <a class="btn btn-secondary o_wait_lazy_js search_panel_btn" id="search_panel">
                                     <span class="fa fa-search"/> 
                                 </a>
                             </div>
-
-                            <!-- <div class="input-group o_searchbar">
-                                <input type="search"
-                                        class="o_searchbar_input form-control"
-                                        placeholder="Search..." name="search" id="search_input_panel"/>
-                                <button type="submit" id="search_panel" class="btn btn-primary">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </div> -->
                         </form>
                     </div>
-                        <!-- </div>
-                    </nav> -->
-                    <div t-if="not requests" class="alert alert-info">
+                    
+                    <div t-if="not requests and not memo_requests" class="alert alert-info">
                         There are currently no Request for your account.
                     </div>
                     <t t-else="">
@@ -153,12 +113,12 @@
                                 </tr>
                             </thead>
                             
-                            <t t-foreach="requests" t-as="request">
+                            <t t-set="display_requests" t-value="memo_requests or requests"/>
+                            <t t-foreach="display_requests" t-as="request">
                                 <tr>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small></small><span class="ms-2" t-field="request.name"/></a></td>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><small>#</small><span class="ms-2" t-field="request.code"/></a></td>
                                     <td class="text-start"><a t-attf-href="/my/request/view/{{request.id}}"><span class="ms-2" t-field="request.approver_id.name"/></a></td>
-                                    <!-- <td class="text-end" t-if="groupby != 'create_date'"> -->
                                     <td class="text-start">
                                         <a t-attf-href="/my/request/view/{{request.id}}"><span t-field="request.date" t-options='{"widget": "datetime", "hide_seconds": True}'/></a>
                                     </td>
@@ -177,6 +137,7 @@
                                 </tr>
                             </t>
                         </t>
+                        
                         <section class="s_faq_collapse pt32 pb32 o_colored_level" data-snippet="s_faq_collapse" data-name="Accordion" style="background-image: none;">
                             <div class="container">
                                 <div id="myCollapseList" class="accordion" role="tablist">
@@ -207,7 +168,6 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="card bg-white" data-name="Item">
                                         <a href="#" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_4List">Vehicle Request</a>
                                         <div class="collapse" data-bs-parent="#myCollapseList" role="tabpanel" id="myCollapseTab488915_4List">
@@ -253,7 +213,6 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="card bg-white" data-name="Item">
                                         <a href="/my/requests/employee_update" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_9List">Employee Update</a>
                                         <div class="collapse" data-bs-parent="#myCollapseList" role="tabpanel" id="myCollapseTab488915_9List">
@@ -263,13 +222,12 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
                                 </div>
                             </div>
                         </section>
                     </t>
                 </section>
             </t>
-        </template> 
+        </template>
     </data>
 </odoo>
