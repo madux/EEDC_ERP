@@ -19,7 +19,7 @@
                             <a t-if="current_memo_type_key" 
                                 t-attf-href="/portal-request?memo_type_key={{current_memo_type_key}}" 
                                 class="btn btn-primary">
-                                    <i class="fa fa-plus"/> Create New <span t-esc="current_memo_type_key.replace('_', ' ').title()"/> Request
+                                    <i class="fa fa-plus"/>&#160;Create New&#160;<span t-esc="current_memo_type_key.replace('_', ' ').title()"/>&#160;Request
                             </a>
                             <a t-else="" 
                                 href="/portal-request" 
