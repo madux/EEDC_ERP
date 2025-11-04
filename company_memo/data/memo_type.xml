@@ -49,7 +49,7 @@
             <field name="active">1</field>
         </record>
         <record id="mtype_soe" model="memo.type">
-            <field name="name">Statement of Expense</field>
+            <field name="name">Retirement of Expense</field>
             <field name="memo_key">soe</field>
             <field name="active">1</field>
         </record>
