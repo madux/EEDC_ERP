@@ -31,26 +31,28 @@
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_prev" 
                                     t-attf-href="/my/requests/{{current_memo_type_key}}/page/prev" 
-                                    class="btn btn-secondary btn-sm p3">
-                                        Prev
+                                    class="btn btn-secondary btn-sm p3"
+                                    title="Previous">
+                                        <i class="fa fa-chevron-left"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
-                                        Prev
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
+                                        <i class="fa fa-chevron-left"/>
                                     </button>
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_prev" 
                                     href="/my/requests/page/prev" 
-                                    class="btn btn-secondary btn-sm p3">
-                                        Prev
+                                    class="btn btn-secondary btn-sm p3"
+                                    title="Previous">
+                                        <i class="fa fa-chevron-left"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
-                                        Prev
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Previous">
+                                        <i class="fa fa-chevron-left"/>
                                     </button>
                                 </t>
                             </div>
 
-                            <div class="pagination-input-group d-inline-flex align-items-center">
+                            <div class="pagination-input-group">
                                 <input type="number" 
                                     id="page_input" 
                                     class="page-input" 
@@ -66,21 +68,23 @@
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_next" 
                                     t-attf-href="/my/requests/{{current_memo_type_key}}/page/next" 
-                                    class="btn btn-secondary btn-sm p3">
-                                        Next
+                                    class="btn btn-secondary btn-sm p3"
+                                    title="Next">
+                                        <i class="fa fa-chevron-right"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
-                                        Next
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
+                                        <i class="fa fa-chevron-right"/>
                                     </button>
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_next" 
                                     href="/my/requests/page/next" 
-                                    class="btn btn-secondary btn-sm p3">
-                                        Next
+                                    class="btn btn-secondary btn-sm p3"
+                                    title="Next">
+                                        <i class="fa fa-chevron-right"/>
                                     </a>
-                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;">
-                                        Next
+                                    <button t-else="" class="btn btn-secondary btn-sm p3" disabled="disabled" style="opacity: 0.5; cursor: not-allowed;" title="Next">
+                                        <i class="fa fa-chevron-right"/>
                                     </button>
                                 </t>
                             </div>

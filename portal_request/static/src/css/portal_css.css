@@ -298,26 +298,19 @@
 
 /* Pagination feature*/
 
-/* Odoo-style pagination */
-.odoo-pagination {
-    margin: 0;
-    padding: 0;
-}
-
-.odoo-pagination .btn {
-    min-width: 31px;
-    height: 31px;
-    padding: 0.25rem 0.5rem;
-    font-size: 14px;
-}
-
 .page-input {
     font-size: 14px;
     padding: 0.25rem 0.5rem;
     text-align: center;
-    -moz-appearance: textfield; /* Remove spinner in Firefox */
+    -moz-appearance: textfield;
+    width: 50px !important;
+    height: 31px !important;
+    border: 1px solid #dee2e6;
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+    line-height: 1.5;
+    vertical-align: middle;
 }
-
 .page-input::-webkit-outer-spin-button,
 .page-input::-webkit-inner-spin-button {
     -webkit-appearance: none; /* Remove spinner in Chrome/Safari */
@@ -330,28 +323,79 @@
     outline: none;
 }
 
-.pagination-input-group {
-    border-radius: 4px;
-    overflow: hidden;
+.pagination-separator {
+    padding: 0 8px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-left: none;
+    border-right: none;
+    font-size: 14px;
+    height: 31px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
 }
 
-.header-flex {
+.pagination-total {
+    padding: 0 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0 4px 4px 0;
+    border-left: none;
+    font-size: 14px;
+    height: 31px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.pagination-input-group {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    height: 31px;
+}
+
+.header-flex .ms-lg-2 {
     display: flex;
-    padding: 1rem;
-    background: #fff;
-    border-bottom: 1px solid #dee2e6;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.header-flex .btn-group {
+    margin: 0;
+}
+
+/* Search Input Elongated */
+.header-flex .input-group {
+    min-width: 300px;  /* Elongated search */
+}
+
+.header-flex .input-group .form-control {
+    min-width: 250px;
 }
 
 @media (max-width: 768px) {
     .header-flex {
         flex-direction: column;
+        align-items: stretch;
     }
     
-    .odoo-pagination {
-        order: 2;
+    .header-flex .ms-lg-2 {
         width: 100%;
         justify-content: center;
+    }
+    
+    .header-flex form {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .header-flex .input-group {
+        width: 100%;
+        min-width: auto;
     }
 }
