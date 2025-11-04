@@ -421,8 +421,10 @@ class Memo_Model(models.Model):
     
     @api.depends('leave_end_date')
     def get_leave_days_taken(self):
-        leave_duration = self.env['hr.leave']._get_number_of_days(
-            self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
+        leave_duration = 0
+        if self.leave_start_date and self.leave_end_date:
+            leave_duration = self.env['hr.leave']._get_number_of_days(
+                self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
         self.leave_duration = leave_duration
         
         # for rec in self:
@@ -3052,7 +3054,7 @@ class Memo_Model(models.Model):
     def get_soe_expense_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.payment_processing_company_id or self.company_id
+        payment_company = self.sudo().payment_processing_company_id or self.sudo().company_id
         company_expense_account_id = payment_company.account_default_debit_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3062,7 +3064,7 @@ class Memo_Model(models.Model):
     def get_soe_credit_account(self, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.payment_processing_company_id or self.company_id
+        payment_company = self.sudo().payment_processing_company_id or self.sudo().company_id
         company_expense_account_id = payment_company.default_cash_advance_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3299,10 +3301,10 @@ class Memo_Model(models.Model):
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
             
-            if not self.cash_advance_reference:
+            if not self.sudo().cash_advance_reference:
                 raise ValidationError("No cash advance reference found for retirement")
             
-            original_advance = self.cash_advance_reference
+            original_advance = self.sudo().cash_advance_reference
             payment_company = original_advance.payment_processing_company_id or \
                             original_advance.company_id
             _logger.info(
@@ -3332,7 +3334,7 @@ class Memo_Model(models.Model):
                 inv = False
             cashadvance_account_to_credit =original_advance.move_id.line_ids[0].account_id.id if original_advance.move_id.line_ids and original_advance.move_id.line_ids[0].account_id else False
             if not inv:
-                partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id
+                partner_id = self.sudo().vendor_id or self.sudo().client_id or self.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,

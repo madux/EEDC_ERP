@@ -1424,7 +1424,8 @@ class PortalRequest(http.Controller):
     @http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):
         '''used to process portal data'''
-        _logger.info(f"All posted data ======> {post.get('inputFollowers')}")
+        saveAction = post.get('saveAction')
+        _logger.info(f"All posted data ======> {saveAction}")
         _logger.info(post)
         try:
             # inputFollowers = '6083, 36646, 37111'
@@ -1582,7 +1583,17 @@ class PortalRequest(http.Controller):
                     stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
                         or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
             
-            memo_id.confirm_memo(
+            if saveAction:
+                '''This saves the record and set the stage to the initial
+                configure stage of the memo settings'''
+                if memo_id.memo_setting_id.stage_ids:
+                    memo_id.stage_id = memo_id.memo_setting_id.stage_ids[0]
+                    memo_id.state = 'submit'
+                else:
+                    memo_id.stage_id = False
+                    memo_id.state = 'submit'
+            else:
+                memo_id.confirm_memo(
                     memo_id.direct_employee_id or employee_id.parent_id, 
                     post.get("description", ""),
                     from_website=True
