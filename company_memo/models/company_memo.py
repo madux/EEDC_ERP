@@ -421,8 +421,10 @@ class Memo_Model(models.Model):
     
     @api.depends('leave_end_date')
     def get_leave_days_taken(self):
-        leave_duration = self.env['hr.leave']._get_number_of_days(
-            self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
+        leave_duration = 0
+        if self.leave_start_date and self.leave_end_date:
+            leave_duration = self.env['hr.leave']._get_number_of_days(
+                self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
         self.leave_duration = leave_duration
         
         # for rec in self:
