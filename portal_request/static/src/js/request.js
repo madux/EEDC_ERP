@@ -2141,6 +2141,10 @@ odoo.define('portal_request.portal_request', function (require) {
 
             'click .button_req_submit': function (ev) {
                 //// main event starts
+                /**
+                 * If the button has attribute save_btn, it should pass a params to the api
+                 *  that determines this is a save operation else submit
+                 */
                 var list_of_fields = [];
                 //ensure leave reliever is added 
                 if($('#selectRequestOption').val() == "leave_request" && $('#leave_reliever').val() == ''){
@@ -2282,9 +2286,12 @@ odoo.define('portal_request.portal_request', function (require) {
                         return false
                     }
                     else{
-                       
                         formData.append('DataItems', JSON.stringify(DataItems))
                         formData.append('inputFollowers', $('#inputFollowers').select2('data'))
+                        // check if the button is save operation and pass in the args 
+                        formData.append('saveAction', current_btn.attr('save_btn'))
+                        console.log(`Save or submit that was clicked, ${current_btn.attr('save_btn')}`)
+                        
                         console.log("sssXMLREQUEST Successful====", DataItems);
                         let $btn = $('.button_req_submit');
                         let $btnHtml = $btn.html()

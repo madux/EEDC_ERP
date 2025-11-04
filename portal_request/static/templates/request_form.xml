@@ -38,7 +38,7 @@
                             </t>
                             <t t-else="">-</t>
                             <t t-if="req.state in ['Refuse', 'submit']">
-                                <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>
+                                <a id="req.id" class="resend_request btn btn-secondary btn-sm">Submit</a>
                             </t>
                             <t t-if="req.move_id or req.state in ['Done'] and req.memo_type_key in ['Payment', 'cash_advance', 'soe', 'procurement_request']" id="printInvoiceBtn" class="btn btn-secondary btn-sm print_invoice_request">
                                 <a t-att-href="'/print/memo/invoice/%s' % req.id" target="_blank" class="btn btn-primary btn-sm">
