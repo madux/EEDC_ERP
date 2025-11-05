@@ -31,7 +31,7 @@
                                 <!-- Previous Button -->
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_prev" 
-                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/prev" 
+                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/prev?filter={{current_filter or 'all'}}" 
                                     class="btn btn-secondary btn-sm pagination-btn"
                                     title="Previous">
                                         <i class="fa fa-chevron-left"/>
@@ -42,7 +42,7 @@
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_prev" 
-                                    href="/my/requests/page/prev" 
+                                    t-attf-href="/my/requests/page/prev?filter={{current_filter or 'all'}}" 
                                     class="btn btn-secondary btn-sm pagination-btn"
                                     title="Previous">
                                         <i class="fa fa-chevron-left"/>
@@ -59,6 +59,7 @@
                                         class="page-input" 
                                         t-att-value="current_page"
                                         t-att-data-type="current_memo_type_key or ''"
+                                        t-att-data-filter="current_filter or 'all'"
                                         t-att-min="1"
                                         t-att-max="total_pages"/>
                                     <span class="pagination-separator">/</span>
@@ -68,7 +69,7 @@
                                 <!-- Next Button -->
                                 <t t-if="current_memo_type_key">
                                     <a t-if="has_next" 
-                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/next" 
+                                    t-attf-href="/my/requests/{{current_memo_type_key}}/page/next?filter={{current_filter or 'all'}}" 
                                     class="btn btn-secondary btn-sm pagination-btn"
                                     title="Next">
                                         <i class="fa fa-chevron-right"/>
@@ -79,7 +80,7 @@
                                 </t>
                                 <t t-else="">
                                     <a t-if="has_next" 
-                                    href="/my/requests/page/next" 
+                                    t-attf-href="/my/requests/page/next?filter={{current_filter or 'all'}}" 
                                     class="btn btn-secondary btn-sm pagination-btn"
                                     title="Next">
                                         <i class="fa fa-chevron-right"/>
@@ -90,9 +91,62 @@
                                 </t>
                             </div>
                         </div>
+                        
+                        <!-- Filter Dropdown -->
+                        <div class="filter-dropdown-container">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-filter"/> 
+                                    <span id="filter-label">
+                                        <t t-if="current_filter == 'to_approve'">To Be Approved</t>
+                                        <t t-elif="current_filter == 'own'">My Requests</t>
+                                        <t t-elif="current_filter == 'related'">Related to Me</t>
+                                        <t t-elif="current_filter == 'approved_by_me'">Approved by Me</t>
+                                        <t t-elif="current_filter == 'completed'">Completed</t>
+                                        <t t-else="">All Requests</t>
+                                    </span>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=all{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-list"/> All Requests
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"/></li>
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=to_approve{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-clock-o"/> To Be Approved
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=own{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-user"/> My Requests
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=related{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-users"/> Related to Me
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=approved_by_me{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-check-circle"/> Approved by Me
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=completed{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-flag-checkered"/> Completed
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
                         <t t-out="0"/>
                         
                         <form method="get">
+                            <input type="hidden" name="filter" t-att-value="current_filter or 'all'"/>
+                            <input type="hidden" name="type" t-att-value="current_memo_type_key" t-if="current_memo_type_key"/>
                             <div class="input-group input-group-sm w-100">
                                 <input type="text" class="form-control form-control-sm" placeholder="Search" t-att-value='search' name="search_input_panel" id="search_input_panel"/>
                                 <a class="btn btn-secondary o_wait_lazy_js search_panel_btn" id="search_panel">
