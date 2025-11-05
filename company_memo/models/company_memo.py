@@ -3382,7 +3382,6 @@ class Memo_Model(models.Model):
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
         
-        
     # def generate_soe_entries(self):
     #     is_config_approver = self.determine_if_user_is_config_approver()
     #     if is_config_approver:
