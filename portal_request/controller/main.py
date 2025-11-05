@@ -1582,8 +1582,9 @@ class PortalRequest(http.Controller):
                 Successfully Registered! with memo id Approver = {approver_ids} \
                     stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
                         or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
-            
+            saveAction = True if saveAction in ['true', 'True', True] else False
             if saveAction:
+                _logger.info(f"submitting action done 1 {saveAction}")
                 '''This saves the record and set the stage to the initial
                 configure stage of the memo settings'''
                 if memo_id.memo_setting_id.stage_ids:
@@ -1593,6 +1594,7 @@ class PortalRequest(http.Controller):
                     memo_id.stage_id = False
                     memo_id.state = 'submit'
             else:
+                _logger.info(f"submitting action done 2 {saveAction}")
                 memo_id.confirm_memo(
                     memo_id.direct_employee_id or employee_id.parent_id, 
                     post.get("description", ""),
