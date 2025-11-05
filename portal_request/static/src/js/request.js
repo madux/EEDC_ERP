@@ -1213,15 +1213,17 @@ odoo.define('portal_request.portal_request', function (require) {
 			'change .destinationlocation-cls': function(ev){
                 let sourceLocationId = $('#source_location_id')
 				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-				if(sourceLocationId.val() == $(ev.target).val()){
-					$(ev.target).val('');
-					$(ev.target).addClass("is-invalid");
-					alert("Source Location and Destination Location must not be the same");
-					return true;
-				}
-				else{
-					$(ev.target).removeClass("is-invalid");
-				}
+				if(sourceLocationId.val() && $(ev.target).val()){
+                    if(sourceLocationId.val() == $(ev.target).val()){
+                        $(ev.target).val('');
+                        $(ev.target).addClass("is-invalid");
+                        alert("Source Location and Destination Location must not be the same");
+                        return true;
+                    }
+                    else{
+                        $(ev.target).removeClass("is-invalid");
+                    }
+                }
             },
             'change .isInterDistrict': function(ev){
                 $('#destination_location_id').val('').trigger('change');
@@ -1734,7 +1736,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert(msg);
                 }
                 // allow destination location to show if it is an inter district transfer
-                
+
                 $('#inter-destination-location-div').removeClass('d-none');
                 $('#destination_location_id').attr('required', true);
             },
