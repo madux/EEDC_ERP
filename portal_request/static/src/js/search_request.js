@@ -90,3 +90,71 @@ odoo.define('portal_request.search_request', function (require) {
 
 // return PortalRequestWidget;
 });
+
+odoo.define('portal_request.pagination', function (require) {
+    "use strict";
+    
+    var publicWidget = require('web.public.widget');
+    
+    publicWidget.registry.PaginationWidget = publicWidget.Widget.extend({
+        selector: '#search_request_section',
+        events: {
+            'keypress #page_input': '_onPageInputKeypress',
+            'blur #page_input': '_onPageInputBlur',
+        },
+        
+        _onPageInputKeypress: function(ev) {
+            if (ev.which === 13 || ev.keyCode === 13) {
+                ev.preventDefault();
+                this._jumpToPage();
+            }
+        },
+        
+        _onPageInputBlur: function(ev) {
+            // Validate when user leaves the input field
+            var $input = this.$('#page_input');
+            var pageNum = parseInt($input.val());
+            var maxPage = parseInt($input.attr('max'));
+            var minPage = parseInt($input.attr('min'));
+            
+            if (isNaN(pageNum) || pageNum < minPage) {
+                pageNum = minPage;
+            } else if (pageNum > maxPage) {
+                pageNum = maxPage;
+            }
+            
+            $input.val(pageNum);
+        },
+        
+        _jumpToPage: function() {
+            var $input = this.$('#page_input');
+            var pageNum = parseInt($input.val());
+            var maxPage = parseInt($input.attr('max'));
+            var minPage = parseInt($input.attr('min'));
+            var requestType = $input.attr('data-type');
+            
+            // Validate page number
+            if (isNaN(pageNum) || pageNum < minPage) {
+                pageNum = minPage;
+                $input.val(pageNum);
+                return;
+            } else if (pageNum > maxPage) {
+                pageNum = maxPage;
+                $input.val(pageNum);
+                return;
+            }
+            
+            // Build URL
+            var baseUrl = '/my/requests';
+            if (requestType) {
+                baseUrl = `/my/requests/${requestType}`;
+            }
+            
+            // Preserve search parameters
+            var searchParams = window.location.search;
+            
+            // Navigate to the page
+            window.location.href = `${baseUrl}/jump/${pageNum}${searchParams}`;
+        }
+    });
+});
