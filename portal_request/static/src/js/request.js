@@ -156,8 +156,8 @@ odoo.define('portal_request.portal_request', function (require) {
             $('#inter-source-location-div').removeClass('d-none');
             $('#source_location_id').attr('required', true);
             // make the destination location required
-            $('#inter-destination-location-div').removeClass('d-none');
-            $('#destination_location_id').attr('required', true);
+            // $('#inter-destination-location-div').removeClass('d-none');
+            // $('#destination_location_id').attr('required', true);
         }
         else{ 
             // make the source location not required
@@ -1213,19 +1213,21 @@ odoo.define('portal_request.portal_request', function (require) {
 			'change .destinationlocation-cls': function(ev){
                 let sourceLocationId = $('#source_location_id')
 				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-				if(sourceLocationId.val() == $(ev.target).val()){
-					$(ev.target).val('');
-					$(ev.target).addClass("is-invalid");
-					alert("Source Location and Destination Location must not be the same");
-					return true;
-				}
-				else{
-					$(ev.target).removeClass("is-invalid");
-				}
+				if(sourceLocationId.val() && $(ev.target).val()){
+                    if(sourceLocationId.val() == $(ev.target).val()){
+                        $(ev.target).val('');
+                        $(ev.target).addClass("is-invalid");
+                        alert("Source Location and Destination Location must not be the same");
+                        return true;
+                    }
+                    else{
+                        $(ev.target).removeClass("is-invalid");
+                    }
+                }
             },
             'change .isInterDistrict': function(ev){
-                $('#destination_location_id').val('');
-                $('#source_location_id').val('');
+                $('#destination_location_id').val('').trigger('change');
+                $('#source_location_id').val('').trigger('change');
                 if ($(ev.target).is(':checked')){
                     // make the source location and destination location required
                     $('#inter-source-location-div').removeClass('d-none');
@@ -1715,7 +1717,6 @@ odoo.define('portal_request.portal_request', function (require) {
                 var self = this;
                 var isChecked = $(ev.target).is(':checked');
                 var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
-                
                 console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id);
 
                 $('#selectConfigOption').val('');
@@ -1733,6 +1734,10 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.warn(msg);
                     alert(msg);
                 }
+                // allow destination location to show if it is an inter district transfer
+
+                $('#inter-destination-location-div').removeClass('d-none');
+                $('#destination_location_id').attr('required', true);
             },
 
             'change select[name=selectConfigOption]': function(ev){
