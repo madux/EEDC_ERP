@@ -286,16 +286,18 @@ class ImportRecords(models.TransientModel):
             employee_id.sudo().user_id.update({
                 'branch_id': employee_id.branch_id.id,
                 'branch_ids': [(4, employee_id.branch_id.id)],
-                # 'company_ids': [(4, employee_id.company_id.id)],
+                # 'company_ids': [(4, company_obj.id)],
                 'company_id': company_obj.id,
             }) 
-            _logger.info('fuckingshit4')
-            employee_id.sudo().update({
-                        'user_id': user.id if user else False,
-                        'work_email': employee_id.work_email,
-                        'company_id':company_obj.id,
-                        # 'migrated_password': password,
-            }) 
+            _logger.info(f'fuckingshit4 == {company_obj.name}, {employee_id.sudo().user_id.company_id.name}')
+            # employee_id.sudo().update({
+            #             # 'user_id': user.id if user else False,
+            #             # 'work_email': employee_id.work_email,
+            #             'company_id':company_obj.id,
+            #             # 'migrated_password': password,
+            # }) 
+            _logger.info(f'fuckingshit5 == {company_obj.name}, {employee_id.sudo().user_id.company_id.name}')
+            
             reset_employee_user_password(employee_id, user)
 
         def generate_user(
