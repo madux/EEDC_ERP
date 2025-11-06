@@ -391,6 +391,100 @@ class Memo_Model(models.Model):
         'memo_document_request_id', 
         string ='Document request Line',
     )
+    
+    action_history_ids = fields.One2many(
+        'memo.action.history', 
+        'memo_id', 
+        string='Approval/Action History',
+        readonly=True
+    )
+
+    approved_by_ids = fields.Many2many(
+        'hr.employee',
+        'memo_approved_by_rel',
+        'memo_id',
+        'employee_id',
+        string='Approved By',
+        compute='_compute_action_users',
+        store=True,
+        help="Employees who approved this request"
+    )
+
+    @api.depends('action_history_ids.action')
+    def _compute_action_users(self):
+        """Compute employees who approved"""
+        for rec in self:
+            approved_history = rec.action_history_ids.filtered(
+                lambda h: h.action == 'approved'
+            )
+            rec.approved_by_ids = approved_history.mapped('actor_id')
+
+            
+    
+    def _log_action(self, action, comments='', next_stage=None):
+        """
+        Args:
+            action: One of 'submitted', 'approved', 'rejected', 'returned', 'cancelled'
+            comments: Optional comment text
+            next_stage: The stage being moved to (if applicable)
+        """
+        current_employee = self.env['hr.employee'].sudo().search([
+            ('user_id', '=', self.env.uid)
+        ], limit=1)
+        
+        if not current_employee:
+            _logger.warning(f"No employee found for user {self.env.uid}")
+            return False
+        
+        # Create history record
+        history_vals = {
+            'memo_id': self.id,
+            'stage_id': self.stage_id.id,
+            'actor_id': current_employee.id,
+            'action': action,
+            'action_date': fields.Datetime.now(),
+            'comments': comments,
+        }
+        
+        if next_stage:
+            history_vals['next_stage_id'] = next_stage.id
+            
+        history_record = self.env['memo.action.history'].sudo().create(history_vals)
+        
+        # Post to chatter with clear formatting
+        action_labels = {
+            'submitted': ('📝', 'Submitted'),
+            'approved': ('✅', 'Approved'),
+            'rejected': ('❌', 'Rejected'),
+            'returned': ('↩️', 'Returned'),
+            'cancelled': ('🚫', 'Cancelled'),
+        }
+        
+        icon, label = action_labels.get(action, ('•', action.title()))
+        
+        # Build chatter message
+        message_parts = [
+            f"<p><b>{icon} {label}</b></p>",
+            f"<p><b>By:</b> {current_employee.name}</p>",
+            f"<p><b>Stage:</b> {self.stage_id.name}</p>",
+        ]
+        
+        if next_stage:
+            message_parts.append(f"<p><b>Moving to:</b> {next_stage.name}</p>")
+        
+        if comments:
+            message_parts.append(f"<p><b>Comments:</b></p><p>{comments}</p>")
+        
+        message_parts.append(f"<p><small><i>{fields.Datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i></small></p>")
+        
+        self.message_post(
+            body="".join(message_parts),
+            message_type='notification',
+            subtype_xmlid='mail.mt_note',
+        )
+        
+        return history_record
+            
     leave_start_date = fields.Datetime('Leave Start Date', default=fields.Date.today())
     leave_end_date = fields.Datetime('Leave End Date', default=fields.Date.today())
     request_date = fields.Datetime('Request Start Date')
@@ -1353,6 +1447,11 @@ class Memo_Model(models.Model):
                 'You cannot cancel a memo that is currently undergoing management approval'
                 )
         for rec in self:
+            
+            rec._log_action(
+                action='cancelled',
+                comments='Request cancelled by initiator'
+            )
             rec.sudo().write({
                 'state': "submit", 
                 'direct_employee_id': False, 
@@ -2067,6 +2166,32 @@ class Memo_Model(models.Model):
                 
     def confirm_memo(self, employee, comments, from_website=False, default_stage_id=False): 
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
+        
+        is_initial_submission = not self.action_history_ids and self.state == 'submit'
+        current_user_is_approver = self.env.uid in [
+            r.user_id.id for r in self.sudo().stage_id.approver_ids
+        ]
+        
+        self.lock_artifacts_from_modification() # first locks already generated artifacts to avoid further modification
+        if default_stage_id:
+            next_stage = self.env['memo.stage'].browse(default_stage_id)
+        else:
+            _, next_stage_id = self.get_next_stage_artifact(self.stage_id, from_website)
+            next_stage = self.env['memo.stage'].browse(next_stage_id)
+        
+        if is_initial_submission:
+            action_type = 'submitted'
+        elif current_user_is_approver:
+            action_type = 'approved'
+        else:
+            action_type = 'approved'
+        
+        self._log_action(
+            action=action_type,
+            comments=comments,
+            next_stage=next_stage
+        )
+        
         Beneficiary = self.employee_id.name # or self.user_ids.name
         body_msg = f"""Dear sir / Madam, \n \
         <br/>I wish to notify you that a {type} with description, {self.name},<br/>  
@@ -2074,7 +2199,6 @@ class Memo_Model(models.Model):
         was sent to you for review / approval. <br/> <br/>Kindly {self.get_url(self.id)}
         <br/> Yours Faithfully<br/>{self.env.user.name}""" 
         self.direct_employee_id = False 
-        self.lock_artifacts_from_modification() # first locks already generated artifacts to avoid further modification
         if default_stage_id:
             # first set the stage id and then update
             self.update_final_state_and_approver(from_website, default_stage_id)
@@ -2092,6 +2216,7 @@ class Memo_Model(models.Model):
         self.follower_messages(body_main)
         self.message_subscribe(partner_ids=[rec.user_id.partner_id.id for rec in self.users_followers])
         self.portal_check_po_config(self.memo_setting_id)
+    
 
     def mail_sending_direct(self, body_msg, email_to=False): 
         subject = "ERP Request Notification"
@@ -3939,4 +4064,33 @@ class Memo_Model(models.Model):
             if len(self.users_followers) < old_length:
                 raise ValidationError("Sorry you cannot remove followers")
         return res
+    
+    
+class MemoActionHistory(models.Model):
+    _name = 'memo.action.history'
+    _description = 'Memo Action History'
+    _order = 'action_date desc'
+    
+    memo_id = fields.Many2one('memo.model', required=True, ondelete='cascade', index=True)
+    stage_id = fields.Many2one('memo.stage', string='Stage', required=True)
+    actor_id = fields.Many2one('hr.employee', string='Actor', required=True)
+    user_id = fields.Many2one('res.users', related='actor_id.user_id', store=True, index=True)
+    action_date = fields.Datetime(default=fields.Datetime.now, required=True, index=True)
+    action = fields.Selection([
+        ('submitted', 'Submitted'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('returned', 'Returned'),
+        ('cancelled', 'Cancelled'),
+    ], required=True, index=True)
+    comments = fields.Text()
+    next_stage_id = fields.Many2one('memo.stage', string='Moved To Stage')
+    
+    def name_get(self):
+        result = []
+        for rec in self:
+            action_label = dict(self._fields['action'].selection).get(rec.action)
+            name = f"{action_label} by {rec.actor_id.name} on {rec.action_date.strftime('%Y-%m-%d %H:%M')}"
+            result.append((rec.id, name))
+        return result
     

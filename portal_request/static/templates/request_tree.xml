@@ -95,7 +95,11 @@
                         <!-- Filter Dropdown -->
                         <div class="filter-dropdown-container">
                             <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-outline-secondary dropdown-toggle filter-btn" 
+                                        type="button" 
+                                        id="filterDropdown" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false">
                                     <i class="fa fa-filter"/> 
                                     <span id="filter-label">
                                         <t t-if="current_filter == 'to_approve'">To Be Approved</t>
@@ -103,39 +107,67 @@
                                         <t t-elif="current_filter == 'related'">Related to Me</t>
                                         <t t-elif="current_filter == 'approved_by_me'">Approved by Me</t>
                                         <t t-elif="current_filter == 'completed'">Completed</t>
+                                        <t t-elif="current_filter == 'refused'">Refused</t>
+                                        <t t-elif="current_filter == 'cancelled'">Cancelled</t>
                                         <t t-else="">All Requests</t>
                                     </span>
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                    <!-- All Requests -->
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=all{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=all{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
                                             <i class="fa fa-list"/> All Requests
                                         </a>
                                     </li>
+                                    
                                     <li><hr class="dropdown-divider"/></li>
+                                    
+                                    <!-- Active Filters -->
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=to_approve{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
-                                            <i class="fa fa-clock-o"/> To Be Approved
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=to_approve{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-clock-o text-warning"/> To Be Approved
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=own{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
-                                            <i class="fa fa-user"/> My Requests
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=own{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-user text-primary"/> My Requests
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=related{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
-                                            <i class="fa fa-users"/> Related to Me
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=related{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-users text-info"/> Related to Me
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=approved_by_me{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
-                                            <i class="fa fa-check-circle"/> Approved by Me
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=approved_by_me{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-check-circle text-success"/> Approved by Me
+                                        </a>
+                                    </li>
+                                    
+                                    <li><hr class="dropdown-divider"/></li>
+                                    
+                                    <!-- Status Filters - Separated Concerns -->
+                                    <li>
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=completed{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-flag-checkered text-success"/> Completed
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" t-attf-href="/my/requests?filter=completed{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
-                                            <i class="fa fa-flag-checkered"/> Completed
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=refused{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-ban text-danger"/> Refused
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" 
+                                        t-attf-href="/my/requests?filter=cancelled{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
+                                            <i class="fa fa-times-circle text-warning"/> Cancelled
                                         </a>
                                     </li>
                                 </ul>

@@ -91,73 +91,6 @@ odoo.define('portal_request.search_request', function (require) {
 // return PortalRequestWidget;
 });
 
-// odoo.define('portal_request.pagination', function (require) {
-//     "use strict";
-    
-//     var publicWidget = require('web.public.widget');
-    
-//     publicWidget.registry.PaginationWidget = publicWidget.Widget.extend({
-//         selector: '#search_request_section',
-//         events: {
-//             'keypress #page_input': '_onPageInputKeypress',
-//             'blur #page_input': '_onPageInputBlur',
-//         },
-        
-//         _onPageInputKeypress: function(ev) {
-//             if (ev.which === 13 || ev.keyCode === 13) {
-//                 ev.preventDefault();
-//                 this._jumpToPage();
-//             }
-//         },
-        
-//         _onPageInputBlur: function(ev) {
-//             // Validate when user leaves the input field
-//             var $input = this.$('#page_input');
-//             var pageNum = parseInt($input.val());
-//             var maxPage = parseInt($input.attr('max'));
-//             var minPage = parseInt($input.attr('min'));
-            
-//             if (isNaN(pageNum) || pageNum < minPage) {
-//                 pageNum = minPage;
-//             } else if (pageNum > maxPage) {
-//                 pageNum = maxPage;
-//             }
-            
-//             $input.val(pageNum);
-//         },
-        
-//         _jumpToPage: function() {
-//             var $input = this.$('#page_input');
-//             var pageNum = parseInt($input.val());
-//             var maxPage = parseInt($input.attr('max'));
-//             var minPage = parseInt($input.attr('min'));
-//             var requestType = $input.attr('data-type');
-            
-//             // Validate page number
-//             if (isNaN(pageNum) || pageNum < minPage) {
-//                 pageNum = minPage;
-//                 $input.val(pageNum);
-//                 return;
-//             } else if (pageNum > maxPage) {
-//                 pageNum = maxPage;
-//                 $input.val(pageNum);
-//                 return;
-//             }
-            
-//             // Build URL
-//             var baseUrl = '/my/requests';
-//             if (requestType) {
-//                 baseUrl = `/my/requests/${requestType}`;
-//             }
-            
-//             // Preserve search parameters
-//             var searchParams = window.location.search;
-            
-//             // Navigate to the page
-//             window.location.href = `${baseUrl}/jump/${pageNum}${searchParams}`;
-//         }
-//     });
-// });
 
 odoo.define('portal_request.pagination', function (require) {
     "use strict";
@@ -180,7 +113,6 @@ odoo.define('portal_request.pagination', function (require) {
         },
         
         _onPageInputBlur: function(ev) {
-            // Validate when user leaves the input field
             var $input = this.$('#page_input');
             var pageNum = parseInt($input.val());
             var maxPage = parseInt($input.attr('max'));
@@ -203,7 +135,6 @@ odoo.define('portal_request.pagination', function (require) {
             var requestType = $input.attr('data-type');
             var filterType = $input.attr('data-filter') || 'all';
             
-            // Validate page number
             if (isNaN(pageNum) || pageNum < minPage) {
                 pageNum = minPage;
                 $input.val(pageNum);
@@ -214,23 +145,19 @@ odoo.define('portal_request.pagination', function (require) {
                 return;
             }
             
-            // Build URL
             var baseUrl = '/my/requests';
             if (requestType) {
                 baseUrl = `/my/requests/${requestType}`;
             }
             
-            // Build query parameters
             var params = new URLSearchParams();
             params.append('filter', filterType);
             
-            // Preserve other search parameters
             var currentParams = new URLSearchParams(window.location.search);
             if (currentParams.has('search_input_panel')) {
                 params.append('search_input_panel', currentParams.get('search_input_panel'));
             }
             
-            // Navigate to the page
             window.location.href = `${baseUrl}/jump/${pageNum}?${params.toString()}`;
         },
         
@@ -240,7 +167,6 @@ odoo.define('portal_request.pagination', function (require) {
             var filterType = this.$('#page_input').attr('data-filter') || 'all';
             var requestType = this.$('#page_input').attr('data-type');
             
-            // Build URL with filter preserved
             var params = new URLSearchParams();
             params.append('searchme', searchQuery);
             params.append('filter', filterType);
