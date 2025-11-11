@@ -91,6 +91,7 @@ odoo.define('portal_request.search_request', function (require) {
 // return PortalRequestWidget;
 });
 
+
 odoo.define('portal_request.pagination', function (require) {
     "use strict";
     
@@ -101,6 +102,7 @@ odoo.define('portal_request.pagination', function (require) {
         events: {
             'keypress #page_input': '_onPageInputKeypress',
             'blur #page_input': '_onPageInputBlur',
+            'click .search_panel_btn': '_onSearchClick',
         },
         
         _onPageInputKeypress: function(ev) {
@@ -111,7 +113,6 @@ odoo.define('portal_request.pagination', function (require) {
         },
         
         _onPageInputBlur: function(ev) {
-            // Validate when user leaves the input field
             var $input = this.$('#page_input');
             var pageNum = parseInt($input.val());
             var maxPage = parseInt($input.attr('max'));
@@ -132,8 +133,8 @@ odoo.define('portal_request.pagination', function (require) {
             var maxPage = parseInt($input.attr('max'));
             var minPage = parseInt($input.attr('min'));
             var requestType = $input.attr('data-type');
+            var filterType = $input.attr('data-filter') || 'all';
             
-            // Validate page number
             if (isNaN(pageNum) || pageNum < minPage) {
                 pageNum = minPage;
                 $input.val(pageNum);
@@ -144,17 +145,36 @@ odoo.define('portal_request.pagination', function (require) {
                 return;
             }
             
-            // Build URL
             var baseUrl = '/my/requests';
             if (requestType) {
                 baseUrl = `/my/requests/${requestType}`;
             }
             
-            // Preserve search parameters
-            var searchParams = window.location.search;
+            var params = new URLSearchParams();
+            params.append('filter', filterType);
             
-            // Navigate to the page
-            window.location.href = `${baseUrl}/jump/${pageNum}${searchParams}`;
+            var currentParams = new URLSearchParams(window.location.search);
+            if (currentParams.has('search_input_panel')) {
+                params.append('search_input_panel', currentParams.get('search_input_panel'));
+            }
+            
+            window.location.href = `${baseUrl}/jump/${pageNum}?${params.toString()}`;
+        },
+        
+        _onSearchClick: function(ev) {
+            ev.preventDefault();
+            var searchQuery = this.$('#search_input_panel').val();
+            var filterType = this.$('#page_input').attr('data-filter') || 'all';
+            var requestType = this.$('#page_input').attr('data-type');
+            
+            var params = new URLSearchParams();
+            params.append('searchme', searchQuery);
+            params.append('filter', filterType);
+            if (requestType) {
+                params.append('type', requestType);
+            }
+            
+            window.location.href = `/my/requests/param?${params.toString()}`;
         }
     });
 });

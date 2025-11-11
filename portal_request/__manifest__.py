@@ -36,5 +36,6 @@
         '/portal_request/static/src/css/employee_dashboard.css',
         '/portal_request/static/src/css/apps_page.css',
         '/portal_request/static/src/js/homepage.js',
+        'portal_request/static/src/css/request_form.css',
     ]},
 }

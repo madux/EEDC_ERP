@@ -1750,26 +1750,30 @@ class PortalRequest(http.Controller):
         query_string = urlparts.query
         _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
 
+
+    
     @http.route([
-        '/my/requests', 
-        '/my/requests/<string:type>', 
-        '/my/requests/<string:type>/page/<string:page>',
-        '/my/requests/<string:type>/jump/<int:page_num>',
-        '/my/requests/param/<path:search_param>',
-        '/my/requests/param', 
-        '/my/requests/page/<string:page>'], 
-                type='http', auth="user", website=True)
+    '/my/requests', 
+    '/my/requests/<string:type>', 
+    '/my/requests/<string:type>/page/<string:page>',
+    '/my/requests/<string:type>/jump/<int:page_num>',
+    '/my/requests/param/<path:search_param>',
+    '/my/requests/param', 
+    '/my/requests/page/<string:page>'], 
+    type='http', auth="user", website=True)
     def my_requests(self, type=False, page=False, page_num=None, search_param=None, **kw):
-        """This route is used to call the requesters or user records for display
-        page: the pagination index: prev or next
-        type: material_request
+        """This route displays user records with enhanced filtering
+        page: pagination index (prev/next)
+        type: request type (material_request, etc)
+        filter: filter type (all, to_approve, own, related, approved_by_me, completed, refused, cancelled)
         """
         user = request.env.user
         sessions = request.session
         
         PAGE_SIZE = 10
         
-        # self.get_request_info(request)
+        filter_type = request.params.get('filter', 'all')
+        
         if page_num:
             start = (page_num - 1) * PAGE_SIZE
             end = page_num * PAGE_SIZE
@@ -1780,7 +1784,8 @@ class PortalRequest(http.Controller):
             sessions['end'] = PAGE_SIZE
             
         search_input_query2 = request.params.get('search')
-        _logger.info(f"Search sest {search_input_query2} {request.params.get('searchme')}, search_input_panel == {request.params.get('search_input_panel')}")
+        _logger.info(f"Search test {search_input_query2} {request.params.get('searchme')}, "
+                    f"search_input_panel == {request.params.get('search_input_panel')}")
         
         search_input_query = request.params.get('searchme')
         search_param = request.params.get('search_param')
@@ -1790,13 +1795,15 @@ class PortalRequest(http.Controller):
         
         memo_type = ['Payment', 'Loan'] if type in ['Payment', 'Loan'] \
             else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
-                else ['leave_request'] if type in ['leave_request'] \
-                    else ['employee_update'] if type in ['employee_update'] \
-                        else ['Internal', 'procurement_request', 'sale_request', 'vehicle_request', 'material_request'] \
-                            if type in ['Internal', 'procurement_request', 'server_access', 'sale_request', 'vehicle_request', 'material_request'] \
-                                else all_memo_type_keys
+            else ['leave_request'] if type in ['leave_request'] \
+            else ['employee_update'] if type in ['employee_update'] \
+            else ['Internal', 'procurement_request', 'sale_request', 'vehicle_request', 'material_request'] \
+                if type in ['Internal', 'procurement_request', 'server_access', 'sale_request', 
+                        'vehicle_request', 'material_request'] \
+            else all_memo_type_keys
                                 
         def get_date_query(date_query):
+            """Parse date from various formats"""
             date_val = None
             if date_query:
                 for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
@@ -1807,54 +1814,138 @@ class PortalRequest(http.Controller):
                         pass 
             return date_val 
         
-        memo_obj = request.env['memo.model'].sudo()   
-        def query_domain(query):
-            domain = [
-                ('active', '=', True),
-                '|', ('code', 'ilike', query),
-                ('name', 'ilike', query),
-                '|','|','|','|','|',
+        memo_obj = request.env['memo.model'].sudo()
+        
+        def get_cancelled_request_ids():
+            """
+            Get IDs of cancelled requests by checking action history.
+            A request is considered cancelled if:
+            1. It has a 'cancelled' action in history, OR
+            2. It's in 'submit' state AND has previous approval/rejection actions
+            (meaning it was reset after being processed)
+            """
+            cancelled_ids = []
+            
+            history_cancelled = request.env['memo.action.history'].sudo().search([
+                ('action', '=', 'cancelled')
+            ]).mapped('memo_id.id')
+            cancelled_ids.extend(history_cancelled)
+            
+            all_histories = request.env['memo.action.history'].sudo().search([
+                ('action', 'in', ['approved', 'rejected', 'returned'])
+            ])
+            
+            for history in all_histories:
+                memo = history.memo_id
+                if memo.state == 'submit':
+                    latest_action = request.env['memo.action.history'].sudo().search([
+                        ('memo_id', '=', memo.id)
+                    ], order='action_date desc', limit=1)
+                    
+                    if latest_action and latest_action.action in ['approved', 'rejected', 'returned']:
+                        actions_after = request.env['memo.action.history'].sudo().search([
+                            ('memo_id', '=', memo.id),
+                            ('action_date', '>', latest_action.action_date)
+                        ])
+                        
+                        if not actions_after and memo.id not in cancelled_ids:
+                            cancelled_ids.append(memo.id)
+            
+            return list(set(cancelled_ids))
+        
+        def get_filter_domain(filter_type, user, memo_type):
+            """Build domain based on filter type"""
+            base_domain = [('active', '=', True)]
+            
+            if memo_type and memo_type != all_memo_type_keys:
+                base_domain.append(('memo_type_key', 'in', memo_type))
+            
+            # Base access domain - user must have some relation to the request
+            access_domain = [
+                '|', '|', '|', '|', '|',
                 ('employee_id.user_id.id', '=', user.id),
-                ('users_followers.user_id.id','=', user.id),
-                ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
-                ('employee_id.parent_id.user_id.id','=', user.id),
-                ('memo_setting_id.approver_ids.user_id.id','=', user.id),
-                ('stage_id.approver_ids.user_id.id','=', user.id),
-                
+                ('users_followers.user_id.id', '=', user.id),
+                ('employee_id.administrative_supervisor_id.user_id.id', '=', user.id),
+                ('employee_id.parent_id.user_id.id', '=', user.id),
+                ('memo_setting_id.approver_ids.user_id.id', '=', user.id),
+                ('stage_id.approver_ids.user_id.id', '=', user.id),
             ]
-            return domain
-        domain_type = domain = [
-                ('active', '=', True),
-                ('memo_type_key', 'in', memo_type),
-                '|','|','|','|','|',
-                ('employee_id.user_id.id', '=', user.id),
-                ('users_followers.user_id.id','=', user.id),
-                ('employee_id.administrative_supervisor_id.user_id.id','=', user.id),
-                ('employee_id.parent_id.user_id.id','=', user.id),
-                ('memo_setting_id.approver_ids.user_id.id','=', user.id),
-                ('stage_id.approver_ids.user_id.id','=', user.id),
-                
+            
+            if filter_type == 'to_approve':
+                return base_domain + [
+                    '|', '|',
+                    ('memo_setting_id.approver_ids.user_id.id', '=', user.id),
+                    ('stage_id.approver_ids.user_id.id', '=', user.id),
+                    ('approver_id.user_id.id', '=', user.id),
+                    ('state', 'not in', ['approved', 'done', 'cancel', 'Refuse'])
+                ]
+            
+            elif filter_type == 'own':
+                return base_domain + [
+                    ('employee_id.user_id.id', '=', user.id)
+                ]
+            
+            elif filter_type == 'related':
+                return base_domain + [
+                    ('employee_id.user_id.id', '!=', user.id),
+                    '|', '|',
+                    ('users_followers.user_id.id', '=', user.id),
+                    ('employee_id.administrative_supervisor_id.user_id.id', '=', user.id),
+                    ('employee_id.parent_id.user_id.id', '=', user.id),
+                ]
+            
+            elif filter_type == 'approved_by_me':
+                return base_domain + [
+                    ('action_history_ids.actor_id.user_id', '=', user.id),
+                    ('action_history_ids.action', '=', 'approved'),
+                ]
+            
+            elif filter_type == 'completed':
+                return base_domain + access_domain + [
+                    '|',
+                    ('state', 'in', ['done', 'approved']),
+                    ('stage_id.name', 'ilike', 'done')
+                ]
+            
+            elif filter_type == 'refused':
+                return base_domain + access_domain + [
+                    ('state', '=', 'Refuse')
+                ]
+            
+            elif filter_type == 'cancelled':
+                cancelled_ids = get_cancelled_request_ids()
+                if not cancelled_ids:
+                    return [('id', '=', False)]
+                return base_domain + access_domain + [
+                    ('id', 'in', cancelled_ids)
+                ]
+            
+            else:
+                return base_domain + access_domain
+        
+        domain = get_filter_domain(filter_type, user, memo_type)
+        
+        if search_input_query or search_input_panel:
+            qry_param = search_input_query or search_input_panel
+            _logger.info(f"Applying search query: {qry_param}")
+            
+            search_domain = [
+                '|', ('code', 'ilike', qry_param),
+                ('name', 'ilike', qry_param),
             ]
-        # if search_input_query or search_param or search_input_panel:
-        if search_input_query:
-            # qry_param = search_input_query or search_param or search_input_panel
-            qry_param = search_input_query
-            _logger.info(f"DOMAIN TO USE 1 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel}")
-            domain = query_domain(qry_param)
-            if type:
-                domain += [('memo_type_key', '=', type)]
+            
             date_search = get_date_query(qry_param)
             if date_search:
-                domain += ['|', ('request_date', '=', date_search), ('create_date', '=', date_search)]
-        if type and not search_input_query and not search_param and not search_input_panel: #look at this more
-            domain = domain_type
+                search_domain += [
+                    '|', ('request_date', '=', date_search), 
+                    ('create_date', '=', date_search)
+                ]
             
-        # if not type and not search_input_query and not search_param and not search_input_panel:
-        #     _logger.info(f"DOMAIN TO USE 3 {type} SEARCH INPUT: {search_input_query}, SEARCH [PARAM {search_param}] == SEARCH INPUT {search_input_panel} DOMAIN: {domain}")
-        #     domain = [('id', '=', 0)]
+            domain = domain + search_domain
+        
         total_count = memo_obj.search_count(domain)
-            
-        start, end = self.get_pagination(page)# if page else False, False
+        
+        start, end = self.get_pagination(page)
         if page_num:
             max_pages = (total_count + PAGE_SIZE - 1) // PAGE_SIZE if total_count > 0 else 1
             if page_num < 1:
@@ -1866,10 +1957,15 @@ class PortalRequest(http.Controller):
                 start = (page_num - 1) * PAGE_SIZE
                 end = page_num * PAGE_SIZE
         
-        _logger.info(f"Pagination: start={start}, end={end}, total={total_count}")
+        _logger.info(f"Pagination: start={start}, end={end}, total={total_count}, filter={filter_type}")
         
-        memo_records = memo_obj.search(domain, order='create_date desc', limit=PAGE_SIZE, offset=start)
-    
+        memo_records = memo_obj.search(
+            domain, 
+            order='create_date desc', 
+            limit=PAGE_SIZE, 
+            offset=start
+        )
+
         if memo_records:
             sessions['start'] = start
             sessions['end'] = min(start + PAGE_SIZE, total_count)
@@ -1883,6 +1979,7 @@ class PortalRequest(http.Controller):
             'requests': memo_records,
             'memo_requests': memo_records,
             'current_memo_type_key': type if type else False,
+            'current_filter': filter_type,
             'page_name': 'my_requests',
             'current_page': current_page,
             'total_pages': total_pages,
@@ -1890,8 +1987,11 @@ class PortalRequest(http.Controller):
             'has_prev': has_prev,
             'has_next': has_next,
             'page_size': PAGE_SIZE,
+            'search': search_input_query or search_input_panel or '',
         }
-        _logger.info(f"Rendering with current_page={current_page}, total_pages={total_pages}, has {len(memo_records)} records")
+        
+        _logger.info(f"Rendering with current_page={current_page}, total_pages={total_pages}, "
+                    f"has {len(memo_records)} records, filter={filter_type}")
         
         return request.render("portal_request.my_portal_request", values)
     
@@ -2069,6 +2169,7 @@ class PortalRequest(http.Controller):
                     }
 
 
+    
     @http.route('/my/request/update', type='json', auth="user", website=True)
     def update_my_request(self, **post):
         _logger.info(f"updating the request ...{post.get('memo_id')}")
@@ -2082,10 +2183,16 @@ class PortalRequest(http.Controller):
         request_record = request_id.search(domain, limit=1)
         stage_id = False
         status = post.get('status', '')
-  
+
         if request_record:
             if status == "cancel":
                 stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+                
+                request_record._log_action(
+                    action='cancelled',
+                    comments='Cancelled via portal'
+                )
+                
                 body_msg = f"""
                     Dear Sir / Madam, <br/>
                     I wish to notify you that a request with description \n <br/>\
@@ -2101,6 +2208,7 @@ class PortalRequest(http.Controller):
                     "link": False, 
                     "message": "Record updated successfully", 
                     }
+            
             elif status == "Sent":
                 stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
                     request_record.sudo().memo_setting_id.stage_ids else \
@@ -2111,6 +2219,7 @@ class PortalRequest(http.Controller):
                     "link": False, 
                     "message": "Record updated successfully", 
                     }
+            
             elif status in ["Resend"]:
                 # useds this to determine the stages configured on the system
                 # if the length of stages is just 1, try the first condition else,
@@ -2125,6 +2234,14 @@ class PortalRequest(http.Controller):
                 memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
                 if memoStage_ids:
                     stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+                    next_stage = request.env['memo.stage'].browse(stage_id)
+                    
+                    request_record._log_action(
+                        action='submitted',
+                        comments='Resubmitted via portal',
+                        next_stage=next_stage
+                    )
+                    
                     request_record.write({'state': 'Sent', 'stage_id': stage_id})
                     return {
                         "status": True, 
@@ -2137,6 +2254,7 @@ class PortalRequest(http.Controller):
                     "link": False, 
                     "message": "No stage configured or found for this request. Contact admin", 
                     }
+            
             elif status in ["Approve"]:
                 
                 # approver_ids, stage = request_record.get_next_stage_artifact()
@@ -2169,7 +2287,7 @@ class PortalRequest(http.Controller):
                             "status": False, 
                             "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
                             "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
-                             
+                            
                             }
                 current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
@@ -2179,7 +2297,18 @@ class PortalRequest(http.Controller):
                     # is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
                     # filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
                     if request.env.user.id in current_stage_approvers:
+                        # Get the stage before update for logging
+                        current_stage_before = request_record.stage_id
+                        
                         request_record.sudo().update_final_state_and_approver()
+                        
+                        # LOG ACTION: Approved
+                        request_record._log_action(
+                            action='approved',
+                            comments='Approved via portal',
+                            next_stage=request_record.stage_id  # Use the new stage after update
+                        )
+                        
                         request_record.sudo().write({
                             'res_users': [(4, request.env.user.id)]
                             })
@@ -2219,7 +2348,7 @@ class PortalRequest(http.Controller):
                     "link": False,
                     "message": "No matching record found", 
                     }
-        # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
+            # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
     
     @http.route('/save/data', type='json', auth="user", website=True)
     def save_data(self, **post):
