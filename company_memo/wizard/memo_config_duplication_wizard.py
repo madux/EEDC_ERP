@@ -40,6 +40,9 @@ class MemoConfigDuplicationWizard(models.TransientModel):
         string='Districts / Branch(s)', 
         required=False)
     
+    prefix_code = fields.Char(
+        string='Prefix Code')
+    
     receivable_account_id = fields.Many2one(
         "account.account", 
         string="Account Receivable"
@@ -87,6 +90,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                 'expense_account_id': memo_config.expense_account_id.id,
                 'advance_account_id': memo_config.advance_account_id.id,
                 'payable_account_id': memo_config.payable_account_id.id,
+                'prefix_code': memo_config.prefix_code
                 })
         return res
 
@@ -113,6 +117,7 @@ class MemoConfigDuplicationWizard(models.TransientModel):
                     'allowed_for_company_ids': self.allowed_companies_ids,
                     'company_id': comp.id,
                     'company_ids': [(4, comp.id)],
+                    'prefix_code': self.prefix_code,
                     'expense_account_id': self.expense_account_id.id,
                     'advance_account_id': self.advance_account_id.id,
                     'payable_account_id': self.payable_account_id.id,

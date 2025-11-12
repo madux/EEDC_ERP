@@ -27,7 +27,7 @@
 
                             </group>
                             <group>
-                                <field name="prefix_code" string="Prefix Code" placeholder="e.g PF for project file"/>
+                                <field name="prefix_code" string="Prefix Code" required="1" placeholder="e.g PF for project file"/>
                                 <field name="department_code" string="Department suffix" placeholder="K, Y, A"/>
                                 <field name="approver_ids" string="Employees for Follow up" required="0" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
                                 <field name="company_ids" required="0" string="Allow companies" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
@@ -40,8 +40,8 @@
                                 <field name="expense_account_id"/>
                                 <field name="inter_district_request" string="Is inter Company / district Material Request" invisible="1"/>
                                 <field name="inter_district" string="Is inter Company / district"/>
-                                <field name="payment_processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True)]}"/>
-                                <field name="payment_processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True)]}"/>
+                                <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True)]}"/>
+                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True)]}"/>
 
                             </group>
                             <notebook>

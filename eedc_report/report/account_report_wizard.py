@@ -341,7 +341,11 @@ class AccountDynamicReport(models.Model):
         all_accounts = tags.mapped('account_ids')
         if not all_accounts: return []
 
-        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company.id)
+        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company_id=False)
+        """args : company_id=False, this will not add company in the domain builder"""
+        if self.company_ids:
+            base_domain.append(('company_id', 'in', self.company_ids.ids))
+        
         base_domain.append(('account_id', 'in', all_accounts.ids))
         all_moves = self.env['account.move.line'].search(base_domain)
 
@@ -458,13 +462,15 @@ class AccountDynamicReport(models.Model):
         _logger.info(f"=== Starting _get_consolidated_district_data for company: {company.name} (ID: {company.id}) ===")
         _logger.info(f"Date range: {start_date} to {end_date}")
         
-        include_unassigned = not self.branch_ids
+        include_unassigned = not self.branch_ids # True if not branch ids
         _logger.info(f"Include Unassigned District: {include_unassigned} (branch_ids set: {bool(self.branch_ids)})")
         
-        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
+        # branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
+        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','in', self.company_ids.ids)])
+        # False or [12, 34, 65]
         _logger.info(f"Branches to process: {len(branches_to_process)} - {[b.name for b in branches_to_process]}")
         
-        if not branches_to_process and not include_unassigned:
+        if not branches_to_process and not include_unassigned: # [12, 34, 65]
             _logger.warning(f"No branches found for company {company.name}")
             return [], [], [], []
 

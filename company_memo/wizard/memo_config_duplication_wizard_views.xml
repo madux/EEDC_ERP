@@ -13,6 +13,7 @@
                         <field name="branch_ids" widget="many2many_tags" />
                     </group>
                     <group>
+                        <field name="prefix_code" />
                         <field name="employees_follow_up_ids" widget="many2many_tags" />
                         <field name="allowed_companies_ids" widget="many2many_tags" />
                     </group>
