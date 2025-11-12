@@ -173,13 +173,14 @@ class MemoConfigDuplicationWizardInherit(models.TransientModel):
                 
                 stage_ids = []
                 new_config = self.env['memo.config'].create({
-                    'name': self.name.strip() if self.name and self.name.strip() else f"{memo_config.name} {memo_config.memo_type.name} - [{cob.name}]",
+                    'name': self.name.strip() if self.name and self.name.strip() else f"{memo_config.memo_type.name} - [{cob.name}]",
                     'branch_id': cob.id,
                     'memo_type': memo_config.memo_type.id,
                     'approver_ids': [(6, 0, self.employees_follow_up_ids.ids)],
                     'allowed_for_company_ids': [(6, 0, self.allowed_companies_ids.ids)],
                     'company_id': comp.id,
                     'company_ids': [(4, comp.id)],
+                    'prefix_code': self.prefix_code,
                     'expense_account_id': self.expense_account_id.id if self.expense_account_id else False,
                     'advance_account_id': self.advance_account_id.id if self.advance_account_id else False,
                     'payable_account_id': self.payable_account_id.id if self.payable_account_id else False,

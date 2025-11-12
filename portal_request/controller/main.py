@@ -381,7 +381,7 @@ class PortalRequest(http.Controller):
                 '''returns all locations if it is not interdistrict or intercompany'''
                 if selectedOption_id:
                     option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
-                    all_branches = [option.payment_processing_branch_id.id]
+                    all_branches = [option.processing_branch_id.id]
                 else:
                     all_branches = request.env['multi.branch'].sudo().search([])
                     all_branches = all_branches.ids

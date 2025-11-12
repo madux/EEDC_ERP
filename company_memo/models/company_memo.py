@@ -29,7 +29,15 @@ class Memo_Model(models.Model):
         dept_suffix = ''
         user_company = self.env.user.company_id
         if ms_config:
-            project_prefix = ms_config.prefix_code or 'MR'
+            project_prefix = (
+                ms_config.prefix_code or
+                ('PMT' if ms_config.memo_key == 'Payment'
+                else 'ADV-EXP' if ms_config.memo_key == 'cash_advance'
+                else 'EXP' if ms_config.memo_key == 'soe'
+                else 'MR' if ms_config.memo_key == 'material_request'
+                else 'PR' if ms_config.memo_key == 'procurement_request'
+                else 'REF')
+            )
             dept_suffix = ms_config.department_code or 'X'
         result = super(Memo_Model, self).create(vals)
         if self.attachment_ids:
@@ -225,6 +233,20 @@ class Memo_Model(models.Model):
         store=True,
     )
     
+    processing_company_id = fields.Many2one(
+        'res.company',
+        string='Processing Company',
+        help="""Company that will process this request type. 
+            """
+    )
+    
+    processing_branch_id = fields.Many2one(
+        'multi.branch',
+        string='Processing Branch',
+        domain="[('company_id', '=', processing_company_id)]",
+        help="Specific branch within the processing company"
+    )
+    
     stock_processing_company_id = fields.Many2one(
         'res.company',
         string='Stock Processing Company',
@@ -240,16 +262,16 @@ class Memo_Model(models.Model):
     @api.depends('memo_setting_id', 'stage_id', 'stage_id.approver_ids')
     def _compute_payment_processing_company(self):
         for rec in self:
-            if rec.memo_setting_id.payment_processing_company_id:
-                rec.payment_processing_company_id = rec.memo_setting_id.payment_processing_company_id
-                rec.payment_processing_branch_id = rec.memo_setting_id.payment_processing_branch_id
+            if rec.memo_setting_id.processing_company_id:
+                rec.processing_company_id = rec.memo_setting_id.processing_company_id
+                rec.processing_branch_id = rec.memo_setting_id.processing_branch_id
             elif rec.stage_id and rec.stage_id.is_approved_stage and rec.stage_id.approver_ids:
                 approver = rec.stage_id.approver_ids[0]
-                rec.payment_processing_company_id = approver.company_id
-                rec.payment_processing_branch_id = approver.user_id.branch_id
+                rec.processing_company_id = approver.company_id
+                rec.processing_branch_id = approver.user_id.branch_id
             else:
-                rec.payment_processing_company_id = rec.company_id
-                rec.payment_processing_branch_id = rec.branch_id
+                rec.processing_company_id = rec.company_id
+                rec.processing_branch_id = rec.branch_id
                 
             # rec.stock_processing_company_id = rec.company_id
             # rec.stock_processing_branch_id = rec.branch_id
@@ -3159,7 +3181,7 @@ class Memo_Model(models.Model):
     def get_cashadvance_debit_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.payment_processing_company_id or self.company_id
+        payment_company = self.processing_company_id or self.company_id
         company_expense_account_id = payment_company.default_cash_advance_account_id
         account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3169,7 +3191,7 @@ class Memo_Model(models.Model):
     def get_cashadvance_credit_account(self, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.payment_processing_company_id or self.company_id
+        payment_company = self.processing_company_id or self.company_id
         company_expense_account_id = payment_company.default_bank_cash_account_id
         account_id = company_expense_account_id # or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3179,7 +3201,7 @@ class Memo_Model(models.Model):
     def get_soe_expense_account(self, pr, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.sudo().payment_processing_company_id or self.sudo().company_id
+        payment_company = self.sudo().processing_company_id or self.sudo().company_id
         company_expense_account_id = payment_company.account_default_debit_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3189,7 +3211,7 @@ class Memo_Model(models.Model):
     def get_soe_credit_account(self, journal_id=False):
         '''pr: line'''
         account_id = None
-        payment_company = self.sudo().payment_processing_company_id or self.sudo().company_id
+        payment_company = self.sudo().processing_company_id or self.sudo().company_id
         company_expense_account_id = payment_company.default_cash_advance_account_id
         account_id = company_expense_account_id or journal_id and journal_id.default_account_id
         if not account_id:
@@ -3280,8 +3302,8 @@ class Memo_Model(models.Model):
             """Check if the user is enlisted as the approver for request type
             if approver is an account officer, system generates move and open the exact record"""
             
-            payment_company = self.payment_processing_company_id or self.company_id
-            payment_branch = self.payment_processing_branch_id or self.branch_id
+            payment_company = self.processing_company_id or self.company_id
+            payment_branch = self.processing_branch_id or self.branch_id
             
             current_user_company = self.env.user.company_id
             
@@ -3388,7 +3410,7 @@ class Memo_Model(models.Model):
                         'to_retire': True if not rec.retired else False,
                     }) for rec in car.mapped('product_ids').filtered(lambda s: not s.retired)]
                 _logger.info(
-                    f"SOE will retire to: {car.payment_processing_company_id.name or car.company_id.name}"
+                    f"SOE will retire to: {car.processing_company_id.name or car.company_id.name}"
                 )
             else:
                 raise ValidationError('you have already retired all the items in the selected cash advance reference')
@@ -3430,7 +3452,7 @@ class Memo_Model(models.Model):
                 raise ValidationError("No cash advance reference found for retirement")
             
             original_advance = self.sudo().cash_advance_reference
-            payment_company = original_advance.payment_processing_company_id or \
+            payment_company = original_advance.processing_company_id or \
                             original_advance.company_id
             _logger.info(
                 f"  SOE Processing:\n"
@@ -3465,7 +3487,7 @@ class Memo_Model(models.Model):
                     'ref': self.code,
                     'origin': self.code,
                     'partner_id': partner_id.id,
-                    'branch_id': original_advance.payment_processing_branch_id.id or original_advance.branch_id.id,
+                    'branch_id': original_advance.processing_branch_id.id or original_advance.branch_id.id,
                     'company_id': payment_company.id,
                     'currency_id': payment_company.currency_id.id,
                     # Do not set default name to account move name, because it
@@ -3892,7 +3914,7 @@ class Memo_Model(models.Model):
         if (self.memo_type.memo_key != "Payment"): # or (self.amountfig < 1):
             raise ValidationError("(1) Request type must be 'Payment'\n (2) Amount must be greater than one to proceed with payment")
         
-        payment_company = self.payment_processing_company_id or self.company_id
+        payment_company = self.processing_company_id or self.company_id
         account_payment_existing = self.env['account.payment'].search([
             ('memo_reference', '=', self.id)
             ], limit=1)
