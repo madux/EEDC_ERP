@@ -1677,7 +1677,6 @@ class PortalRequest(http.Controller):
             request.env['request.line'].sudo().create(request_vals)
             counter += 1
     
-
     def generate_employee_transfer_line(self, DataItems, memo_id):
         counter = 1
         for rec in DataItems:
