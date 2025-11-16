@@ -472,7 +472,7 @@ class AccountDynamicReport(models.Model):
         _logger.info(f"Include Unassigned District: {include_unassigned} (branch_ids set: {bool(self.branch_ids)})")
         
         # branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
-        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','in', self.company_ids.ids)])
+        branches_to_process = self.branch_ids.filtered(lambda b: b.company_id == company.id) or self.env['multi.branch'].search([('company_id','=', company.id)])
         # False or [12, 34, 65]
         _logger.info(f"Branches to process: {len(branches_to_process)} - {[b.name for b in branches_to_process]}")
         
