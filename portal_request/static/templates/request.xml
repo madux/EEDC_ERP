@@ -2,7 +2,7 @@
     <data>
         <!-- request form template -->
         <!-- <template id="incident_mgt_template" name="Request Form"> -->
-        <template name="portal_request_success_template" id="portal_request_success_template">
+        <template name="Request Successful" id="portal_request_success_template">
             <t t-call="website.layout">
                 <div id="wrap" class="oe_structure oe_empty h-100">
                     <div class="container d-flex flex-column justify-content-center h-100">
@@ -531,14 +531,14 @@
                                                     <span class="s_website_form_label_content">Request Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-4">
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="request_date" name="request_date" required="true" labelfor="Request Date"/>
                                                 </div>
-                                                <label id="vendor_label" class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="vendor">
+                                                <label id="vendor_label" class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="vendor">
                                                     <span class="s_website_form_label_content">Partner</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm" id="vendor_div">
+                                                <div class="col-sm col-md-4" id="vendor_div">
                                                     <input id="vendor_id" class="form-control" name="vendor_id" labelfor="vendor_id"/>
                                                 </div>
 
@@ -551,6 +551,45 @@
                                                 </div>
                                             </div>
                                         </div> 
+                                        <!-- doform -->
+                                        <div id="currency_div" class="d-none s_website_form_field mb-3 col-12 s_website_form_custom" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <!-- Currency --> 
+                                                <label class="col-form-label s_website_form_label" style="width: 200px" Labelfor="Currency">
+                                                    <span class="s_website_form_label_content">Currency</span>
+                                                </label>
+                                                <div class="col-sm col-md-4">
+                                                    <select id="currency_id" name="currency_id" class="form-control form-control-sm" Labelfor="Currency">
+                                                        <t t-if="user_id.company_id.currency_id">
+                                                            <option selected="selected" t-att-value="user_id.company_id.currency_id.id">
+                                                                <span t-esc="user_id.company_id.currency_id.name"/>
+                                                            </option>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <option selected="selected" value=""> Select currency </option>
+                                                        </t>
+
+                                                        <t t-foreach="currency_ids" t-as="curr">
+                                                            <option t-att-value="curr.id">
+                                                                <span t-esc="curr.name"/>
+                                                            </option>
+                                                        </t>
+                                                    </select> 
+                                                </div>
+
+                                                <!-- Conversion Rate --> 
+                                                <label class="col-form-label s_website_form_label" style="width: 150px">
+                                                    <span class="s_website_form_label_content">Conversion Rate</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm col-md-4">
+                                                    <input type="number" class="form-control s_website_form_input"
+                                                        name="currency_rate" id="currency_rate" Labelfor="Currency rate"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- doform -->
+
 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
@@ -577,12 +616,13 @@
                                                 </div> 
                                             </div>
                                         </div> 
+                                         
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label"  labelfor="inputFollowers">
+                                                <label for="inputFollowers" class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" labelfor="inputFollowers">
                                                     <span class="s_website_form_label_content">Choose Followers</span>
                                                 </label>
-                                                 <div class="col-sm">
+                                                 <div class="col-sm col-md-8">
                                                     <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers"/>
                                                 </div> 
                                             </div>
@@ -764,7 +804,7 @@
                                                             </th>
                                                             <!-- 9 -->
                                                             <th id="note_label" width="20%">
-                                                                <label>More Details</label>
+                                                                <label>Enter More Details</label>
                                                             </th>
                                                             <!-- 10 -->
                                                             <th class="d-none" id="distance_from" width="20%">
