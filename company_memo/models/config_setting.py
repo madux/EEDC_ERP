@@ -467,15 +467,28 @@ class MemoConfig(models.Model):
     payment_processing_branch_id = fields.Many2one(
         'multi.branch',
         string='Payment Processing Branch',
-        domain="[('company_id', '=', payment_processing_company_id)]"
+        domain="[('company_id', '=', processing_company_id)]"
     )
     
-    @api.onchange('payment_processing_company_id')
+    processing_company_id = fields.Many2one(
+        'res.company',
+        string='Request Processing Company',
+        help="""If set, all payments for this memo type will be processed 
+        by this company (useful for SubCos without accounting systems)"""
+    )
+    
+    processing_branch_id = fields.Many2one(
+        'multi.branch',
+        string='Request Processing Branch',
+        domain="[('company_id', '=', processing_company_id)]"
+    )
+    
+    @api.onchange('processing_company_id')
     def _onchange_payment_processing_company(self):
         """Clear branch if company changes"""
-        if self.payment_processing_branch_id and \
-           self.payment_processing_branch_id.company_id != self.payment_processing_company_id:
-            self.payment_processing_branch_id = False
+        if self.processing_branch_id and \
+           self.processing_branch_id.company_id != self.processing_company_id:
+            self.processing_branch_id = False
 
     
     def write(self, vals):

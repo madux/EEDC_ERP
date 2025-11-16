@@ -135,7 +135,8 @@
                 </button>
 
                 <field name="invoice_date" position="after">
-                    <field name="branch_id" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}" />
+                    <field name="company_id" options="{'no_create': True, 'no_open': True}" readonly="0"/>
+                    <field name="branch_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}" />
                 </field>
 
                 

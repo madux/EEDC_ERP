@@ -14,7 +14,31 @@
                         <section id="website-app-section" class="page-section">  
                             <t t-call="portal_request.website_app_page"/>
                         </section>
-                        
+
+                        <!-- Status Flow Section -->
+                        <t t-if="req.computed_stage_ids">
+                            <div class="status-flow d-flex align-items-center justify-content-start mb-3">
+                                <t t-foreach="req.computed_stage_ids" t-as="stg">
+                                    <t t-set="stage_class" t-value="'stage-box px-3 py-2 text-uppercase fw-bold'"/>
+                                    <t t-if="stg.sequence &lt; req.stage_id.sequence">
+                                        <t t-set="stage_class" t-value="stage_class + ' completed'"/>
+                                    </t>
+                                    <t t-elif="stg.id == req.stage_id.id">
+                                        <t t-set="stage_class" t-value="stage_class + ' active'"/>
+                                    </t>
+
+                                    <div class="stage-step d-flex align-items-center">
+                                        <div t-att-class="stage_class">
+                                            <t t-esc="stg.name"/>
+                                        </div>
+                                        <t t-if="stg != req.computed_stage_ids[-1]">
+                                            <div class="arrow-right"></div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+
                         <div class="navbar-light py-0 mb-2 pt-1 p-2">
                             <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
                                 Back...

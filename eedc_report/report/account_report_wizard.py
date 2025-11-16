@@ -77,6 +77,7 @@ class AccountDynamicReport(models.Model):
     partner_id = fields.Many2one('res.partner', string='Partner')
     account_type = fields.Selection(
         [
+            ("all", "All Account Type"),
             ("asset_receivable", "Receivable"),
             ("asset_cash", "Bank and Cash"),
             ("asset_current", "Current Assets"),
@@ -337,11 +338,20 @@ class AccountDynamicReport(models.Model):
         year_start = end_date.replace(day=1, month=1)
         domain_end_date = end_date
         
-        tags = self.env['economic.tag'].search([('account_type', '=', self.account_type)])
+        # tags = self.env['economic.tag'].search([('account_type', '=', self.account_type)]) if self.account_head_type != 'all' else self.env['economic.tag'].search([])
+        if self.account_type != 'all':
+            tags = self.env['economic.tag'].search([('account_type', '=', self.account_type)])
+        else:
+            tags = self.env['economic.tag'].search([])
+            
         all_accounts = tags.mapped('account_ids')
         if not all_accounts: return []
 
-        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company.id)
+        base_domain = self._build_base_domain(year_start, domain_end_date, branch.id, company_id=False)
+        """args : company_id=False, this will not add company in the domain builder"""
+        if self.company_ids:
+            base_domain.append(('company_id', 'in', self.company_ids.ids))
+        
         base_domain.append(('account_id', 'in', all_accounts.ids))
         all_moves = self.env['account.move.line'].search(base_domain)
 
@@ -458,13 +468,15 @@ class AccountDynamicReport(models.Model):
         _logger.info(f"=== Starting _get_consolidated_district_data for company: {company.name} (ID: {company.id}) ===")
         _logger.info(f"Date range: {start_date} to {end_date}")
         
-        include_unassigned = not self.branch_ids
+        include_unassigned = not self.branch_ids # True if not branch ids
         _logger.info(f"Include Unassigned District: {include_unassigned} (branch_ids set: {bool(self.branch_ids)})")
         
-        branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
+        # branches_to_process = self.branch_ids or self.env['multi.branch'].search([('company_id','=', company.id)])
+        branches_to_process = self.branch_ids.filtered(lambda b: b.company_id == company.id) or self.env['multi.branch'].search([('company_id','=', company.id)])
+        # False or [12, 34, 65]
         _logger.info(f"Branches to process: {len(branches_to_process)} - {[b.name for b in branches_to_process]}")
         
-        if not branches_to_process and not include_unassigned:
+        if not branches_to_process and not include_unassigned: # [12, 34, 65]
             _logger.warning(f"No branches found for company {company.name}")
             return [], [], [], []
 
@@ -472,10 +484,15 @@ class AccountDynamicReport(models.Model):
             all_accounts = self.account_ids
             _logger.info(f"Using {len(all_accounts)} manually selected accounts")
         else:
-            all_accounts = self.env['account.account'].search([
-                ('company_id', '=', company.id), 
-                ('account_type', '=', self.account_type)
-            ])
+            if self.account_type != 'all':
+                all_accounts = self.env['account.account'].search([
+                    ('company_id', '=', company.id), 
+                    ('account_type', '=', self.account_type)
+                ])
+            else:
+                all_accounts = self.env['account.account'].search([
+                    ('company_id', '=', company.id), 
+                ])
             _logger.info(f"Found {len(all_accounts)} accounts with type '{self.account_type}' for company {company.name}")
 
         if not all_accounts:

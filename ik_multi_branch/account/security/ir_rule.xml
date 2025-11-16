@@ -195,21 +195,20 @@
             <field name="name">Memo: Cross-Company Product Access</field>
             <field name="model_id" ref="product.model_product_product"/>
             <field name="global" eval="False"/>
+            <field name="active" eval="False"/>
             <field name="domain_force">[
-                '|', '|', '|',
-                ('company_id', '=', user.company_id.id),
+                '|', '|',
                 ('company_id', 'in', user.company_ids.ids),
-                ('id', 'in', [
-                    line.product_id.id 
-                    for memo in user.env['memo.model'].search([
-                        '|', '|', '|',
-                        ('stage_id.approver_ids.user_id', '=', user.id),
-                        ('memo_setting_id.approver_ids.user_id', '=', user.id),
-                        ('users_followers.user_id', '=', user.id),
-                        ('employee_id.user_id', '=', user.id)
-                    ])
-                    for line in memo.product_ids
-                ])
+                ('id', 'in', user.env['memo.model'].search([
+                    '|', '|', '|',
+                    ('stage_id.approver_ids.user_id', '=', user.id),
+                    ('memo_setting_id.approver_ids.user_id', '=', user.id),
+                    ('users_followers.user_id', '=', user.id),
+                    ('employee_id.user_id', '=', user.id)
+                ]).mapped('product_ids.id')),
+                ('id', 'in', user.env['memo.line'].search([
+                    ('memo_id.stage_id.approver_ids.user_id', '=', user.id)
+                ]).mapped('product_id.id'))
             ]</field>
             <field name="groups" eval="[(4, ref('base.group_user'))]"/>
         </record>

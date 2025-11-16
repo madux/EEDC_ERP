@@ -177,7 +177,7 @@
             </record>
 
             
-<record id="user_see_documents_folder_company_related_record_10" model="ir.rule">
+            <record id="user_see_documents_folder_company_related_record_10" model="ir.rule">
                 <field name="name">documents.folder: Normal users see company related</field>
                 <field name="model_id" ref="documents.model_documents_folder"/>
                 <field name="global" eval="True"/>
