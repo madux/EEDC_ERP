@@ -207,6 +207,11 @@ class PortalRequest(http.Controller):
             "config_type_ids": memo_configs,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
+            # doform
+            "user_id": request.env.user,
+            "company_id": request.env.user.company_id,
+            "currency_ids": request.env['res.currency'].search([]),
+            # 
             "has_inter_district_configs": has_inter_district_configs,
         }
         
@@ -1405,7 +1410,7 @@ class PortalRequest(http.Controller):
             return {
                 "status": False,
                 "location_id": False,
-                "message": "Please ensure you select a product line", 
+                "message": "Select a product first, before adding unit quantity", 
                 }
  
     def generate_attachment(self, name, title, datas, res_id, model='memo.model'):
@@ -1495,6 +1500,7 @@ class PortalRequest(http.Controller):
                 "leave_end_date": leave_end_date,
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
                 "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
+                "currency_id": int(post.get("currency_id")) if post.get("currency_id") else False,
                 "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
                 "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
                 'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
@@ -1677,7 +1683,6 @@ class PortalRequest(http.Controller):
             request.env['request.line'].sudo().create(request_vals)
             counter += 1
     
-
     def generate_employee_transfer_line(self, DataItems, memo_id):
         counter = 1
         for rec in DataItems:
