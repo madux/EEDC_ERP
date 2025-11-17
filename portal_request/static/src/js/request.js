@@ -1087,8 +1087,9 @@ odoo.define('portal_request.portal_request', function (require) {
                 })();
 
                 var initType = $('#selectedRequestTypeId').val() || $('#selectRequestType').val();
+                var initDistrict = $('#selectRequestDistrict').val();
                 if (initType) {
-                    self.populateConfigOptionsForType(initType, false);
+                    self.populateConfigOptionsForType(initType, false, initDistrict);
                 }
             });
 
@@ -1676,8 +1677,9 @@ odoo.define('portal_request.portal_request', function (require) {
                 var selected_type_id = String(selectedTypeElement.val() || '');
                 var selected_option = selectedTypeElement.find('option:selected');
                 var memo_key = selected_option.attr('memo_key');
+                var selected_district = $('#selectRequestDistrict').val();
                 
-                console.log('Request Type changed:', selected_type_id, memo_key);
+                console.log('Request Type changed:', selected_type_id, memo_key, 'District:', selected_district);
                 
                 $('#selectedRequestTypeId').val(selected_type_id);
                 
@@ -1691,7 +1693,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
                 clearAllElement();
 
-                var info = self.populateConfigOptionsForType(selected_type_id, false);
+                var info = self.populateConfigOptionsForType(selected_type_id, false, selected_district);
                 
                 if (!info || info.matching === 0) {
                     $('#selectConfigOption').prop('disabled', true);
@@ -1709,6 +1711,35 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#selectConfigOption').prop('disabled', info.visible === 0);
                 console.log('Config options populated:', info);
             },
+
+            'change select[name=selectRequestDistrict]': function(ev){
+                var selectedDistrict = $(ev.target).val();
+                
+                console.log('District changed to:', selectedDistrict);
+                
+                // DO NOT clear staff_id and employee details - they remain the same
+                // Only clear request type and options below
+                
+                // Clear request type
+                $('#selectRequestType').val('');
+                $('#selectedRequestTypeId').val('');
+                
+                // Clear and hide everything else
+                clearAllElement();
+                
+                // Reload the page with new district parameter to get filtered configs
+                var urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('district_id', selectedDistrict);
+                
+                // Preserve memo_type_key if it exists
+                var memoTypeKey = urlParams.get('memo_type_key') || urlParams.get('memo_type');
+                if (memoTypeKey) {
+                    urlParams.set('memo_type_key', memoTypeKey);
+                }
+                
+                // Reload page with new district
+                window.location.href = window.location.pathname + '?' + urlParams.toString();
+            },
             
             // Inter-district Process block
             'change .isInterDistrictProcess': function(ev){
@@ -1722,7 +1753,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#selectConfigOptionId').val('');
                 $('#selectRequestOption').val('');
 
-                var info = self.populateConfigOptionsForType(selected_type_id, isChecked);
+                var info = self.populateConfigOptionsForType(selected_type_id, isChecked, selected_district);
                 console.log('populateConfigOptionsForType returned:', info);
 
                 if (info.matching > 0 && info.visible === 0) {
@@ -2370,8 +2401,10 @@ odoo.define('portal_request.portal_request', function (require) {
             }
          },
 
-        populateConfigOptionsForType: function(typeId, interProcessFilter){
+        populateConfigOptionsForType: function(typeId, interProcessFilter, districtId){
             typeId = String(typeId || '');
+            districtId = districtId ? parseInt(districtId) : null;
+
             var $select = $('#selectConfigOption');
             var $placeholder = $select.find('option[value=""]').clone();
             $select.empty().append($placeholder);
@@ -2391,6 +2424,15 @@ odoo.define('portal_request.portal_request', function (require) {
             } else {
                 toAdd = cache.noninter;
             }
+
+            if (districtId) {
+                toAdd = toAdd.filter(function($opt) {
+                    var optDistrict = $opt.attr('branch_id') || $opt.data('branch_id');
+                    return !optDistrict || parseInt(optDistrict) === districtId;
+                });
+            }
+
+            console.log('Options to add after filtering:', toAdd.length);
 
             toAdd.forEach(function($opt){
                 $select.append($opt.clone());

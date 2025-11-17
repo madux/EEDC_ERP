@@ -132,32 +132,44 @@ class Home(main.Home):
 class PortalRequest(http.Controller):
     
     
-    
-    # @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
-    # def portal_request(self):
-    #     """Request portal for employee / portal users
-    #     """
-    #     # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
-    #     memo_configs = request.env['memo.model'].sudo().get_user_configs()
-    #     vals = {
-    #         "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
-    #         "memo_key_ids": [{'id': 0, 'name': ''}],
-    #         "config_type_ids": memo_configs, # self.get_user_configs ,
-    #     }
-    #     return request.render("portal_request.portal_request_template", vals)
-    
     @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
     def portal_request(self, **kw):
         """Request portal for employee / portal users
         """
         
         memo_type_key = kw.get('memo_type_key', False) or kw.get('memo_type', False)
+        selected_district_id = kw.get('district_id', False)
         
         _logger.info(f"=== Portal Request Form (Create New) ===")
         _logger.info(f"URL params: {kw}")
         _logger.info(f"Extracted memo_type_key: {memo_type_key}")
         
+        user = request.env.user
+        employee = request.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+        user_branch = user.branch_id
+        
+        allowed_branches_ids = set()
+        if user.branch_id:
+            allowed_branches_ids.add(user.branch_id.id)
+        if user.branch_ids:
+            allowed_branches_ids.update(user.branch_ids.ids)
+            
+        allowed_branches_ids = list(allowed_branches_ids) if allowed_branches_ids else []
+        
+        if allowed_branches_ids:
+            if not selected_district_id or int(selected_district_id) not in allowed_branches_ids:
+                selected_district_id = user_branch.id if user_branch else (allowed_branches_ids[0] if allowed_branches_ids else False)
+            else:
+                selected_district_id = int(selected_district_id)
+        else:
+            selected_district_id = False
+            _logger.warning(f"User {user.name} has no branch configured")
+        
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
+        filtered_configs = request.env['memo.config'].sudo()
+        for config in memo_configs:
+            if config.branch_id.id == selected_district_id:
+                filtered_configs += config
         source_location_data_ids = request.env['stock.location'].sudo().search(
             [('usage', '=', 'internal')]
         )
@@ -168,15 +180,15 @@ class PortalRequest(http.Controller):
             ]
         )
         
-        _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
+        _logger.info(f"Found {len(filtered_configs)} configs for user: {filtered_configs.mapped('name')}")
         
         # memo_type_ids = request.env['memo.type'].sudo().search([
         #     ('allow_for_publish', '=', True),
         #     ('active', '=', True)
         # ])
-        memo_type_ids = memo_configs.mapped('memo_type')
+        memo_type_ids = filtered_configs.mapped('memo_type')
         
-        has_inter_district_configs = any(config.inter_district for config in memo_configs)
+        has_inter_district_configs = any(config.inter_district for config in filtered_configs)
         _logger.info(f"Has inter-district configs: {has_inter_district_configs}")
         
         selected_memo_type_id = False
@@ -204,7 +216,7 @@ class PortalRequest(http.Controller):
             "source_location_data_ids": source_location_data_ids,
             "destination_location_data_ids": destination_location_data_ids,
             "memo_type_ids": memo_type_ids,
-            "config_type_ids": memo_configs,
+            "config_type_ids": filtered_configs,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
             # doform
@@ -213,6 +225,10 @@ class PortalRequest(http.Controller):
             "currency_ids": request.env['res.currency'].search([]),
             # 
             "has_inter_district_configs": has_inter_district_configs,
+            "user_branch": user_branch,
+            "allowed_branches": request.env['multi.branch'].sudo().browse(allowed_branches_ids),
+            "selected_district_id": selected_district_id,
+            "show_branch_selector": len(allowed_branches_ids) > 1,
         }
         
         _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
