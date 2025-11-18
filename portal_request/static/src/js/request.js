@@ -1823,6 +1823,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 var self = this;
                 var isChecked = $(ev.target).is(':checked');
                 var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
+                var selected_district = $('#selectRequestDistrict').val();
                 console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id);
 
                 $('#selectConfigOption').val('');
