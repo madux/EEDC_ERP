@@ -633,7 +633,7 @@
                                                     <span class="s_website_form_label_content">Leave Type</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-3">
                                                     <select id="leave_type_id" name="leave_type_id" class="form-control form-control-sm" labelfor="Leave Type">
                                                         <option selected="selected" value="">-- Select leave type --</option>
                                                         <t t-foreach="leave_type_ids" t-as="lv">
@@ -643,16 +643,16 @@
                                                         </t>
                                                     </select>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_start_date">
-                                                    <span class="s_website_form_label_content">Leave Start Date</span>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_start_date">
+                                                    <span class="s_website_form_label_content">Start Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
                                                     <input type="hidden" class="form-control s_website_form_input" name="leave_remaining" id="leave_remaining"/>
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_date" name="leave_start_datex" required="false" labelfor="Leave start date"/>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_end_datex">
-                                                    <span class="s_website_form_label_content">Leave End Date</span>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_end_datex">
+                                                    <span class="s_website_form_label_content">End Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
@@ -682,22 +682,22 @@
                                                     <span class="s_website_form_label_content">Taken Leave</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-1">
                                                     <span id="leave_taken" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </div> 
                                             
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_remain">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 170px" for="leave_remain">
                                                     <span class="s_website_form_label_content">Remaining Leave</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-1">
                                                     <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </div> 
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_reliever">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_reliever">
                                                     <span class="s_website_form_label_content">Reliever</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-4">
                                                     <input id="leave_reliever" class="form-control" name="leave_reliever" labelfor="leave_reliever"/>
                                                 </div> 
                                             </div>

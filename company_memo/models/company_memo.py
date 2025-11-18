@@ -541,7 +541,7 @@ class Memo_Model(models.Model):
         if self.leave_start_date and self.leave_end_date:
             leave_duration = self.env['hr.leave']._get_number_of_days(
                 self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
-        self.leave_duration = leave_duration
+        self.leave_duration = leave_duration + 1
         
         # for rec in self:
         #     if rec.leave_start_date and rec.leave_end_date:
