@@ -19,7 +19,8 @@
                             <a t-if="current_memo_type_key" 
                                 t-attf-href="/portal-request?memo_type_key={{current_memo_type_key}}" 
                                 class="btn btn-primary">
-                                    <i class="fa fa-plus"/>&#160;Create New&#160;<span t-esc="current_memo_type_key.replace('_', ' ').title()"/>&#160;Request
+                                    <!-- <i class="fa fa-plus"/>&#160;Create New&#160;<span t-esc="current_memo_type_key.replace('_', ' ').title()"/>&#160;Request -->
+                                    <i class="fa fa-plus"/>&#160;Create New&#160;<span t-esc="current_memo_display_name"/>&#160;Request
                             </a>
                             <a t-else="" 
                                 href="/portal-request" 
@@ -290,7 +291,7 @@
                                         <a href="/my/requests/soe" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_7List">Retirement of Expense</a>
                                         <div class="collapse" data-bs-parent="#myCollapseList" role="tabpanel" id="myCollapseTab488915_7List">
                                             <div class="card-body">
-                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Statement of Expense request you have initiated as a portal User.</p>
+                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Retirement of Expense request you have initiated as a portal User.</p>
                                                 <a id="soe_view" href="/my/requests/soe" class="btn btn-secondary btn-sm">View Requests</a>
                                             </div>
                                         </div>

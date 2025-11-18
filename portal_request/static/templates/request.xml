@@ -176,6 +176,22 @@
                                                         </t> 
                                                     </select>
                                                 </div>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestDistrict" t-if="show_branch_selector">
+                                                    <span class="s_website_form_label_content">Request District</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm" t-if="show_branch_selector">
+                                                    <select name="selectRequestDistrict" id="selectRequestDistrict" required="required" class="form-control" labelfor="Request District">
+                                                        <t t-foreach="allowed_branches" t-as="branch">
+                                                            <option t-att-value="branch.id" 
+                                                                    t-att-id="branch.id"
+                                                                    t-att-selected="'selected' if branch.id == user_branch.id else None">
+                                                                <span t-esc="branch.name"/>
+                                                            </option>
+                                                        </t> 
+                                                    </select>
+                                                </div>
+                                                <input type="hidden" name="selectRequestDistrict" id="selectRequestDistrict" t-if="not show_branch_selector" t-att-value="user_branch.id"/>
                                             </div>
                                         </div>
                                         <!-- end of new field -->
@@ -248,7 +264,8 @@
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="config_type_ids" t-as="ct">
                                                             <option t-att-value="ct.id" t-att-id="ct.id" t-att-memo_key_id="ct.memo_type.id"
-                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'">
+                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'"
+                                                            t-att-branch_id="ct.branch_id.id if ct.branch_id else ''">
                                                                 <span t-esc="ct.name"/>
                                                             </option>
                                                             <t t-if="ct.inter_district"> (Inter-District)</t>
@@ -633,7 +650,7 @@
                                                     <span class="s_website_form_label_content">Leave Type</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-3">
                                                     <select id="leave_type_id" name="leave_type_id" class="form-control form-control-sm" labelfor="Leave Type">
                                                         <option selected="selected" value="">-- Select leave type --</option>
                                                         <t t-foreach="leave_type_ids" t-as="lv">
@@ -643,16 +660,16 @@
                                                         </t>
                                                     </select>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_start_date">
-                                                    <span class="s_website_form_label_content">Leave Start Date</span>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_start_date">
+                                                    <span class="s_website_form_label_content">Start Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
                                                     <input type="hidden" class="form-control s_website_form_input" name="leave_remaining" id="leave_remaining"/>
                                                     <input type="text" class="form-control datepicker s_website_form_input" id="leave_start_date" name="leave_start_datex" required="false" labelfor="Leave start date"/>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_end_datex">
-                                                    <span class="s_website_form_label_content">Leave End Date</span>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_end_datex">
+                                                    <span class="s_website_form_label_content">End Date</span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
@@ -682,22 +699,22 @@
                                                     <span class="s_website_form_label_content">Taken Leave</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-1">
                                                     <span id="leave_taken" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </div> 
                                             
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_remain">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 170px" for="leave_remain">
                                                     <span class="s_website_form_label_content">Remaining Leave</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-1">
                                                     <span id="leave_remain" class="s_website_form_mark" style="font-size: 2em; font-weight: bold; white-space:nowrap;">0</span> Days
                                                 </div> 
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="leave_reliever">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 100px" for="leave_reliever">
                                                     <span class="s_website_form_label_content">Reliever</span>
                                                     <span class="s_website_form_mark"> </span>
                                                 </label>
-                                                <div class="col-sm">
+                                                <div class="col-sm col-md-4">
                                                     <input id="leave_reliever" class="form-control" name="leave_reliever" labelfor="leave_reliever"/>
                                                 </div> 
                                             </div>
@@ -966,10 +983,10 @@
                                         </div>
                                     </div>
                                     <div class="card bg-white" data-name="Item">
-                                        <a href="/my/requests/soe" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_7">Statement of Expense</a>
+                                        <a href="/my/requests/soe" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_7">Retirement of Expense</a>
                                         <div class="collapse" data-bs-parent="#myCollapse" role="tabpanel" id="myCollapseTab488915_7">
                                             <div class="card-body">
-                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Statement of Expense request you have initiated as a portal User.</p>
+                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Retirement of Expense request you have initiated as a portal User.</p>
                                                 <a id="soe_view" href="/my/requests/soe" class="btn btn-secondary btn-sm">View Requests</a>
                                             </div>
                                         </div>
