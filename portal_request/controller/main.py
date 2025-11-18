@@ -1766,6 +1766,22 @@ class PortalRequest(http.Controller):
         urlparts = urllib.parse.urlsplit(request.url)
         query_string = urlparts.query
         _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
+        
+    def _get_memo_display_name(self, memo_key):
+        """Return user-friendly display name for memo types"""
+        display_names = {
+            'soe': 'Retirement',
+            'cash_advance': 'Cash Advance',
+            'leave_request': 'Leave',
+            'material_request': 'Material Request',
+            'procurement_request': 'Procurement',
+            'vehicle_request': 'Vehicle Request',
+            'server_access': 'Server Access',
+            'employee_update': 'Employee Update',
+            'Payment': 'Payment',
+            'sale_request': 'Sales Request',
+        }
+        return display_names.get(memo_key, memo_key.replace('_', ' ').title())
 
 
     
@@ -1997,6 +2013,7 @@ class PortalRequest(http.Controller):
             'requests': memo_records,
             'memo_requests': memo_records,
             'current_memo_type_key': type if type else False,
+            'current_memo_display_name': self._get_memo_display_name(type) if type else 'All',
             'current_filter': filter_type,
             'page_name': 'my_requests',
             'current_page': current_page,

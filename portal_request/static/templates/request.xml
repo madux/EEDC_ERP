@@ -983,10 +983,10 @@
                                         </div>
                                     </div>
                                     <div class="card bg-white" data-name="Item">
-                                        <a href="/my/requests/soe" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_7">Statement of Expense</a>
+                                        <a href="/my/requests/soe" role="tab" data-bs-toggle="collapse" aria-expanded="false" class="collapsed card-header o_default_snippet_text" data-bs-target="#myCollapseTab488915_7">Retirement of Expense</a>
                                         <div class="collapse" data-bs-parent="#myCollapse" role="tabpanel" id="myCollapseTab488915_7">
                                             <div class="card-body">
-                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Statement of Expense request you have initiated as a portal User.</p>
+                                                <p class="card-text o_default_snippet_text" id="soe">This displays the list of all Retirement of Expense request you have initiated as a portal User.</p>
                                                 <a id="soe_view" href="/my/requests/soe" class="btn btn-secondary btn-sm">View Requests</a>
                                             </div>
                                         </div>
