@@ -1811,7 +1811,8 @@ class PortalRequest(http.Controller):
         all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].sudo().search([])]
         
         memo_type = ['Payment', 'Loan'] if type in ['Payment', 'Loan'] \
-            else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
+            else ['soe'] if type == 'soe' \
+            else ['cash_advance'] if type == 'cash_advance' \
             else ['leave_request'] if type in ['leave_request'] \
             else ['employee_update'] if type in ['employee_update'] \
             else ['Internal', 'procurement_request', 'sale_request', 'vehicle_request', 'material_request'] \
