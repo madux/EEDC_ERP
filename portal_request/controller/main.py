@@ -2117,6 +2117,12 @@ class PortalRequest(http.Controller):
     def my_single_request(self, id):
         id = int(id) if id else 0
         """This route is used to call the requesters or user record for display"""
+        
+        referer = request.httprequest.environ.get('HTTP_REFERER', '/my/requests')
+        back_url = '/my/requests'
+        if 'memo_type' in referer or '/my/requests/' in referer:
+            back_url = referer
+            
         user = request.env.user
         request_id = request.env['memo.model'].sudo()
         attachment = request.env['ir.attachment'].sudo()
@@ -2160,6 +2166,8 @@ class PortalRequest(http.Controller):
             # "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
             "number_of_days_display": number_of_days_display,#leave_allocation_id.number_of_days_display,
             "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
+            'back_url': back_url,
+            'memo_display_name': self._get_memo_display_name(requests.memo_type_key),
         }
         return request.render("portal_request.request_form_template", values) 
     

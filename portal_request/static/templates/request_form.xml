@@ -40,11 +40,12 @@
                         </t>
 
                         <div class="navbar-light py-0 mb-2 pt-1 p-2">
-                            <!-- <a id="previous" href="/my/requests" class="btn btn-secondary btn-sm">
+                            <!-- <a id="previous" 
+                             t-attf-href="/my/requests/{{req.memo_type_key}}?memo_type={{req.memo_type_key}}" class="btn btn-secondary btn-sm">
                                 Back...
                             </a> -->
                              <a id="previous" 
-                                t-attf-href="/my/requests/{{req.memo_type_key}}?memo_type={{req.memo_type_key}}" 
+                                t-att-href="back_url" 
                                 class="btn btn-secondary btn-sm">
                                     Back...
                             </a>
