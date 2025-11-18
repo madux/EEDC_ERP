@@ -1061,13 +1061,26 @@ odoo.define('portal_request.portal_request', function (require) {
                         var val = $opt.val();
                         if (val === '') return;
                         
-                        var memo_type_id = getOptionMemoTypeId($opt);
-                        var rawInter = ($opt.data('inter_district') !== undefined) ? 
-                            $opt.data('inter_district') : $opt.attr('inter_district');
+                        var memo_type_id = String($opt.attr('memo_key_id') || '');
+                        var rawInter = $opt.attr('inter_district');
                         var isInterProcess = isTrueValue(rawInter);
+                        
+                        // Get branch_id - try multiple approaches
+                        var branchId = $opt.attr('branch_id') || $opt.data('branch_id');
+                        if (branchId) {
+                            branchId = String(branchId);
+                        }
+                        
+                        console.log('Building cache for:', $opt.text(), {
+                            memo_type_id: memo_type_id,
+                            branch_id: branchId,
+                            inter: isInterProcess
+                        });
 
+                        // Initialize cache structure
                         if (!self.configOptionsCache[memo_type_id]) {
-                            self.configOptionsCache[memo_type_id] = { 
+                            self.configOptionsCache[memo_type_id] = {
+                                byBranch: {},
                                 inter: [], 
                                 noninter: [], 
                                 all: [] 
@@ -1075,22 +1088,73 @@ odoo.define('portal_request.portal_request', function (require) {
                         }
                         
                         var cloneOpt = $opt.clone();
-                        self.configOptionsCache[memo_type_id].all.push(cloneOpt);
                         
+                        // Store in 'all' array
+                        self.configOptionsCache[memo_type_id].all.push(cloneOpt.clone());
+                        
+                        // Store by inter/non-inter
                         if (isInterProcess) {
-                            self.configOptionsCache[memo_type_id].inter.push(cloneOpt);
+                            self.configOptionsCache[memo_type_id].inter.push(cloneOpt.clone());
                         } else {
-                            self.configOptionsCache[memo_type_id].noninter.push(cloneOpt);
+                            self.configOptionsCache[memo_type_id].noninter.push(cloneOpt.clone());
+                        }
+                        
+                        // Store by branch
+                        if (branchId) {
+                            if (!self.configOptionsCache[memo_type_id].byBranch[branchId]) {
+                                self.configOptionsCache[memo_type_id].byBranch[branchId] = {
+                                    inter: [],
+                                    noninter: [],
+                                    all: []
+                                };
+                            }
+                            
+                            self.configOptionsCache[memo_type_id].byBranch[branchId].all.push(cloneOpt.clone());
+                            
+                            if (isInterProcess) {
+                                self.configOptionsCache[memo_type_id].byBranch[branchId].inter.push(cloneOpt.clone());
+                            } else {
+                                self.configOptionsCache[memo_type_id].byBranch[branchId].noninter.push(cloneOpt.clone());
+                            }
                         }
                     });
-                    console.log('configOptionsCache built:', Object.keys(self.configOptionsCache));
+                    
+                    console.log('=== FINAL CACHE STRUCTURE ===');
+                    Object.keys(self.configOptionsCache).forEach(function(typeId){
+                        var cache = self.configOptionsCache[typeId];
+                        console.log('Type', typeId, ':', {
+                            total: cache.all.length,
+                            branches: Object.keys(cache.byBranch),
+                            inter: cache.inter.length,
+                            noninter: cache.noninter.length
+                        });
+                    });
                 })();
 
                 var initType = $('#selectedRequestTypeId').val() || $('#selectRequestType').val();
                 var initDistrict = $('#selectRequestDistrict').val();
+                var initInterProcess = $('#isInterDistrictProcess').is(':checked');
+                
+                console.log('=== INITIAL POPULATION ===');
+                console.log('Initial Type:', initType);
+                console.log('Initial District:', initDistrict);
+                console.log('Initial Inter-Process:', initInterProcess);
+                
                 if (initType) {
-                    self.populateConfigOptionsForType(initType, false, initDistrict);
+                    // Apply district filter on initial load
+                    var info = self.populateConfigOptionsForType(initType, initInterProcess, initDistrict);
+                    
+                    console.log('Initial population result:', info);
+                    
+                    // Show/hide inter-district checkbox based on what's available for this district
+                    if (info.hasInter && info.hasNonInter) {
+                        $('#div_inter_district_process').removeClass('d-none');
+                    } else {
+                        $('#div_inter_district_process').addClass('d-none');
+                        $('#isInterDistrictProcess').prop('checked', false);
+                    }
                 }
+                console.log('=== END INITIAL POPULATION ===');
             });
 
         },
@@ -1355,7 +1419,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             var curType = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val() || '');
                             if (curType && typeof self.populateConfigOptionsForType === 'function') {
                                 var interState = $('#isInterDistrictProcess').is(':checked');
-                                self.populateConfigOptionsForType(curType, interState ? true : false);
+                                var currentDistrict = $('#selectRequestDistrict').val();
+                                console.log('Re-populating after staff_id change with district:', currentDistrict);
+                                self.populateConfigOptionsForType(curType, interState ? true : false, currentDistrict);
                             }
                         }
                     }).guardedCatch(function (error) {
@@ -1713,32 +1779,43 @@ odoo.define('portal_request.portal_request', function (require) {
             },
 
             'change select[name=selectRequestDistrict]': function(ev){
-                var selectedDistrict = $(ev.target).val();
+                var self = this;
+                var selected_district = $(ev.target).val();
+                var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
+                var isInterProcess = $('#isInterDistrictProcess').is(':checked');
                 
-                console.log('District changed to:', selectedDistrict);
+                console.log('District changed to:', selected_district);
+                console.log('Current request type:', selected_type_id);
                 
-                // DO NOT clear staff_id and employee details - they remain the same
-                // Only clear request type and options below
+                $('#selectConfigOption').val('');
+                $('#selectedRequestOptionId').val('');
+                $('#selectConfigOptionId').val('');
+                $('#selectRequestOption').val('');
                 
-                // Clear request type
-                $('#selectRequestType').val('');
-                $('#selectedRequestTypeId').val('');
-                
-                // Clear and hide everything else
                 clearAllElement();
                 
-                // Reload the page with new district parameter to get filtered configs
-                var urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('district_id', selectedDistrict);
-                
-                // Preserve memo_type_key if it exists
-                var memoTypeKey = urlParams.get('memo_type_key') || urlParams.get('memo_type');
-                if (memoTypeKey) {
-                    urlParams.set('memo_type_key', memoTypeKey);
+                // Re-populate options for current type + new district
+                if (selected_type_id) {
+                    var info = self.populateConfigOptionsForType(
+                        selected_type_id, 
+                        isInterProcess ? true : false, 
+                        selected_district
+                    );
+                    
+                    console.log('Repopulated with', info.visible, 'options for district', selected_district);
+                    
+                    // Show/hide inter-district checkbox
+                    if (info.hasInter && info.hasNonInter) {
+                        $('#div_inter_district_process').removeClass('d-none');
+                    } else {
+                        $('#div_inter_district_process').addClass('d-none');
+                        $('#isInterDistrictProcess').prop('checked', false);
+                    }
+                    
+                    if (info.visible === 0) {
+                        alert('No request configurations available for this district. Please select a different district or request type.');
+                    }
                 }
-                
-                // Reload page with new district
-                window.location.href = window.location.pathname + '?' + urlParams.toString();
             },
             
             // Inter-district Process block
@@ -1772,6 +1849,12 @@ odoo.define('portal_request.portal_request', function (require) {
             'change select[name=selectConfigOption]': function(ev){
                 // let selectedTarget = $(ev.target).val();
                 let selectedTarget = $(ev.target);
+                let selectedValue = selectedTarget.val();
+
+                if (!selectedValue || selectedValue === '') {
+                    console.log('No option selected, skipping validation');
+                    return;
+                }
                 let sro = $('#selectConfigOption option:selected')[0]
                 $('#existing_ref_label').text("Existing Ref #");
                 $('#div_existing_order').addClass('d-none');
@@ -1783,7 +1866,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     route: `/check-configured-stage`,
                     params: {
                         'staff_num': staff_num,
-                        'request_config_option': selectedTarget.val(),
+                        'request_config_option': selectedValue,
                     },
                 }).then(function (data) {
                     console.log('checking if stage is configured => '+ JSON.stringify(data))
@@ -2401,9 +2484,9 @@ odoo.define('portal_request.portal_request', function (require) {
             }
          },
 
-        populateConfigOptionsForType: function(typeId, interProcessFilter, districtId){
+       populateConfigOptionsForType: function(typeId, interProcessFilter, districtId){
             typeId = String(typeId || '');
-            districtId = districtId ? parseInt(districtId) : null;
+            districtId = districtId ? String(districtId) : null;
 
             var $select = $('#selectConfigOption');
             var $placeholder = $select.find('option[value=""]').clone();
@@ -2412,40 +2495,60 @@ odoo.define('portal_request.portal_request', function (require) {
             var cache = this.configOptionsCache[typeId];
             if (!cache) {
                 $select.prop('disabled', true);
-                console.log('populateConfigOptionsForType: no cache for typeId=', typeId);
+                console.log('No cache for typeId:', typeId);
                 return { matching: 0, visible: 0, hasInter: false, hasNonInter: false };
             }
 
             var toAdd = [];
-            if (interProcessFilter === null) {
-                toAdd = cache.all;
-            } else if (interProcessFilter === true) {
-                toAdd = cache.inter;
+            
+            // Filter by district FIRST, then by inter/non-inter
+            if (districtId && cache.byBranch[districtId]) {
+                console.log('Using district filter:', districtId);
+                if (interProcessFilter === null) {
+                    toAdd = cache.byBranch[districtId].all;
+                } else if (interProcessFilter === true) {
+                    toAdd = cache.byBranch[districtId].inter;
+                } else {
+                    toAdd = cache.byBranch[districtId].noninter;
+                }
             } else {
-                toAdd = cache.noninter;
+                console.log('No district filter, using all options');
+                if (interProcessFilter === null) {
+                    toAdd = cache.all;
+                } else if (interProcessFilter === true) {
+                    toAdd = cache.inter;
+                } else {
+                    toAdd = cache.noninter;
+                }
             }
 
-            if (districtId) {
-                toAdd = toAdd.filter(function($opt) {
-                    var optDistrict = $opt.attr('branch_id') || $opt.data('branch_id');
-                    return !optDistrict || parseInt(optDistrict) === districtId;
-                });
-            }
-
-            console.log('Options to add after filtering:', toAdd.length);
+            console.log('Adding', toAdd.length, 'options to dropdown');
 
             toAdd.forEach(function($opt){
                 $select.append($opt.clone());
             });
 
             $select.prop('disabled', toAdd.length === 0);
+            
+            // Calculate hasInter/hasNonInter based on what's available for this district
+            var hasInter = false;
+            var hasNonInter = false;
+            
+            if (districtId && cache.byBranch[districtId]) {
+                hasInter = cache.byBranch[districtId].inter.length > 0;
+                hasNonInter = cache.byBranch[districtId].noninter.length > 0;
+            } else {
+                hasInter = cache.inter.length > 0;
+                hasNonInter = cache.noninter.length > 0;
+            }
+            
             return {
                 matching: cache.all.length,
                 visible: toAdd.length,
-                hasInter: cache.inter.length > 0,
-                hasNonInter: cache.noninter.length > 0
+                hasInter: hasInter,
+                hasNonInter: hasNonInter
             };
-        }
+        },
 
     });
 

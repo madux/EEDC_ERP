@@ -166,10 +166,6 @@ class PortalRequest(http.Controller):
             _logger.warning(f"User {user.name} has no branch configured")
         
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
-        filtered_configs = request.env['memo.config'].sudo()
-        for config in memo_configs:
-            if config.branch_id.id == selected_district_id:
-                filtered_configs += config
         source_location_data_ids = request.env['stock.location'].sudo().search(
             [('usage', '=', 'internal')]
         )
@@ -180,15 +176,15 @@ class PortalRequest(http.Controller):
             ]
         )
         
-        _logger.info(f"Found {len(filtered_configs)} configs for user: {filtered_configs.mapped('name')}")
+        _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
         
         # memo_type_ids = request.env['memo.type'].sudo().search([
         #     ('allow_for_publish', '=', True),
         #     ('active', '=', True)
         # ])
-        memo_type_ids = filtered_configs.mapped('memo_type')
+        memo_type_ids = memo_configs.mapped('memo_type')
         
-        has_inter_district_configs = any(config.inter_district for config in filtered_configs)
+        has_inter_district_configs = any(config.inter_district for config in memo_configs)
         _logger.info(f"Has inter-district configs: {has_inter_district_configs}")
         
         selected_memo_type_id = False
@@ -216,7 +212,7 @@ class PortalRequest(http.Controller):
             "source_location_data_ids": source_location_data_ids,
             "destination_location_data_ids": destination_location_data_ids,
             "memo_type_ids": memo_type_ids,
-            "config_type_ids": filtered_configs,
+            "config_type_ids": memo_configs,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
             # doform
@@ -234,7 +230,7 @@ class PortalRequest(http.Controller):
         _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
         
         return request.render("portal_request.portal_request_template", vals)
-
+    
     
     @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
     def reset_password(self, **post):

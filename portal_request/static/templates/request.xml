@@ -264,7 +264,8 @@
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="config_type_ids" t-as="ct">
                                                             <option t-att-value="ct.id" t-att-id="ct.id" t-att-memo_key_id="ct.memo_type.id"
-                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'">
+                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'"
+                                                            t-att-branch_id="ct.branch_id.id if ct.branch_id else ''">
                                                                 <span t-esc="ct.name"/>
                                                             </option>
                                                             <t t-if="ct.inter_district"> (Inter-District)</t>
