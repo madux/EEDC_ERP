@@ -132,30 +132,38 @@ class Home(main.Home):
 class PortalRequest(http.Controller):
     
     
-    
-    # @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
-    # def portal_request(self):
-    #     """Request portal for employee / portal users
-    #     """
-    #     # memo_config_memo_type_ids = [mt.memo_type.id for mt in request.env["memo.config"].sudo().search([])]
-    #     memo_configs = request.env['memo.model'].sudo().get_user_configs()
-    #     vals = {
-    #         "leave_type_ids": request.env["hr.leave.type"].sudo().search([('company_id', '=', request.env.user.company_id.id)]),
-    #         "memo_key_ids": [{'id': 0, 'name': ''}],
-    #         "config_type_ids": memo_configs, # self.get_user_configs ,
-    #     }
-    #     return request.render("portal_request.portal_request_template", vals)
-    
     @http.route(["/portal-request"], type='http', auth='user', website=True, website_published=True)
     def portal_request(self, **kw):
         """Request portal for employee / portal users
         """
         
         memo_type_key = kw.get('memo_type_key', False) or kw.get('memo_type', False)
+        selected_district_id = kw.get('district_id', False)
         
         _logger.info(f"=== Portal Request Form (Create New) ===")
         _logger.info(f"URL params: {kw}")
         _logger.info(f"Extracted memo_type_key: {memo_type_key}")
+        
+        user = request.env.user
+        employee = request.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+        user_branch = user.branch_id
+        
+        allowed_branches_ids = set()
+        if user.branch_id:
+            allowed_branches_ids.add(user.branch_id.id)
+        if user.branch_ids:
+            allowed_branches_ids.update(user.branch_ids.ids)
+            
+        allowed_branches_ids = list(allowed_branches_ids) if allowed_branches_ids else []
+        
+        if allowed_branches_ids:
+            if not selected_district_id or int(selected_district_id) not in allowed_branches_ids:
+                selected_district_id = user_branch.id if user_branch else (allowed_branches_ids[0] if allowed_branches_ids else False)
+            else:
+                selected_district_id = int(selected_district_id)
+        else:
+            selected_district_id = False
+            _logger.warning(f"User {user.name} has no branch configured")
         
         memo_configs = request.env['memo.model'].sudo().get_user_configs()
         source_location_data_ids = request.env['stock.location'].sudo().search(
@@ -213,12 +221,16 @@ class PortalRequest(http.Controller):
             "currency_ids": request.env['res.currency'].search([]),
             # 
             "has_inter_district_configs": has_inter_district_configs,
+            "user_branch": user_branch,
+            "allowed_branches": request.env['multi.branch'].sudo().browse(allowed_branches_ids),
+            "selected_district_id": selected_district_id,
+            "show_branch_selector": len(allowed_branches_ids) > 1,
         }
         
         _logger.info(f"Rendering portal request with selected_memo_type_id: {selected_memo_type_id}")
         
         return request.render("portal_request.portal_request_template", vals)
-
+    
     
     @http.route(['/reset/password'], type='http', website=True, auth="none", csrf=False)
     def reset_password(self, **post):
@@ -1754,6 +1766,22 @@ class PortalRequest(http.Controller):
         urlparts = urllib.parse.urlsplit(request.url)
         query_string = urlparts.query
         _logger.info(f"URL PARTS = {urlparts} QUERY STRING IS {query_string}")
+        
+    def _get_memo_display_name(self, memo_key):
+        """Return user-friendly display name for memo types"""
+        display_names = {
+            'soe': 'Retirement',
+            'cash_advance': 'Cash Advance',
+            'leave_request': 'Leave',
+            'material_request': 'Material Request',
+            'procurement_request': 'Procurement',
+            'vehicle_request': 'Vehicle Request',
+            'server_access': 'Server Access',
+            'employee_update': 'Employee Update',
+            'Payment': 'Payment',
+            'sale_request': 'Sales Request',
+        }
+        return display_names.get(memo_key, memo_key.replace('_', ' ').title())
 
 
     
@@ -1799,7 +1827,8 @@ class PortalRequest(http.Controller):
         all_memo_type_keys = [rec.memo_key for rec in request.env['memo.type'].sudo().search([])]
         
         memo_type = ['Payment', 'Loan'] if type in ['Payment', 'Loan'] \
-            else ['soe', 'cash_advance'] if type in ['soe', 'cash_advance'] \
+            else ['soe'] if type == 'soe' \
+            else ['cash_advance'] if type == 'cash_advance' \
             else ['leave_request'] if type in ['leave_request'] \
             else ['employee_update'] if type in ['employee_update'] \
             else ['Internal', 'procurement_request', 'sale_request', 'vehicle_request', 'material_request'] \
@@ -1984,6 +2013,7 @@ class PortalRequest(http.Controller):
             'requests': memo_records,
             'memo_requests': memo_records,
             'current_memo_type_key': type if type else False,
+            'current_memo_display_name': self._get_memo_display_name(type) if type else 'All',
             'current_filter': filter_type,
             'page_name': 'my_requests',
             'current_page': current_page,
@@ -2087,6 +2117,12 @@ class PortalRequest(http.Controller):
     def my_single_request(self, id):
         id = int(id) if id else 0
         """This route is used to call the requesters or user record for display"""
+        
+        referer = request.httprequest.environ.get('HTTP_REFERER', '/my/requests')
+        back_url = '/my/requests'
+        if 'memo_type' in referer or '/my/requests/' in referer:
+            back_url = referer
+            
         user = request.env.user
         request_id = request.env['memo.model'].sudo()
         attachment = request.env['ir.attachment'].sudo()
@@ -2130,6 +2166,8 @@ class PortalRequest(http.Controller):
             # "number_of_days_display": requests.employee_id.allocation_remaining_display, # leave_allocation_id.number_of_days_display,
             "number_of_days_display": number_of_days_display,#leave_allocation_id.number_of_days_display,
             "description_body": BeautifulSoup(requests.description or "-", "html.parser").get_text(),
+            'back_url': back_url,
+            'memo_display_name': self._get_memo_display_name(requests.memo_type_key),
         }
         return request.render("portal_request.request_form_template", values) 
     
