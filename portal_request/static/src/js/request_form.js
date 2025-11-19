@@ -1148,50 +1148,120 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 });
             },
 
+            // 'click .approve_request': function(ev){
+            //     let targetElementId = $('.record_id').attr('id');
+            //     let $btn = $('.approve_request');
+            //     let $btnHtml = $btn.html()
+            //     $btn.attr('disabled', 'disabled');
+            //     $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+            //     $.blockUI({
+            //         'message': '<h2 class="card-name">Approving ...</h2>'
+            //     });
+            //     this._rpc({
+            //         route: `/my/request/update`,
+            //         params: {
+            //             'status': 'Approve',
+            //             'memo_id': targetElementId
+            //         },
+            //     }).then(function (data) {
+            //         if(data.status){
+            //             console.log('updating Approval status => '+ JSON.stringify(data))
+            //             // $('#successful_alert').show()
+            //             alert(data.message);
+            //             $('#div_supervisor_comment_message').addClass('d-none');
+            //             $btn.attr('disabled', false);
+            //             $btn.html($btnHtml)
+            //             $.unblockUI()
+            //             window.location.href = `/my/request/view/${targetElementId}`
+            //         }else{
+                        
+            //             alert(data.message);
+            //             $btn.attr('disabled', false);
+            //             $btn.html($btnHtml)
+            //             $.unblockUI()
+            //             if (data.link){
+            //                 // window.location.href = data.link
+            //                 window.open( data.link, '_blank');
+            //             }
+            //             // return false;
+            //         }
+                    
+            //     }).guardedCatch(function (error) {
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml)
+            //         $.unblockUI()
+            //         let msg = error.message.message
+            //         alert(`Unknown Error! ${msg}`)
+            //     });
+            // },
             'click .approve_request': function(ev){
                 let targetElementId = $('.record_id').attr('id');
-                let $btn = $('.approve_request');
-                let $btnHtml = $btn.html()
+                let $btn = $(ev.target); // Fix: ensure we grab the button correctly
+                let $btnHtml = $btn.html();
+                
+                // Check if we are sending a forced approver (from the modal)
+                let forcedApproverId = $btn.attr('data-forced-approver');
+                
                 $btn.attr('disabled', 'disabled');
                 $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                $.blockUI({
-                    'message': '<h2 class="card-name">Approving ...</h2>'
-                });
+                
+                $.blockUI({ 'message': '<h2 class="card-name">Processing...</h2>' });
+                
                 this._rpc({
                     route: `/my/request/update`,
                     params: {
                         'status': 'Approve',
-                        'memo_id': targetElementId
+                        'memo_id': targetElementId,
+                        'forced_approver_id': forcedApproverId // Send this if selected from modal
                     },
                 }).then(function (data) {
-                    if(data.status){
-                        console.log('updating Approval status => '+ JSON.stringify(data))
-                        // $('#successful_alert').show()
-                        alert(data.message);
-                        $('#div_supervisor_comment_message').addClass('d-none');
-                        $btn.attr('disabled', false);
-                        $btn.html($btnHtml)
-                        $.unblockUI()
-                        window.location.href = `/my/request/view/${targetElementId}`
-                    }else{
-                        
-                        alert(data.message);
-                        $btn.attr('disabled', false);
-                        $btn.html($btnHtml)
-                        $.unblockUI()
-                        if (data.link){
-                            // window.location.href = data.link
-                            window.open( data.link, '_blank');
-                        }
-                        // return false;
-                    }
-                    
-                }).guardedCatch(function (error) {
+                    $.unblockUI();
                     $btn.attr('disabled', false);
-                    $btn.html($btnHtml)
-                    $.unblockUI()
-                    let msg = error.message.message
-                    alert(`Unknown Error! ${msg}`)
+                    $btn.html($btnHtml);
+
+                    if(data.status){
+                        // Success
+                        alert(data.message);
+                        $('#manual_approver_modal').modal('hide'); // Hide modal if open
+                        window.location.reload();
+                    } else {
+                        // Check for Manual Selection Trigger
+                        if (data.manual_select === true && data.approvers) {
+                            // 1. Populate the modal
+                            let $select = $('#manual_approver_select');
+                            $select.empty();
+                            data.approvers.forEach(function(app){
+                                $select.append(new Option(app.name, app.id));
+                            });
+                            
+                            // 2. Show the modal
+                            $('#manual_approver_modal').modal('show');
+                            
+                            // 3. Handle Confirm Button in Modal
+                            // We unbind click first to avoid duplicate events if clicked multiple times
+                            $('#btn_confirm_manual_approver').off('click').on('click', function(){
+                                let selectedId = $('#manual_approver_select').val();
+                                if(selectedId){
+                                    // Store selected ID on the main approve button temporarily or call RPC directly
+                                    // Let's trigger the main button again but with data
+                                    $('.approve_request').attr('data-forced-approver', selectedId);
+                                    $('.approve_request').trigger('click');
+                                }
+                            });
+                        } else {
+                            // Standard Error
+                            alert(data.message);
+                            if (data.link){
+                                window.open(data.link, '_blank');
+                            }
+                        }
+                    }
+                }).guardedCatch(function (error) {
+                    $.unblockUI();
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml);
+                    let msg = error.message ? error.message.message : error;
+                    alert(`Error: ${msg}`);
                 });
             },
             'click .cancel_btn': function(ev){

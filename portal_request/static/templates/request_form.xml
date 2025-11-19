@@ -81,6 +81,31 @@
                             </a>
                         </div>
 
+                        <!-- Add this at the bottom of your template, inside the <div class="container"> or near other modals -->
+<div class="modal fade" id="manual_approver_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Next Approver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Multiple approvers found for the next stage. Please select one:</p>
+                <div class="form-group">
+                    <label for="manual_approver_select">Approver</label>
+                    <select class="form-control" id="manual_approver_select">
+                        <!-- Options injected via JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn_confirm_manual_approver">Confirm Approval</button>
+            </div>
+        </div>
+    </div>
+</div>
+
                         <div class="row mt16 o_project_portal_sidebar">
                           <div class="col-4">
                             <t t-call="portal.portal_record_sidebar">

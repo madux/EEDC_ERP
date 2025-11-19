@@ -1885,6 +1885,21 @@ odoo.define('portal_request.portal_request', function (require) {
                         let memo_type_key = sro.getAttribute("memo_type_key");
                         console.log(`KEY MEMO IS ${memo_type_key}`)
 
+                        // === NEW CODE STARTS HERE ===
+                        // Check if this config requires a district (using the attribute from XML)
+                        let requiresDistrict = sro.getAttribute("requires_district"); 
+                        let $districtDiv = $('#processing_district_div'); // Ensure this ID matches your XML
+                        let $districtInput = $('#processing_branch_id');
+
+                        if (requiresDistrict === 'true' || requiresDistrict === 'True') {
+                            $districtDiv.removeClass('d-none');
+                            $districtInput.attr('required', true);
+                        } else {
+                            $districtDiv.addClass('d-none');
+                            $districtInput.attr('required', false).val(''); // Hide and clear
+                        }
+                        // === NEW CODE ENDS HERE ===
+
                         $('#selectConfigOptionId').val(Number(memo_config_id));
                         $('#selectedRequestOptionId').val(Number(memo_type_id));
                         $('#selectRequestOption').val(memo_type_key);
@@ -2589,6 +2604,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#div_justification_reason').addClass('d-none');
         $('#justification_reason').attr('required', false);
         $('#justification_reason').val('');
+
+        $('#processing_district_div').addClass('d-none');
+        $('#processing_branch_id').val('').attr('required', false);
 
         $('#PaymentcashAdvanceDiv').addClass('d-none');
         $('#PaymentcashAdvanceLabel').addClass('d-none'); 

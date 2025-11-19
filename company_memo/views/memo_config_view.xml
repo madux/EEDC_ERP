@@ -40,8 +40,11 @@
                                 <field name="expense_account_id"/>
                                 <field name="inter_district_request" string="Is inter Company / district Material Request" invisible="1"/>
                                 <field name="inter_district" string="Is inter Company / district"/>
-                                <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True)]}"/>
-                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True)]}"/>
+                                <field name="allow_cross_company_requests" string="Allow Cross-company requests"/>
+                                <field name="requires_processing_district" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True)]}"/>
+                                <field name="routing_mode" attrs="{'invisible': [('inter_district', '=', False)]}"/>
+                                <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/>
+                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/>
 
                             </group>
                             <notebook>
