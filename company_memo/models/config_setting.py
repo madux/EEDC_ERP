@@ -502,7 +502,7 @@ class MemoConfig(models.Model):
     )
     
     @api.onchange('processing_company_id')
-    def _onchange_payment_processing_company(self):
+    def _onchange_processing_company(self):
         """Clear branch if company changes"""
         if self.processing_branch_id and \
            self.processing_branch_id.company_id != self.processing_company_id:
