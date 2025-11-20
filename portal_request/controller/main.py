@@ -3018,6 +3018,7 @@ class PortalRequest(http.Controller):
                         # AUTO MODE: Filter by Processing Branch (Using 'processing_branch_id' as requested)
                         if routing_mode == 'auto':
                             proc_branch_id = request_record.processing_branch_id
+                            _logger.info("Using Auto Routing mode with district {proc_branch_id}")
                             
                             if proc_branch_id:
                                 # Filter approvers belonging to that branch

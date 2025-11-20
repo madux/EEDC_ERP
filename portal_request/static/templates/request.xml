@@ -272,26 +272,6 @@
                                                             <t t-if="ct.inter_district"> (Inter-District)</t>
                                                         </t> 
                                                     </select>
-                                                    <!-- new -->
-                                                    <div class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" 
-                                                        id="processing_district_div" data-name="Field">
-                                                        <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                            <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="processing_branch_id">
-                                                                <span class="s_website_form_label_content">Processing District</span>
-                                                                <span class="s_website_form_mark"> *</span>
-                                                            </label>
-                                                            <div class="col-sm">
-                                                                <select name="processing_branch_id" id="processing_branch_id" class="form-control">
-                                                                    <option value="" selected="true" disabled="true">.. Select Processing District ..</option>
-                                                                    <t t-foreach="all_districts" t-as="dist">
-                                                                        <option t-att-value="dist.id"><t t-esc="dist.name"/></option>
-                                                                    </t>
-                                                                </select>
-                                                                <small class="text-muted">Select the district responsible for fulfilling this request.</small>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- new ended-->
                                                     <select name="selectRequestOption2" id="selectRequestOption2" required="required" data-init="" class="d-none form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="memo_key_ids" t-as="key">
@@ -386,6 +366,26 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <!-- new -->
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" 
+                                            id="processing_district_div" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="processing_branch_id">
+                                                    <span class="s_website_form_label_content">Processing District</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <select name="processing_branch_id" id="processing_branch_id" class="form-control">
+                                                        <option value="" selected="true" disabled="true">.. Select Processing District ..</option>
+                                                        <t t-foreach="all_districts" t-as="dist">
+                                                            <option t-att-value="dist.id"><t t-esc="dist.name"/></option>
+                                                        </t>
+                                                    </select>
+                                                    <small class="text-muted">Select the district responsible for fulfilling this request.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- new ended-->
                                         <input type="hidden" id="preselected_memo_key" t-att-value="preselected_memo_key or ''"/>
 
                                         <div id ="divEmployeeData" class="d-none s_website_form_field mb-3 col-6 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
