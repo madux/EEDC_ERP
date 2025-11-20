@@ -1893,28 +1893,21 @@ odoo.define('portal_request.portal_request', function (require) {
                         // ============================================================
                         // 1. POPULATE PROCESSING DISTRICT DROPDOWN
                         // ============================================================
-                        let $districtSelect = $('#processing_branch_id');
-                        
-                        // Clear the dropdown completely
+                        let $districtSelect = $('#processing_branch_id'); 
+
                         $districtSelect.empty();
-                        
-                        // Add the default placeholder back
                         $districtSelect.append('<option disabled="true" selected="true" value="">.. Select Processing District ..</option>');
                         
-                        // Check if the controller returned a list of districts
-                        // (Make sure your controller sends: 'districts': [{'id': 1, 'name': 'Lagos'}, ...])
                         if (data.data.districts && data.data.districts.length > 0) {
                             data.data.districts.forEach(function(dist) {
-                                // Create new option and append it
-                                // new Option(text, value)
                                 $districtSelect.append(new Option(dist.name, dist.id));
                             });
                         }
 
-                        // === NEW CODE STARTS HERE ===
                         // Check if this config requires a district (using the attribute from XML)
+                        // let $selectedOption = $('#selectConfigOption option:selected');
                         let requiresDistrict = sro.getAttribute("requires_district"); 
-                        let $districtDiv = $('#processing_district_div'); // Ensure this ID matches your XML
+                        let $districtDiv = $('#processing_district_div');
                         let $districtInput = $('#processing_branch_id');
 
                         if (requiresDistrict === 'true' || requiresDistrict === 'True') {
