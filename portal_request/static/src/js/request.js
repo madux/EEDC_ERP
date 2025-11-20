@@ -1879,11 +1879,37 @@ odoo.define('portal_request.portal_request', function (require) {
                         alert_modal.modal('show');
                     }
                     else{
-                         // set the value of selected option to the hidden field
+
+                        // set the value of selected option to the hidden field
                         let memo_config_id = sro.getAttribute("id");
                         let memo_type_id = sro.getAttribute("memo_key_id");
                         let memo_type_key = sro.getAttribute("memo_type_key");
                         console.log(`KEY MEMO IS ${memo_type_key}`)
+
+                        $('#selectConfigOptionId').val(Number(memo_config_id));
+                        $('#selectedRequestOptionId').val(Number(memo_type_id));
+                        $('#selectRequestOption').val(memo_type_key);
+
+                        // ============================================================
+                        // 1. POPULATE PROCESSING DISTRICT DROPDOWN
+                        // ============================================================
+                        let $districtSelect = $('#processing_branch_id');
+                        
+                        // Clear the dropdown completely
+                        $districtSelect.empty();
+                        
+                        // Add the default placeholder back
+                        $districtSelect.append('<option disabled="true" selected="true" value="">.. Select Processing District ..</option>');
+                        
+                        // Check if the controller returned a list of districts
+                        // (Make sure your controller sends: 'districts': [{'id': 1, 'name': 'Lagos'}, ...])
+                        if (data.data.districts && data.data.districts.length > 0) {
+                            data.data.districts.forEach(function(dist) {
+                                // Create new option and append it
+                                // new Option(text, value)
+                                $districtSelect.append(new Option(dist.name, dist.id));
+                            });
+                        }
 
                         // === NEW CODE STARTS HERE ===
                         // Check if this config requires a district (using the attribute from XML)
@@ -1899,10 +1925,6 @@ odoo.define('portal_request.portal_request', function (require) {
                             $districtInput.attr('required', false).val(''); // Hide and clear
                         }
                         // === NEW CODE ENDS HERE ===
-
-                        $('#selectConfigOptionId').val(Number(memo_config_id));
-                        $('#selectedRequestOptionId').val(Number(memo_type_id));
-                        $('#selectRequestOption').val(memo_type_key);
 
                         // determine to ensure that you selected an inter company or district transfer
                         if (data.data.inter_district_request){

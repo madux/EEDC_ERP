@@ -377,9 +377,9 @@
                                                 <div class="col-sm">
                                                     <select name="processing_branch_id" id="processing_branch_id" class="form-control">
                                                         <option value="" selected="true" disabled="true">.. Select Processing District ..</option>
-                                                        <t t-foreach="all_districts" t-as="dist">
+                                                        <!-- <t t-foreach="all_districts" t-as="dist">
                                                             <option t-att-value="dist.id"><t t-esc="dist.name"/></option>
-                                                        </t>
+                                                        </t> -->
                                                     </select>
                                                     <small class="text-muted">Select the district responsible for fulfilling this request.</small>
                                                 </div>

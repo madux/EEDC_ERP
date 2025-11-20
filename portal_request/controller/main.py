@@ -176,7 +176,7 @@ class PortalRequest(http.Controller):
             ]
         )
         
-        all_districts = request.env['multi.branch'].sudo().search([])
+        # all_districts = request.env['multi.branch'].sudo().search([])
         
         _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
         
@@ -215,7 +215,7 @@ class PortalRequest(http.Controller):
             "destination_location_data_ids": destination_location_data_ids,
             "memo_type_ids": memo_type_ids,
             "config_type_ids": memo_configs,
-            "all_districts": all_districts,
+            # "all_districts": all_districts,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
             # doform
@@ -838,11 +838,17 @@ class PortalRequest(http.Controller):
                         }
                 else:
                     _logger.info('Employee is internal allowed user')
+                    
+                    district_domain = []
+                    if not memo_setting_id.allow_cross_company_requests:
+                        district_domain = [('company_id', '=', request.env.user.company_id.id)]
+                    districts = request.env['multi.branch'].sudo().search(district_domain)
                     return {
                         "status": True,
                         "message": "", 
                         "data": {
                             'inter_district_request': memo_setting_id.inter_district,
+                            'districts': [{'id': d.id, 'name': d.name} for d in districts], 
                         }
                         }
             # else:
