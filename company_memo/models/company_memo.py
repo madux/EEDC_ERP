@@ -3319,11 +3319,18 @@ class Memo_Model(models.Model):
             )
             
             view_id = self.env.ref('account.view_move_form').id
-            journal_id = self.env['account.journal'].sudo().search(
-            [
+            base_journal_domain = [
                 ('company_id', '=', payment_company.id),
                 ('type', 'in', ['bank', 'general']),
-             ], limit=1)
+             ]
+            journal_id = self.env['account.journal'].sudo().search(
+                base_journal_domain + [('allowed_branch_ids', 'in', [payment_branch.id])], 
+                limit=1
+            )
+            
+            if not journal_id:
+                journal_id = self.env['account.journal'].sudo().search(base_journal_domain, limit=1)
+            
             if not journal_id:
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
