@@ -260,8 +260,12 @@ class Memo_Model(models.Model):
     
     
     @api.depends('memo_setting_id', 'stage_id', 'stage_id.approver_ids')
-    def _compute_payment_processing_company(self):
+    def _compute_processing_company(self):
         for rec in self:
+            if rec.memo_setting_id.requires_processing_district and rec.processing_branch_id:
+                rec.processing_company_id = rec.processing_branch_id.company_id or rec.company_id
+                continue 
+
             if rec.memo_setting_id.processing_company_id:
                 rec.processing_company_id = rec.memo_setting_id.processing_company_id
                 rec.processing_branch_id = rec.memo_setting_id.processing_branch_id
@@ -272,9 +276,6 @@ class Memo_Model(models.Model):
             else:
                 rec.processing_company_id = rec.company_id
                 rec.processing_branch_id = rec.branch_id
-                
-            # rec.stock_processing_company_id = rec.company_id
-            # rec.stock_processing_branch_id = rec.branch_id
             
     
     

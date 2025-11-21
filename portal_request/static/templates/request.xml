@@ -96,7 +96,7 @@
                                 </div>
                             </div>
                         </section>
-                        <section class="s_website_form pt16 pb16 o_colored_level portal-request" id="portal-request" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
+                        <section class="s_website_form pt16 pb16 o_colored_level portal-request" id="portal-request" t-att-data-request-branch-id="user_branch.id if user_branch else False" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
                             <div class="container">
                              <!-- action="/portal/form/" -->
                                 <!-- <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true" data-success-mode="redirect" data-success-page="/contactus-thank-you" data-model_name="mail.mail"> -->
@@ -248,104 +248,36 @@
 
                                         <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectConfigOption">
                                                     <span class="s_website_form_label_content">Request Option </span>
                                                     <span class="s_website_form_mark"> *</span>
                                                     <input type="number" class="d-none form-control s_website_form_input" 
-                                                    name="selectedRequestOptionId" id="selectedRequestOptionId"/>
+                                                        name="selectedRequestOptionId" id="selectedRequestOptionId"/>
                                                     <input type="number" class="d-none form-control s_website_form_input" 
-                                                    name="selectConfigOptionId" id="selectConfigOptionId"/>
+                                                        name="selectConfigOptionId" id="selectConfigOptionId"/>
                                                     <input type="text" class="d-none form-control s_website_form_input" 
-                                                    name="selectRequestOption" id="selectRequestOption" placeholder="request option eg soe"/>
+                                                        name="selectRequestOption" id="selectRequestOption" placeholder="request option eg soe"/>
+                                                    <input type="checkbox" name="is_inter_district_transfer_config" id="is_inter_district_transfer_config" class="d-none"/>
                                                 </label>
                                                 <div class="col-sm">
-                                                    
                                                     <select name="selectConfigOption" id="selectConfigOption" required="required" data-init="" class="form-control" labelfor="Request Option">
                                                         <option disabled="true" selected="true" value="">.. Select ..</option>
                                                         <t t-foreach="config_type_ids" t-as="ct">
-                                                            <option t-att-value="ct.id" t-att-id="ct.id" t-att-memo_key_id="ct.memo_type.id"
-                                                            t-att-memo_type_key="ct.memo_key"  t-att-inter_district="'True' if ct.inter_district else 'False'"
-                                                            t-att-branch_id="ct.branch_id.id if ct.branch_id else ''">
+                                                            <option t-att-value="ct.id" 
+                                                                    t-att-id="ct.id" 
+                                                                    t-att-memo_key_id="ct.memo_type.id"
+                                                                    t-att-memo_type_key="ct.memo_key"  
+                                                                    t-att-inter_district="'True' if ct.inter_district else 'False'"
+                                                                    t-att-branch_id="ct.branch_id.id if ct.branch_id else ''"
+                                                                    t-att-requires_district="'true' if ct.requires_processing_district else 'false'">
                                                                 <span t-esc="ct.name"/>
+                                                                <t t-if="ct.inter_district"> (Inter-District)</t>
                                                             </option>
-                                                            <t t-if="ct.inter_district"> (Inter-District)</t>
                                                         </t> 
                                                     </select>
-                                                    <select name="selectRequestOption2" id="selectRequestOption2" required="required" data-init="" class="d-none form-control" labelfor="Request Option">
-                                                        <option disabled="true" selected="true" value="">.. Select ..</option>
-                                                        <t t-foreach="memo_key_ids" t-as="key">
-                                                            <!-- <option t-att-value="key.memo_key"> -->
-                                                            <option t-att-value="key.get('id')" t-att-id="key.get('id')">
-                                                                <span t-esc="key.get('name')"/>
-                                                            </option>
-                                                        </t>
-                                                        <!-- <option value="Internal">Internal Request</option>
-                                                        <option value="server_access">System Access Request</option>
-                                                        <option value="material_request">Material request</option>
-                                                        <option value="employee_update">Employee Update Request</option>
-                                                        <option value="procurement_request">Procurement request</option>
-                                                        <option value="payment_request">Payment Request</option>
-                                                        <option value="vehicle_request">Vehicle Request</option>
-                                                        <option value="leave_request">Leave Request</option>
-                                                        <option value="cash_advance">Cash Advance Request</option>
-                                                        <option value="soe">Statement of Expense</option> -->
-                                                    </select>
                                                 </div>
 
-                                                <div id="interdistrict" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" data-type="text" data-name="Field">
-                                                    <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                        <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="selectRequestOption">
-                                                            <span class="s_website_form_label_content">Inter-district Transfer</span>
-                                                        </label>
-                                                        <div class="col-sm" id="interdistrict-checkbox-div">
-                                                            <div class="mb-2 mt-2 text-muted">
-                                                                <input type="checkbox" name="isInterDistrict" id="isInterDistrict" class="isInterDistrict"/>
-                                                                <input type="checkbox" name="is_inter_district_transfer_config" id="is_inter_district_transfer_config" class="d-none"/>
-                                                                <label for="isInterDistrict">Is Inter-district</label>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="col-sm d-none" id="inter-source-location-div">
-                                                            <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="source_location_id">
-                                                                <span class="s_website_form_label_content">Source Location </span>
-                                                                <span class="s_website_form_mark"> *</span>
-                                                            </label>
-                                                            <div class="mb-2 mt-2 text-muted">
-                                                                <!-- TARGETTTLOCATION: -->
-                                                                <input id="TargetSourceLocation" class="form-control d-none" name="TargetSourceLocation" labelfor="TargetSourceLocation"/>
-                                                                
-                                                                <input id="source_location_id" name="source_location_id" labelfor="source_location_id" class="form-control Sourcelocation-cls"/>
-                                                                <!-- <select name="source_location_id" id="source_location_id" required="" data-init="" class="form-control Sourcelocation-cls" labelfor="Source Location">
-                                                                    <option disabled="true" selected="true" value="">.. Select ..</option>
-                                                                    <t t-foreach="source_location_data_ids" t-as="key"> 
-                                                                        <option t-att-value="key.id" t-att-id="key.id">
-                                                                            <span t-esc="key.display_name"/>
-                                                                        </option>
-                                                                    </t>
-                                                                </select> -->
-
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm d-none" id="inter-destination-location-div">
-                                                             <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="destination_location_id">
-                                                                <span class="s_website_form_label_content">Destination Location </span>
-                                                                <span class="s_website_form_mark"> *</span>
-                                                            </label>
-                                                            <div class="mb-2 mt-2 text-muted">
-                                                                <input id="destination_location_id" name="destination_location_id" labelfor="source_location_id" class="form-control destinationlocation-cls"/>
-
-                                                                <!-- <select name="destination_location_id" id="destination_location_id" required="" data-init="" class="form-control destinationlocation-cls" labelfor="Destination Location">
-                                                                    <option disabled="true" selected="true" value="">.. Select ..</option>
-                                                                    <t t-foreach="destination_location_data_ids" t-as="key">
-                                                                        <option t-att-value="key.id" t-att-id="key.id">
-                                                                            <span t-esc="key.display_name"/>
-                                                                        </option>
-                                                                    </t>
-                                                                </select> -->
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <!-- Type of Request (Hidden - for existing request functionality) -->
                                                 <label class="col-form-label col-sm-auto s_website_form_label d-none" style="width: 200px" for="selectTypeRequest">
                                                     <span class="s_website_form_label_content">Type of Request</span>
                                                     <span class="s_website_form_mark"> *</span>
@@ -357,14 +289,61 @@
                                                         <option value="existing">Existing Request</option>
                                                     </select>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" id="PaymentcashAdvanceLabel" for="PaymentcashAdvance">
+
+                                                <!-- Payment Reference -->
+                                                <label class="col-form-label col-sm-auto s_website_form_label d-none" style="width: 200px" id="PaymentcashAdvanceLabel" for="PaymentcashAdvance">
                                                     <span class="s_website_form_label_content">Payment Ref</span>
                                                 </label>
-                                                <div class="col-sm" id="PaymentcashAdvanceDiv">
-                                                    <input type="text" class="form-control s_website_form_input" name="PaymentcashAdvance" id="PaymentcashAdvance" labelfor="PaymentcashAdvance"/>
+                                                <div class="col-sm d-none" id="PaymentcashAdvanceDiv">
+                                                    <input type="text" class="form-control s_website_form_input" name="PaymentcashAdvance" id="PaymentcashAdvance" labelfor="Payment Reference"/>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Processing District -->
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" 
+                                            id="processing_district_div" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="processing_branch_id">
+                                                    <span class="s_website_form_label_content">Processing District</span>
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <select name="processing_branch_id" id="processing_branch_id" class="form-control" labelfor="Processing District">
+                                                        <option value="" selected="true" disabled="true">.. Select Processing District ..</option>
+                                                    </select>
+                                                    <small class="text-muted">Select the district responsible for fulfilling this request.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Material Request Location Fields (Shown AFTER Processing District) -->
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" id="material_request_locations" data-name="Field">
+                                            <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px">
+                                                    <span class="s_website_form_label_content">Stock Locations</span>
+                                                </label>
+                                                <div class="col-sm">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label" for="source_location_id">
+                                                                Source Location <span class="text-danger">*</span>
+                                                            </label>
+                                                            <input id="TargetSourceLocation" class="form-control d-none" name="TargetSourceLocation"/>
+                                                            <input id="source_location_id" name="source_location_id" labelfor="Source Location" class="form-control Sourcelocation-cls"/>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-6">
+                                                            <label class="form-label" for="destination_location_id">
+                                                                Destination Location <span class="text-danger">*</span>
+                                                            </label>
+                                                            <input id="destination_location_id" name="destination_location_id" labelfor="Destination Location" class="form-control destinationlocation-cls"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- new ended-->
                                         <input type="hidden" id="preselected_memo_key" t-att-value="preselected_memo_key or ''"/>
 
                                         <div id ="divEmployeeData" class="d-none s_website_form_field mb-3 col-6 s_website_form_custom s_website_form_required" data-type="text" data-name="Field">

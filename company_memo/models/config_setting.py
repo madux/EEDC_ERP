@@ -456,6 +456,12 @@ class MemoConfig(models.Model):
     
     inter_district = fields.Boolean(default=False, string="Inter-Company/District")
     inter_district_request = fields.Boolean(default=False, string="Is inter Company / district Material Request")
+    
+    allow_cross_company_requests = fields.Boolean(
+        string='Allow Cross-Company Requests',
+        default=False,
+        help="Allow districts to request from districts in other companies"
+    )
      
     payment_processing_company_id = fields.Many2one(
         'res.company',
@@ -483,8 +489,20 @@ class MemoConfig(models.Model):
         domain="[('company_id', '=', processing_company_id)]"
     )
     
+    routing_mode = fields.Selection([
+        ('standard', 'Standard'),
+        ('auto', 'Auto (Branch Based)'),
+        ('manual', 'Manual Selection')
+    ], string='Routing Mode', default='standard',
+       help="Standard: Random/Default. Auto: Matches Branch. Manual: User selects if multiple approvers exist.")
+    
+    requires_processing_district = fields.Boolean(
+        string="Require Processing District",
+        help="If checked, the user must select a specific district/branch to process this request on the portal."
+    )
+    
     @api.onchange('processing_company_id')
-    def _onchange_payment_processing_company(self):
+    def _onchange_processing_company(self):
         """Clear branch if company changes"""
         if self.processing_branch_id and \
            self.processing_branch_id.company_id != self.processing_company_id:

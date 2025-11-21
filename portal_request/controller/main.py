@@ -176,6 +176,8 @@ class PortalRequest(http.Controller):
             ]
         )
         
+        # all_districts = request.env['multi.branch'].sudo().search([])
+        
         _logger.info(f"Found {len(memo_configs)} configs for user: {memo_configs.mapped('name')}")
         
         # memo_type_ids = request.env['memo.type'].sudo().search([
@@ -213,6 +215,7 @@ class PortalRequest(http.Controller):
             "destination_location_data_ids": destination_location_data_ids,
             "memo_type_ids": memo_type_ids,
             "config_type_ids": memo_configs,
+            # "all_districts": all_districts,
             "selected_memo_type_id": selected_memo_type_id,
             "preselected_memo_key": memo_type_key,
             # doform
@@ -354,82 +357,175 @@ class PortalRequest(http.Controller):
                     "message": "Employee with staff ID provided does not exist. Contact Admin", 
                 }
                 
-    @http.route(['/get-stock-location'], type='http', website=True, auth="user", csrf=False)
-    def get_stock_location(self, **post):
-        user = request.env.user
-        location_type = post.get('location_type')
-        is_inter_company = post.get('is_inter_company')
-        selected_location_id = post.get('selected_source')
-        selectedOption_id = post.get('selectedOption_id')
+    # @http.route(['/get-stock-location'], type='http', website=True, auth="user", csrf=False)
+    # def get_stock_location(self, **post):
+    #     user = request.env.user
+    #     location_type = post.get('location_type')
+    #     is_inter_company = post.get('is_inter_company')
+    #     selected_location_id = post.get('selected_source')
+    #     selectedOption_id = post.get('selectedOption_id')
         
-        location_data_ids =None
-        query = request.params.get('q', '') 
-        is_inter_company2 = request.params.get('is_inter_company') 
-        branch_ids = [user.branch_id.id] + user.branch_ids.ids
-        company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
-        stockObj = request.env['stock.location'].sudo()
-        _logger.info(f"Search locations : params Selected location : {selected_location_id}, ==> is intercompany : {is_inter_company} SELECTED OPTION {selectedOption_id} - location type:  {location_type}, QUERY ==> {query}")
-        is_inter_company = False if is_inter_company in [False, 'false', 'Off', 'OFF'] else True 
-        if not is_inter_company:
+    #     location_data_ids =None
+        
+    #     processing_branch_id = post.get('processing_branch_id') 
+        
+    #     query = request.params.get('q', '') 
+    #     is_inter_company2 = request.params.get('is_inter_company') 
+    #     branch_ids = [user.branch_id.id] + user.branch_ids.ids
+    #     company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+    #     stockObj = request.env['stock.location'].sudo()
+    #     _logger.info(f"Search locations : params Selected location : {selected_location_id}, ==> is intercompany : {is_inter_company} SELECTED OPTION {selectedOption_id} - location type:  {location_type}, QUERY ==> {query}")
+        
+    #     is_inter_company = False if is_inter_company in [False, 'false', 'False', '0', 'Off'] else True 
+        
+    #     domain = [('usage', '=', 'internal')]
+        
+    #     if not is_inter_company:
             
-            if location_type == "source":
-                domain = [
-                    ('usage', '=', 'internal'),
-                    ('branch_id.id', 'in', branch_ids),
-                    ('company_id.id', 'in', company_ids),
-                    ('name', 'ilike', query)
-                    ]
-                if selected_location_id:
-                    domain.append(('id', '!=', selected_location_id))
-                location_data_ids = stockObj.search(domain)
+    #         if location_type == "source":
+    #             domain += [
+    #                 # ('usage', '=', 'internal'),
+    #                 ('branch_id.id', 'in', branch_ids),
+    #                 ('company_id.id', 'in', company_ids),
+    #                 # ('name', 'ilike', query)
+    #                 ]
+    #             if selected_location_id:
+    #                 domain.append(('id', '!=', selected_location_id))
+    #             location_data_ids = stockObj.search(domain)
                 
-            else:
-                domain=[
-                    ('usage', '=', 'internal'),
-                    ('branch_id.id', 'in', branch_ids),
-                    ('company_id.id', 'in', company_ids),
-                    ('name', 'ilike', query)
-                    ]
-                if selected_location_id:
-                    domain.append(('id', '!=', selected_location_id))
-                location_data_ids = stockObj.search(domain)
-        else:
-            if location_type == "source":
-                '''returns all locations if it is not interdistrict or intercompany'''
-                if selectedOption_id:
-                    option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
-                    all_branches = [option.processing_branch_id.id]
-                else:
-                    all_branches = request.env['multi.branch'].sudo().search([])
-                    all_branches = all_branches.ids
+    #         else:
+    #             domain=[
+    #                 ('usage', '=', 'internal'),
+    #                 ('branch_id.id', 'in', branch_ids),
+    #                 ('company_id.id', 'in', company_ids),
+    #                 ('name', 'ilike', query)
+    #                 ]
+    #             if selected_location_id:
+    #                 domain.append(('id', '!=', selected_location_id))
+    #             location_data_ids = stockObj.search(domain)
+    #     else:
+    #         if location_type == "source":
+    #             '''returns all locations if it is not interdistrict or intercompany'''
+    #             if selectedOption_id:
+    #                 option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
+    #                 all_branches = [option.processing_branch_id.id]
+    #             else:
+    #                 all_branches = request.env['multi.branch'].sudo().search([])
+    #                 all_branches = all_branches.ids
                 
-                domain = [
-                        ('usage', '=', 'internal'),
-                        ('branch_id', 'in', all_branches),
-                        ('name', 'ilike', query)
-                    ]
-                if selected_location_id:
-                    domain.append(('id', '!=', selected_location_id))
-                location_data_ids = stockObj.search(domain)
+    #             domain = [
+    #                     ('usage', '=', 'internal'),
+    #                     ('branch_id', 'in', all_branches),
+    #                     ('name', 'ilike', query)
+    #                 ]
+    #             if selected_location_id:
+    #                 domain.append(('id', '!=', selected_location_id))
+    #             location_data_ids = stockObj.search(domain)
                 
-            else:
-                domain=[
-                    ('usage', '=', 'internal'),
-                    ('branch_id.id', 'in', branch_ids),
-                    ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
-                    ('name', 'ilike', query)
-                    ]
-                if selected_location_id:
-                    domain.append(('id', '!=', selected_location_id))
-                location_data_ids = stockObj.search(domain)
+    #         else:
+    #             domain=[
+    #                 ('usage', '=', 'internal'),
+    #                 ('branch_id.id', 'in', branch_ids),
+    #                 ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
+    #                 ('name', 'ilike', query)
+    #                 ]
+    #             if selected_location_id:
+    #                 domain.append(('id', '!=', selected_location_id))
+    #             location_data_ids = stockObj.search(domain)
                  
-        return json.dumps({
-            "results": [{"id": item.id, "text": f'{item.name}'} for item in location_data_ids],
-            "pagination": {
-                "more": True,
-            }
-        })
-        
+    #     return json.dumps({
+    #         "results": [{"id": item.id, "text": f'{item.name}'} for item in location_data_ids],
+    #         "pagination": {
+    #             "more": True,
+    #         }
+    #     })
+    
+    @http.route('/get-stock-location', type='http', auth='user', csrf=False, methods=['POST'])
+    def get_stock_location(self, **kwargs):
+        try:
+            # Get parameters from POST request
+            q = request.params.get('q', '').strip()
+            page_limit = int(request.params.get('page_limit', 10))
+            page = int(request.params.get('page', 1))
+            
+            # Handle boolean string conversion
+            is_inter_company_raw = request.params.get('is_inter_company')
+            is_inter_company = str(is_inter_company_raw).lower() in ('true', '1', 'yes', 'on')
+            
+            # Get district_id
+            district_id = request.params.get('district_id')
+            if district_id and district_id not in ['null', 'undefined', 'false', '', 0, '0']:
+                try:
+                    district_id = int(district_id)
+                except (ValueError, TypeError):
+                    district_id = 0
+            else:
+                district_id = 0
+                
+            # Get location type
+            location_type = request.params.get('location_type', 'source')
+            
+            # Get selected_location_id to exclude
+            selected_location_id_raw = request.params.get('selected_location_id', 0)
+            try:
+                selected_location_id = int(selected_location_id_raw) if selected_location_id_raw else 0
+            except (ValueError, TypeError):
+                selected_location_id = 0
+            
+            _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id}")
+            
+            # Build search domain
+            domain = [('usage', '=', 'internal')]
+            
+            company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+            
+            if not is_inter_company:
+                domain.append(('company_id', '=', request.env.user.company_id.id))
+                # domain.append(('company_id', '=', company_ids))
+            
+            if district_id and district_id > 0:
+                domain.append(('branch_id', '=', district_id))
+            
+            if q:
+                domain.append(('name', 'ilike', q))
+                
+            if selected_location_id and selected_location_id > 0:
+                domain.append(('id', '!=', selected_location_id))
+            
+            _logger.info(f"Search domain: {domain}")
+            
+            # Perform Search
+            locations = request.env['stock.location'].sudo().search(domain, limit=page_limit)
+            
+            results = [
+                {
+                    "id": loc.id,
+                    "text": f"{loc.name} ({loc.branch_id.name})" if loc.branch_id else loc.name
+                }
+                for loc in locations
+            ]
+            
+            _logger.info(f"Found {len(results)} locations")
+            
+            # Return JSON response for Select2
+            return request.make_response(
+                json.dumps({
+                    "results": results,
+                    "total": len(results),
+                }),
+                headers=[('Content-Type', 'application/json')]
+            )
+            
+        except Exception as e:
+            _logger.exception("Error in get_stock_location")
+            return request.make_response(
+                json.dumps({
+                    "error": str(e),
+                    "results": [],
+                    "total": 0
+                }),
+                headers=[('Content-Type', 'application/json')]
+            )
             
     @http.route(['/relieve/reliever'], type='json', website=True, auth="user", csrf=False)
     def reset_relieve_reliever(self, **post):
@@ -835,11 +931,17 @@ class PortalRequest(http.Controller):
                         }
                 else:
                     _logger.info('Employee is internal allowed user')
+                    
+                    district_domain = []
+                    if not memo_setting_id.allow_cross_company_requests:
+                        district_domain = [('company_id', '=', request.env.user.company_id.id)] #AAdd allowed companies
+                    districts = request.env['multi.branch'].sudo().search(district_domain)
                     return {
                         "status": True,
                         "message": "", 
                         "data": {
                             'inter_district_request': memo_setting_id.inter_district,
+                            'districts': [{'id': d.id, 'name': d.name} for d in districts], 
                         }
                         }
             # else:
@@ -1438,7 +1540,431 @@ class PortalRequest(http.Controller):
         return attachment_id
     
      # portal_request data_process form post
-    @http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
+    # @http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
+    # def portal_data_process(self, **post):
+    #     '''used to process portal data'''
+    #     saveAction = post.get('saveAction')
+    #     _logger.info(f"All posted data ======> {saveAction}")
+    #     _logger.info(post)
+    #     try:
+    #         # inputFollowers = '6083, 36646, 37111'
+    #         inputFollowers = [int(r) for r in str(post.get('inputFollowers')).split(',')] if post.get('inputFollowers') else [] 
+    #         #request.httprequest.form.getlist('inputFollowers[]')  # get multiple values
+    #         employee_id = request.env['hr.employee'].sudo().search([
+    #             ('user_id', '=', request.env.uid), 
+    #             ('employee_number', '=', post.get('staff_id'))], limit=1)
+    #         if not employee_id:
+    #             return json.dumps({'status': False, 'message': "No employee record found for staff id provided"})
+    #         existing_request  = post.get("selectTypeRequest")
+    #         existing_order = post.get("existing_order")
+    #         memo_id = False
+    #         if existing_request == "existing":
+    #             memo_id = request.env['memo.model'].sudo().search([
+    #             ('employee_id', '=', employee_id.id), 
+    #             ('code', '=', existing_order)], limit=1)
+    #             if not memo_id:
+    #                 return json.dumps({'status': False, 'message': "No existing request found for the employee"})
+    #         leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
+    #         leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
+    #             if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
+    #         if post.get("selectRequestOption") == "soe":
+    #             cash_advance_id = request.env['memo.model'].sudo().search([
+    #             ('code', '=ilike', existing_order)], limit=1)
+    #         else:
+    #             cash_advance_id = False
+    #         systemRequirementOptions = [
+    #             'Application change : True' if post.get("applicationChange") == "on" else '',
+    #             'Enhancement : True' if post.get("enhancement") == "on" else '',
+    #             'Datapatch : True' if post.get("datapatch") == "on" else '',
+    #             'Database Change : True' if post.get("databaseChange") == "on" else '',
+    #             'OS Change : True' if post.get("osChange") == "on" else '',
+    #             'Ids on OS and DB : True' if post.get("ids_on_os_and_db") == "on" else '',
+    #             'Version Upgrade : True' if post.get("versionUpgrade") == "on" else '',
+    #             'Hardware Option : True' if post.get("hardwareOption") == "on" else '',
+    #             'Other Changes : ' + post.get("other_system_details", "") if post.get("other_system_details") else '', 
+    #             'Justification reason : ' + post.get("justification_reason", "") if post.get("justification_reason") else '', 
+    #             'Start date : ' + post.get("request_date",'') if post.get("request_date") else '', 
+    #             'End date : ' + post.get("request_end_date",'') if post.get("request_end_date") else '', 
+    #             ]
+    #         description_body = f"""
+    #         <b>Description: </b> {post.get("description", "")}<br/>
+    #         <b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
+    #         """
+    #         memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
+
+    #         def get_browsed_data(model, recid):
+    #             data = request.env[f'{model}'].sudo().browse(int(recid))
+    #             if data:
+    #                 return data 
+    #             else:
+    #                 return False
+    #         vals = {
+    #             "employee_id": employee_id.id,
+    #             "memo_type": memo_config.memo_type.id,
+    #             "memo_setting_id": memo_config.id,
+    #             "memo_type_key": memo_config.memo_type.memo_key,
+    #             "email": post.get("email_from"),
+    #             "payment_reference": post.get("PaymentcashAdvance"),
+    #             "phone": post.get("phone_number"),
+    #             "name": post.get("subject", ''),
+    #             "amountfig": post.get("amount_fig", 0),
+    #             "date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
+    #             "leave_type_id": post.get("leave_type_id", ""),
+    #             "leave_start_date": leave_start_date,
+    #             "leave_end_date": leave_end_date,
+    #             "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
+    #             "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
+    #             "currency_id": int(post.get("currency_id")) if post.get("currency_id") else False,
+    #             "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
+    #             "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
+    #             'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
+                
+    #             "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+    #             "applicationChange": True if post.get("applicationChange") == "on" else False,
+    #             "enhancement": True if post.get("enhancement") == "on" else False,
+    #             "datapatch": True if post.get("datapatch") == "on" else False,
+    #             "databaseChange": True if post.get("databaseChange") == "on" else False,
+    #             "osChange": True if post.get("osChange") == "on" else False,
+    #             "ids_on_os_and_db": True if post.get("ids_on_os_and_db") == "on" else False,
+    #             "versionUpgrade": True if post.get("versionUpgrade") == "on" else False,
+    #             "hardwareOption": True if post.get("hardwareOption") == "on" else False,
+    #             "otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
+    #             "other_system_details": post.get("other_system_details"),
+    #             "justification_reason": post.get("justification_reason"),
+    #             "state": "Sent",
+    #             "company_id": request.env.user.company_id.id,
+    #             "branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
+    #             "currency_id": request.env.user.company_id.currency_id.id,
+    #             "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
+    #             "users_followers": [(6, 0, inputFollowers)], 
+    #             "description": description_body, 
+    #             "request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
+    #             "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
+    #         }
+    #         _logger.info(f"POST DATA {vals}")
+    #         _logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
+    #         DataItems = []
+    #         DataItems = json.loads(post.get('DataItems'))
+    #         memo_obj = request.env['memo.model']
+    #         if not memo_id:
+    #             _logger.info("Request id creating")
+    #             memo_id = memo_obj.sudo().create(vals)
+    #         else:
+    #             _logger.info("Request id updating")
+    #             memo_id.sudo().write(vals)
+    #         if DataItems:
+    #             _logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
+    #             if post.get("selectRequestOption") != "employee_update":
+    #                 self.generate_request_line(DataItems, memo_id)
+    #             else: 
+    #                 self.generate_employee_transfer_line(DataItems, memo_id)
+            
+    #         ## generating attachment
+    #         if 'other_docs' in request.params:
+    #             attached_files = request.httprequest.files.getlist('other_docs')
+    #             for attachment in attached_files:
+    #                 file_name = attachment.filename
+    #                 datas = base64.b64encode(attachment.read())
+    #                 other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
+    #         # memo_id.action_submit_button()
+    #         memo_id.message_subscribe(partner_ids=[get_browsed_data('hr.employee', id) and get_browsed_data('hr.employee', id).user_id.partner_id.id for id in inputFollowers])
+    #         stage_id = memo_id.get_initial_stage(
+    #             memo_config.id,
+    #             )
+    #         _logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type_key} and department {memo_id.employee_id.department_id.name}''')
+    #         approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+    #         if not approver_ids and not next_stage_id:
+    #             _logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
+    #             return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
+    #             # return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
+
+    #         stage_obj = request.env['memo.stage'].sudo().search([('id', '=', next_stage_id)])
+    #         approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id] if employee_id.parent_id else []
+    #         follower_ids = [(4, r) for r in approver_ids]
+    #         user_ids = [(4, request.env.user.id)]
+    #         if employee_id.administrative_supervisor_id:
+    #             follower_ids.append((4, employee_id.administrative_supervisor_id.id))
+    #         if employee_id.parent_id:
+    #             follower_ids.append((4, employee_id.parent_id.id))
+    #         selected_approver = random.choice(approver_ids)
+    #         memo_id.sudo().update({
+    #             'stage_id': next_stage_id, 
+    #             'approver_id': selected_approver,
+    #             'set_staff': selected_approver,
+    #             'approver_ids': [(4, r) for r in approver_ids],
+    #             "direct_employee_id": selected_approver,
+    #             'users_followers': follower_ids,
+    #             'res_users': user_ids,
+    #             'memo_setting_id': stage_obj.memo_config_id.id,
+    #             'memo_type_key': memo_id.memo_type_key or memo_id.memo_key,
+    #         })
+    #         _logger.info(f'''
+    #             Successfully Registered! with memo id Approver = {approver_ids} \
+    #                 stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+    #                     or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
+    #         saveAction = True if saveAction in ['true', 'True', True] else False
+    #         if saveAction:
+    #             _logger.info(f"submitting action done 1 {saveAction}")
+    #             '''This saves the record and set the stage to the initial
+    #             configure stage of the memo settings'''
+    #             if memo_id.memo_setting_id.stage_ids:
+    #                 memo_id.stage_id = memo_id.memo_setting_id.stage_ids[0]
+    #                 memo_id.state = 'submit'
+    #             else:
+    #                 memo_id.stage_id = False
+    #                 memo_id.state = 'submit'
+    #         else:
+    #             _logger.info(f"submitting action done 2 {saveAction}")
+    #             memo_id.confirm_memo(
+    #                 memo_id.direct_employee_id or employee_id.parent_id, 
+    #                 post.get("description", ""),
+    #                 from_website=True
+    #                 )
+    #         request.session['memo_ref'] = memo_id.code
+    #         request.session['memo_record_id'] = memo_id.id
+    #         return json.dumps({'status': True, 'message': "Form Submitted!"})
+    #     except Exception as ex:
+    #         _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
+    #         return json.dumps({'status': False, 'message': "Form Submitted!"})
+    
+    # @http.route(['/portal_data_process'], type='http', methods=['POST'], website=True, auth="user", csrf=False)
+    # def portal_data_process(self, **post):
+    #     '''used to process portal data'''
+    #     saveAction = post.get('saveAction')
+    #     _logger.info(f"All posted data ======> {saveAction}")
+    #     _logger.info(post)
+    #     try:
+    #         # inputFollowers = '6083, 36646, 37111'
+    #         inputFollowers = [int(r) for r in str(post.get('inputFollowers')).split(',')] if post.get('inputFollowers') else [] 
+    #         #request.httprequest.form.getlist('inputFollowers[]')  # get multiple values
+    #         employee_id = request.env['hr.employee'].sudo().search([
+    #             ('user_id', '=', request.env.uid), 
+    #             ('employee_number', '=', post.get('staff_id'))], limit=1)
+    #         if not employee_id:
+    #             return json.dumps({'status': False, 'message': "No employee record found for staff id provided"})
+    #         existing_request  = post.get("selectTypeRequest")
+    #         existing_order = post.get("existing_order")
+    #         memo_id = False
+    #         if existing_request == "existing":
+    #             memo_id = request.env['memo.model'].sudo().search([
+    #             ('employee_id', '=', employee_id.id), 
+    #             ('code', '=', existing_order)], limit=1)
+    #             if not memo_id:
+    #                 return json.dumps({'status': False, 'message': "No existing request found for the employee"})
+    #         leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
+    #         leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
+    #             if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
+    #         if post.get("selectRequestOption") == "soe":
+    #             cash_advance_id = request.env['memo.model'].sudo().search([
+    #             ('code', '=ilike', existing_order)], limit=1)
+    #         else:
+    #             cash_advance_id = False
+    #         systemRequirementOptions = [
+    #             'Application change : True' if post.get("applicationChange") == "on" else '',
+    #             'Enhancement : True' if post.get("enhancement") == "on" else '',
+    #             'Datapatch : True' if post.get("datapatch") == "on" else '',
+    #             'Database Change : True' if post.get("databaseChange") == "on" else '',
+    #             'OS Change : True' if post.get("osChange") == "on" else '',
+    #             'Ids on OS and DB : True' if post.get("ids_on_os_and_db") == "on" else '',
+    #             'Version Upgrade : True' if post.get("versionUpgrade") == "on" else '',
+    #             'Hardware Option : True' if post.get("hardwareOption") == "on" else '',
+    #             'Other Changes : ' + post.get("other_system_details", "") if post.get("other_system_details") else '', 
+    #             'Justification reason : ' + post.get("justification_reason", "") if post.get("justification_reason") else '', 
+    #             'Start date : ' + post.get("request_date",'') if post.get("request_date") else '', 
+    #             'End date : ' + post.get("request_end_date",'') if post.get("request_end_date") else '', 
+    #             ]
+    #         description_body = f"""
+    #         <b>Description: </b> {post.get("description", "")}<br/>
+    #         <b>Requirements: </b> {'<br/>'.join([r for r in systemRequirementOptions if r ])}
+    #         """
+    #         memo_config = request.env['memo.config'].sudo().search([('id', '=', int(post.get("selectConfigOption")))], limit=1)
+
+    #         def get_browsed_data(model, recid):
+    #             data = request.env[f'{model}'].sudo().browse(int(recid))
+    #             if data:
+    #                 return data 
+    #             else:
+    #                 return False
+    #         vals = {
+    #             "employee_id": employee_id.id,
+    #             "memo_type": memo_config.memo_type.id,
+    #             "memo_setting_id": memo_config.id,
+    #             "memo_type_key": memo_config.memo_type.memo_key,
+    #             "email": post.get("email_from"),
+    #             "payment_reference": post.get("PaymentcashAdvance"),
+    #             "phone": post.get("phone_number"),
+    #             "name": post.get("subject", ''),
+    #             "amountfig": post.get("amount_fig", 0),
+    #             "date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
+    #             "leave_type_id": post.get("leave_type_id", ""),
+    #             "leave_start_date": leave_start_date,
+    #             "leave_end_date": leave_end_date,
+    #             "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
+    #             "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
+    #             "currency_id": int(post.get("currency_id")) if post.get("currency_id") else False,
+    #             "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
+    #             "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
+    #             'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
+                
+    #             "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+    #             "applicationChange": True if post.get("applicationChange") == "on" else False,
+    #             "enhancement": True if post.get("enhancement") == "on" else False,
+    #             "datapatch": True if post.get("datapatch") == "on" else False,
+    #             "databaseChange": True if post.get("databaseChange") == "on" else False,
+    #             "osChange": True if post.get("osChange") == "on" else False,
+    #             "ids_on_os_and_db": True if post.get("ids_on_os_and_db") == "on" else False,
+    #             "versionUpgrade": True if post.get("versionUpgrade") == "on" else False,
+    #             "hardwareOption": True if post.get("hardwareOption") == "on" else False,
+    #             "otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
+    #             "other_system_details": post.get("other_system_details"),
+    #             "justification_reason": post.get("justification_reason"),
+    #             "state": "Sent",
+    #             "company_id": request.env.user.company_id.id,
+    #             "branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
+    #             "currency_id": request.env.user.company_id.currency_id.id,
+    #             "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
+    #             "users_followers": [(6, 0, inputFollowers)], 
+    #             "description": description_body, 
+    #             "request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
+    #             "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False,
+    #             # Added processing_district_id as requested
+    #             "processing_district_id": int(post.get('processing_district_id')) if post.get('processing_district_id') not in [False, '', 'false', None] else False,
+    #         }
+    #         _logger.info(f"POST DATA {vals}")
+    #         _logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
+    #         DataItems = []
+    #         DataItems = json.loads(post.get('DataItems'))
+    #         memo_obj = request.env['memo.model']
+    #         if not memo_id:
+    #             _logger.info("Request id creating")
+    #             memo_id = memo_obj.sudo().create(vals)
+    #         else:
+    #             _logger.info("Request id updating")
+    #             memo_id.sudo().write(vals)
+    #         if DataItems:
+    #             _logger.info(f'DATA ITEMS IDS IS HERE {DataItems}')
+    #             if post.get("selectRequestOption") != "employee_update":
+    #                 self.generate_request_line(DataItems, memo_id)
+    #             else: 
+    #                 self.generate_employee_transfer_line(DataItems, memo_id)
+            
+    #         ## generating attachment
+    #         if 'other_docs' in request.params:
+    #             attached_files = request.httprequest.files.getlist('other_docs')
+    #             for attachment in attached_files:
+    #                 file_name = attachment.filename
+    #                 datas = base64.b64encode(attachment.read())
+    #                 other_docs_attachment = self.generate_attachment(memo_id.code, file_name, datas, memo_id.id)
+    #         # memo_id.action_submit_button()
+    #         memo_id.message_subscribe(partner_ids=[get_browsed_data('hr.employee', id) and get_browsed_data('hr.employee', id).user_id.partner_id.id for id in inputFollowers])
+    #         stage_id = memo_id.get_initial_stage(
+    #             memo_config.id,
+    #             )
+    #         _logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type_key} and department {memo_id.employee_id.department_id.name}''')
+    #         approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+    #         if not approver_ids and not next_stage_id:
+    #             _logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
+    #             return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
+    #             # return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
+
+    #         stage_obj = request.env['memo.stage'].sudo().search([('id', '=', next_stage_id)])
+            
+    #         # === START OF ROUTING INTEGRATION ===
+    #         routing_mode = post.get('routing_mode', 'standard')
+            
+    #         if routing_mode == 'manual' and post.get('manual_approver_id'):
+    #             # Manual routing: use selected approver
+    #             selected_approver_id = int(post.get('manual_approver_id'))
+    #             approver_ids = [selected_approver_id]
+    #             _logger.info(f"Manual routing: Selected approver {selected_approver_id}")
+                
+    #         elif routing_mode == 'auto' and post.get('processing_district_id'):
+    #             # Auto routing: filter approvers by processing district
+    #             processing_district_id = int(post.get('processing_district_id'))
+    #             processing_district = request.env['multi.branch'].sudo().browse(processing_district_id)
+                
+    #             # Filter approvers from stage by processing district
+    #             # Assuming approver_ids here refers to the list returned by get_next_stage_artifact, 
+    #             # but usually we check the stage configuration for all potential approvers first
+    #             # However, to align with the snippet logic filtering from stage_obj:
+    #             filtered_approvers = stage_obj.approver_ids.filtered(
+    #                 lambda emp: emp.branch_id.id == processing_district_id
+    #             )
+                
+    #             if filtered_approvers:
+    #                 approver_ids = filtered_approvers.ids
+    #                 _logger.info(f"Auto routing: Found {len(approver_ids)} approvers in {processing_district.name}")
+    #             else:
+    #                 return json.dumps({
+    #                     'status': False,
+    #                     'message': f"No approver found for {processing_district.name}. Contact administrator."
+    #                 })
+    #         else:
+    #             # Standard/Fallback routing: use configured approvers from stage or parent
+    #             # Re-evaluating approver_ids based on standard logic if not set
+    #             approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id] if employee_id.parent_id else []
+
+    #         # Final check for approvers
+    #         if not approver_ids:
+    #             return json.dumps({
+    #                 'status': False,
+    #                 'message': "No approver available. Contact administrator."
+    #             })
+
+    #         selected_approver = random.choice(approver_ids) if len(approver_ids) > 1 else approver_ids[0]
+            
+    #         # === END OF ROUTING INTEGRATION ===
+
+    #         # Original Logic for followers (adding Approvers + Supervisors)
+    #         follower_ids = [(4, r) for r in approver_ids]
+    #         user_ids = [(4, request.env.user.id)]
+    #         if employee_id.administrative_supervisor_id:
+    #             follower_ids.append((4, employee_id.administrative_supervisor_id.id))
+    #         if employee_id.parent_id:
+    #             follower_ids.append((4, employee_id.parent_id.id))
+                
+    #         memo_id.sudo().update({
+    #             'stage_id': next_stage_id, 
+    #             'approver_id': selected_approver,
+    #             'set_staff': selected_approver,
+    #             'approver_ids': [(4, r) for r in approver_ids],
+    #             "direct_employee_id": selected_approver,
+    #             'users_followers': follower_ids,
+    #             'res_users': user_ids,
+    #             'memo_setting_id': stage_obj.memo_config_id.id,
+    #             'memo_type_key': memo_id.memo_type_key or memo_id.memo_key,
+    #         })
+    #         _logger.info(f'''
+    #             Successfully Registered! with memo id Approver = {approver_ids} \
+    #                 stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
+    #                     or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id} routing mode: {routing_mode}''')
+            
+    #         saveAction = True if saveAction in ['true', 'True', True] else False
+    #         if saveAction:
+    #             _logger.info(f"submitting action done 1 {saveAction}")
+    #             '''This saves the record and set the stage to the initial
+    #             configure stage of the memo settings'''
+    #             if memo_id.memo_setting_id.stage_ids:
+    #                 memo_id.stage_id = memo_id.memo_setting_id.stage_ids[0]
+    #                 memo_id.state = 'submit'
+    #             else:
+    #                 memo_id.stage_id = False
+    #                 memo_id.state = 'submit'
+    #         else:
+    #             _logger.info(f"submitting action done 2 {saveAction}")
+    #             memo_id.confirm_memo(
+    #                 memo_id.direct_employee_id or employee_id.parent_id, 
+    #                 post.get("description", ""),
+    #                 from_website=True
+    #                 )
+    #         request.session['memo_ref'] = memo_id.code
+    #         request.session['memo_record_id'] = memo_id.id
+    #         return json.dumps({'status': True, 'message': "Form Submitted!"})
+    #     except Exception as ex:
+    #         _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
+    #         return json.dumps({'status': False, 'message': str(ex) or "Form Submitted!"})
+    
+    @http.route(['/portal_data_process'], type='http', methods=['POST'], website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):
         '''used to process portal data'''
         saveAction = post.get('saveAction')
@@ -1496,6 +2022,12 @@ class PortalRequest(http.Controller):
                     return data 
                 else:
                     return False
+            
+            # 1. Capture the Processing District (Integration)
+            processing_branch_id = False
+            if post.get('processing_branch_id') and str(post.get('processing_branch_id')).isdigit():
+                processing_branch_id = int(post.get('processing_branch_id'))
+
             vals = {
                 "employee_id": employee_id.id,
                 "memo_type": memo_config.memo_type.id,
@@ -1537,7 +2069,8 @@ class PortalRequest(http.Controller):
                 "users_followers": [(6, 0, inputFollowers)], 
                 "description": description_body, 
                 "request_date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(),
-                "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False
+                "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False,
+                "processing_branch_id": processing_branch_id,
             }
             _logger.info(f"POST DATA {vals}")
             _logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
@@ -1570,36 +2103,69 @@ class PortalRequest(http.Controller):
                 memo_config.id,
                 )
             _logger.info(f'''initial stage come be {stage_id} memo type => {memo_id.memo_type_key} and department {memo_id.employee_id.department_id.name}''')
+            
+            # Note: get_next_stage_artifact might return a list of potential approvers
             approver_ids, next_stage_id = memo_id.get_next_stage_artifact(stage_id, True)
+            
             if not approver_ids and not next_stage_id:
                 _logger.info(f'''Friendly approvers {approver_ids} memo type => {next_stage_id}''')
                 return json.dumps({'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"})
                 # return {'status': False, 'message': "Please ensure to configure the Memo type\n for the employee department!"}
 
             stage_obj = request.env['memo.stage'].sudo().search([('id', '=', next_stage_id)])
-            approver_ids = stage_obj.approver_ids.ids if stage_obj.approver_ids else [employee_id.parent_id.id] if employee_id.parent_id else []
-            follower_ids = [(4, r) for r in approver_ids]
+            
+            # === START OF IMPROVED ROUTING LOGIC ===
+            potential_approvers = stage_obj.approver_ids
+            final_approver_id = False
+
+            # 1. Priority: Filter by Processing District (if one was selected)
+            if processing_branch_id and potential_approvers:
+                district_specific_approver = potential_approvers.filtered(
+                    lambda emp: emp.branch_id.id == processing_branch_id
+                )
+                if district_specific_approver:
+                    final_approver_id = district_specific_approver[0].id
+                    _logger.info(f"Routing: Found specific approver for district: {district_specific_approver[0].name}")
+                else:
+                    _logger.warning(f"Routing: Selected district {processing_branch_id} has no matching approver in stage {stage_obj.name}. Falling back.")
+
+            # 2. Fallback: Standard Random Selection (Line Manager or Stage Approvers)
+            if not final_approver_id:
+                # Use potential_approvers from stage, or fall back to parent_id if stage has no approvers
+                available_ids = potential_approvers.ids if potential_approvers else [employee_id.parent_id.id] if employee_id.parent_id else []
+                
+                if available_ids:
+                    final_approver_id = random.choice(available_ids)
+
+            # Final Validation
+            if not final_approver_id:
+                return json.dumps({'status': False, 'message': "Configuration Error: No approver found for the next stage."})
+
+            # Standard follower logic
+            follower_ids = [(4, final_approver_id)]
             user_ids = [(4, request.env.user.id)]
             if employee_id.administrative_supervisor_id:
                 follower_ids.append((4, employee_id.administrative_supervisor_id.id))
             if employee_id.parent_id:
                 follower_ids.append((4, employee_id.parent_id.id))
-            selected_approver = random.choice(approver_ids)
+
             memo_id.sudo().update({
                 'stage_id': next_stage_id, 
-                'approver_id': selected_approver,
-                'set_staff': selected_approver,
-                'approver_ids': [(4, r) for r in approver_ids],
-                "direct_employee_id": selected_approver,
+                'approver_id': final_approver_id,
+                'set_staff': final_approver_id,
+                # Using (6, 0, [id]) to explicitly set the authorized approver for this stage
+                'approver_ids': [(6, 0, [final_approver_id])],
+                "direct_employee_id": final_approver_id,
                 'users_followers': follower_ids,
                 'res_users': user_ids,
                 'memo_setting_id': stage_obj.memo_config_id.id,
                 'memo_type_key': memo_id.memo_type_key or memo_id.memo_key,
             })
             _logger.info(f'''
-                Successfully Registered! with memo id Approver = {approver_ids} \
-                    stage {next_stage_id} {memo_id} {memo_id.stage_id} {memo_id.stage_id.memo_config_id} \
-                        or {stage_obj} {stage_obj.memo_config_id} {memo_id.memo_setting_id}''')
+                Successfully Registered! with approver = {final_approver_id} \
+                    stage {next_stage_id}''')
+            # === END OF IMPROVED ROUTING LOGIC ===
+            
             saveAction = True if saveAction in ['true', 'True', True] else False
             if saveAction:
                 _logger.info(f"submitting action done 1 {saveAction}")
@@ -2213,10 +2779,193 @@ class PortalRequest(http.Controller):
 
 
     
+    # @http.route('/my/request/update', type='json', auth="user", website=True)
+    # def update_my_request(self, **post):
+    #     _logger.info(f"updating the request ...{post.get('memo_id')}")
+    #     user = request.env.user
+    #     request_id = request.env['memo.model'].sudo()
+    #     domain = [
+    #         # ('employee_id.user_id', '=', user.id),
+    #         ('id', '=', post.get('memo_id')),
+    #         # ('state', 'in', ['Refuse']),
+    #     ]
+    #     request_record = request_id.search(domain, limit=1)
+    #     stage_id = False
+    #     status = post.get('status', '')
+
+    #     if request_record:
+    #         if status == "cancel":
+    #             stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+                
+    #             request_record._log_action(
+    #                 action='cancelled',
+    #                 comments='Cancelled via portal'
+    #             )
+                
+    #             body_msg = f"""
+    #                 Dear Sir / Madam, <br/>
+    #                 I wish to notify you that a request with description \n <br/>\
+    #                 has been cancel by {request.env.user.name} <br/>\
+    #                 Kindly {get_url(request_record.id)}"""
+    #             request_record.mail_sending_direct(body_msg)
+    #             request_record.write({
+    #                 'state': 'Refuse', 
+    #                 'stage_id': stage_id,
+    #                 })
+    #             return {
+    #                 "status": True, 
+    #                 "link": False, 
+    #                 "message": "Record updated successfully", 
+    #                 }
+            
+    #         elif status == "Sent":
+    #             stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
+    #                 request_record.sudo().memo_setting_id.stage_ids else \
+    #                     request.env.ref('company_memo.memo_cancel_stage').id
+    #             request_record.sudo().write({'state': 'Sent', 'stage_id': stage_id})
+    #             return {
+    #                 "status": True, 
+    #                 "link": False, 
+    #                 "message": "Record updated successfully", 
+    #                 }
+            
+    #         elif status in ["Resend"]:
+    #             # useds this to determine the stages configured on the system
+    #             # if the length of stages is just 1, try the first condition else,
+    #             # set the stage to the next stage after draft.
+    #             if not request.env.user.id == request_record.employee_id.user_id.id:
+    #                 return {
+    #                     "status": False, 
+    #                     "link": False, 
+    #                     "message": "Only initiator can resend this request", 
+    #                     }
+                
+    #             memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
+    #             if memoStage_ids:
+    #                 stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+    #                 next_stage = request.env['memo.stage'].browse(stage_id)
+                    
+    #                 request_record._log_action(
+    #                     action='submitted',
+    #                     comments='Resubmitted via portal',
+    #                     next_stage=next_stage
+    #                 )
+                    
+    #                 request_record.write({'state': 'Sent', 'stage_id': stage_id})
+    #                 return {
+    #                     "status": True, 
+    #                     "link": False,
+    #                     "message": "Record updated successfully", 
+    #                     }
+    #             else:
+    #                 return {
+    #                 "status": False, 
+    #                 "link": False, 
+    #                 "message": "No stage configured or found for this request. Contact admin", 
+    #                 }
+            
+    #         elif status in ["Approve"]:
+                
+    #             # approver_ids, stage = request_record.get_next_stage_artifact()
+    #             current_stage_approvers = request_record.sudo().stage_id.approver_ids
+    #             manager_approvals = []
+    #             if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
+    #                 manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
+    #             # user_employeeid = request.env.user.employee_id.id
+    #             if not request.env.user.id in [r.user_id.id for r in current_stage_approvers] + manager_approvals:
+    #                 if not (request_record.supervisor_comment or request_record.manager_comment):
+    #                     return {
+    #                         "status": False, 
+    #                         "link": False,
+    #                         "message": "Please Scroll down to the ending of the form to provide manager's or supervisor's comment", 
+    #                         }
+    #                 else:
+    #                     return {
+    #                         "status": False, 
+    #                         "link": False,
+    #                         "message": "You are not assigned to approve this record", 
+    #                         }
+    #             """First check if the server """
+    #             # ensure that current stage is not the main approval stage. Only internal users
+    #             # can go into office memo to approve
+    #             if request_record.sudo().stage_id.is_approved_stage:
+    #                 url_link = get_model_url(request_record.id, 'memo.model')
+    #                 is_internal_user = request.env.user.has_group('base.group_user')
+    #                 _logger.info(f"LINKAGE {url_link} Internal user found {is_internal_user}")
+    #                 return {
+    #                         "status": False, 
+    #                         "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
+    #                         "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
+                            
+    #                         }
+    #             current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
+    #             is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
+    #                 filtered(lambda appr: appr.is_approved_stage == True) 
+    #             if is_approved_stage:
+    #                 stage_id = is_approved_stage[0] 
+    #                 # is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
+    #                 # filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
+    #                 if request.env.user.id in current_stage_approvers:
+    #                     # Get the stage before update for logging
+    #                     current_stage_before = request_record.stage_id
+                        
+    #                     request_record.sudo().update_final_state_and_approver()
+                        
+    #                     # LOG ACTION: Approved
+    #                     request_record._log_action(
+    #                         action='approved',
+    #                         comments='Approved via portal',
+    #                         next_stage=request_record.stage_id  # Use the new stage after update
+    #                     )
+                        
+    #                     request_record.sudo().write({
+    #                         'res_users': [(4, request.env.user.id)]
+    #                         })
+    #                 else:
+    #                     return {
+    #                         "status": True,
+    #                         "link": False,
+    #                         "message": "You are not allowed to approve this document", 
+    #                     }
+    #                     # request_record.write({'state': 'Sent', 'stage_id': stage_id})
+    #                 body_msg = f"""
+    #                 Dear Sir / Madam <br/>\
+    #                 I wish to notify you that a request with description \n <br/>\
+    #                 has been approved for validation by {request.env.user.name} <br/>\
+    #                 Kindly {get_url(request_record.id)}"""
+    #                 request_record.mail_sending_direct(body_msg)
+    #                 return {
+    #                     "status": True,
+    #                     "link": False,
+    #                     "message": "Record updated successfully", 
+    #                     }
+    #             else:
+    #                 return {
+    #                 "status": False, 
+    #                 "link": False,
+    #                 "message": "No stage configured as approved stage. Contact admin", 
+    #                 }
+    #         else:
+    #             return {
+    #                     "status": False,
+    #                     "link": False, 
+    #                     "message": "Request must have a status", 
+    #                     }
+    #     else:
+    #         return {
+    #                 "status": False, 
+    #                 "link": False,
+    #                 "message": "No matching record found", 
+    #                 }
+            # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
+            
     @http.route('/my/request/update', type='json', auth="user", website=True)
     def update_my_request(self, **post):
         _logger.info(f"updating the request ...{post.get('memo_id')}")
         user = request.env.user
+        
+        selected_approver_id = int(post.get('selected_approver_id')) if post.get('selected_approver_id') else False
+
         request_id = request.env['memo.model'].sudo()
         domain = [
             # ('employee_id.user_id', '=', user.id),
@@ -2332,53 +3081,140 @@ class PortalRequest(http.Controller):
                             "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
                             
                             }
-                current_stage_approvers = [r.user_id.id for r in current_stage_approvers] + manager_approvals
-                is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
-                    filtered(lambda appr: appr.is_approved_stage == True) 
-                if is_approved_stage:
-                    stage_id = is_approved_stage[0] 
-                    # is_approved_stage = request_record.sudo().memo_setting_id.mapped('stage_ids').\
-                    # filtered(lambda appr: appr.approver_id.user_id.id == request.env.user.id)
-                    if request.env.user.id in current_stage_approvers:
-                        # Get the stage before update for logging
-                        current_stage_before = request_record.stage_id
-                        
-                        request_record.sudo().update_final_state_and_approver()
-                        
-                        # LOG ACTION: Approved
-                        request_record._log_action(
-                            action='approved',
-                            comments='Approved via portal',
-                            next_stage=request_record.stage_id  # Use the new stage after update
-                        )
-                        
-                        request_record.sudo().write({
-                            'res_users': [(4, request.env.user.id)]
-                            })
+                
+                # === INTEGRATED ROUTING LOGIC STARTS HERE ===
+                
+                current_stage_id = request_record.stage_id.id
+                stage_ids = request_record.memo_setting_id.stage_ids.ids
+                next_stage_id = False
+
+                # Calculate Next Stage Index
+                if current_stage_id in stage_ids:
+                    idx = stage_ids.index(current_stage_id)
+                    if idx < len(stage_ids) - 1:
+                        next_stage_id = stage_ids[idx + 1]
                     else:
+                        # Fallback if at end of list (usually handled by is_approved_stage check above)
+                        pass 
+                
+                if next_stage_id:
+                    next_stage = request.env['memo.stage'].sudo().browse(next_stage_id)
+                    potential_approvers = next_stage.approver_ids
+                    
+                    # Determine Routing Logic based on Memo Config
+                    routing_mode = getattr(request_record.memo_setting_id, 'routing_mode', 'standard') # Safe getattr
+                    final_approver_id = False
+
+                    # --- A. If User already selected someone from popup (Manual Mode Phase 2) ---
+                    if selected_approver_id:
+                        final_approver_id = selected_approver_id
+                        _logger.info(f"Routing: Using Selected approver {final_approver_id}")
+                    
+                    else:
+                        # --- B. Calculate based on Mode ---
+                        
+                        # AUTO MODE: Filter by Processing Branch (Using 'processing_branch_id' as requested)
+                        if routing_mode == 'auto':
+                            proc_branch_id = request_record.processing_branch_id
+                            _logger.info(f"Using Auto Routing mode with district {proc_branch_id.name}")
+                            
+                            if proc_branch_id:
+                                # Filter approvers belonging to that branch
+                                branch_approvers = potential_approvers.filtered(
+                                    lambda e: e.branch_id.id == proc_branch_id.id
+                                )
+                                if branch_approvers:
+                                    final_approver_id = branch_approvers[0].id
+                                else:
+                                    # Fallback to random if no branch specific approver found
+                                    if potential_approvers:
+                                        final_approver_id = random.choice(potential_approvers.ids)
+                            else:
+                                # No branch set, behave like standard
+                                if potential_approvers:
+                                    final_approver_id = random.choice(potential_approvers.ids)
+
+                        # MANUAL MODE: Check count for popup
+                        elif routing_mode == 'manual':
+                            if len(potential_approvers) > 1:
+                                # RETURN DATA TO FRONTEND TO SHOW POPUP
+                                approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
+                                return {
+                                    "status": False, # Stop processing
+                                    "manual_select": True, # Trigger JS popup
+                                    "approvers": approver_list,
+                                    "message": "Please select an approver"
+                                }
+                            elif len(potential_approvers) == 1:
+                                final_approver_id = potential_approvers[0].id
+                        
+                        # STANDARD MODE (Default)
+                        else:
+                            if potential_approvers:
+                                final_approver_id = random.choice(potential_approvers.ids)
+
+                        # --- C. Fallback Logic (Managers) ---
+                        # If next stage is the second stage (Index 1 usually), try Line Manager if no approver found
+                        if not final_approver_id:
+                            # Check index of NEXT stage
+                            next_stage_index = stage_ids.index(next_stage_id)
+                            if next_stage_index == 1: 
+                                employee_self_id = request_record.employee_id.id
+                                
+                                # Check Parent/Line Manager (ensure it's not the employee themselves)
+                                if request_record.employee_id.parent_id and \
+                                    request_record.employee_id.parent_id.id != employee_self_id:
+                                    final_approver_id = request_record.employee_id.parent_id.id
+                                    
+                                # Check Administrative Supervisor (ensure it's not the employee themselves)
+                                elif request_record.employee_id.administrative_supervisor_id and \
+                                    request_record.employee_id.administrative_supervisor_id.id != employee_self_id:
+                                    final_approver_id = request_record.employee_id.administrative_supervisor_id.id
+
+                    if not final_approver_id:
                         return {
-                            "status": True,
+                            "status": False, 
                             "link": False,
-                            "message": "You are not allowed to approve this document", 
+                            "message": f"No approver found for the next stage ({next_stage.name}). Please contact Admin."
                         }
-                        # request_record.write({'state': 'Sent', 'stage_id': stage_id})
+
+                    # === APPLY UPDATES ===
+                    
+                    # LOG ACTION: Approved
+                    request_record._log_action(
+                        action='approved',
+                        comments='Approved via portal',
+                        next_stage=next_stage 
+                    )
+                    
+                    request_record.sudo().write({
+                        'stage_id': next_stage_id,
+                        'approver_id': final_approver_id,
+                        'users_followers': [(4, final_approver_id)],
+                        'res_users': [(4, request.env.user.id)]
+                        })
+                    
                     body_msg = f"""
                     Dear Sir / Madam <br/>\
                     I wish to notify you that a request with description \n <br/>\
                     has been approved for validation by {request.env.user.name} <br/>\
                     Kindly {get_url(request_record.id)}"""
                     request_record.mail_sending_direct(body_msg)
+                    
                     return {
                         "status": True,
                         "link": False,
                         "message": "Record updated successfully", 
                         }
+                
                 else:
                     return {
                     "status": False, 
                     "link": False,
-                    "message": "No stage configured as approved stage. Contact admin", 
+                    "message": "No next stage found. Configuration Error.", 
                     }
+                # === END INTEGRATED LOGIC ===
+                
             else:
                 return {
                         "status": False,
@@ -2391,7 +3227,6 @@ class PortalRequest(http.Controller):
                     "link": False,
                     "message": "No matching record found", 
                     }
-            # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
     
     @http.route('/save/data', type='json', auth="user", website=True)
     def save_data(self, **post):

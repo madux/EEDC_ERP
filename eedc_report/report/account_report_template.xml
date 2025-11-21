@@ -1207,7 +1207,6 @@
                             }
 
                             /* 2. Remove overflow restrictions from ALL potential parent containers */
-                            /* This is what enabled the dropdown to hover (The LLM that gave you this was correct on this part) */
                             .o_content,
                             .o_report_html,
                             .o_web_client, 
