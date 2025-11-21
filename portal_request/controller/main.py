@@ -1128,6 +1128,84 @@ class PortalRequest(http.Controller):
         # request.session.clear()
         return request.render("portal_request.portal_request_success_template", vals)
 
+    # @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
+    # def get_portal_product(self, **post):
+    #     productItems = json.loads(post.get('productItems'))
+    #     request_type_option = post.get('request_type')
+    #     source_locationId = post.get('source_locationId')
+    #     _logger.info(f'productitemmms {productItems}')
+    #     query = request.params.get('q', '') 
+    #     productItems_List = [int(i) for i in productItems if i]
+    #     result = []
+    #     if source_locationId:
+    #         domain = [
+    #         ('product_id.id', 'not in', productItems_List),
+    #         ('location_id', '=', int(source_locationId)), 
+    #           '|','|', 
+    #         ('product_id.name', 'ilike', query),
+    #         ('product_id.default_code', 'ilike', query),
+    #         ('product_id.barcode', 'ilike', query)
+    #         ]
+    #         quants = request.env["stock.quant"].sudo().search(domain)
+    #         if quants:
+    #             for item in quants:
+    #                 result.append(
+    #                     {
+    #                         "id": item.product_id.id,
+    #                         "text": f'{item.product_id.name} {item.product_id.default_code}', 
+    #                         "qty": item.product_id.qty_available
+    #                     })
+    #     else:
+    #         domain = [
+    #         ('detailed_type', 'in', ['consu', 'product']), 
+    #            ('id', 'not in', productItems_List),
+    #         ('company_id', '=', request.env.user.company_id.id), 
+    #            ('active', '=', True), 
+    #           '|','|', 
+    #         ('name', 'ilike', query),
+    #         ('default_code', 'ilike', query),
+    #         ('barcode', 'ilike', query)
+    #         ]
+    #         products = request.env["product.product"].sudo().search(domain)
+    #         if products:
+    #             for item in products:
+    #                 result.append(
+    #                     {
+    #                         "id": item.id,
+    #                         "text": f'{item.name} {item.default_code}', 
+    #                         'qty': item.qty_available
+    #                     })
+
+    #     if request_type_option and request_type_option == "vehicle_request":
+    #         result = []
+    #         domain = [
+    #                     ('is_vehicle_product', '=', True), 
+    #                     ('detailed_type', 'in', ['service']), 
+    #                     ('id', 'not in', productItems_List),
+    #                     ('company_id', '=', request.env.user.company_id.id), 
+    #                     ('active', '=', True), 
+    #                     '|','|', 
+    #                     ('name', 'ilike', query),
+    #                     ('default_code', 'ilike', query),
+    #                     ('barcode', 'ilike', query)
+    #                   ]
+    #         products = request.env["product.product"].sudo().search(domain)
+    #         if products:
+    #             for item in products:
+    #                 result.append(
+    #                     {
+    #                         "id": item.id,
+    #                         "text": f'{item.name} {item.default_code}', 
+    #                         'qty': item.qty_available
+    #                     })
+    #     # domain = [('id', 'in', [403, 222, 1000, 5000])]
+    #     return json.dumps({
+    #         "results": result , #[{"id": item.id,"text": f'{item.name} {item.default_code}', 'qty': item.qty_available} for item in products],
+    #         "pagination": {
+    #             "more": True,
+    #         }
+    #     })
+    
     @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
     def get_portal_product(self, **post):
         productItems = json.loads(post.get('productItems'))
@@ -1137,70 +1215,84 @@ class PortalRequest(http.Controller):
         query = request.params.get('q', '') 
         productItems_List = [int(i) for i in productItems if i]
         result = []
+        
+        # Define which request types can see service products
+        service_allowed_types = ['procurement_request', 'sale_request']
+        
         if source_locationId:
             domain = [
-            ('product_id.id', 'not in', productItems_List),
-            ('location_id', '=', int(source_locationId)), 
-              '|','|', 
-            ('product_id.name', 'ilike', query),
-            ('product_id.default_code', 'ilike', query),
-            ('product_id.barcode', 'ilike', query)
+                ('product_id.id', 'not in', productItems_List),
+                ('location_id', '=', int(source_locationId)), 
+                '|','|', 
+                ('product_id.name', 'ilike', query),
+                ('product_id.default_code', 'ilike', query),
+                ('product_id.barcode', 'ilike', query)
             ]
             quants = request.env["stock.quant"].sudo().search(domain)
             if quants:
                 for item in quants:
-                    result.append(
-                        {
-                            "id": item.product_id.id,
-                            "text": f'{item.product_id.name} {item.product_id.default_code}', 
-                            "qty": item.product_id.qty_available
-                        })
+                    result.append({
+                        "id": item.product_id.id,
+                        "text": f'{item.product_id.name} {item.product_id.default_code}', 
+                        "qty": item.product_id.qty_available
+                    })
         else:
+            # Base domain for all products
+            base_domain = [
+                ('id', 'not in', productItems_List),
+                ('company_id', '=', request.env.user.company_id.id), 
+                ('active', '=', True), 
+                '|','|', 
+                ('name', 'ilike', query),
+                ('default_code', 'ilike', query),
+                ('barcode', 'ilike', query)
+            ]
+            
+            # Add detailed_type filter based on request type
+            if request_type_option == 'material_request':
+                # Material requests: ONLY physical products (storable/consumable)
+                domain = base_domain + [('detailed_type', 'in', ['consu', 'product'])]
+            elif request_type_option in service_allowed_types:
+                # Procurement, sales, payment, vehicle: Allow services AND physical products
+                domain = base_domain + [('detailed_type', 'in', ['consu', 'product', 'service'])]
+            else:
+                # Default: physical products only
+                domain = base_domain + [('detailed_type', 'in', ['consu', 'product'])]
+            
+            products = request.env["product.product"].sudo().search(domain)
+            if products:
+                for item in products:
+                    result.append({
+                        "id": item.id,
+                        "text": f'{item.name} {item.default_code}', 
+                        'qty': item.qty_available
+                    })
+
+        # Special handling for vehicle requests (existing code)
+        if request_type_option and request_type_option == "vehicle_request":
+            result = []
             domain = [
-            ('detailed_type', 'in', ['consu', 'product']), 
-               ('id', 'not in', productItems_List),
-            ('company_id', '=', request.env.user.company_id.id), 
-               ('active', '=', True), 
-              '|','|', 
-            ('name', 'ilike', query),
-            ('default_code', 'ilike', query),
-            ('barcode', 'ilike', query)
+                ('is_vehicle_product', '=', True), 
+                ('detailed_type', 'in', ['service']), 
+                ('id', 'not in', productItems_List),
+                ('company_id', '=', request.env.user.company_id.id), 
+                ('active', '=', True), 
+                '|','|', 
+                ('name', 'ilike', query),
+                ('default_code', 'ilike', query),
+                ('barcode', 'ilike', query)
             ]
             products = request.env["product.product"].sudo().search(domain)
             if products:
                 for item in products:
-                    result.append(
-                        {
-                            "id": item.id,
-                            "text": f'{item.name} {item.default_code}', 
-                            'qty': item.qty_available
-                        })
-
-        if request_type_option and request_type_option == "vehicle_request":
-            result = []
-            domain = [
-                        ('is_vehicle_product', '=', True), 
-                        ('detailed_type', 'in', ['service']), 
-                        ('id', 'not in', productItems_List),
-                        ('company_id', '=', request.env.user.company_id.id), 
-                        ('active', '=', True), 
-                        '|','|', 
-                        ('name', 'ilike', query),
-                        ('default_code', 'ilike', query),
-                        ('barcode', 'ilike', query)
-                      ]
-            products = request.env["product.product"].sudo().search(domain)
-            if products:
-                for item in products:
-                    result.append(
-                        {
-                            "id": item.id,
-                            "text": f'{item.name} {item.default_code}', 
-                            'qty': item.qty_available
-                        })
-        # domain = [('id', 'in', [403, 222, 1000, 5000])]
+                    result.append({
+                        "id": item.id,
+                        "text": f'{item.name} {item.default_code}', 
+                        'qty': item.qty_available
+                    })
+        
         return json.dumps({
-            "results": result , #[{"id": item.id,"text": f'{item.name} {item.default_code}', 'qty': item.qty_available} for item in products],
+            "results": result,
             "pagination": {
                 "more": True,
             }
