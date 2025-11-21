@@ -1199,8 +1199,8 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let $btn = $(ev.target); // Fix: ensure we grab the button correctly
                 let $btnHtml = $btn.html();
                 
-                // Check if we are sending a forced approver (from the modal)
-                let forcedApproverId = $btn.attr('data-forced-approver');
+                // Check if we are sending a selected approver (from the modal)
+                let selectedApproverId = $btn.attr('data-selected-approver');
                 
                 $btn.attr('disabled', 'disabled');
                 $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
@@ -1212,7 +1212,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     params: {
                         'status': 'Approve',
                         'memo_id': targetElementId,
-                        'forced_approver_id': forcedApproverId // Send this if selected from modal
+                        'selected_approver_id': selectedApproverId // Send this if selected from modal
                     },
                 }).then(function (data) {
                     $.unblockUI();
@@ -1244,7 +1244,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                                 if(selectedId){
                                     // Store selected ID on the main approve button temporarily or call RPC directly
                                     // Let's trigger the main button again but with data
-                                    $('.approve_request').attr('data-forced-approver', selectedId);
+                                    $('.approve_request').attr('data-selected-approver', selectedId);
                                     $('.approve_request').trigger('click');
                                 }
                             });

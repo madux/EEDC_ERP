@@ -96,7 +96,7 @@
                                 </div>
                             </div>
                         </section>
-                        <section class="s_website_form pt16 pb16 o_colored_level portal-request" id="portal-request" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
+                        <section class="s_website_form pt16 pb16 o_colored_level portal-request" id="portal-request" t-att-data-request-branch-id="user_branch.id if user_branch else False" data-vcss="001" data-snippet="s_website_form" data-name="Form" style="background-image: none;">
                             <div class="container">
                              <!-- action="/portal/form/" -->
                                 <!-- <form id="msform" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true" data-success-mode="redirect" data-success-page="/contactus-thank-you" data-model_name="mail.mail"> -->

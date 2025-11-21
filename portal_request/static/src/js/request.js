@@ -1333,39 +1333,43 @@ odoo.define('portal_request.portal_request', function (require) {
                 compute_total_amount();
             },
 
-            // $('#inactivelist').change(function () {
-            //     alert('changed');
-            //  });
-			
+
             'change .Sourcelocation-cls': function(ev){
                 let sourceLocationId = $('#source_location_id');
                 let selectedValue = $(ev.target).val();
                 
-                console.log(`SOURCE LOCATION CHANGED: ${sourceLocationId.val()} == ${selectedValue}`);
+                console.log(`SOURCE LOCATION CHANGED: ${selectedValue}`);
                 
                 if(selectedValue && selectedValue !== ''){
                     $('#TargetSourceLocation').val(selectedValue);
                     
-                    // Clear and reinitialize destination with source exclusion
+                    // Clear and reinitialize destination
                     $('#destination_location_id').val('').trigger('change');
                     
-                    // Use the config's inter-district flag
-                    // let interCompany = $('#is_inter_district_transfer_config').is(':checked');
-                    let interCompany = $("#selectConfigOption option:selected").attr("allow_cross_company_requests") === "True";
-                    let selectedDistrict = $('#processing_branch_id').val();
+                    var isInterDistrictTransfer = $('#isInterDistrictProcess').is(':checked');
                     
-                    console.log('Refreshing destination with inter-company:', interCompany, 'district:', selectedDistrict, 'excluding source:', selectedValue);
+                    var requestBranchId = null;
+                    var configBranchId = $("#selectConfigOption option:selected").attr("branch_id");
+                    if (configBranchId && configBranchId !== 'False' && configBranchId !== 'false') {
+                        requestBranchId = parseInt(configBranchId);
+                    } else {
+                        requestBranchId = $('#portal-request').data('request-branch-id');
+                    }
+                    
+                    // Exclude source ONLY during inter-district transfers
+                    var excludeSourceId = isInterDistrictTransfer ? parseInt(selectedValue) : 0;
+                    
+                    console.log('Refreshing destination with request branch:', requestBranchId, 'excluding source:', excludeSourceId);
                     
                     searchStockLocation(
                         destination_location_id, 
                         'destination', 
-                        interCompany, 
+                        isInterDistrictTransfer, 
                         '', 
-                        parseInt(selectedValue),  // Pass source location to exclude
-                        selectedDistrict
+                        excludeSourceId,
+                        requestBranchId
                     );
                     
-                    // Remove validation errors
                     sourceLocationId.removeClass('is-invalid').addClass('is-valid');
                 } else {
                     $('#destination_location_id').val('');
@@ -1918,24 +1922,48 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
             
+            
             'change #processing_branch_id': function(ev){
                 var self = this;
                 var selectedDistrict = $(ev.target).val();
                 var memo_type_key = $('#selectRequestOption').val();
                 
                 console.log('Processing district selected:', selectedDistrict);
-                console.log('Memo key...:', memo_type_key)
+                console.log('Memo key:', memo_type_key);
                 
                 if (memo_type_key === "material_request" && selectedDistrict) {
                     var isInterDistrictTransfer = $('#isInterDistrictProcess').is(':checked');
                     
-                    console.log('Initializing location searches for district:', selectedDistrict, 'Inter-district:', isInterDistrictTransfer);
+                    var requestBranchId = null;
+                    
+                    // Priority 1: From config option's branch_id attribute
+                    var configBranchId = $("#selectConfigOption option:selected").attr("branch_id");
+                    if (configBranchId && configBranchId !== 'False' && configBranchId !== 'false' && configBranchId !== '') {
+                        requestBranchId = parseInt(configBranchId);
+                        console.log('Using request branch from config:', requestBranchId);
+                    }
+                    
+                    if (!requestBranchId) {
+                        var userBranchData = $('#portal-request').data('request-branch-id');
+                        if (userBranchData) {
+                            requestBranchId = parseInt(userBranchData);
+                            console.log('Using request branch from portal data:', requestBranchId);
+                        }
+                    }
+                    
+                    // Fallback: Use processing district
+                    if (!requestBranchId) {
+                        requestBranchId = parseInt(selectedDistrict);
+                        console.log('Fallback: Using processing district as request branch:', requestBranchId);
+                    }
+                    
+                    console.log('Initializing locations - Processing:', selectedDistrict, 'Request Branch:', requestBranchId, 'Inter:', isInterDistrictTransfer);
                     
                     // Clear existing values first
                     $('#source_location_id').val('').trigger('change');
                     $('#destination_location_id').val('').trigger('change');
 
-                    // Initialize source location with district filter
+                    // Initialize SOURCE location with processing district filter
                     searchStockLocation(
                         source_location_id, 
                         'source', 
@@ -1945,17 +1973,16 @@ odoo.define('portal_request.portal_request', function (require) {
                         selectedDistrict
                     );
                     
-                    // Initialize destination location
+                    // Initialize DESTINATION location with REQUEST BRANCH filter
                     searchStockLocation(
                         destination_location_id, 
                         'destination', 
                         isInterDistrictTransfer, 
                         '', 
                         0,
-                        selectedDistrict
+                        requestBranchId
                     );
                     
-                    // Auto-load first location for source using jQuery AJAX (not _rpc)
                     $.ajax({
                         url: '/get-stock-location',
                         type: 'POST',
@@ -1978,19 +2005,57 @@ odoo.define('portal_request.portal_request', function (require) {
                                 
                                 var $sourceSelect = $('#source_location_id');
                                 
-                                // Add option if it doesn't exist
                                 if ($sourceSelect.find("option[value='" + firstLocation.id + "']").length === 0) {
                                     var newOption = new Option(firstLocation.text, firstLocation.id, true, true);
                                     $sourceSelect.append(newOption);
                                 }
                                 
-                                // Set value and trigger change
                                 $sourceSelect.val(firstLocation.id).trigger('change');
-                                
                                 $('#TargetSourceLocation').val(firstLocation.id);
                                 $sourceSelect.removeClass('is-invalid').addClass('is-valid');
+                                
+                                var excludeSourceId = isInterDistrictTransfer ? firstLocation.id : 0;
+                                
+                                $.ajax({
+                                    url: '/get-stock-location',
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    data: {
+                                        q: '',
+                                        location_type: 'destination',
+                                        is_inter_company: isInterDistrictTransfer,
+                                        district_id: requestBranchId,
+                                        selected_location_id: excludeSourceId,
+                                        page_limit: 1,
+                                        page: 1
+                                    },
+                                    success: function (destData) {
+                                        console.log('Auto-load destination response:', destData);
+                                        
+                                        if (destData && destData.results && destData.results.length > 0) {
+                                            var firstDest = destData.results[0];
+                                            console.log('Setting destination to:', firstDest);
+                                            
+                                            var $destSelect = $('#destination_location_id');
+                                            
+                                            if ($destSelect.find("option[value='" + firstDest.id + "']").length === 0) {
+                                                var newDestOption = new Option(firstDest.text, firstDest.id, true, true);
+                                                $destSelect.append(newDestOption);
+                                            }
+                                            
+                                            $destSelect.val(firstDest.id).trigger('change');
+                                            $destSelect.removeClass('is-invalid').addClass('is-valid');
+                                        } else {
+                                            console.warn('No destination locations found for request branch:', requestBranchId);
+                                        }
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.error('Error loading destination:', error);
+                                    }
+                                });
+                                
                             } else {
-                                console.warn('No locations found for district:', selectedDistrict);
+                                console.warn('No source locations found for district:', selectedDistrict);
                                 alert('No stock locations found for the selected district. Please ensure locations are configured.');
                             }
                         },
@@ -2145,9 +2210,9 @@ odoo.define('portal_request.portal_request', function (require) {
                                 locationDistrictId = parseInt(request_branch);
                                 console.log('Using request_branch from config:', locationDistrictId);
                             }
-                            // Priority 3: Use user's selected district
+                            // Priority 3: Use rquest district in the template
                             else {
-                                locationDistrictId = parseInt($('#selectRequestDistrict').val());
+                                locationDistrictId = parseInt($('#portal-request').data('request-branch-id'));
                                 console.log('Using user selected district:', locationDistrictId);
                             }
                             
@@ -2166,11 +2231,10 @@ odoo.define('portal_request.portal_request', function (require) {
                             if (isInterDistrictTransfer) {
                                 console.log('Inter-district transfer: Pre-filling locations');
                                 
-                                // Make both required
+                                // Required
                                 $('#source_location_id').attr('required', true);
                                 $('#destination_location_id').attr('required', true);
                                 
-                                // Initialize destination location search (will be different district)
                                 searchStockLocation(
                                     destination_location_id, 
                                     'destination', 
@@ -2271,7 +2335,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                 $('#source_location_id').attr('required', true);
                                 $('#destination_location_id').attr('required', false);
                                 
-                                // Initialize destination with same district (user can choose to fill or not)
                                 searchStockLocation(
                                     destination_location_id, 
                                     'destination', 

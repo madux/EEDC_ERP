@@ -477,8 +477,11 @@ class PortalRequest(http.Controller):
             # Build search domain
             domain = [('usage', '=', 'internal')]
             
+            company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+            
             if not is_inter_company:
                 domain.append(('company_id', '=', request.env.user.company_id.id))
+                # domain.append(('company_id', '=', company_ids))
             
             if district_id and district_id > 0:
                 domain.append(('branch_id', '=', district_id))
@@ -2961,8 +2964,7 @@ class PortalRequest(http.Controller):
         _logger.info(f"updating the request ...{post.get('memo_id')}")
         user = request.env.user
         
-        # Check if user selected someone from the popup (New Integration)
-        forced_approver_id = int(post.get('forced_approver_id')) if post.get('forced_approver_id') else False
+        selected_approver_id = int(post.get('selected_approver_id')) if post.get('selected_approver_id') else False
 
         request_id = request.env['memo.model'].sudo()
         domain = [
@@ -3104,9 +3106,9 @@ class PortalRequest(http.Controller):
                     final_approver_id = False
 
                     # --- A. If User already selected someone from popup (Manual Mode Phase 2) ---
-                    if forced_approver_id:
-                        final_approver_id = forced_approver_id
-                        _logger.info(f"Routing: Using forced approver {final_approver_id}")
+                    if selected_approver_id:
+                        final_approver_id = selected_approver_id
+                        _logger.info(f"Routing: Using Selected approver {final_approver_id}")
                     
                     else:
                         # --- B. Calculate based on Mode ---
