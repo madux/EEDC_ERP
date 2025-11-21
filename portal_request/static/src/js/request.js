@@ -1924,6 +1924,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 var memo_type_key = $('#selectRequestOption').val();
                 
                 console.log('Processing district selected:', selectedDistrict);
+                console.log('Memo key...:', memo_type_key)
                 
                 if (memo_type_key === "material_request" && selectedDistrict) {
                     var isInterDistrictTransfer = $('#isInterDistrictProcess').is(':checked');
@@ -2083,8 +2084,11 @@ odoo.define('portal_request.portal_request', function (require) {
                         let memo_type_id = sro.getAttribute("memo_key_id");
                         let memo_type_key = sro.getAttribute("memo_type_key");
                         let is_inter_district_config = sro.getAttribute("inter_district");
+                        let request_branch = sro.getAttribute("branch_id");
+                        let processing_branch = sro.getAttribute("processing_branch");
+                        let inter_company = sro.getAttribute("allow_cross_company_requests");
                         
-                        console.log(`Config selected: ${memo_type_key}, Inter-District: ${is_inter_district_config}`);
+                        console.log(`Config selected: ${memo_type_key}, Inter-District: ${is_inter_district_config}, Request Branch: ${request_branch}, Processing Branch: ${processing_branch}, Cross-Company: ${inter_company}`);
 
                         $('#selectConfigOptionId').val(Number(memo_config_id));
                         $('#selectedRequestOptionId').val(Number(memo_type_id));
@@ -2092,6 +2096,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
                         // Store whether this config is inter-district
                         let isInterDistrictTransfer = (is_inter_district_config === 'True' || is_inter_district_config === 'true');
+                        let allowCrossCompany = (inter_company === 'True' || inter_company === 'true');
                         $('#is_inter_district_transfer_config').prop('checked', isInterDistrictTransfer);
 
                         // ============================================================
@@ -2119,26 +2124,217 @@ odoo.define('portal_request.portal_request', function (require) {
                             $districtInput.attr('required', false).val('');
                         }
 
-                        // ============================================================
-                        // HANDLE MATERIAL REQUEST LOCATION FIELDS
-                        // ============================================================
+
                         if (memo_type_key === "material_request") {
-                            console.log('Material request selected, Inter-district:', isInterDistrictTransfer);
+                            console.log('Material request selected - Initializing locations');
+                            console.log('Config: Inter-district:', isInterDistrictTransfer, 'Cross-company:', allowCrossCompany, 'Request Branch:', request_branch, 'Processing Branch:', processing_branch);
                             
                             // Show the location fields container
                             $('#material_request_locations').removeClass('d-none');
                             
-                            // DON'T initialize searches yet - wait for processing district selection
-                            // Just make fields required
+                            // Determine which district to use for location filtering
+                            let locationDistrictId = null;
+                            
+                            // Priority 1: Use processing_branch from config if set
+                            if (processing_branch && processing_branch !== 'False' && processing_branch !== 'false' && processing_branch !== '') {
+                                locationDistrictId = parseInt(processing_branch);
+                                console.log('Using processing_branch from config:', locationDistrictId);
+                            }
+                            // Priority 2: Use request_branch (branch_id) from config
+                            else if (request_branch && request_branch !== 'False' && request_branch !== 'false' && request_branch !== '') {
+                                locationDistrictId = parseInt(request_branch);
+                                console.log('Using request_branch from config:', locationDistrictId);
+                            }
+                            // Priority 3: Use user's selected district
+                            else {
+                                locationDistrictId = parseInt($('#selectRequestDistrict').val());
+                                console.log('Using user selected district:', locationDistrictId);
+                            }
+                            
+                            // Initialize source location search
+                            console.log('Initializing source location with district:', locationDistrictId, 'allow cross-company:', allowCrossCompany);
+                            searchStockLocation(
+                                source_location_id, 
+                                'source', 
+                                allowCrossCompany,
+                                '', 
+                                0,
+                                locationDistrictId
+                            );
+                            
+                            // For INTER-DISTRICT transfers: Pre-fill both source and destination
+                            if (isInterDistrictTransfer) {
+                                console.log('Inter-district transfer: Pre-filling locations');
+                                
+                                // Make both required
+                                $('#source_location_id').attr('required', true);
+                                $('#destination_location_id').attr('required', true);
+                                
+                                // Initialize destination location search (will be different district)
+                                searchStockLocation(
+                                    destination_location_id, 
+                                    'destination', 
+                                    allowCrossCompany,
+                                    '', 
+                                    0,
+                                    locationDistrictId
+                                );
+                                
+                                // Auto-load first location for SOURCE
+                                $.ajax({
+                                    url: '/get-stock-location',
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    data: {
+                                        q: '',
+                                        location_type: 'source',
+                                        is_inter_company: allowCrossCompany,
+                                        district_id: locationDistrictId,
+                                        selected_location_id: 0,
+                                        page_limit: 1,
+                                        page: 1
+                                    },
+                                    success: function (data) {
+                                        console.log('Source location auto-load response:', data);
+                                        
+                                        if (data && data.results && data.results.length > 0) {
+                                            let firstLocation = data.results[0];
+                                            console.log('Setting source location to:', firstLocation);
+                                            
+                                            let $sourceSelect = $('#source_location_id');
+                                            
+                                            // Add option if it doesn't exist
+                                            if ($sourceSelect.find("option[value='" + firstLocation.id + "']").length === 0) {
+                                                let newOption = new Option(firstLocation.text, firstLocation.id, true, true);
+                                                $sourceSelect.append(newOption);
+                                            }
+                                            
+                                            // Set value and trigger change
+                                            $sourceSelect.val(firstLocation.id).trigger('change');
+                                            $('#TargetSourceLocation').val(firstLocation.id);
+                                            $sourceSelect.removeClass('is-invalid').addClass('is-valid');
+                                            
+                                            // Now auto-load DESTINATION (excluding source)
+                                            $.ajax({
+                                                url: '/get-stock-location',
+                                                type: 'POST',
+                                                dataType: 'json',
+                                                data: {
+                                                    q: '',
+                                                    location_type: 'destination',
+                                                    is_inter_company: allowCrossCompany,
+                                                    district_id: locationDistrictId,
+                                                    selected_location_id: firstLocation.id, // Exclude source
+                                                    page_limit: 1,
+                                                    page: 1
+                                                },
+                                                success: function (destData) {
+                                                    console.log('Destination location auto-load response:', destData);
+                                                    
+                                                    if (destData && destData.results && destData.results.length > 0) {
+                                                        let firstDestLocation = destData.results[0];
+                                                        console.log('Setting destination location to:', firstDestLocation);
+                                                        
+                                                        let $destSelect = $('#destination_location_id');
+                                                        
+                                                        if ($destSelect.find("option[value='" + firstDestLocation.id + "']").length === 0) {
+                                                            let newDestOption = new Option(firstDestLocation.text, firstDestLocation.id, true, true);
+                                                            $destSelect.append(newDestOption);
+                                                        }
+                                                        
+                                                        $destSelect.val(firstDestLocation.id).trigger('change');
+                                                        $destSelect.removeClass('is-invalid').addClass('is-valid');
+                                                    } else {
+                                                        console.warn('No destination locations found');
+                                                    }
+                                                },
+                                                error: function (xhr, status, error) {
+                                                    console.error('Error loading destination location:', error);
+                                                }
+                                            });
+                                            
+                                        } else {
+                                            console.warn('No source locations found for district:', locationDistrictId);
+                                            alert('No stock locations found for the selected district. Please ensure locations are configured.');
+                                        }
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.error('Error loading source location:', error, xhr.responseText);
+                                        alert('Error loading locations. Please try again.');
+                                    }
+                                });
+                                
+                            } else {
+                                // NON-INTER-DISTRICT: Source required, Destination optional (same district)
+                                console.log('Non-inter-district transfer: Source required, destination optional');
+                                
+                                $('#source_location_id').attr('required', true);
+                                $('#destination_location_id').attr('required', false);
+                                
+                                // Initialize destination with same district (user can choose to fill or not)
+                                searchStockLocation(
+                                    destination_location_id, 
+                                    'destination', 
+                                    false, // Always within same company for non-inter
+                                    '', 
+                                    0,
+                                    locationDistrictId
+                                );
+                                
+                                // Auto-load ONLY source location
+                                $.ajax({
+                                    url: '/get-stock-location',
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    data: {
+                                        q: '',
+                                        location_type: 'source',
+                                        is_inter_company: false, // Within company
+                                        district_id: locationDistrictId,
+                                        selected_location_id: 0,
+                                        page_limit: 1,
+                                        page: 1
+                                    },
+                                    success: function (data) {
+                                        console.log('Source location auto-load (non-inter) response:', data);
+                                        
+                                        if (data && data.results && data.results.length > 0) {
+                                            let firstLocation = data.results[0];
+                                            console.log('Setting source location to:', firstLocation);
+                                            
+                                            let $sourceSelect = $('#source_location_id');
+                                            
+                                            if ($sourceSelect.find("option[value='" + firstLocation.id + "']").length === 0) {
+                                                let newOption = new Option(firstLocation.text, firstLocation.id, true, true);
+                                                $sourceSelect.append(newOption);
+                                            }
+                                            
+                                            $sourceSelect.val(firstLocation.id).trigger('change');
+                                            $('#TargetSourceLocation').val(firstLocation.id);
+                                            $sourceSelect.removeClass('is-invalid').addClass('is-valid');
+                                        } else {
+                                            console.warn('No locations found for district:', locationDistrictId);
+                                            alert('No stock locations found. Please contact administrator.');
+                                        }
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.error('Error loading source location:', error);
+                                        alert('Error loading locations. Please try again.');
+                                    }
+                                });
+                                
+                                // Don't pre-fill destination for non-inter-district
+                                $('#destination_location_id').val('');
+                            }
+
                             $('#source_location_id').attr('required', true);
                             $('#destination_location_id').attr('required', true);
-                            
-                            console.log('Location fields shown, waiting for processing district selection');
                             
                             // Show product form
                             displayNonLeaveElement();
                             $('.add_item').removeClass('d-none');
                             $('#product_form_div').removeClass('d-none');
+                            
                         } else {
                             // Not a material request - hide location fields
                             $('#material_request_locations').addClass('d-none');
