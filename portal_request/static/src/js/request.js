@@ -807,45 +807,124 @@ odoo.define('portal_request.portal_request', function (require) {
         allowClear: true,
     });
 
-    function searchStockLocation(element, location_type,is_inter_company, classes='', selected_location_id=0){
-        console.log(`What am i sending as inter company ${is_inter_company}, selection location ${selected_location_id} -- type of ${typeof(is_inter_company)}`)
-        // find the input field
-        const elm = element // $(`input[name=source_location_id]`);
-        let oldValue = elm.val(); // OGIDI
-        let oldId = elm.attr('id'); 
-        elm.select2({
-            ajax: {
-              url: '/get-stock-location',
-              dataType: 'json',
-              delay: 30,
-              data: function (term, page) {
-                return {
-                  q: term, //search term
-                  page_limit: 10, // page size
-                  location_type: location_type, 
-                  is_inter_company: is_inter_company, // true, // is_inter_company, 
-                  selected_location_id: selected_location_id, 
-                  selectedOption_id: $('#selectConfigOption').val() ? $('#selectConfigOption').val() : false, 
-                  page: page, // page number
-                };
-              },
-              results: function (data, page) {
-                var more = (page * 30) < data.total;
-                return {results: data.results, more: more};
-              },
-              cache: true
-            },
-            minimumInputLength: 1,
-            multiple: false,
-            placeholder: 'Search for Source location',
-            allowClear: true,
-        }); 
-        // if (oldId){
-        //     elm.val(oldId)
-        //     console.log(`location found CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-        //     $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
-        // }
+    // function searchStockLocation(element, location_type,is_inter_company, classes='', selected_location_id=0){
+    //     console.log(`What am i sending as inter company ${is_inter_company}, selection location ${selected_location_id} -- type of ${typeof(is_inter_company)}`)
+    //     // find the input field
+    //     const elm = element // $(`input[name=source_location_id]`);
+    //     let oldValue = elm.val(); // OGIDI
+    //     let oldId = elm.attr('id'); 
+    //     elm.select2({
+    //         ajax: {
+    //           url: '/get-stock-location',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               page_limit: 10, // page size
+    //               location_type: location_type, 
+    //               is_inter_company: is_inter_company, // true, // is_inter_company, 
+    //               selected_location_id: selected_location_id, 
+    //               selectedOption_id: $('#selectConfigOption').val() ? $('#selectConfigOption').val() : false, 
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 1,
+    //         multiple: false,
+    //         placeholder: 'Search for Source location',
+    //         allowClear: true,
+    //     }); 
+    //     // if (oldId){
+    //     //     elm.val(oldId)
+    //     //     console.log(`location found CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+    //     //     $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    //     // }
 
+    // }
+    function searchStockLocation(element, location_type, is_inter_company, classes='', selected_location_id=0, district_id=null){
+        console.log(`searchStockLocation called: type=${location_type}, inter_company=${is_inter_company}, district=${district_id}`);
+        
+        let $elm;
+        if (typeof element === 'string') {
+            $elm = $('#' + element);
+        } else if (element instanceof jQuery) {
+            $elm = element;
+        } else {
+            $elm = $(element);
+        }
+        
+        if ($elm.length === 0) {
+            console.error("Element not found for searchStockLocation");
+            return;
+        }
+        
+        // Destroy existing select2
+        if ($elm.hasClass("select2-offscreen") || $elm.data('select2')) {
+            $elm.select2('destroy');
+        }
+        
+        // Clear current value
+        $elm.val('').trigger('change');
+        
+        let getDistrictId = function() {
+            if (district_id) return district_id;
+            let domVal = $('#processing_branch_id').val();
+            return domVal ? domVal : 0;
+        };
+        
+        console.log(`Initializing Select2 on ${$elm.attr('id')} | Inter: ${is_inter_company} | District: ${getDistrictId()}`);
+        
+        $elm.select2({
+            ajax: {
+                url: '/get-stock-location',
+                type: 'POST',
+                dataType: 'json',
+                delay: 250,
+                data: function (term, page) {
+                    let params = {
+                        q: term || '',
+                        page_limit: 10,
+                        location_type: location_type,
+                        is_inter_company: is_inter_company,
+                        selected_location_id: selected_location_id || 0,
+                        district_id: getDistrictId(),
+                        page: page || 1,
+                    };
+                    console.log('Select2 AJAX params:', params);
+                    return params;
+                },
+                results: function (data, page) {
+                    console.log('Select2 results received:', data);
+                    
+                    if (data.error) {
+                        console.error('Error from server:', data.error);
+                        return {results: [], more: false};
+                    }
+                    
+                    var res = data && data.results ? data.results : [];
+                    var more = (page * 10) < (data.total || 0);
+                    
+                    return {
+                        results: res, 
+                        more: more
+                    };
+                },
+                cache: false
+            },
+            minimumInputLength: 0,
+            multiple: false,
+            placeholder: location_type === 'source' ? 'Search for Source location' : 'Search for Destination location',
+            allowClear: true,
+            width: '100%'
+        });
+        
+        console.log(`Select2 initialized successfully for ${location_type} location`);
     }
     let source_location_id = $('#source_location_id')
     let destination_location_id = $('#destination_location_id')
@@ -1259,18 +1338,39 @@ odoo.define('portal_request.portal_request', function (require) {
             //  });
 			
             'change .Sourcelocation-cls': function(ev){
-                let sourceLocationId = $('#source_location_id')
-				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-				if($(ev.target)){
-					$('#TargetSourceLocation').val($(ev.target).val())
-                    let interCompany = $('#isInterDistrict').is(':checked') ? true : false
-                    console.log('interdistrict is', interCompany)
-                    searchStockLocation(destination_location_id, 'destination', interCompany, '', parseInt(sourceLocationId.val()))
-
-				}else{
-					$('.destinationlocation-cls').val('')
-					$('.destinationlocation-cls').addClass('is-invalid')
-				}
+                let sourceLocationId = $('#source_location_id');
+                let selectedValue = $(ev.target).val();
+                
+                console.log(`SOURCE LOCATION CHANGED: ${sourceLocationId.val()} == ${selectedValue}`);
+                
+                if(selectedValue && selectedValue !== ''){
+                    $('#TargetSourceLocation').val(selectedValue);
+                    
+                    // Clear and reinitialize destination with source exclusion
+                    $('#destination_location_id').val('').trigger('change');
+                    
+                    // Use the config's inter-district flag
+                    // let interCompany = $('#is_inter_district_transfer_config').is(':checked');
+                    let interCompany = $("#selectConfigOption option:selected").attr("allow_cross_company_requests") === "True";
+                    let selectedDistrict = $('#processing_branch_id').val();
+                    
+                    console.log('Refreshing destination with inter-company:', interCompany, 'district:', selectedDistrict, 'excluding source:', selectedValue);
+                    
+                    searchStockLocation(
+                        destination_location_id, 
+                        'destination', 
+                        interCompany, 
+                        '', 
+                        parseInt(selectedValue),  // Pass source location to exclude
+                        selectedDistrict
+                    );
+                    
+                    // Remove validation errors
+                    sourceLocationId.removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $('#destination_location_id').val('');
+                    $('#destination_location_id').addClass('is-invalid');
+                }
             },
 
 			'change .destinationlocation-cls': function(ev){
@@ -1288,45 +1388,45 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 }
             },
-            'change .isInterDistrict': function(ev){
-                $('#destination_location_id').val('').trigger('change');
-                $('#source_location_id').val('').trigger('change');
-                if ($(ev.target).is(':checked')){
-                    // make the source location and destination location required
-                    $('#inter-source-location-div').removeClass('d-none');
-                    $('#source_location_id').attr('required', true);
-                    let is_inter_district_transfer = $('#is_inter_district_transfer_config').is(':checked')
-                    if (!is_inter_district_transfer){
-                        $('#isInterDistrict').prop('checked', false)
-                        alert('The selected Request option is not setup for inter district transfer')
-                    }
-                    let interCompany = true
-                    searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-                    searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
+            // 'change .isInterDistrict': function(ev){
+            //     $('#destination_location_id').val('').trigger('change');
+            //     $('#source_location_id').val('').trigger('change');
+            //     if ($(ev.target).is(':checked')){
+            //         // make the source location and destination location required
+            //         $('#inter-source-location-div').removeClass('d-none');
+            //         $('#source_location_id').attr('required', true);
+            //         let is_inter_district_transfer = $('#is_inter_district_transfer_config').is(':checked')
+            //         if (!is_inter_district_transfer){
+            //             $('#isInterDistrict').prop('checked', false)
+            //             alert('The selected Request option is not setup for inter district transfer')
+            //         }
+            //         let interCompany = true
+            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
+            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
                     
-                    // make the destination location required
-                    $('#inter-destination-location-div').removeClass('d-none');
-                    $('#destination_location_id').attr('required', true);
-                }
-                else{
-                    let interCompany = false
-                    searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-                    searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-                }
-                /** 
-                 * This will be removed because source and destination 
-                 * location is requirement for all material request 
-                else{ 
-                    // make the source location not required
-                    $('#inter-source-location-div').addClass('d-none');
-                    $('#source_location_id').attr('required', false);
+            //         // make the destination location required
+            //         $('#inter-destination-location-div').removeClass('d-none');
+            //         $('#destination_location_id').attr('required', true);
+            //     }
+            //     else{
+            //         let interCompany = false
+            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
+            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
+            //     }
+            //     /** 
+            //      * This will be removed because source and destination 
+            //      * location is requirement for all material request 
+            //     else{ 
+            //         // make the source location not required
+            //         $('#inter-source-location-div').addClass('d-none');
+            //         $('#source_location_id').attr('required', false);
                     
-                    // make the destination location not required
-                    $('#inter-destination-location-div').addClass('d-none');
-                    $('#destination_location_id').attr('required', false);
-                }
-                */
-            },
+            //         // make the destination location not required
+            //         $('#inter-destination-location-div').addClass('d-none');
+            //         $('#destination_location_id').attr('required', false);
+            //     }
+            //     */
+            // },
 
             'change .otherChangeOption': function(ev){
                 if ($(ev.target).is(':checked')){
@@ -1818,37 +1918,123 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
             
-            // Inter-district Process block
+            'change #processing_branch_id': function(ev){
+                var self = this;
+                var selectedDistrict = $(ev.target).val();
+                var memo_type_key = $('#selectRequestOption').val();
+                
+                console.log('Processing district selected:', selectedDistrict);
+                
+                if (memo_type_key === "material_request" && selectedDistrict) {
+                    var isInterDistrictTransfer = $('#isInterDistrictProcess').is(':checked');
+                    
+                    console.log('Initializing location searches for district:', selectedDistrict, 'Inter-district:', isInterDistrictTransfer);
+                    
+                    // Clear existing values first
+                    $('#source_location_id').val('').trigger('change');
+                    $('#destination_location_id').val('').trigger('change');
+
+                    // Initialize source location with district filter
+                    searchStockLocation(
+                        source_location_id, 
+                        'source', 
+                        isInterDistrictTransfer, 
+                        '', 
+                        0,
+                        selectedDistrict
+                    );
+                    
+                    // Initialize destination location
+                    searchStockLocation(
+                        destination_location_id, 
+                        'destination', 
+                        isInterDistrictTransfer, 
+                        '', 
+                        0,
+                        selectedDistrict
+                    );
+                    
+                    // Auto-load first location for source using jQuery AJAX (not _rpc)
+                    $.ajax({
+                        url: '/get-stock-location',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            q: '',
+                            location_type: 'source',
+                            is_inter_company: isInterDistrictTransfer,
+                            district_id: selectedDistrict,
+                            selected_location_id: 0,
+                            page_limit: 1,
+                            page: 1
+                        },
+                        success: function (data) {
+                            console.log('Auto-load source location response:', data);
+                            
+                            if (data && data.results && data.results.length > 0) {
+                                var firstLocation = data.results[0];
+                                console.log('Setting source location to:', firstLocation);
+                                
+                                var $sourceSelect = $('#source_location_id');
+                                
+                                // Add option if it doesn't exist
+                                if ($sourceSelect.find("option[value='" + firstLocation.id + "']").length === 0) {
+                                    var newOption = new Option(firstLocation.text, firstLocation.id, true, true);
+                                    $sourceSelect.append(newOption);
+                                }
+                                
+                                // Set value and trigger change
+                                $sourceSelect.val(firstLocation.id).trigger('change');
+                                
+                                $('#TargetSourceLocation').val(firstLocation.id);
+                                $sourceSelect.removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                console.warn('No locations found for district:', selectedDistrict);
+                                alert('No stock locations found for the selected district. Please ensure locations are configured.');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error loading source location:', error, xhr.responseText);
+                            alert('Error loading locations. Please try again.');
+                        }
+                    });
+                }
+            },
+            
             'change .isInterDistrictProcess': function(ev){
                 var self = this;
                 var isChecked = $(ev.target).is(':checked');
                 var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
                 var selected_district = $('#selectRequestDistrict').val();
-                console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id);
+                
+                console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id, 'District:', selected_district);
 
+                // Clear current selections
                 $('#selectConfigOption').val('');
                 $('#selectedRequestOptionId').val('');
                 $('#selectConfigOptionId').val('');
                 $('#selectRequestOption').val('');
+                
+                // Clear location fields
+                $('#destination_location_id').val('').trigger('change');
+                $('#source_location_id').val('').trigger('change');
 
-                var info = self.populateConfigOptionsForType(selected_type_id, isChecked, selected_district);
-                console.log('populateConfigOptionsForType returned:', info);
+                // Re-populate config options based on inter-district flag and district
+                if (selected_type_id) {
+                    var info = self.populateConfigOptionsForType(selected_type_id, isChecked, selected_district);
+                    console.log('populateConfigOptionsForType returned:', info);
 
-                if (info.matching > 0 && info.visible === 0) {
-                    var msg = isChecked ?
-                        'No inter-district process configurations found for this request type.' :
-                        'No regular (non-inter-district) configurations found for this request type.';
-                    console.warn(msg);
-                    alert(msg);
+                    if (info.matching > 0 && info.visible === 0) {
+                        var msg = isChecked ?
+                            'No inter-district process configurations found for this request type in this district.' :
+                            'No regular (non-inter-district) configurations found for this request type in this district.';
+                        console.warn(msg);
+                        alert(msg);
+                    }
                 }
-                // allow destination location to show if it is an inter district transfer
-
-                $('#inter-destination-location-div').removeClass('d-none');
-                $('#destination_location_id').attr('required', true);
             },
 
             'change select[name=selectConfigOption]': function(ev){
-                // let selectedTarget = $(ev.target).val();
                 let selectedTarget = $(ev.target);
                 let selectedValue = selectedTarget.val();
 
@@ -1856,13 +2042,27 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log('No option selected, skipping validation');
                     return;
                 }
-                let sro = $('#selectConfigOption option:selected')[0]
+                
+                let sro = $('#selectConfigOption option:selected')[0];
                 $('#existing_ref_label').text("Existing Ref #");
                 $('#div_existing_order').addClass('d-none');
-                clearAllElement();
+                
+                // clearAllElement();
+                // Clear only necessary fields
+                $('#subject').val('');
+                $('#description').val('');
+                $('#amount_fig').val('');
+                $('#existing_order').val('');
+                $('#request_status').val('');
+                $('#tbody_product').empty();
+                $('#tbody_employee').empty();
+                
+                $('#source_location_id').val('');
+                $('#destination_location_id').val('');
+                
                 let self = this;
-                // checkConfiguredStages(this, selectedTarget);
                 let staff_num = $('#staff_id').val();
+                
                 this._rpc({
                     route: `/check-configured-stage`,
                     params: {
@@ -1870,31 +2070,34 @@ odoo.define('portal_request.portal_request', function (require) {
                         'request_config_option': selectedValue,
                     },
                 }).then(function (data) {
-                    console.log('checking if stage is configured => '+ JSON.stringify(data))
+                    console.log('checking if stage is configured => '+ JSON.stringify(data));
+                    
                     if (!data.status) {
-                        $('#selectConfigOption').val('')
-                        // alert(`Validation Error! ${data.message}`)
-                        let message = `Validation Error! ${data.message}`
-                        modal_message.text(message)
+                        $('#selectConfigOption').val('');
+                        let message = `Validation Error! ${data.message}`;
+                        modal_message.text(message);
                         alert_modal.modal('show');
-                    }
-                    else{
-
-                        // set the value of selected option to the hidden field
+                    } else {
+                        // Get config attributes
                         let memo_config_id = sro.getAttribute("id");
                         let memo_type_id = sro.getAttribute("memo_key_id");
                         let memo_type_key = sro.getAttribute("memo_type_key");
-                        console.log(`KEY MEMO IS ${memo_type_key}`)
+                        let is_inter_district_config = sro.getAttribute("inter_district");
+                        
+                        console.log(`Config selected: ${memo_type_key}, Inter-District: ${is_inter_district_config}`);
 
                         $('#selectConfigOptionId').val(Number(memo_config_id));
                         $('#selectedRequestOptionId').val(Number(memo_type_id));
                         $('#selectRequestOption').val(memo_type_key);
 
+                        // Store whether this config is inter-district
+                        let isInterDistrictTransfer = (is_inter_district_config === 'True' || is_inter_district_config === 'true');
+                        $('#is_inter_district_transfer_config').prop('checked', isInterDistrictTransfer);
+
                         // ============================================================
-                        // 1. POPULATE PROCESSING DISTRICT DROPDOWN
+                        // POPULATE PROCESSING DISTRICT DROPDOWN
                         // ============================================================
                         let $districtSelect = $('#processing_branch_id'); 
-
                         $districtSelect.empty();
                         $districtSelect.append('<option disabled="true" selected="true" value="">.. Select Processing District ..</option>');
                         
@@ -1904,8 +2107,6 @@ odoo.define('portal_request.portal_request', function (require) {
                             });
                         }
 
-                        // Check if this config requires a district (using the attribute from XML)
-                        // let $selectedOption = $('#selectConfigOption option:selected');
                         let requiresDistrict = sro.getAttribute("requires_district"); 
                         let $districtDiv = $('#processing_district_div');
                         let $districtInput = $('#processing_branch_id');
@@ -1915,25 +2116,37 @@ odoo.define('portal_request.portal_request', function (require) {
                             $districtInput.attr('required', true);
                         } else {
                             $districtDiv.addClass('d-none');
-                            $districtInput.attr('required', false).val(''); // Hide and clear
+                            $districtInput.attr('required', false).val('');
                         }
-                        // === NEW CODE ENDS HERE ===
 
-                        // determine to ensure that you selected an inter company or district transfer
-                        if (data.data.inter_district_request){
-                            console.log('This is an inter district transfer')
-                            $('#is_inter_district_transfer_config').prop('checked', true);
-                            $('#isInterDistrict').prop('checked', true);
-                            $('#isInterDistrict').trigger('change');
-
-                        }else{
-                            $('#is_inter_district_transfer_config').prop('checked', false);
-                            $('#isInterDistrict').prop('checked', false);
-                            $('#isInterDistrict').trigger('change');
+                        // ============================================================
+                        // HANDLE MATERIAL REQUEST LOCATION FIELDS
+                        // ============================================================
+                        if (memo_type_key === "material_request") {
+                            console.log('Material request selected, Inter-district:', isInterDistrictTransfer);
+                            
+                            // Show the location fields container
+                            $('#material_request_locations').removeClass('d-none');
+                            
+                            // DON'T initialize searches yet - wait for processing district selection
+                            // Just make fields required
+                            $('#source_location_id').attr('required', true);
+                            $('#destination_location_id').attr('required', true);
+                            
+                            console.log('Location fields shown, waiting for processing district selection');
+                            
+                            // Show product form
+                            displayNonLeaveElement();
+                            $('.add_item').removeClass('d-none');
+                            $('#product_form_div').removeClass('d-none');
+                        } else {
+                            // Not a material request - hide location fields
+                            $('#material_request_locations').addClass('d-none');
+                            $('#source_location_id').attr('required', false);
+                            $('#destination_location_id').attr('required', false);
                         }
-                        
-                        if(memo_type_key == "leave_request"){
-                            console.log('Yes leave is selected')
+
+                        if (memo_type_key == "leave_request") {
                             $('#leave_section').removeClass('d-none');
                             $('#leave_section2').removeClass('d-none');
                             $('#leave_start_date').attr('required', true);
@@ -1942,9 +2155,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#product_form_div').addClass('d-none');
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
-                            display_material_request_location(false);
-                        }
-                        else if(memo_type_key == "server_access"){
+                        } 
+                        else if (memo_type_key == "server_access") {
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
                             $('#product_form_div').addClass('d-none');
@@ -1952,16 +2164,13 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#div_system_requirement').removeClass('d-none');
                             $('#request_end_date').removeClass('d-none');
                             $('#request_end_date').attr('required', true);
-                            $('#labelDescription').text('Resource Details (IP Adress/Server Name/Database');
+                            $('#labelDescription').text('Resource Details (IP Address/Server Name/Database)');
                             $('#div_justification_reason').removeClass('d-none');
                             $('#justification_reason').attr('required', true);
-                            // $('#justification_reason').addClass("is-valid");
                             $('#justification_reason').removeClass("d-none");
-                            console.log("server request selected == ", memo_type_key);
                             displayNonLeaveElement();
-                            display_material_request_location(false);
                         }
-                        else if(memo_type_key == 'employee_update'){
+                        else if (memo_type_key == 'employee_update') {
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
                             $('#product_form_div').addClass('d-none');
@@ -1975,47 +2184,30 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#divEmployeeData').removeClass('d-none');
                             $('#selectEmployeedata').attr('required', true);
                             $('#employee_item_form_div').removeClass('d-none');
-                            display_material_request_location(false);
-                            
                         }
-                        // else if($.inArray(selectedTarget, ["Payment", "cash_advance"])){
-                        else if(memo_type_key == "Payment"){
-                            // $('#amount_section').removeClass('d-none');
-                            // $('#amount_fig').attr("required", true);
-                           
-                            console.log("request selected== ", memo_type_key);
-                            displayNonLeaveElement()
-                             $('#PaymentcashAdvanceDiv').removeClass('d-none');
+                        else if (memo_type_key == "Payment") {
+                            displayNonLeaveElement();
+                            $('#PaymentcashAdvanceDiv').removeClass('d-none');
                             $('#PaymentcashAdvanceLabel').removeClass('d-none');
                             $('#vendor_label').removeClass('d-none');
                             $('#vendor_id').attr("required", false);
                             $('#vendor_div').removeClass('d-none');
-
-                            //doform
                             $('#currency_div').removeClass('d-none');
                             $('#currency_id').attr("required", true); 
-
                             $('#product_form_div').removeClass('d-none');
                             $('.add_item').removeClass('d-none');
-                            display_material_request_location(false);
                         }
-
-                        else if(memo_type_key == "sale_request"){
-                            displayNonLeaveElement()
+                        else if (memo_type_key == "sale_request") {
+                            displayNonLeaveElement();
                             $('#vendor_label').removeClass('d-none'); 
                             $('#vendor_id').attr("required", false);
                             $('#vendor_div').removeClass('d-none');
-                            
-                            //doform
                             $('#currency_div').removeClass('d-none');
                             $('#currency_id').attr("required", true);
-
                             $('#product_form_div').removeClass('d-none');
                             $('.add_item').removeClass('d-none');
-                            display_material_request_location(false);
                         }
-                        // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
-                        else if(memo_type_key == "cash_advance"){
+                        else if (memo_type_key == "cash_advance") {
                             var staff_num = $('#staff_id').val();
                             self._rpc({
                                 route: `/check-cash-retirement`,
@@ -2024,81 +2216,55 @@ odoo.define('portal_request.portal_request', function (require) {
                                     'request_type': memo_type_key,
                                 },
                             }).then(function (data) {
-                                console.log('retrieved cash advance data => '+ JSON.stringify(data))
                                 if (!data.status) {
                                     $(ev.target).val('');
-                                    $("#amount_fig").val('')
+                                    $("#amount_fig").val('');
                                     $('#amount_section').addClass('d-none');
                                     $('#product_form_div').addClass('d-none');
-                                    $('.add_item').addClass('d-none')
-                                    alert(`Validation Error! ${data.message}`)
-                                }else{
-                                    // $('#amount_section').removeClass('d-none');
-                                    // $('#amount_fig').attr("required", false);
-                                    console.log("request selected== ", selectedTarget);
-                                    displayNonLeaveElement()
-                                    display_material_request_location(false);
+                                    $('.add_item').addClass('d-none');
+                                    alert(`Validation Error! ${data.message}`);
+                                } else {
+                                    displayNonLeaveElement();
                                     $('#product_form_div').removeClass('d-none');
                                     $('.add_item').removeClass('d-none');
                                 }
                             }).guardedCatch(function (error) {
-                                let msg = error.message.message
-                                console.log(msg)
-                                $("#amount_fig").val('')
+                                let msg = error.message.message;
+                                $("#amount_fig").val('');
                                 $('#amount_section').addClass('d-none');
                                 $('#product_form_div').addClass('d-none');
-                                alert(`Unknown Error! ${msg}`)
+                                alert(`Unknown Error! ${msg}`);
                             }); 
                         }
-                        else if(memo_type_key == "soe"){
-                            // $('#amount_section').removeClass('d-none');
-                            // $('#amount_fig').attr("required", true); 
-                            displayNonLeaveElement()
-                            display_material_request_location(false);
-                            $('.add_item').addClass('d-none')
+                        else if (memo_type_key == "soe") {
+                            displayNonLeaveElement();
+                            $('.add_item').addClass('d-none');
                             $('#product_form_div').removeClass('d-none'); 
-                            if ($('#selectTypeRequest').val() == "new"){
-                                if ($('#staff_id').val() == ""){
-                                    selectedTarget.val('').trigger('change')
+                            
+                            if ($('#selectTypeRequest').val() == "new") {
+                                if ($('#staff_id').val() == "") {
+                                    selectedTarget.val('').trigger('change');
                                     alert("Please enter staff ID");
-                                }
-                                else{
+                                } else {
                                     $('#existing_order').attr('required', true);
                                     $('#div_existing_order').removeClass('d-none');
                                     $('#existing_ref_label').text("Cash Advance Ref #");
-                                    }
+                                }
                             }
                         }
-                         
-                        else if(memo_type_key == "material_request"){
-                            $('#interdistrict').removeClass('d-none');
-							displayNonLeaveElement()
-                            $('.add_item').removeClass('d-none')
-                            $('#product_form_div').removeClass('d-none'); 
-                            display_material_request_location(true);
-                            
-                            let interCompany = $('#isInterDistrict').is(':checked') ? true : false
-                            console.log('SOOOOO MANYTHINGS HAPPE', interCompany)
-                            searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-                            searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-                        }
-
-                        else{
+                        else {
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
-                            console.log("request selected");
                             displayNonLeaveElement();
-                            display_material_request_location(false);
                             $('#product_form_div').removeClass('d-none');
                         }
                     }
                 }).guardedCatch(function (error) {
-                    let msg = error.message.message
-                    console.log(msg)
-                    $("#selectConfigOptionId").val('')
-                    $("#selectedRequestOptionId").val('')
-                    $("#selectRequestOption").val('')
-                    alert(`Unknown Error! ${msg}`)
+                    let msg = error.message.message;
+                    $("#selectConfigOptionId").val('');
+                    $("#selectedRequestOptionId").val('');
+                    $("#selectRequestOption").val('');
+                    alert(`Unknown Error! ${msg}`);
                 });
             },
 
@@ -2639,14 +2805,26 @@ odoo.define('portal_request.portal_request', function (require) {
 
         
         // $('#justification_reason').addClass("is-valid");
-        $('#interdistrict').addClass('d-none');
-        $('#isInterDistrict').prop('checked', false);
+        // $('#interdistrict').addClass('d-none');
+        // $('#isInterDistrict').prop('checked', false);
+        // $('#source_location_id').val('');
+        // $('#destination_location_id').val('');
+        // $('#source_location_id').attr("required", false);
+        // $('#destination_location_id').attr("required", false);
+        // $('#inter-destination-location-div').addClass('d-none');
+        // $('#inter-source-location-div').addClass('d-none');
+        // Clear inter-district states - SINGLE SOURCE OF TRUTH
+        $('#isInterDistrictProcess').prop('checked', false);
+        $('#is_inter_district_transfer_config').prop('checked', false);
+        
+        // Clear and hide location fields
         $('#source_location_id').val('');
         $('#destination_location_id').val('');
-        $('#source_location_id').attr("required", false);
-        $('#destination_location_id').attr("required", false);
+        $('#material_request_locations').addClass('d-none');
         $('#inter-destination-location-div').addClass('d-none');
         $('#inter-source-location-div').addClass('d-none');
+        $('#source_location_id').attr("required", false);
+        $('#destination_location_id').attr("required", false);
 
         $('#leave_type_id').val('');
         $('#leave_start_date').val('');
