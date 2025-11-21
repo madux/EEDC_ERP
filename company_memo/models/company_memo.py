@@ -767,6 +767,36 @@ class Memo_Model(models.Model):
                                          'submit': [('required', True)],
                                          'submit':[('readonly', False)],
                                      }, index=True)
+    
+    bank_journal_id = fields.Many2one(
+        'account.journal', 
+        string='Journal',
+        compute='_compute_default_journal',
+        store=True,
+        readonly=False,
+        domain="[('type', 'in', ['bank', 'general']), ('company_id', '=', processing_company_id)]"
+    )
+    
+    @api.depends('processing_company_id', 'processing_branch_id')
+    def _compute_default_journal(self):
+        for rec in self:
+            company = rec.processing_company_id or rec.company_id
+            branch = rec.processing_branch_id or rec.branch_id
+            
+            base_domain = [
+                ('company_id', '=', company.id),
+                ('type', 'in', ['bank', 'general']),
+            ]
+            
+            journal = self.env['account.journal'].search(
+                base_domain + [('allowed_branch_ids', 'in', [branch.id])], 
+                limit=1
+            )
+            
+            if not journal:
+                journal = self.env['account.journal'].search(base_domain, limit=1)
+                
+            rec.bank_journal_id = journal.id
 
     def validate_po_line(self):
         '''if the stage requires PO confirmation'''
@@ -3319,11 +3349,19 @@ class Memo_Model(models.Model):
             )
             
             view_id = self.env.ref('account.view_move_form').id
-            journal_id = self.env['account.journal'].sudo().search(
-            [
-                ('company_id', '=', payment_company.id),
-                ('type', 'in', ['bank', 'general']),
-             ], limit=1)
+            # base_journal_domain = [
+            #     ('company_id', '=', payment_company.id),
+            #     ('type', 'in', ['bank', 'general']),
+            #  ]
+            # journal_id = self.env['account.journal'].sudo().search(
+            #     base_journal_domain + [('allowed_branch_ids', 'in', [payment_branch.id])], 
+            #     limit=1
+            # )
+            # if not journal_id:
+            #     journal_id = self.env['account.journal'].sudo().search(base_journal_domain, limit=1)
+            
+            journal_id = self.bank_journal_id
+            
             if not journal_id:
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
