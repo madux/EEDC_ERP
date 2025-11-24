@@ -2439,6 +2439,8 @@ class PortalRequest(http.Controller):
             'Payment': 'Payment',
             'sale_request': 'Sales Request',
         }
+        if not memo_key:
+            return "Request" 
         return display_names.get(memo_key, memo_key.replace('_', ' ').title())
 
 
@@ -3051,274 +3053,464 @@ class PortalRequest(http.Controller):
     #                 }
             # return request.redirect(f'/my/request/view/{str(id)}')# %(requests.id))
             
+    # @http.route('/my/request/update', type='json', auth="user", website=True)
+    # def update_my_request(self, **post):
+    #     _logger.info(f"updating the request ...{post.get('memo_id')}")
+    #     user = request.env.user
+        
+    #     selected_approver_id = int(post.get('selected_approver_id')) if post.get('selected_approver_id') else False
+
+    #     request_id = request.env['memo.model'].sudo()
+    #     domain = [
+    #         # ('employee_id.user_id', '=', user.id),
+    #         ('id', '=', post.get('memo_id')),
+    #         # ('state', 'in', ['Refuse']),
+    #     ]
+    #     request_record = request_id.search(domain, limit=1)
+    #     stage_id = False
+    #     status = post.get('status', '')
+
+    #     if request_record:
+    #         if status == "cancel":
+    #             stage_id = request.env.ref('company_memo.memo_cancel_stage').id
+                
+    #             request_record._log_action(
+    #                 action='cancelled',
+    #                 comments='Cancelled via portal'
+    #             )
+                
+    #             body_msg = f"""
+    #                 Dear Sir / Madam, <br/>
+    #                 I wish to notify you that a request with description \n <br/>\
+    #                 has been cancel by {request.env.user.name} <br/>\
+    #                 Kindly {get_url(request_record.id)}"""
+    #             request_record.mail_sending_direct(body_msg)
+    #             request_record.write({
+    #                 'state': 'Refuse', 
+    #                 'stage_id': stage_id,
+    #                 })
+    #             return {
+    #                 "status": True, 
+    #                 "link": False, 
+    #                 "message": "Record updated successfully", 
+    #                 }
+            
+    #         elif status == "Sent":
+    #             stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
+    #                 request_record.sudo().memo_setting_id.stage_ids else \
+    #                     request.env.ref('company_memo.memo_cancel_stage').id
+    #             request_record.sudo().write({'state': 'Sent', 'stage_id': stage_id})
+    #             return {
+    #                 "status": True, 
+    #                 "link": False, 
+    #                 "message": "Record updated successfully", 
+    #                 }
+            
+    #         elif status in ["Resend"]:
+    #             # useds this to determine the stages configured on the system
+    #             # if the length of stages is just 1, try the first condition else,
+    #             # set the stage to the next stage after draft.
+    #             if not request.env.user.id == request_record.employee_id.user_id.id:
+    #                 return {
+    #                     "status": False, 
+    #                     "link": False, 
+    #                     "message": "Only initiator can resend this request", 
+    #                     }
+                
+    #             memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
+    #             if memoStage_ids:
+    #                 stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
+    #                 next_stage = request.env['memo.stage'].browse(stage_id)
+                    
+    #                 request_record._log_action(
+    #                     action='submitted',
+    #                     comments='Resubmitted via portal',
+    #                     next_stage=next_stage
+    #                 )
+                    
+    #                 request_record.write({'state': 'Sent', 'stage_id': stage_id})
+    #                 return {
+    #                     "status": True, 
+    #                     "link": False,
+    #                     "message": "Record updated successfully", 
+    #                     }
+    #             else:
+    #                 return {
+    #                 "status": False, 
+    #                 "link": False, 
+    #                 "message": "No stage configured or found for this request. Contact admin", 
+    #                 }
+            
+    #         elif status in ["Approve"]:
+                
+    #             # approver_ids, stage = request_record.get_next_stage_artifact()
+    #             current_stage_approvers = request_record.sudo().stage_id.approver_ids
+    #             manager_approvals = []
+    #             if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
+    #                 manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
+    #             # user_employeeid = request.env.user.employee_id.id
+    #             if not request.env.user.id in [r.user_id.id for r in current_stage_approvers] + manager_approvals:
+    #                 if not (request_record.supervisor_comment or request_record.manager_comment):
+    #                     return {
+    #                         "status": False, 
+    #                         "link": False,
+    #                         "message": "Please Scroll down to the ending of the form to provide manager's or supervisor's comment", 
+    #                         }
+    #                 else:
+    #                     return {
+    #                         "status": False, 
+    #                         "link": False,
+    #                         "message": "You are not assigned to approve this record", 
+    #                         }
+    #             """First check if the server """
+    #             # ensure that current stage is not the main approval stage. Only internal users
+    #             # can go into office memo to approve
+    #             if request_record.sudo().stage_id.is_approved_stage:
+    #                 url_link = get_model_url(request_record.id, 'memo.model')
+    #                 is_internal_user = request.env.user.has_group('base.group_user')
+    #                 _logger.info(f"LINKAGE {url_link} Internal user found {is_internal_user}")
+    #                 return {
+    #                         "status": False, 
+    #                         "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
+    #                         "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
+                            
+    #                         }
+                
+    #             # === INTEGRATED ROUTING LOGIC STARTS HERE ===
+                
+    #             current_stage_id = request_record.stage_id.id
+    #             stage_ids = request_record.memo_setting_id.stage_ids.ids
+    #             next_stage_id = False
+
+    #             # Calculate Next Stage Index
+    #             if current_stage_id in stage_ids:
+    #                 idx = stage_ids.index(current_stage_id)
+    #                 if idx < len(stage_ids) - 1:
+    #                     next_stage_id = stage_ids[idx + 1]
+    #                 else:
+    #                     # Fallback if at end of list (usually handled by is_approved_stage check above)
+    #                     pass 
+                
+    #             if next_stage_id:
+    #                 next_stage = request.env['memo.stage'].sudo().browse(next_stage_id)
+    #                 potential_approvers = next_stage.approver_ids
+                    
+    #                 # Determine Routing Logic based on Memo Config
+    #                 routing_mode = getattr(request_record.memo_setting_id, 'routing_mode', 'standard') # Safe getattr
+    #                 final_approver_id = False
+
+    #                 # --- A. If User already selected someone from popup (Manual Mode Phase 2) ---
+    #                 if selected_approver_id:
+    #                     final_approver_id = selected_approver_id
+    #                     _logger.info(f"Routing: Using Selected approver {final_approver_id}")
+                    
+    #                 else:
+    #                     # --- B. Calculate based on Mode ---
+                        
+    #                     # AUTO MODE: Filter by Processing Branch (Using 'processing_branch_id' as requested)
+    #                     if routing_mode == 'auto':
+    #                         proc_branch_id = request_record.processing_branch_id
+    #                         _logger.info(f"Using Auto Routing mode with district {proc_branch_id.name}")
+                            
+    #                         if proc_branch_id:
+    #                             # Filter approvers belonging to that branch
+    #                             branch_approvers = potential_approvers.filtered(
+    #                                 lambda e: e.branch_id.id == proc_branch_id.id
+    #                             )
+    #                             if branch_approvers:
+    #                                 final_approver_id = branch_approvers[0].id
+    #                             else:
+    #                                 # Fallback to random if no branch specific approver found
+    #                                 if potential_approvers:
+    #                                     final_approver_id = random.choice(potential_approvers.ids)
+    #                         else:
+    #                             # No branch set, behave like standard
+    #                             if potential_approvers:
+    #                                 final_approver_id = random.choice(potential_approvers.ids)
+
+    #                     # MANUAL MODE: Check count for popup
+    #                     elif routing_mode == 'manual':
+    #                         if len(potential_approvers) > 1:
+    #                             # RETURN DATA TO FRONTEND TO SHOW POPUP
+    #                             approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
+    #                             return {
+    #                                 "status": False, # Stop processing
+    #                                 "manual_select": True, # Trigger JS popup
+    #                                 "approvers": approver_list,
+    #                                 "message": "Please select an approver"
+    #                             }
+    #                         elif len(potential_approvers) == 1:
+    #                             final_approver_id = potential_approvers[0].id
+                        
+    #                     # STANDARD MODE (Default)
+    #                     else:
+    #                         if potential_approvers:
+    #                             final_approver_id = random.choice(potential_approvers.ids)
+
+    #                     # --- C. Fallback Logic (Managers) ---
+    #                     # If next stage is the second stage (Index 1 usually), try Line Manager if no approver found
+    #                     if not final_approver_id:
+    #                         # Check index of NEXT stage
+    #                         next_stage_index = stage_ids.index(next_stage_id)
+    #                         if next_stage_index == 1: 
+    #                             employee_self_id = request_record.employee_id.id
+                                
+    #                             # Check Parent/Line Manager (ensure it's not the employee themselves)
+    #                             if request_record.employee_id.parent_id and \
+    #                                 request_record.employee_id.parent_id.id != employee_self_id:
+    #                                 final_approver_id = request_record.employee_id.parent_id.id
+                                    
+    #                             # Check Administrative Supervisor (ensure it's not the employee themselves)
+    #                             elif request_record.employee_id.administrative_supervisor_id and \
+    #                                 request_record.employee_id.administrative_supervisor_id.id != employee_self_id:
+    #                                 final_approver_id = request_record.employee_id.administrative_supervisor_id.id
+
+    #                 if not final_approver_id:
+    #                     return {
+    #                         "status": False, 
+    #                         "link": False,
+    #                         "message": f"No approver found for the next stage ({next_stage.name}). Please contact Admin."
+    #                     }
+
+    #                 # === APPLY UPDATES ===
+                    
+    #                 # LOG ACTION: Approved
+    #                 request_record._log_action(
+    #                     action='approved',
+    #                     comments='Approved via portal',
+    #                     next_stage=next_stage 
+    #                 )
+                    
+    #                 request_record.sudo().write({
+    #                     'stage_id': next_stage_id,
+    #                     'approver_id': final_approver_id,
+    #                     'users_followers': [(4, final_approver_id)],
+    #                     'res_users': [(4, request.env.user.id)]
+    #                     })
+                    
+    #                 body_msg = f"""
+    #                 Dear Sir / Madam <br/>\
+    #                 I wish to notify you that a request with description \n <br/>\
+    #                 has been approved for validation by {request.env.user.name} <br/>\
+    #                 Kindly {get_url(request_record.id)}"""
+    #                 request_record.mail_sending_direct(body_msg)
+                    
+    #                 return {
+    #                     "status": True,
+    #                     "link": False,
+    #                     "message": "Record updated successfully", 
+    #                     }
+                
+    #             else:
+    #                 return {
+    #                 "status": False, 
+    #                 "link": False,
+    #                 "message": "No next stage found. Configuration Error.", 
+    #                 }
+    #             # === END INTEGRATED LOGIC ===
+                
+    #         else:
+    #             return {
+    #                     "status": False,
+    #                     "link": False, 
+    #                     "message": "Request must have a status", 
+    #                     }
+    #     else:
+    #         return {
+    #                 "status": False, 
+    #                 "link": False,
+    #                 "message": "No matching record found", 
+    #                 }
+    
     @http.route('/my/request/update', type='json', auth="user", website=True)
     def update_my_request(self, **post):
         _logger.info(f"updating the request ...{post.get('memo_id')}")
-        user = request.env.user
         
+        # Capture selected approver from popup (if Manual mode triggered previously)
         selected_approver_id = int(post.get('selected_approver_id')) if post.get('selected_approver_id') else False
 
         request_id = request.env['memo.model'].sudo()
-        domain = [
-            # ('employee_id.user_id', '=', user.id),
-            ('id', '=', post.get('memo_id')),
-            # ('state', 'in', ['Refuse']),
-        ]
-        request_record = request_id.search(domain, limit=1)
+        request_record = request_id.search([('id', '=', post.get('memo_id'))], limit=1)
         stage_id = False
         status = post.get('status', '')
 
         if request_record:
             if status == "cancel":
                 stage_id = request.env.ref('company_memo.memo_cancel_stage').id
-                
-                request_record._log_action(
-                    action='cancelled',
-                    comments='Cancelled via portal'
-                )
-                
-                body_msg = f"""
-                    Dear Sir / Madam, <br/>
-                    I wish to notify you that a request with description \n <br/>\
-                    has been cancel by {request.env.user.name} <br/>\
-                    Kindly {get_url(request_record.id)}"""
+                request_record._log_action(action='cancelled', comments='Cancelled via portal')
+                body_msg = f"""Dear Sir/Madam, Request cancelled by {request.env.user.name}"""
                 request_record.mail_sending_direct(body_msg)
-                request_record.write({
-                    'state': 'Refuse', 
-                    'stage_id': stage_id,
-                    })
-                return {
-                    "status": True, 
-                    "link": False, 
-                    "message": "Record updated successfully", 
-                    }
+                request_record.write({'state': 'Refuse', 'stage_id': stage_id})
+                return {"status": True, "message": "Record cancelled successfully"}
             
-            elif status == "Sent":
-                stage_id = request_record.sudo().memo_setting_id.stage_ids[0].id if \
-                    request_record.sudo().memo_setting_id.stage_ids else \
-                        request.env.ref('company_memo.memo_cancel_stage').id
-                request_record.sudo().write({'state': 'Sent', 'stage_id': stage_id})
-                return {
-                    "status": True, 
-                    "link": False, 
-                    "message": "Record updated successfully", 
-                    }
-            
-            elif status in ["Resend"]:
-                # useds this to determine the stages configured on the system
-                # if the length of stages is just 1, try the first condition else,
-                # set the stage to the next stage after draft.
-                if not request.env.user.id == request_record.employee_id.user_id.id:
-                    return {
-                        "status": False, 
-                        "link": False, 
-                        "message": "Only initiator can resend this request", 
-                        }
+            elif status in ["Sent", "Resend"]:
+                if status == "Resend" and request.env.user.id != request_record.employee_id.user_id.id:
+                    return {"status": False, "message": "Only initiator can resend this request"}
                 
-                memoStage_ids = request_record.sudo().memo_setting_id.stage_ids.ids 
-                if memoStage_ids:
-                    stage_id = memoStage_ids[0] if len(memoStage_ids) < 1 else memoStage_ids[1]
-                    next_stage = request.env['memo.stage'].browse(stage_id)
+                if request_record.memo_setting_id.stage_ids:
+                    # Reset to First Stage (Draft/Start)
+                    stage_id = request_record.memo_setting_id.stage_ids[0].id
                     
-                    request_record._log_action(
-                        action='submitted',
-                        comments='Resubmitted via portal',
-                        next_stage=next_stage
-                    )
+                    # If Resend, logic might require moving to the NEXT stage after draft immediately
+                    # matching set_draft() behavior or similar. 
+                    # Standard behavior: Move to first stage, state = Sent.
                     
-                    request_record.write({'state': 'Sent', 'stage_id': stage_id})
-                    return {
-                        "status": True, 
-                        "link": False,
-                        "message": "Record updated successfully", 
-                        }
+                    vals = {'state': 'Sent', 'stage_id': stage_id}
+                    
+                    if status == "Resend":
+                        next_stage = request.env['memo.stage'].browse(stage_id)
+                        request_record._log_action(action='submitted', comments='Resubmitted via portal', next_stage=next_stage)
+                    
+                    request_record.write(vals)
+                    return {"status": True, "message": "Record updated successfully"}
                 else:
-                    return {
-                    "status": False, 
-                    "link": False, 
-                    "message": "No stage configured or found for this request. Contact admin", 
-                    }
+                    return {"status": False, "message": "Configuration Error: No stages found"}
             
+            # =====================================================
+            # LOGIC 3: APPROVE (INTEGRATED WORKFLOW)
+            # =====================================================
             elif status in ["Approve"]:
                 
-                # approver_ids, stage = request_record.get_next_stage_artifact()
-                current_stage_approvers = request_record.sudo().stage_id.approver_ids
+                current_stage_approvers = request_record.stage_id.approver_ids
+                
                 manager_approvals = []
-                if request_record.sudo().memo_setting_id.stage_ids.ids.index(request_record.sudo().stage_id.id) in [0, 1]:
-                    manager_approvals = [request_record.sudo().employee_id.parent_id.user_id.id, request_record.sudo().employee_id.administrative_supervisor_id.user_id.id]
-                # user_employeeid = request.env.user.employee_id.id
-                if not request.env.user.id in [r.user_id.id for r in current_stage_approvers] + manager_approvals:
+                if request_record.memo_setting_id.stage_ids.ids.index(request_record.stage_id.id) in [0, 1]:
+                    if request_record.employee_id.parent_id:
+                        manager_approvals.append(request_record.employee_id.parent_id.user_id.id)
+                    if request_record.employee_id.administrative_supervisor_id:
+                        manager_approvals.append(request_record.employee_id.administrative_supervisor_id.user_id.id)
+                
+                authorized_users = [r.user_id.id for r in current_stage_approvers] + manager_approvals
+                
+                if request.env.user.id not in authorized_users:
                     if not (request_record.supervisor_comment or request_record.manager_comment):
                         return {
-                            "status": False, 
-                            "link": False,
-                            "message": "Please Scroll down to the ending of the form to provide manager's or supervisor's comment", 
-                            }
-                    else:
-                        return {
-                            "status": False, 
-                            "link": False,
-                            "message": "You are not assigned to approve this record", 
-                            }
-                """First check if the server """
-                # ensure that current stage is not the main approval stage. Only internal users
-                # can go into office memo to approve
-                if request_record.sudo().stage_id.is_approved_stage:
-                    url_link = get_model_url(request_record.id, 'memo.model')
-                    is_internal_user = request.env.user.has_group('base.group_user')
-                    _logger.info(f"LINKAGE {url_link} Internal user found {is_internal_user}")
-                    return {
-                            "status": False, 
-                            "link": get_model_url(request_record.id, 'memo.model') if is_internal_user else False,
-                            "message": """Click the 'VIEW AS A CORE USER' Button to Approve this record. You can Contact system admin to give you guidance""" 
-                            
-                            }
-                
-                # === INTEGRATED ROUTING LOGIC STARTS HERE ===
-                
-                current_stage_id = request_record.stage_id.id
-                stage_ids = request_record.memo_setting_id.stage_ids.ids
-                next_stage_id = False
-
-                # Calculate Next Stage Index
-                if current_stage_id in stage_ids:
-                    idx = stage_ids.index(current_stage_id)
-                    if idx < len(stage_ids) - 1:
-                        next_stage_id = stage_ids[idx + 1]
-                    else:
-                        # Fallback if at end of list (usually handled by is_approved_stage check above)
-                        pass 
-                
-                if next_stage_id:
-                    next_stage = request.env['memo.stage'].sudo().browse(next_stage_id)
-                    potential_approvers = next_stage.approver_ids
-                    
-                    # Determine Routing Logic based on Memo Config
-                    routing_mode = getattr(request_record.memo_setting_id, 'routing_mode', 'standard') # Safe getattr
-                    final_approver_id = False
-
-                    # --- A. If User already selected someone from popup (Manual Mode Phase 2) ---
-                    if selected_approver_id:
-                        final_approver_id = selected_approver_id
-                        _logger.info(f"Routing: Using Selected approver {final_approver_id}")
-                    
-                    else:
-                        # --- B. Calculate based on Mode ---
-                        
-                        # AUTO MODE: Filter by Processing Branch (Using 'processing_branch_id' as requested)
-                        if routing_mode == 'auto':
-                            proc_branch_id = request_record.processing_branch_id
-                            _logger.info(f"Using Auto Routing mode with district {proc_branch_id.name}")
-                            
-                            if proc_branch_id:
-                                # Filter approvers belonging to that branch
-                                branch_approvers = potential_approvers.filtered(
-                                    lambda e: e.branch_id.id == proc_branch_id.id
-                                )
-                                if branch_approvers:
-                                    final_approver_id = branch_approvers[0].id
-                                else:
-                                    # Fallback to random if no branch specific approver found
-                                    if potential_approvers:
-                                        final_approver_id = random.choice(potential_approvers.ids)
-                            else:
-                                # No branch set, behave like standard
-                                if potential_approvers:
-                                    final_approver_id = random.choice(potential_approvers.ids)
-
-                        # MANUAL MODE: Check count for popup
-                        elif routing_mode == 'manual':
-                            if len(potential_approvers) > 1:
-                                # RETURN DATA TO FRONTEND TO SHOW POPUP
-                                approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
-                                return {
-                                    "status": False, # Stop processing
-                                    "manual_select": True, # Trigger JS popup
-                                    "approvers": approver_list,
-                                    "message": "Please select an approver"
+                                "status": False,
+                                "link": False,
+                                "message": "Please provide comments at the bottom of the form"
                                 }
-                            elif len(potential_approvers) == 1:
-                                final_approver_id = potential_approvers[0].id
-                        
-                        # STANDARD MODE (Default)
-                        else:
-                            if potential_approvers:
-                                final_approver_id = random.choice(potential_approvers.ids)
+                    else:
+                        return {
+                                "status": False,
+                                "link": False, 
+                                "message": "You are not assigned to approve this record"
+                                }
 
-                        # --- C. Fallback Logic (Managers) ---
-                        # If next stage is the second stage (Index 1 usually), try Line Manager if no approver found
-                        if not final_approver_id:
-                            # Check index of NEXT stage
-                            next_stage_index = stage_ids.index(next_stage_id)
-                            if next_stage_index == 1: 
-                                employee_self_id = request_record.employee_id.id
-                                
-                                # Check Parent/Line Manager (ensure it's not the employee themselves)
-                                if request_record.employee_id.parent_id and \
-                                    request_record.employee_id.parent_id.id != employee_self_id:
-                                    final_approver_id = request_record.employee_id.parent_id.id
-                                    
-                                # Check Administrative Supervisor (ensure it's not the employee themselves)
-                                elif request_record.employee_id.administrative_supervisor_id and \
-                                    request_record.employee_id.administrative_supervisor_id.id != employee_self_id:
-                                    final_approver_id = request_record.employee_id.administrative_supervisor_id.id
-
-                    if not final_approver_id:
+                if request_record.stage_id.is_approved_stage:
+                    is_internal_user = request.env.user.has_group('base.group_user')
+                    if is_internal_user:
                         return {
                             "status": False, 
-                            "link": False,
-                            "message": f"No approver found for the next stage ({next_stage.name}). Please contact Admin."
+                            "link": get_model_url(request_record.id, 'memo.model'),
+                            "message": "Click 'VIEW AS A CORE USER' to Approve. Contact admin for guidance"
                         }
 
-                    # === APPLY UPDATES ===
-                    
-                    # LOG ACTION: Approved
-                    request_record._log_action(
-                        action='approved',
-                        comments='Approved via portal',
-                        next_stage=next_stage 
-                    )
-                    
-                    request_record.sudo().write({
-                        'stage_id': next_stage_id,
-                        'approver_id': final_approver_id,
-                        'users_followers': [(4, final_approver_id)],
-                        'res_users': [(4, request.env.user.id)]
-                        })
-                    
-                    body_msg = f"""
-                    Dear Sir / Madam <br/>\
-                    I wish to notify you that a request with description \n <br/>\
-                    has been approved for validation by {request.env.user.name} <br/>\
-                    Kindly {get_url(request_record.id)}"""
-                    request_record.mail_sending_direct(body_msg)
-                    
-                    return {
-                        "status": True,
-                        "link": False,
-                        "message": "Record updated successfully", 
-                        }
-                
+                # Using get_next_stage_artifact to handle 'stage_to_skip' and config logic
+                potential_approver_ids, next_stage_id = request_record.get_next_stage_artifact(request_record.stage_id, from_website=True)
+
+                if not next_stage_id:
+                    return {"status": False, "message": "No next stage found. Process complete or Configuration Error."}
+
+                next_stage = request.env['memo.stage'].sudo().browse(next_stage_id)
+                potential_approvers = request.env['hr.employee'].sudo().browse(potential_approver_ids)
+
+                # Routing Logic (Auto/Manual/Branch) ---
+                routing_mode = getattr(request_record.memo_setting_id, 'routing_mode', 'standard')
+                final_approver_id = False
+
+                if selected_approver_id:
+                    final_approver_id = selected_approver_id
                 else:
-                    return {
-                    "status": False, 
-                    "link": False,
-                    "message": "No next stage found. Configuration Error.", 
-                    }
-                # === END INTEGRATED LOGIC ===
+                    if routing_mode == 'auto':
+                        proc_branch_id = request_record.processing_branch_id
+                        if proc_branch_id:
+                             branch_approvers = potential_approvers.filtered(lambda e: e.branch_id.id == proc_branch_id.id)
+                             final_approver_id = branch_approvers[0].id if branch_approvers else (random.choice(potential_approvers.ids) if potential_approvers else False)
+                        else:
+                             final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
+                    elif routing_mode == 'manual':
+                        if len(potential_approvers) > 1:
+                            approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
+                            return {"status": False, "manual_select": True, "approvers": approver_list, "message": "Please select an approver"}
+                        elif len(potential_approvers) == 1:
+                            final_approver_id = potential_approvers[0].id
+                        else:
+                            final_approver_id = False 
+                    else:
+                        final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
+
+                # Prevent Self-Approval (if configured)
+                if final_approver_id and final_approver_id == request_record.employee_id.id:
+                     others = potential_approvers.filtered(lambda e: e.id != request_record.employee_id.id)
+                     if others: final_approver_id = others[0].id
+
+                if not final_approver_id:
+                     return {"status": False, "message": f"No approver found for stage {next_stage.name}"}
+
+                current_employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.env.user.id)], limit=1)
                 
+                employee_followers_update = []
+                if final_approver_id:
+                    employee_followers_update.append((4, final_approver_id)) # Add Next Approver
+                if current_employee:
+                    employee_followers_update.append((4, current_employee.id)) # Keep Current User
+
+                invoices, documents = request_record.generate_required_artifacts(next_stage, request_record, request_record.code)
+                
+                vals = {
+                    'stage_id': next_stage_id,
+                    'approver_id': final_approver_id,
+                    'set_staff': final_approver_id, # Missing workflow fixed
+                    'direct_employee_id': final_approver_id,
+                    'approver_ids': [(6, 0, [final_approver_id])], # M2M Update fixed
+                    'users_followers': employee_followers_update, 
+                    'res_users': [(4, request.env.user.id)], # Add current user to res_users M2M
+                    'invoice_ids': [(4, iv) for iv in invoices],
+                    'attachment_ids': [(4, dc) for dc in documents]
+                }
+
+                request_record.generate_sub_stage_artifacts(next_stage)
+
+                if next_stage.is_approved_stage:
+                    if request_record.memo_type_key == 'material_request':
+                         request_record.enable_edit_mode()
+                    
+                    if request_record.memo_type_key in ["Payment", 'loan', 'cash_advance', 'soe']:
+                        vals['state'] = "Approve"
+                    else:
+                        vals['state'] = "Approve2"
+                
+                if request_record.memo_setting_id and request_record.memo_setting_id.stage_ids:
+                    last_stage = request_record.memo_setting_id.stage_ids[-1]
+                    
+                    if last_stage.id == next_stage_id:
+                        if vals.get('state') == 'Approve' and request_record.memo_type_key in ["Payment", 'loan', 'cash_advance', 'soe']:
+                            pass 
+                        else:
+                            vals['state'] = 'Done'
+                            final_user_emp = request.env['hr.employee'].sudo().search([('user_id', '=', request.env.uid)], limit=1)
+                            if final_user_emp:
+                                vals['approver_id'] = final_user_emp.id
+                                vals['approver_ids'] = [(4, final_user_emp.id)]
+
+                request_record.sudo().write(vals)
+
+                request_record._log_action(
+                    action='approved', 
+                    comments='Approved via portal', 
+                    next_stage=next_stage
+                )
+                
+                body_msg = f"""Dear Sir/Madam, Request approved by {request.env.user.name}"""
+                request_record.mail_sending_direct(body_msg)
+                
+                return {"status": True, "message": "Record updated successfully"}
+
             else:
-                return {
-                        "status": False,
-                        "link": False, 
-                        "message": "Request must have a status", 
-                        }
+                return {"status": False, "message": "Request must have a status"}
         else:
-            return {
-                    "status": False, 
-                    "link": False,
-                    "message": "No matching record found", 
-                    }
+            return {"status": False, "message": "No matching record found"}
+        
     
     @http.route('/save/data', type='json', auth="user", website=True)
     def save_data(self, **post):
