@@ -15,17 +15,17 @@ class PurchaseOrder(models.Model):
         res.update({'branch_id': self.branch_id.id})
         return res
 
-    @api.onchange('branch_id')
-    def _onchange_branch_id(self):
-        # for rec in self:
-        if self.branch_id:
-            picking_type = self.env['stock.picking.type'].search(
-                [('warehouse_id.branch_id', '=', self.branch_id.id), ('code', '=', 'incoming')], limit=1)
-            if picking_type:
-                self.picking_type_id = picking_type.id
-            else:
-                raise ValidationError(
-                    'The Logged in User branch does not have any assigned Receipt Warehouse')
+    # @api.onchange('branch_id')
+    # def _onchange_branch_id(self):
+    #     # for rec in self:
+    #     if self.branch_id:
+    #         picking_type = self.env['stock.picking.type'].search(
+    #             [('warehouse_id.branch_id', '=', self.branch_id.id), ('code', '=', 'incoming')], limit=1)
+    #         if picking_type:
+    #             self.picking_type_id = picking_type.id
+    #         else:
+    #             raise ValidationError(
+    #                 'The Logged in User branch does not have any assigned Receipt Warehouse')
 
 
 class PurchaseOrderLine(models.Model):
