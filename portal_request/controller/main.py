@@ -3127,11 +3127,24 @@ class PortalRequest(http.Controller):
                 current_stage_approvers = request_record.stage_id.approver_ids
                 
                 manager_approvals = []
-                if request_record.memo_setting_id.stage_ids.ids.index(request_record.stage_id.id) in [0, 1]:
-                    if request_record.employee_id.parent_id:
-                        manager_approvals.append(request_record.employee_id.parent_id.user_id.id)
-                    if request_record.employee_id.administrative_supervisor_id:
-                        manager_approvals.append(request_record.employee_id.administrative_supervisor_id.user_id.id)
+                
+                # if request_record.memo_setting_id.stage_ids.ids.index(request_record.stage_id.id) in [0, 1]:
+                #     if request_record.employee_id.parent_id:
+                #         manager_approvals.append(request_record.employee_id.parent_id.user_id.id)
+                #     if request_record.employee_id.administrative_supervisor_id:
+                #         manager_approvals.append(request_record.employee_id.administrative_supervisor_id.user_id.id)
+                
+                #Added a fix
+                
+                config_stage_ids = request_record.memo_setting_id.stage_ids.ids
+                current_stage_id = request_record.stage_id.id
+                
+                if current_stage_id and current_stage_id in config_stage_ids:
+                    if config_stage_ids.index(current_stage_id) in [0, 1]:
+                        if request_record.employee_id.parent_id:
+                            manager_approvals.append(request_record.employee_id.parent_id.user_id.id)
+                        if request_record.employee_id.administrative_supervisor_id:
+                            manager_approvals.append(request_record.employee_id.administrative_supervisor_id.user_id.id)
                 
                 authorized_users = [r.user_id.id for r in current_stage_approvers] + manager_approvals
                 
@@ -3177,7 +3190,29 @@ class PortalRequest(http.Controller):
                         proc_branch_id = request_record.processing_branch_id
                         if proc_branch_id:
                              branch_approvers = potential_approvers.filtered(lambda e: e.branch_id.id == proc_branch_id.id)
-                             final_approver_id = branch_approvers[0].id if branch_approvers else (random.choice(potential_approvers.ids) if potential_approvers else False)
+                            #  final_approver_id = branch_approvers[0].id if branch_approvers else (random.choice(potential_approvers.ids) if potential_approvers else False)
+                             count = len(branch_approvers)
+                             
+                             if count == 1:
+                                 final_approver_id = branch_approvers[0].id
+                                 
+                             elif count > 1:
+                                 approver_list = [{'id': app.id, 'name': f"{app.name} ({app.job_id.name or 'Staff'})"} for app in branch_approvers]
+                                 return {
+                                     "status": False, 
+                                     "manual_select": True, 
+                                     "approvers": approver_list, 
+                                     "message": f"Multiple approvers found in {proc_branch_id.name}. Please select one."
+                                 }
+                             
+                             else: # count == 0
+                                 approver_list = [{'id': app.id, 'name': f"{app.name} ({app.branch_id.name or 'Head Office'})"} for app in potential_approvers]
+                                 return {
+                                     "status": False, 
+                                     "manual_select": True, 
+                                     "approvers": approver_list, 
+                                     "message": f"No approver found in {proc_branch_id.name}. Please select from the general pool."
+                                 }
                         else:
                              final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
                     elif routing_mode == 'manual':
