@@ -3335,6 +3335,12 @@ class PortalRequest(http.Controller):
                 
             }
             request_record.update(values)
+            
+            if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
+                values['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
+                if not request_record.state:
+                    values['state'] = 'submit' 
+                    
             # updated_request = self.update_request_line(DataItems, request_record)
             for rec in DataItems:
                 desc = rec.get('description', '')
