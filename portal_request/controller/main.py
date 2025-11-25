@@ -3134,6 +3134,8 @@ class PortalRequest(http.Controller):
                 #     if request_record.employee_id.administrative_supervisor_id:
                 #         manager_approvals.append(request_record.employee_id.administrative_supervisor_id.user_id.id)
                 
+                #Added a fix
+                
                 config_stage_ids = request_record.memo_setting_id.stage_ids.ids
                 current_stage_id = request_record.stage_id.id
                 
