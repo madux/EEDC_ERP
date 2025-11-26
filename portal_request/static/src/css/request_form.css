@@ -78,3 +78,9 @@
 .arrow-right {
     transition: all 0.3s ease-in-out;
 }
+
+
+/* Hide Save button */
+#button_save_submit {
+        display: none !important;
+}
