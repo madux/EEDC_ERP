@@ -3060,6 +3060,8 @@ class PortalRequest(http.Controller):
         
         # Capture selected approver from popup (if Manual mode triggered previously)
         selected_approver_id = int(post.get('selected_approver_id')) if post.get('selected_approver_id') else False
+        selected_route_id = int(post.get('selected_route_id')) if post.get('selected_route_id') else False
+        selected_district_id = int(post.get('selected_district_id')) if post.get('selected_district_id') else False
 
         request_id = request.env['memo.model'].sudo()
         request_record = request_id.search([('id', '=', post.get('memo_id'))], limit=1)
@@ -3185,7 +3187,18 @@ class PortalRequest(http.Controller):
 
                 if selected_approver_id:
                     final_approver_id = selected_approver_id
-                else:
+                elif selected_route_id:
+                    route_rec = request.env['memo.stage.route'].sudo().browse(selected_route_id)
+                    final_approver_id = route_rec.approver_id.id
+                    update_vals = {}
+                    if route_rec.branch_id: update_vals['processing_branch_id'] = route_rec.branch_id.id
+                    if route_rec.company_id: update_vals['processing_company_id'] = route_rec.company_id.id
+                    if update_vals: request_record.sudo().write(update_vals)
+                elif selected_district_id:
+                    request_record.sudo().write({'processing_branch_id': selected_district_id})
+                    routing_mode = 'auto' 
+                
+                if not final_approver_id:
                     if routing_mode == 'auto':
                         proc_branch_id = request_record.processing_branch_id
                         if proc_branch_id:
@@ -3216,13 +3229,43 @@ class PortalRequest(http.Controller):
                         else:
                              final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
                     elif routing_mode == 'manual':
-                        if len(potential_approvers) > 1:
-                            approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
-                            return {"status": False, "manual_select": True, "approvers": approver_list, "message": "Please select an approver"}
-                        elif len(potential_approvers) == 1:
-                            final_approver_id = potential_approvers[0].id
+                        stage_option = next_stage.routing_option
+                        
+                        if stage_option == 'sub_approver':
+                            if next_stage.route_ids:
+                                routes_data = [{'id': r.id, 'name': r.name} for r in next_stage.route_ids]
+                                return {
+                                    "status": False, 
+                                    "route_select": True, 
+                                    "routes": routes_data, 
+                                    "message": "Please select the destination."
+                                }
+                            else:
+                                return {"status": False, "message": "Config Error: No Sub-Approvers found for this stage."}
+                        
+                        elif stage_option == 'district':
+                            domain = []
+                            if not request_record.memo_setting_id.allow_cross_company_requests:
+                                domain = [('company_id', '=', request.env.user.company_id.id)]
+                            
+                            districts = request.env['multi.branch'].sudo().search(domain)
+                            districts_data = [{'id': d.id, 'name': d.name} for d in districts]
+                            
+                            return {
+                                "status": False, 
+                                "district_select": True, 
+                                "districts": districts_data, 
+                                "message": "Please select the destination district."
+                            }
+                        
                         else:
-                            final_approver_id = False 
+                            approver_list = [{'id': app.id, 'name': app.name} for app in potential_approvers]
+                            return {
+                                "status": False, 
+                                "manual_select": True, 
+                                "approvers": approver_list, 
+                                "message": "Please select an approver"
+                            }
                     else:
                         final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
 

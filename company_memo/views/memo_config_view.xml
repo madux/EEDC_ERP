@@ -43,8 +43,10 @@
                                 <field name="allow_cross_company_requests" string="Allow Cross-company requests"/>
                                 <field name="requires_processing_district" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True)]}"/>
                                 <field name="routing_mode" attrs="{'invisible': [('inter_district', '=', False)]}"/>
-                                <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/>
-                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/>
+                                <!-- <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)], 'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/>
+                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)],'required': [('inter_district', '=', True), ('requires_processing_district', '=', False)]}"/> -->
+                                <field name="processing_company_id" attrs="{'invisible': [('inter_district', '=', False)]}"/>
+                                <field name="processing_branch_id" attrs="{'invisible': [('inter_district', '=', False)]}"/>
 
                             </group>
                             <notebook>
@@ -130,15 +132,12 @@
                             <field name="memo_has_condition"/>
                             <field name="yes_condition" attrs="{'invisible': [('memo_has_condition', '!=', True)]}"/>
                             <field name="no_condition" attrs="{'invisible': [('memo_has_condition', '!=', True)]}"/> 
-                            <!-- # attrs="{'ssss': [('xdsds', 'sddf', sdfef)]}" -->
                             <field name="dummy_memo_config_stage_ids" invisible="1"/>
                             <field name="yes_conditional_stage_id" force_save="1" readonly="0" domain="[('id', 'in', dummy_memo_config_stage_ids)]" 
                             attrs="{'invisible': [('yes_condition', '!=', True)], 'required': [('yes_condition', '=', True)]}"/>
                             <field name="no_conditional_stage_id" force_save="1" readonly="0" domain="[('id', 'in', dummy_memo_config_stage_ids)]" 
                             attrs="{'invisible': [('no_condition', '!=', True)], 'required': [('no_condition', '=', True)]}" />
                             <field name="memo_config_id" readonly="0" force_save="1" string="Parent setting" required="1" options="{'no_create':True, 'no_open': False}"/> 
-
-                            <!-- <field name="approver_id" required="0"/> -->
                         </group>
                     </group>
                     <notebook>
@@ -151,6 +150,7 @@
                                 </tree>
                             </field>
                         </page>
+                        
                         <page string="Required Documents">  
                             <field name="required_document_line" domain="[('id', '=', 0)]">
                                 <tree string="Document">
@@ -159,60 +159,100 @@
                                 </tree>
                             </field>
                         </page>
-                        <page string="Sub Stages">  
-                            <field name="sub_stage_ids" context="{'default_is_sub_stage': True, 'default_memo_config_id': memo_config_id}">
-                                <form string="Sub Stages">
-                                    <group>
-                                        <group>
-                                            <field name="name" string="Stage name"/>
-                                            <field name="approver_ids" string="Approvers" required="1" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
-                                            <field name="sequence" string="Sequence"/>
-                                            
-                                        </group>
-                                        <group>
-                                            <field name="is_sub_stage" string="Is sub stage" readonly="1"/>
-                                            <field name="require_po_confirmation"/>
-                                            <field name="require_so_confirmation"/>
-                                            <field name="active" string="Active" readonly="1"/>
-                                            <field name="memo_config_id" readonly="0" force_save="1"
-                                            string="Parent setting" attrs="{'required': [('is_sub_stage', '!=', True)]}" options="{'no_create':True, 'no_open': False}"/> 
-                                        </group>
-                                    </group>
-                                    <notebook>
-                                        <page string="Required Invoice lines">  
-                                            <field name="required_invoice_line" domain="[('id', '=', 0)]">
-                                                <tree string="Required Invoice">
-                                                    <field name="name" string="Invoice name"/>
-                                                    <field name="move_type" string="Invoice type" required="1"/>
-                                                    <field name="compulsory" string="Is compulsory"/>
-                                                </tree>
-                                            </field>
-                                        </page>
-                                        <page string="Required Documents">  
-                                            <field name="required_document_line" domain="[('id', '=', 0)]">
-                                                <tree string="Document">
-                                                    <field name="name"/>
-                                                    <field name="compulsory" string="Is compulsory"/>
-                                                </tree>
-                                            </field>
-                                        </page>
-                                    </notebook>
-                                </form>
-                                <tree string="Sub Stages">
+
+                        <page string="Routing Configuration">
+                            <group>
+                <group>
+                    <field name="routing_option" widget="radio"/>
+                </group>
+                
+                <group>
+                    <div style="margin-top: 10px;">
+                        <label for="action_generate_routes" string="Action" style="font-weight:bold; margin-right: 10px;"/>
+                        <button name="action_generate_routes" 
+                                string="Generate Routes" 
+                                type="object" 
+                                icon="fa-refresh"
+                                class="btn btn-sm btn-secondary" 
+                                confirm="Generate route lines for all employees in the 'Approvers' list? (Duplicates will be skipped)"/>
+                        <div class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">
+                            <i>Click to auto-fill table from Approvers list.</i>
+                        </div>
+                    </div>
+                </group>
+            </group>
+    
+                    
+                    <field name="route_ids" attrs="{'invisible': [('routing_option', '!=', 'sub_approver')]}">
+                        <tree string="Sub Approvers / Routes" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name" placeholder="e.g. Forward to Ogui FA"/>
+                            <field name="approver_id"/>
+                            <field name="branch_id" placeholder="Optional: Update District"/>
+                            <field name="company_id" optional="hide"/>
+                        </tree>
+                    </field>
+                    
+                    <div class="text-muted" attrs="{'invisible': [('routing_option', '!=', 'district')]}">
+                        <i class="fa fa-info-circle"/> 
+                        When set to <b>Select District</b>, the portal will automatically show a popup containing all available Districts/Branches based on the Company configuration.
+                    </div>
+                </page>
+
+                <page string="Sub Stages">  
+                    <field name="sub_stage_ids" context="{'default_is_sub_stage': True, 'default_memo_config_id': memo_config_id}">
+                        <tree string="Sub Stages">
+                            <field name="name" string="Stage name"/>
+                            <field name="approver_ids" string="Approvers" required="1" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                            <field name="is_sub_stage" string="Is sub stage" readonly="1"/>
+                            <field name="active" string="Active" readonly="1"/>
+                        </tree>
+                        <form string="Sub Stages">
+                            <group>
+                                <group>
                                     <field name="name" string="Stage name"/>
                                     <field name="approver_ids" string="Approvers" required="1" widget="many2many_tags" options="{'no_create':True, 'no_open': False}"/>
+                                    <field name="sequence" string="Sequence"/>
+                                </group>
+                                <group>
                                     <field name="is_sub_stage" string="Is sub stage" readonly="1"/>
+                                    <field name="require_po_confirmation"/>
+                                    <field name="require_so_confirmation"/>
                                     <field name="active" string="Active" readonly="1"/>
-                                </tree>
-                            </field>
-                        </page>
-                        <page string="Description">  
-                                <field name="description"/>
-                        </page>
-                    </notebook>
-                </form>
-            </field>
-        </record>
+                                    <field name="memo_config_id" readonly="0" force_save="1"
+                                    string="Parent setting" attrs="{'required': [('is_sub_stage', '!=', True)]}" options="{'no_create':True, 'no_open': False}"/> 
+                                </group>
+                            </group>
+                            <notebook>
+                                <page string="Required Invoice lines">  
+                                    <field name="required_invoice_line" domain="[('id', '=', 0)]">
+                                        <tree string="Required Invoice">
+                                            <field name="name" string="Invoice name"/>
+                                            <field name="move_type" string="Invoice type" required="1"/>
+                                            <field name="compulsory" string="Is compulsory"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                                <page string="Required Documents">  
+                                    <field name="required_document_line" domain="[('id', '=', 0)]">
+                                        <tree string="Document">
+                                            <field name="name"/>
+                                            <field name="compulsory" string="Is compulsory"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook>
+                        </form>
+                    </field>
+                </page>
+
+                <page string="Description">  
+                        <field name="description"/>
+                </page>
+            </notebook>
+        </form>
+    </field>
+</record>
         <record model="ir.actions.act_window" id="memo_stage_action">
             <field name="name">Memo stage</field>
             <field name="res_model">memo.stage</field>

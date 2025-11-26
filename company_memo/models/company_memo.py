@@ -1847,7 +1847,8 @@ class Memo_Model(models.Model):
             last_stage = mstages[-1] if mstages else False # 'e.g 9'
             if last_stage and last_stage.id != current_stage_id.id:
                 current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
-                if current_stage_index in [0, 1]:
+                # if current_stage_index in [0, 1]: # Check here very well
+                if current_stage_index == 0:
                     manager_can_approve = True
                 next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:
