@@ -220,5 +220,22 @@
             <field name="code">action=model.transfer_employee_action()</field>
         </record>
 
+        <record id="action_update_memo_model_employee" model="ir.actions.server">
+            <field name="name">Update EEDC Request References</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="binding_model_id" ref="eedc_addons.model_hr_employee"/>
+            <field name="binding_view_types">form,tree</field>
+            <field name="groups_id" eval="[(6, 0, [
+                ref('base.group_system'),
+                ref('hr_pms.group_pms_officer_id'),
+            ])]"/>
+            <field name="state">code</field>
+            <field name="code"><![CDATA[
+        action = records.action_update_memo_model_employee()
+            ]]></field>
+        </record>
+
+
     </data>
 </odoo>
