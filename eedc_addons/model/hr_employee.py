@@ -240,7 +240,7 @@ class HREmployee(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Memo Employee Update Complete',
+                'title': 'EEDC Request Employee Update Complete',
                 'message': message,
                 'type': 'success' if not error_count else 'warning',
                 'sticky': True,
