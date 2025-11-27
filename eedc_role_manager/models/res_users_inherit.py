@@ -231,10 +231,66 @@ class ResUsers(models.Model):
     def _sync_approvals_from_roles(self):
         """
         Synchronize memo.stage approver lists based on user's roles, companies and branches.
+        Includes automatic cleanup of stale ownership records from archived employees.
         """
         MemoStage = self.env['memo.stage']
         ownership_model = self.env['user.role.approval.ownership']
         
+        # CLEANUP: Fix ownership records with stale employee references
+        for user in self:
+            current_employee = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+            
+            if not current_employee:
+                _logger.info(f"User {user.login} has no linked employee, skipping cleanup")
+                continue
+            
+            # Find ownership records for this user that reference different employees
+            stale_ownerships = ownership_model.sudo().search([
+                ('user_id', '=', user.id),
+                ('employee_id', '!=', current_employee.id)
+            ])
+            
+            if stale_ownerships:
+                _logger.warning(f"User {user.login}: Found {len(stale_ownerships)} ownership records with stale employee references")
+                
+                for stale_own in stale_ownerships:
+                    old_employee = stale_own.employee_id
+                    stage = stale_own.stage_id
+                    
+                    # Check if duplicate would exist with current employee
+                    duplicate_check = ownership_model.sudo().search([
+                        ('user_id', '=', user.id),
+                        ('employee_id', '=', current_employee.id),
+                        ('stage_id', '=', stage.id)
+                    ], limit=1)
+                    
+                    if duplicate_check:
+                        # Duplicate exists, just delete the stale one
+                        _logger.info(f"Deleting stale ownership (stage: {stage.name}, old emp: {old_employee.name})")
+                        
+                        # Remove old employee from stage approvers if still there
+                        if old_employee in stage.approver_ids:
+                            stage.sudo().write({'approver_ids': [(3, old_employee.id)]})
+                        
+                        stale_own.sudo().unlink()
+                    else:
+                        # No duplicate, update to current employee
+                        _logger.info(f"Updating ownership to current employee (stage: {stage.name}, {old_employee.name} -> {current_employee.name})")
+                        
+                        # Remove old employee from stage approvers
+                        if old_employee in stage.approver_ids:
+                            stage.sudo().write({'approver_ids': [(3, old_employee.id)]})
+                        
+                        # Update ownership record
+                        stale_own.sudo().write({'employee_id': current_employee.id})
+                        
+                        # Add current employee to stage approvers if not there
+                        if current_employee not in stage.approver_ids:
+                            stage.sudo().write({'approver_ids': [(4, current_employee.id)]})
+                
+                _logger.info(f"Completed cleanup for user {user.login}")
+        
+        # Continue with normal sync
         employees = self.env['hr.employee'].search([('user_id', 'in', self.ids)])
         
         for employee in employees:
@@ -274,10 +330,6 @@ class ResUsers(models.Model):
                 
                 for role in context_limited_roles:
                     _logger.info(f"Processing context-limited role: {role.name}")
-                    # _logger.info(f"User company_id: {user.company_id.name if user.company_id else 'None'}")
-                    # _logger.info(f"User branch_id: {user.branch_id.name if hasattr(user, 'branch_id') and user.branch_id else 'None'}")
-                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
-                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
                     
                     domain = [('approval_role_ids', 'in', [role.id])]
                     
@@ -303,10 +355,6 @@ class ResUsers(models.Model):
                 
                 for role in role_limited_roles:
                     _logger.info(f"Processing role-limited role: {role.name}")
-                    # _logger.info(f"User allowed companies: {user.company_ids.mapped('name')}")
-                    # _logger.info(f"User allowed branches: {user.branch_ids.mapped('name')}")
-                    # _logger.info(f"Role allowed companies: {role.company_ids.mapped('name')}")
-                    # _logger.info(f"Role allowed branches: {role.branch_ids.mapped('name')}")
                     
                     domain = [('approval_role_ids', 'in', [role.id])]
                     
@@ -317,7 +365,7 @@ class ResUsers(models.Model):
                     else:
                         _logger.info(f"Skipping role {role.name} - no company intersection between user and role and also no allowed companies set")
                         
-                      
+                    
                     if role.branch_ids:
                         applicable_branches = role.branch_ids & user.branch_ids if user.branch_ids else False
                         if not applicable_branches:
@@ -411,14 +459,24 @@ class ResUsers(models.Model):
                     stage.write({'approver_ids': [(4, employee.id)]})
                     _logger.info(f"Successfully added employee {employee.name} to stage {stage.name} approvers")
 
+                # Check for duplicate before creating
                 existing = ownership_model.search([
                     ('user_id', '=', user.id),
-                    ('employee_id', '=', employee.id),
                     ('stage_id', '=', stage.id)
                 ], limit=1)
-                if not existing:
+                
+                if existing:
+                    # Update existing record to correct employee
+                    _logger.warning(f"Found existing ownership for user {user.name} on stage {stage.name}, updating to correct employee")
                     granting_roles = approval_roles.filtered(lambda r: r in stage.approval_role_ids)
-                    ownership_model.create({
+                    existing.sudo().write({
+                        'employee_id': employee.id,
+                        'role_ids': [(6, 0, granting_roles.ids)]
+                    })
+                else:
+                    # Create new record
+                    granting_roles = approval_roles.filtered(lambda r: r in stage.approval_role_ids)
+                    ownership_model.sudo().create({
                         'user_id': user.id,
                         'employee_id': employee.id,
                         'stage_id': stage.id,
