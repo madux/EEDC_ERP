@@ -1194,13 +1194,85 @@ odoo.define('portal_request.portal_request_form', function (require) {
             //         alert(`Unknown Error! ${msg}`)
             //     });
             // },
+            // 'click .approve_request': function(ev){
+            //     let targetElementId = $('.record_id').attr('id');
+            //     let $btn = $(ev.target); // Fix: ensure we grab the button correctly
+            //     let $btnHtml = $btn.html();
+                
+            //     // Check if we are sending a selected approver (from the modal)
+            //     let selectedApproverId = $btn.attr('data-selected-approver');
+                
+            //     $btn.attr('disabled', 'disabled');
+            //     $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                
+            //     $.blockUI({ 'message': '<h2 class="card-name">Processing...</h2>' });
+                
+            //     this._rpc({
+            //         route: `/my/request/update`,
+            //         params: {
+            //             'status': 'Approve',
+            //             'memo_id': targetElementId,
+            //             'selected_approver_id': selectedApproverId // Send this if selected from modal
+            //         },
+            //     }).then(function (data) {
+            //         $.unblockUI();
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml);
+
+            //         if(data.status){
+            //             // Success
+            //             alert(data.message);
+            //             $('#manual_approver_modal').modal('hide'); // Hide modal if open
+            //             window.location.reload();
+            //         } else {
+            //             // Check for Manual Selection Trigger
+            //             if (data.manual_select === true && data.approvers) {
+            //                 // 1. Populate the modal
+            //                 let $select = $('#manual_approver_select');
+            //                 $select.empty();
+            //                 data.approvers.forEach(function(app){
+            //                     $select.append(new Option(app.name, app.id));
+            //                 });
+                            
+            //                 // 2. Show the modal
+            //                 $('#manual_approver_modal').modal('show');
+                            
+            //                 // 3. Handle Confirm Button in Modal
+            //                 // We unbind click first to avoid duplicate events if clicked multiple times
+            //                 $('#btn_confirm_manual_approver').off('click').on('click', function(){
+            //                     let selectedId = $('#manual_approver_select').val();
+            //                     if(selectedId){
+            //                         // Store selected ID on the main approve button temporarily or call RPC directly
+            //                         // Let's trigger the main button again but with data
+            //                         $('.approve_request').attr('data-selected-approver', selectedId);
+            //                         $('.approve_request').trigger('click');
+            //                     }
+            //                 });
+            //             } else {
+            //                 // Standard Error
+            //                 alert(data.message);
+            //                 if (data.link){
+            //                     window.open(data.link, '_blank');
+            //                 }
+            //             }
+            //         }
+            //     }).guardedCatch(function (error) {
+            //         $.unblockUI();
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml);
+            //         let msg = error.message ? error.message.message : error;
+            //         alert(`Error: ${msg}`);
+            //     });
+            // },
             'click .approve_request': function(ev){
                 let targetElementId = $('.record_id').attr('id');
-                let $btn = $(ev.target); // Fix: ensure we grab the button correctly
+                let $btn = $(ev.target); 
                 let $btnHtml = $btn.html();
                 
-                // Check if we are sending a selected approver (from the modal)
+                // 1. Retrieve all potential selected IDs from button attributes
                 let selectedApproverId = $btn.attr('data-selected-approver');
+                let selectedRouteId = $btn.attr('data-selected-route');
+                let selectedDistrictId = $btn.attr('data-selected-district');
                 
                 $btn.attr('disabled', 'disabled');
                 $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
@@ -1212,7 +1284,10 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     params: {
                         'status': 'Approve',
                         'memo_id': targetElementId,
-                        'selected_approver_id': selectedApproverId // Send this if selected from modal
+                        // Pass all 3 possible selections
+                        'selected_approver_id': selectedApproverId, 
+                        'selected_route_id': selectedRouteId,
+                        'selected_district_id': selectedDistrictId
                     },
                 }).then(function (data) {
                     $.unblockUI();
@@ -1220,36 +1295,74 @@ odoo.define('portal_request.portal_request_form', function (require) {
                     $btn.html($btnHtml);
 
                     if(data.status){
-                        // Success
                         alert(data.message);
-                        $('#manual_approver_modal').modal('hide'); // Hide modal if open
+                        $('.modal').modal('hide'); 
                         window.location.reload();
                     } else {
-                        // Check for Manual Selection Trigger
-                        if (data.manual_select === true && data.approvers) {
-                            // 1. Populate the modal
+                        // === LOGIC BRANCHING FOR POPUPS ===
+
+                        // CASE A: Route/Sub-Approver Selection
+                        if (data.route_select === true && data.routes) {
+                            let $select = $('#manual_route_select');
+                            $select.empty();
+                            data.routes.forEach(function(r){
+                                $select.append(new Option(r.name, r.id));
+                            });
+                            $('#manual_route_modal').modal('show');
+                            
+                            $('#btn_confirm_manual_route').off('click').on('click', function(){
+                                let val = $('#manual_route_select').val();
+                                if(val){
+                                    $btn.attr('data-selected-route', val);
+                                    $btn.removeAttr('data-selected-approver'); 
+                                    $btn.removeAttr('data-selected-district');
+                                    $btn.trigger('click');
+                                }
+                            });
+                        }
+                        
+                        // CASE B: District Selection
+                        else if (data.district_select === true && data.districts) {
+                            let $select = $('#manual_district_select');
+                            $select.empty();
+                            data.districts.forEach(function(d){
+                                $select.append(new Option(d.name, d.id));
+                            });
+                            $('#manual_district_modal').modal('show');
+                            
+                            $('#btn_confirm_manual_district').off('click').on('click', function(){
+                                let val = $('#manual_district_select').val();
+                                if(val){
+                                    // Set District ID, Clear others
+                                    $btn.attr('data-selected-district', val);
+                                    $btn.removeAttr('data-selected-approver');
+                                    $btn.removeAttr('data-selected-route');
+                                    $btn.trigger('click');
+                                }
+                            });
+                        }
+
+                        // CASE C: Standard Approver Selection (Existing)
+                        else if (data.manual_select === true && data.approvers) {
                             let $select = $('#manual_approver_select');
                             $select.empty();
                             data.approvers.forEach(function(app){
                                 $select.append(new Option(app.name, app.id));
                             });
-                            
-                            // 2. Show the modal
                             $('#manual_approver_modal').modal('show');
                             
-                            // 3. Handle Confirm Button in Modal
-                            // We unbind click first to avoid duplicate events if clicked multiple times
                             $('#btn_confirm_manual_approver').off('click').on('click', function(){
-                                let selectedId = $('#manual_approver_select').val();
-                                if(selectedId){
-                                    // Store selected ID on the main approve button temporarily or call RPC directly
-                                    // Let's trigger the main button again but with data
-                                    $('.approve_request').attr('data-selected-approver', selectedId);
-                                    $('.approve_request').trigger('click');
+                                let val = $('#manual_approver_select').val();
+                                if(val){
+                                    // Set Approver ID (Keep Route/District if they existed previously, 
+                                    // as this might be a secondary popup after selecting a district)
+                                    $btn.attr('data-selected-approver', val);
+                                    $btn.trigger('click');
                                 }
                             });
-                        } else {
-                            // Standard Error
+                        } 
+                        
+                        else {
                             alert(data.message);
                             if (data.link){
                                 window.open(data.link, '_blank');
