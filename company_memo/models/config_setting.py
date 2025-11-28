@@ -266,6 +266,11 @@ class MemoStage(models.Model):
        help="If Routing is Manual, what should the user select?")
 
     route_ids = fields.One2many('memo.stage.route', 'stage_id', string="Sub Approvers")
+    no_popup_if_one_approver = fields.Boolean(
+        string="Auto-Select Single Option", 
+        default=True,
+        help="If checked, and Manual Routing is active: The system will skip the popup if there is only one Approver or one Route available."
+    )
     
 
     @api.onchange('memo_has_condition')

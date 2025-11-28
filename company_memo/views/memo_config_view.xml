@@ -197,6 +197,7 @@
                         <i class="fa fa-info-circle"/> 
                         When set to <b>Select District</b>, the portal will automatically show a popup containing all available Districts/Branches based on the Company configuration.
                     </div>
+                    <field name="no_popup_if_one_approver" />
                 </page>
 
                 <page string="Sub Stages">  
