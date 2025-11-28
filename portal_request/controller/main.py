@@ -3411,9 +3411,7 @@ class PortalRequest(http.Controller):
         status = post.get('status', '')
 
         if request_record:
-            # =====================================================
-            # 1. CANCEL LOGIC
-            # =====================================================
+            
             if status == "cancel":
                 stage_id = request.env.ref('company_memo.memo_cancel_stage').id
                 request_record._log_action(action='cancelled', comments='Cancelled via portal')
@@ -3424,9 +3422,6 @@ class PortalRequest(http.Controller):
                 request_record.write({'state': 'Refuse', 'stage_id': stage_id})
                 return {"status": True, "message": "Record cancelled successfully"}
             
-            # =====================================================
-            # 2. SENT LOGIC
-            # =====================================================
             elif status == "Sent":
                 stage_id = request_record.memo_setting_id.stage_ids[0].id if request_record.memo_setting_id.stage_ids else False
                 
@@ -3436,9 +3431,6 @@ class PortalRequest(http.Controller):
                 else:
                     return {"status": False, "link": False, "message": "Configuration Error: No stages found"}
 
-            # =====================================================
-            # 3. RESEND LOGIC
-            # =====================================================
             elif status == "Resend":
                 if request.env.user.id != request_record.employee_id.user_id.id:
                     return {"status": False, "link": False, "message": "Only initiator can resend this request"}
@@ -3459,9 +3451,6 @@ class PortalRequest(http.Controller):
                 else:
                     return {"status": False, "link": False, "message": "No stage configured or found for this request."}
             
-            # =====================================================
-            # 4. APPROVE LOGIC (INTEGRATED)
-            # =====================================================
             elif status in ["Approve"]:
                 
                 # --- A. Permission Checks ---
@@ -3510,13 +3499,9 @@ class PortalRequest(http.Controller):
                 final_approver_id = False
                 
                 # --- INITIALIZE PROCESSING CONTEXT ---
-                # This fixes the UnboundLocalError
                 proc_branch_id = request_record.processing_branch_id
                 routing_mode = getattr(request_record.memo_setting_id, 'routing_mode', 'standard')
 
-                # ============================================================
-                # PHASE 1: RESOLVE POPUP SELECTIONS
-                # ============================================================
                 
                 # 1. User selected a specific STAFF
                 if selected_approver_id:
@@ -3527,7 +3512,6 @@ class PortalRequest(http.Controller):
                     route_rec = request.env['memo.stage.route'].sudo().browse(selected_route_id)
                     final_approver_id = route_rec.approver_id.id
                     
-                    # Update Processing Context
                     update_vals = {}
                     if route_rec.branch_id: 
                         update_vals['processing_branch_id'] = route_rec.branch_id.id
@@ -3548,29 +3532,21 @@ class PortalRequest(http.Controller):
                     
                     request_record.sudo().write(vals)
                     
-                    # Update local variable and FORCE AUTO MODE to find staff
                     proc_branch_id = branch_rec
                     routing_mode = 'auto' 
 
                 
-                # ============================================================
-                # PHASE 2: ROUTING EXECUTION
-                # ============================================================
-                
+               
                 if not final_approver_id:
                     
-                    # --- AUTO MODE ---
                     if routing_mode == 'auto':
                         if proc_branch_id:
-                             # Filter by Branch
                              branch_approvers = potential_approvers.filtered(lambda e: e.branch_id.id == proc_branch_id.id)
                              count = len(branch_approvers)
                              
                              if count == 1:
-                                 # Exact match
                                  final_approver_id = branch_approvers[0].id
                              elif count > 1:
-                                 # Multiple matches: Force Manual Popup (Filtered)
                                  approver_list = [{'id': app.id, 'name': f"{app.name} ({app.job_id.name or 'Staff'})"} for app in branch_approvers]
                                  return {
                                      "status": False, 
@@ -3579,7 +3555,6 @@ class PortalRequest(http.Controller):
                                      "message": f"Multiple approvers found in {proc_branch_id.name}. Please select one."
                                  }
                              else: 
-                                 # No match: Fallback to General Popup
                                  approver_list = [{'id': app.id, 'name': f"{app.name} ({app.branch_id.name or 'Head Office'})"} for app in potential_approvers]
                                  return {
                                      "status": False, 
@@ -3588,10 +3563,8 @@ class PortalRequest(http.Controller):
                                      "message": f"No approver found in {proc_branch_id.name}. Please select manually."
                                  }
                         else:
-                             # Branch not set -> Fallback to Manual logic below
                              routing_mode = 'manual'
 
-                    # --- MANUAL MODE ---
                     if routing_mode == 'manual':
                         stage_option = next_stage.routing_option
                         
@@ -3611,7 +3584,6 @@ class PortalRequest(http.Controller):
                         # Option B: Districts
                         elif stage_option == 'district':
                             if proc_branch_id:
-                                # Branch already set -> Fallthrough to Standard Staff Popup
                                 stage_option = 'standard'
                             else:
                                 domain = []
@@ -3644,11 +3616,10 @@ class PortalRequest(http.Controller):
                                     "message": "Please select an approver"
                                 }
 
-                    # --- STANDARD MODE (Random/Default) ---
                     if routing_mode == 'standard':
                         final_approver_id = random.choice(potential_approvers.ids) if potential_approvers else False
 
-                # Prevent Self-Approval (if configured logic implies it)
+                # Prevent Self-Approval
                 if final_approver_id and final_approver_id == request_record.employee_id.id:
                      others = potential_approvers.filtered(lambda e: e.id != request_record.employee_id.id)
                      if others: final_approver_id = others[0].id
@@ -3657,25 +3628,21 @@ class PortalRequest(http.Controller):
                      return {"status": False, "message": f"No approver found for stage {next_stage.name}"}
 
                 # --- D. Prepare Followers ---
-                # FIX: Use HR Employee IDs for followers, not Partner/User IDs
                 current_employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.env.user.id)], limit=1)
                 
                 employee_followers_update = []
                 
-                # Standard Routing: Add all stage approvers as followers (Optional preference)
+                # Standard Routing: Add all stage approvers as followers
                 if next_stage.approver_ids and routing_mode == 'standard':
                     for emp in next_stage.approver_ids:
                         employee_followers_update.append((4, emp.id))
                     
-                # Add specific approver
                 if final_approver_id:
                     employee_followers_update.append((4, final_approver_id))
                 
-                # Add Current User (Self-Preservation)
                 if current_employee:
                     employee_followers_update.append((4, current_employee.id))
 
-                # --- E. Artifacts & Values ---
                 invoices, documents = request_record.generate_required_artifacts(next_stage, request_record, request_record.code)
                 
                 vals = {
@@ -3692,22 +3659,19 @@ class PortalRequest(http.Controller):
 
                 request_record.generate_sub_stage_artifacts(next_stage)
 
-                # --- F. State Logic ---
                 if next_stage.is_approved_stage:
                     if request_record.memo_type_key == 'material_request':
                          request_record.enable_edit_mode()
                     
                     if request_record.memo_type_key in ["Payment", 'loan', 'cash_advance', 'soe']:
-                        vals['state'] = "Approve" # Triggers Register Invoice Button
+                        vals['state'] = "Approve"
                     else:
                         vals['state'] = "Approve2"
                 
-                # --- G. Done Logic ---
                 if request_record.memo_setting_id and request_record.memo_setting_id.stage_ids:
                     last_stage = request_record.memo_setting_id.stage_ids[-1]
                     
                     if last_stage.id == next_stage_id:
-                        # Don't auto-close pending payments
                         if vals.get('state') == 'Approve' and request_record.memo_type_key in ["Payment", 'loan', 'cash_advance', 'soe']:
                             pass 
                         else:
