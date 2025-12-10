@@ -361,7 +361,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     <textarea rows="2" name="note_area" id="${lastRow_count}" row_identity="identity_${lastRow_count}" note_elm="" class="Notefor form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none': ''}" labelfor="Note"/> 
                 </th>
                  
-                <th width="10% id="distance_from_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}">
+                <th width="10%" id="distance_from_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}">
                     <textarea placeholder="Start typing" name="distance_from" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required': ''}" class="DistanceFrom form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}" labelfor="Distance From"/> 
                 </th>
                 <th width="10%" id="distance_to_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '': 'd-none'}">
@@ -1234,6 +1234,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     if (!is_inter_district_transfer){
                         $('#isInterDistrict').prop('checked', false)
                         alert('The selected Request option is not setup for inter district transfer')
+                        return false
                     }
                     let interCompany = true
                     searchStockLocation(source_location_id, 'source', interCompany, '', 0)
@@ -1842,6 +1843,23 @@ odoo.define('portal_request.portal_request', function (require) {
                             displayNonLeaveElement()
                              $('#PaymentcashAdvanceDiv').removeClass('d-none');
                             $('#PaymentcashAdvanceLabel').removeClass('d-none');
+                            $('#vendor_label').removeClass('d-none');
+                            $('#vendor_id').attr("required", false);
+                            $('#vendor_div').removeClass('d-none');
+
+                            //doform
+                            $('#currency_div').removeClass('d-none');
+                            $('#currency_id').attr("required", true); 
+
+                            $('#product_form_div').removeClass('d-none');
+                            $('.add_item').removeClass('d-none');
+                            display_material_request_location(false);
+                        }
+                        else if($.inArray(memo_type_key, ["procurement_request", "procurement"]) !== -1){ 
+                            console.log("Procurement == ", memo_type_key);
+                            displayNonLeaveElement()
+                            //  $('#PaymentcashAdvanceDiv').removeClass('d-none');
+                            // $('#PaymentcashAdvanceLabel').removeClass('d-none');
                             $('#vendor_label').removeClass('d-none');
                             $('#vendor_id').attr("required", false);
                             $('#vendor_div').removeClass('d-none');

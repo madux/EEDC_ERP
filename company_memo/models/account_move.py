@@ -9,6 +9,7 @@ from odoo import http
 
 class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
+    _check_company_auto = False
 
     lock_fields_from_memo = fields.Boolean(
         string='locks field',
@@ -46,6 +47,7 @@ class AccountMoveMemo(models.Model):
     example_preview = fields.Html(compute='_compute_payment_term_example')
     legacy_id = fields.Integer(string="legacy_id")
     external_id = fields.Char(string="External ID")
+    hide_invoice_line = fields.Boolean()
     
     @api.depends('memo_id')
     def _compute_payment_term_example(self):
@@ -85,6 +87,8 @@ class AccountMoveMemo(models.Model):
     
 class AccountMove(models.Model):
     _inherit = 'account.move.line'
+    _check_company_auto = False
+
 
     code = fields.Char(string="Code")
     lock_fields_from_memo = fields.Boolean(

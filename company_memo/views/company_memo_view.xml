@@ -144,7 +144,6 @@
 								<!-- <field name="cash_advance_reference" domain="[('state', '=', 'Done')]" attrs="{'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')]}"/>
 								<field name="soe_advance_reference" attrs="{'invisible':[('memo_type_key','!=', 'cash_advance')]}"/> -->
 								<field name="company_id" invisible="0"/>
-								<field name="currency_id" invisible="1"/>
 								<field name="move_id" invisible="1"/>
 								<field name="users_followers" widget="many2many_tags" required="0" invisible="0" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 								<field name="active" invisible="1" groups="base.group_system"/>
@@ -191,6 +190,8 @@
 								<field name="approver_id" invisible="1" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="approver_ids" invisible="1" widget="many2many_tags" readonly="0" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" groups="base.group_system"/>
 								<field name="user_is_approver" invisible="1" readonly="0"/>
+								<field name="currency_id" attrs="{'invisible':[('memo_type_key','not in', ['cash_advance', 'soe', 'procurement', 'procurement_request', 'Payment', 'payment', 'payment_request'])], 'readonly':[('state','in',['Sent', 'Done', 'Approve', 'Approve2'])]}"/>
+								<field name="conversion_rate" attrs="{'invisible':[('memo_type_key','not in', ['cash_advance', 'soe', 'procurement', 'procurement_request', 'Payment', 'payment', 'payment_request'])], 'readonly':[('state','in',['Sent', 'Done', 'Approve', 'Approve2'])]}"/>
 								<field name="state" invisible="1" force_save="1" readonly="0"/>
 								<field name="is_request_completed" readonly="1" invisible="1"/>
 								<field name="edit_mode" string="Edit mode" invisible="1"/> 

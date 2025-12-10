@@ -378,6 +378,11 @@ class Memo_Model(models.Model):
         default= lambda self: self.env.user.company_id.currency_id.id, 
         readonly=True,
     )
+    conversion_rate = fields.Float(
+        string="Conversion Rate",
+        digits=(12, 6),
+        help="Custom conversion rate to override the default currency rate.",
+    ) 
     
     periods = fields.Integer(
         required=False,
@@ -542,7 +547,8 @@ class Memo_Model(models.Model):
             leave_duration = self.env['hr.leave']._get_number_of_days(
                 self.leave_start_date, self.leave_end_date, self.employee_id.id)['days']
         self.leave_duration = leave_duration + 1
-        
+    
+    
         # for rec in self:
         #     if rec.leave_start_date and rec.leave_end_date:
         #         duration = rec.leave_end_date - rec.leave_start_date
@@ -778,7 +784,7 @@ class Memo_Model(models.Model):
         
     def validate_necessary_components(self):
         '''check relevant fields necessary for different memo type'''
-        request_list = ['Payment', 'material_request', 'procurement_request', 'cash_advance', 'soe', 'vehicle_request']
+        request_list = ['Payment', 'material_request', 'procurement_request', 'procurement','cash_advance', 'soe', 'vehicle_request']
         if self.memo_type_key in request_list:
             if not self.product_ids:
                 raise ValidationError("Please enter request lines")
@@ -1804,7 +1810,7 @@ class Memo_Model(models.Model):
         document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
         helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
         memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
-            else self.helpdesk_memo_config_id if self.helpdesk_memo_config_id \
+            else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
                 else self.memo_setting_id 
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
@@ -2277,8 +2283,8 @@ class Memo_Model(models.Model):
     
     def determine_if_user_is_config_approver(self):
         """
-        This determines if the user is responsible to approve the memo as a Purchase Officer
-        This will open up the procurement application to proceed with the respective record
+            This determines if the user is responsible to approve the memo as a Purchase Officer
+            This will open up the procurement application to proceed with the respective record
         """
         memo_settings = self.env['memo.config'].sudo().search([
             ('id', '=', self.memo_setting_id.id)
@@ -2685,7 +2691,7 @@ class Memo_Model(models.Model):
             )
             
             if existing_product:
-                return existing_product
+                return existing_product.id
             else:
                 _logger.info('CREATING PRODUCT: %s', product.name)
                 # Use the ORIGINAL product parameter, not the search result
@@ -2695,7 +2701,7 @@ class Memo_Model(models.Model):
                     'barcode': product.code,       # Use code instead of name
                     'company_id': company.id,      # Set company_id
                 })
-                return new_product
+                return new_product.id
         else:
             raise ValidationError("No product line found to process")
            
@@ -3321,31 +3327,39 @@ class Memo_Model(models.Model):
             journal_id = self.env['account.journal'].sudo().search(
             [
                 ('company_id', '=', payment_company.id),
-                ('type', 'in', ['bank', 'general']),
+                # ('type', 'in', ['bank', 'general']),
+                ('type', 'in', ['purchase']),
              ], limit=1)
             if not journal_id:
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             # delete the invoice to recreate if error
-            if inv and inv.state == 'cancel':
+            if inv and inv.state in ['cancel', 'draft']:
                 inv.unlink() # delete the invoice to recreate if error
                 inv = False
             #### deleted the found invoice
             if not inv:
                 partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
+                rate_line = self.currency_id.rate_ids.filtered(
+                lambda r: fields.Date.to_date(r.name) <= fields.Date.today()
+                ).sorted(key=lambda r: r.name, reverse=True)[:1]
+                
                 inv = account_move.create({ 
                     'memo_id': self.id,
                     'ref': self.code,
                     'origin': self.code,
+                    'hide_invoice_line': True,
                     'partner_id': partner_id.id,
                     'company_id': payment_company.id,
+                    # 'currency_id': self.currency_id.id or payment_company.currency_id.id,
                     'currency_id': payment_company.currency_id.id,
+                    'conversion_rate': self.conversion_rate if self.conversion_rate > 0 else rate_line.inverse_company_rate,
                     'branch_id': payment_branch.id,
                     # Do not set default name to account move name, because it
                     # is unique 
                     'name': f"{self.code}", # /{self.id}", # /{fields.Date.today().month}/{fields.Date.today().year}",
-                    'move_type': 'entry',
+                    'move_type': 'in_invoice', #  if self.memo_type_key in ['procurement_request', 'procurement', 'cash_advance', 'payment', 'Payment'] else 'entry',
                     'invoice_date': fields.Date.today(),
                     'invoice_date_due': fields.Date.today(),
                     'date': fields.Date.today(),
@@ -3361,20 +3375,23 @@ class Memo_Model(models.Model):
                             'debit': pr.sub_total_amount if pr.sub_total_amount > 0 else pr.amount_total * pr.quantity_available, 
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
-                                                            'name': 'Cash Advance for Credit balance',
+                                                            'name': 'Credit balance',
                                                             'account_id': self.get_cashadvance_credit_account(journal_id).id,
                                                             'credit': sum([r.sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
                                                             })],
                 })
             else:
-                self.move_id = inv.id
                 if inv.state == ['posted', 'post']:
                     '''check if the related invoice entry has been posted 
                     but record hasnt been set to the done or final stage'''
                     ms = self.memo_setting_id
                     if ms.stage_ids and self.stage_id.id != ms.stage_ids[-1].id:
                         self.update_final_state_and_approver(False, False, False)
+            container = {'records': inv}
+            inv._sync_dynamic_lines(container)
+            self.move_id = inv.id
+
             return self.record_to_open(
             "account.move", 
             view_id,
@@ -3793,7 +3810,7 @@ class Memo_Model(models.Model):
             pass 
         elif self.memo_type.memo_key == "leave_request":
             view_id = self.env.ref('hr_holidays.hr_leave_view_form').id
-            return self.record_to_open('purchase.order', view_id)
+            return self.record_to_open('hr.leave', view_id)
         elif self.memo_type.memo_key in ["cash_advance", "soe"]:
             view_id = self.env.ref('account.view_move_form').id
             return self.record_to_open('account.move', view_id)

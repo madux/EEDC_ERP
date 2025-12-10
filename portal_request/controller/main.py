@@ -210,7 +210,7 @@ class PortalRequest(http.Controller):
             # doform
             "user_id": request.env.user,
             "company_id": request.env.user.company_id,
-            "currency_ids": request.env['res.currency'].search([]),
+            "currency_ids": request.env['res.currency'].search([('active', '=', True)]),
             # 
             "has_inter_district_configs": has_inter_district_configs,
         }
@@ -1500,7 +1500,8 @@ class PortalRequest(http.Controller):
                 "leave_end_date": leave_end_date,
                 "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
                 "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
-                "currency_id": int(post.get("currency_id")) if post.get("currency_id") else False,
+                "currency_id": int(post.get("currency_id")) if post.get("currency_id") else request.env.user.company_id.currency_id.id,
+                "conversion_rate": int(post.get("currency_rate")) if post.get("currency_rate") else 0,
                 "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
                 "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
                 'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
@@ -1520,7 +1521,7 @@ class PortalRequest(http.Controller):
                 "state": "Sent",
                 "company_id": request.env.user.company_id.id,
                 "branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
-                "currency_id": request.env.user.company_id.currency_id.id,
+                # "currency_id": request.env.user.company_id.currency_id.id,
                 "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
                 "users_followers": [(6, 0, inputFollowers)], 
                 "description": description_body, 

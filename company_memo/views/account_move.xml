@@ -5,8 +5,7 @@
             <field name="name">Journal Entries --</field>
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_form"/>
-            <field name="arch" type="xml">
-                
+            <field name="arch" type="xml"> 
                 <xpath expr="//field[@name='move_type']" position="replace">
                 </xpath>
                 <xpath expr="//field[@name='ref']" position="after">
@@ -15,11 +14,14 @@
                     <field name="origin" required="0"/>
                     <field name="payment_journal_id" required="0"/>
                     <field name="move_type" required="0" invisible="1"/>
+                    <!-- <field name="currency_id" readonly="0" force_save="1" string="Currency"/>
+                    <field name="conversion_rate" readonly="0" force_save="1" string="Conversion Rate"/> -->
                     <!-- <field name="lock_fields_from_memo" required="0" invisible="0"/> -->
                 </xpath>
                 <xpath expr="//field[@name='payment_journal_id']" position="after">
                     <field name="move_type" required="0" invisible="0" readonly="0"/>
                     <field name="example_invalid" invisible="1"/>
+                    <field name="hide_invoice_line" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='invoice_payment_term_id']" position="replace">
                  <field name="invoice_payment_term_id" context="{'example_date': invoice_date, 'example_amount': tax_totals['amount_total']}" placeholder="Terms"/>
@@ -43,7 +45,7 @@
                     </div>
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']" position="attributes">
-					<attribute name="attrs">{'readonly': [('memo_state', 'not in', ['submit', False])]}</attribute>
+					<attribute name="attrs">{'invisible': ['|', ('hide_invoice_line', '=', True), ('move_type', '=', 'entry')], 'readonly': [('memo_state', 'not in', ['submit', False])]}</attribute>
 				</xpath>
                 
             </field>
