@@ -87,8 +87,15 @@ class ImportRecords(models.TransientModel):
         
         return True
 
-    def get_company_and_district_id(self, district_name, company_external_id):
-        """Get company and district ID, with predefined mappings and ilike search"""
+    def get_company_and_district_id(self, district_name, company_external_id, district_code=None):
+        """Get company and district ID, with predefined mappings and improved search.
+        Now prioritizes district_code over district_name for better matching.
+        
+        Args:
+            district_name: Name of the district
+            company_external_id: External ID of the company
+            district_code: District code from the data
+        """
         
         company_district_mappings = {
             'multi_company.company_firstpower': 'multi_company.branch0019',
@@ -105,10 +112,9 @@ class ImportRecords(models.TransientModel):
         company_id = None
         district_id = None
         
+        # ========== HANDLE COMPANY ==========
         if company_external_id:
             company_external_id = str(company_external_id).strip()
-            # Company = self.env['res.company']
-            # company_rec = Company.search([('name', 'ilike', company_name)], limit=1)
             company_rec = self.sudo().env.ref(company_external_id, raise_if_not_found=False)
             if company_rec:
                 company_id = company_rec.id
@@ -117,25 +123,75 @@ class ImportRecords(models.TransientModel):
         else:
             company_id = default_company.id if default_company else False
         
-        if district_name:
-            district_name = str(district_name).strip()
-            District = self.env['multi.branch']
-            district_rec = District.search([('name', '=ilike', district_name)], limit=1)
+        # ========== HANDLE DISTRICT ==========
+        District = self.env['multi.branch']
+        
+        # PRIORITY 1: Try district_code first
+        if district_code:
+            district_code = str(district_code).strip()
+            
+            district_rec = District.search([('code', '=ilike', district_code)], limit=1)
+            
             if district_rec:
                 district_id = district_rec.id
+                _logger.info(f"✓ Found district by code '{district_code}': {district_rec.name}")
+                return company_id, district_id
             else:
-                if company_external_id:
-                    for comp_key, district_ref in company_district_mappings.items():
-                        if comp_key == company_external_id:
-                            mapped_district = self.sudo().env.ref(district_ref, raise_if_not_found=False)
-                            district_id = mapped_district.id if mapped_district else None
-                            break
-                
-                if not district_id and company_id == (default_company.id if default_company else False):
-                    district_id = default_district.id if default_district else None
-        else:
-            district_id = default_district.id if default_district else None
+                _logger.warning(f"✗ District code '{district_code}' not found in system")
+        
+        # PRIORITY 2: Try to find by name
+        if district_name and not district_id:
+            district_name = str(district_name).strip()
             
+            # Strategy 1: Exact match (case-insensitive)
+            district_rec = District.search([('name', '=ilike', district_name)], limit=1)
+            
+            if district_rec:
+                district_id = district_rec.id
+                _logger.info(f"✓ Found district by exact name '{district_name}': {district_rec.name}")
+            
+            # Strategy 2: Partial match - handles "Enugu District" vs "Enugu"
+            if not district_rec:
+                district_rec = District.search([('name', 'ilike', district_name)], limit=1)
+                
+                if district_rec:
+                    district_id = district_rec.id
+                    _logger.info(f"✓ Found district by partial match '{district_name}': {district_rec.name}")
+            
+            if not district_rec:
+                if 'District' in district_name or 'district' in district_name:
+                    cleaned_name = district_name.replace('District', '').replace('district', '').strip()
+                    district_rec = District.search([
+                        '|',
+                        ('name', '=ilike', cleaned_name),
+                        ('name', 'ilike', cleaned_name)
+                    ], limit=1)
+                    
+                    if district_rec:
+                        district_id = district_rec.id
+                        _logger.info(f"✓ Found district by removing 'District' suffix: '{district_name}' → '{district_rec.name}'")
+            
+            if not district_id:
+                _logger.warning(f"✗ District name '{district_name}' not found in system using any strategy")
+        
+        # PRIORITY 3: Use company mapping as fallback
+        if not district_id and company_external_id:
+            mapped_district_ref = company_district_mappings.get(company_external_id)
+            if mapped_district_ref:
+                mapped_district = self.sudo().env.ref(mapped_district_ref, raise_if_not_found=False)
+                if mapped_district:
+                    district_id = mapped_district.id
+                    _logger.info(f"✓ Using mapped district '{mapped_district.name}' for company '{company_external_id}'")
+        
+        # PRIORITY 4: Use default district if still not found
+        if not district_id:
+            if company_id == (default_company.id if default_company else False):
+                district_id = default_district.id if default_district else None
+                if default_district:
+                    _logger.info(f"✓ Using default district '{default_district.name}'")
+            else:
+                _logger.warning(f"✗ No district found, and no default applicable for company {company_id}")
+        
         return company_id, district_id
     
     def get_hr_district_id(self, name):
@@ -824,12 +880,16 @@ class ImportRecords(models.TransientModel):
                                 continue
                         
                         # Get company and branch
+                        district_name = row[9] if len(row) > 9 else None
+                        company_ext_id = row[27] if len(row) > 27 else None
+                        district_code = row[28] if len(row) > 28 else None  # NEW!
+
                         company_id, branch_id = self.get_company_and_district_id(
-                            row[9] if len(row) > 9 else None,
-                            row[27] if len(row) > 27 else None
+                            district_name=district_name,
+                            company_external_id=company_ext_id,
+                            district_code=district_code  # NEW!
                         )
                         
-                        # Create department OUTSIDE savepoint
                         departmentid = None
                         if len(row) > 11 and row[11]:
                             departmentid = self.create_department(row[11], company_id)
@@ -839,7 +899,6 @@ class ImportRecords(models.TransientModel):
                                 unsuccess_records.append(error_msg)
                                 continue
                         
-                        # Create job OUTSIDE savepoint
                         job_id = None
                         if len(row) > 16 and row[16]:
                             job_id = self.get_designation_id(row[16], departmentid, company_id)
@@ -849,7 +908,6 @@ class ImportRecords(models.TransientModel):
                                 unsuccess_records.append(error_msg)
                                 continue
                         
-                        # NOW process employee creation in savepoint
                         with self.env.cr.savepoint():
                             static_emp_date = '01/01/2014'
                             emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
@@ -1012,9 +1070,14 @@ class ImportRecords(models.TransientModel):
                             
                             dt = appt_date or emp_date
                             
+                            district_name = row[9] if len(row) > 9 else None
+                            company_ext_id = row[27] if len(row) > 27 else None
+                            district_code = row[28] if len(row) > 28 else None
+
                             company_id, branch_id = self.get_company_and_district_id(
-                                row[9] if len(row) > 9 else None,
-                                row[27] if len(row) > 27 else None
+                                district_name=district_name,
+                                company_external_id=company_ext_id,
+                                district_code=district_code 
                             )
                             hr_district_name = row[9] if len(row) > 9 else None
                             hr_district_id = self.get_hr_district_id(hr_district_name)
@@ -1030,7 +1093,9 @@ class ImportRecords(models.TransientModel):
                                 'middle_name': name_data['middle_name'],
                                 'last_name': name_data['last_name'],
                                 'level_id': self.get_level_id(row[3].strip()) if len(row) > 3 and row[3] else None,
+                                'company_id': company_id,  # ← ADDED
                                 'branch_id': branch_id,
+                                'ps_district_id': hr_district_id,  # ← ADDED (keeping as you requested)
                                 'gender': 'male' if len(row) > 10 and row[10] in ['m', 'M'] else 'female' if len(row) > 10 and row[10] in ['f', 'F'] else 'other',
                                 'department_id': departmentid,
                                 'unit_id': self.get_unit_id(row[12].strip()) if len(row) > 12 and row[12] else None,
@@ -1122,8 +1187,9 @@ class ImportRecords(models.TransientModel):
                                 except Exception as e:
                                     _logger.error("Error creating/linking user for employee %s: %s", employee_id.name, e)
                             else:
+                                # User already exists - just ensure company access
                                 _logger.info("User exists for employee %s", employee_id.name)
-                                generate_user(user_vals)
+                                # REMOVED: generate_user(user_vals)  ← This was redundant!
                                 if company_id:
                                     try:
                                         self.ensure_user_has_company(employee_id.user_id, company_id)
