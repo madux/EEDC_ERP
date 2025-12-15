@@ -90,17 +90,59 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p>Multiple approvers found for the next stage. Please select one:</p>
+                                        <p>Multiple approvers found. Please select one:</p>
                                         <div class="form-group">
                                             <label for="manual_approver_select">Approver</label>
-                                            <select class="form-control" id="manual_approver_select">
-                                                <!-- Options injected via JS -->
-                                            </select>
+                                            <select class="form-control" id="manual_approver_select"></select>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="btn btn-primary" id="btn_confirm_manual_approver">Confirm Approval</button>
+                                        <button type="button" class="btn btn-primary" id="btn_confirm_manual_approver">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW 1: Popup Modal for Routes (Sub-Approvers) -->
+                        <div class="modal fade" id="manual_route_modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Select Routing Option</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Please select where to forward this request:</p>
+                                        <div class="form-group">
+                                            <label for="manual_route_select">Destination</label>
+                                            <select class="form-control" id="manual_route_select"></select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="btn_confirm_manual_route">Confirm Route</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW 2: Popup Modal for Districts -->
+                        <div class="modal fade" id="manual_district_modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Select District</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Please select the processing district:</p>
+                                        <div class="form-group">
+                                            <label for="manual_district_select">District</label>
+                                            <select class="form-control" id="manual_district_select"></select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="btn_confirm_manual_district">Confirm District</button>
                                     </div>
                                 </div>
                             </div>
