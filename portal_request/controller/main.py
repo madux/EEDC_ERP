@@ -1211,90 +1211,56 @@ class PortalRequest(http.Controller):
         productItems = json.loads(post.get('productItems'))
         request_type_option = post.get('request_type')
         source_locationId = post.get('source_locationId')
-        _logger.info(f'productitemmms {productItems}')
+        
+        _logger.info(f'productItems {productItems}')
         query = request.params.get('q', '') 
         productItems_List = [int(i) for i in productItems if i]
         result = []
         
-        # Define which request types can see service products
+        domain = [
+            ('id', 'not in', productItems_List),
+            ('company_id', '=', request.env.user.company_id.id), 
+            ('active', '=', True), 
+            '|','|', 
+            ('name', 'ilike', query),
+            ('default_code', 'ilike', query),
+            ('barcode', 'ilike', query)
+        ]
+
         service_allowed_types = ['procurement_request', 'sale_request']
         
-        if source_locationId:
-            domain = [
-                ('product_id.id', 'not in', productItems_List),
-                ('location_id', '=', int(source_locationId)), 
-                '|','|', 
-                ('product_id.name', 'ilike', query),
-                ('product_id.default_code', 'ilike', query),
-                ('product_id.barcode', 'ilike', query)
-            ]
-            quants = request.env["stock.quant"].sudo().search(domain)
-            if quants:
-                for item in quants:
-                    result.append({
-                        "id": item.product_id.id,
-                        "text": f'{item.product_id.name} {item.product_id.default_code}', 
-                        "qty": item.product_id.qty_available
-                    })
-        else:
-            # Base domain for all products
-            base_domain = [
-                ('id', 'not in', productItems_List),
-                ('company_id', '=', request.env.user.company_id.id), 
-                ('active', '=', True), 
-                '|','|', 
-                ('name', 'ilike', query),
-                ('default_code', 'ilike', query),
-                ('barcode', 'ilike', query)
-            ]
-            
-            # Add detailed_type filter based on request type
-            if request_type_option == 'material_request':
-                # Material requests: ONLY physical products (storable/consumable)
-                domain = base_domain + [('detailed_type', 'in', ['consu', 'product'])]
-            elif request_type_option in service_allowed_types:
-                # Procurement, sales, payment, vehicle: Allow services AND physical products
-                domain = base_domain + [('detailed_type', 'in', ['consu', 'product', 'service'])]
-            else:
-                # Default: physical products only
-                domain = base_domain + [('detailed_type', 'in', ['consu', 'product'])]
-            
-            products = request.env["product.product"].sudo().search(domain)
-            if products:
-                for item in products:
-                    result.append({
-                        "id": item.id,
-                        "text": f'{item.name} {item.default_code}', 
-                        'qty': item.qty_available
-                    })
-
-        # Special handling for vehicle requests (existing code)
-        if request_type_option and request_type_option == "vehicle_request":
-            result = []
-            domain = [
+        if request_type_option == "vehicle_request":
+            domain += [
                 ('is_vehicle_product', '=', True), 
-                ('detailed_type', 'in', ['service']), 
-                ('id', 'not in', productItems_List),
-                ('company_id', '=', request.env.user.company_id.id), 
-                ('active', '=', True), 
-                '|','|', 
-                ('name', 'ilike', query),
-                ('default_code', 'ilike', query),
-                ('barcode', 'ilike', query)
+                ('detailed_type', 'in', ['service'])
             ]
-            products = request.env["product.product"].sudo().search(domain)
-            if products:
-                for item in products:
-                    result.append({
-                        "id": item.id,
-                        "text": f'{item.name} {item.default_code}', 
-                        'qty': item.qty_available
-                    })
+        elif request_type_option == 'material_request':
+            domain += [('detailed_type', 'in', ['consu', 'product'])]
+        elif request_type_option in service_allowed_types:
+            domain += [('detailed_type', 'in', ['consu', 'product', 'service'])]
+        else:
+            domain += [('detailed_type', 'in', ['consu', 'product'])]
+
+        products = request.env["product.product"].sudo().search(domain, limit=20)
+        
+        for item in products:
+            qty_available = 0.0
+            
+            if source_locationId and str(source_locationId).isdigit():
+                qty_available = item.with_context(location=int(source_locationId)).qty_available
+            else:
+                qty_available = item.qty_available
+
+            result.append({
+                "id": item.id,
+                "text": f'{item.name} {item.default_code or ""}', 
+                "qty": qty_available
+            })
         
         return json.dumps({
             "results": result,
             "pagination": {
-                "more": True,
+                "more": len(products) == 20,
             }
         })
         
@@ -1582,7 +1548,7 @@ class PortalRequest(http.Controller):
                             "location_id": False,
                             "message": """
                             System could not found any single quantity available in your 
-                            company locations. Kindly request for procurement""", 
+                            company locations. Kindly contact your store officer""", 
                         }
                     if product_qty > total_availability: 
                         return {
@@ -2761,28 +2727,73 @@ class PortalRequest(http.Controller):
             return request.make_response(pdf, headers=pdfhttpheaders)
     
 
+    # @http.route(['/check-employee-still-onleave'], type='json', website=True, auth="user", csrf=False)
+    # def employee_still_on_leave(self, **post):
+    #     '''Check if employee is absent and return a validation message'''
+    #     employee_id = post.get('employee_id', 0)
+    #     start_date = post.get('start_date')
+    #     end_date = post.get('end_date')
+    #     _logger.info(f"lost for {post}")
+    #     employee_obj = request.env['hr.employee'].sudo().browse([int(employee_id or 0)])
+    #     _logger.info(f'WHO IS EMPLOYEE {employee_obj}')
+    #     if employee_obj and employee_obj.hr_icon_display in ['presence_holiday_present', 'presence_holiday_absent']:
+    #         '''Check if employee is on leave and return validation message'''
+    #         msg = """The employee to relieve you is currently on leave / Absent"""
+    #         return {
+    #             "status": False,
+    #             "message": msg, 
+    #             } 
+    #     else:
+    #         _logger.info('EMPLOYEE NOT ON LEAVE')
+    #         return {
+    #             "status": True,
+    #             "message": "", 
+    #             }
+    
     @http.route(['/check-employee-still-onleave'], type='json', website=True, auth="user", csrf=False)
     def employee_still_on_leave(self, **post):
-        '''Check if employee is absent and return a validation message'''
+        '''Check if employee has a conflicting leave during the requested period'''
         employee_id = post.get('employee_id', 0)
-        start_date = post.get('start_date')
-        end_date = post.get('end_date')
-        _logger.info(f"lost for {post}")
-        employee_obj = request.env['hr.employee'].sudo().browse([int(employee_id or 0)])
-        _logger.info(f'WHO IS EMPLOYEE {employee_obj}')
-        if employee_obj and employee_obj.hr_icon_display in ['presence_holiday_present', 'presence_holiday_absent']:
-            '''Check if employee is on leave and return validation message'''
-            msg = """The employee to relieve you is currently on leave / Absent"""
+        start_date_str = post.get('start_date')
+        end_date_str = post.get('end_date')
+        
+        if not employee_id:
+            return {"status": True, "message": ""}
+
+        employee_obj = request.env['hr.employee'].sudo().browse([int(employee_id)])
+        
+        start_date_dt = self.compute_date_format(start_date_str)
+        end_date_dt = self.compute_date_format(end_date_str)
+
+        if not start_date_dt or not end_date_dt:
+            return {"status": True, "message": ""}
+
+        start_date = start_date_dt.date()
+        end_date = end_date_dt.date()
+
+        domain = [
+            ('employee_id', '=', employee_obj.id),
+            ('state', 'in', ['validate', 'validate1']),
+            ('request_date_from', '<=', end_date),
+            ('request_date_to', '>=', start_date),
+        ]
+        
+        conflicting_leave = request.env['hr.leave'].sudo().search(domain, limit=1)
+
+        if conflicting_leave:
+            l_start = conflicting_leave.request_date_from.strftime('%d-%b-%Y')
+            l_end = conflicting_leave.request_date_to.strftime('%d-%b-%Y')
+            
+            msg = f"""The selected reliever ({employee_obj.name}) has an approved leave from {l_start} to {l_end} which conflicts with your request period."""
             return {
                 "status": False,
                 "message": msg, 
-                } 
-        else:
-            _logger.info('EMPLOYEE NOT ON LEAVE')
-            return {
-                "status": True,
-                "message": "", 
-                }
+            } 
+        
+        return {
+            "status": True,
+            "message": "", 
+        }
    
     @http.route('/my/request/view/<string:id>', type='http', auth="user", website=True)
     def my_single_request(self, id):

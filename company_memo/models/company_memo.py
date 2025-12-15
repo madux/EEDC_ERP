@@ -774,29 +774,37 @@ class Memo_Model(models.Model):
         compute='_compute_default_journal',
         store=True,
         readonly=False,
-        domain="[('type', 'in', ['bank', 'general']), ('company_id', '=', processing_company_id)]"
+        domain="[('type', 'in', ['bank', 'general']), '|', ('company_id', '=', processing_company_id), ('company_id', '=', company_id)]"
     )
     
-    @api.depends('processing_company_id', 'processing_branch_id')
+    @api.depends('stage_id', 'processing_company_id', 'processing_branch_id', 'company_id', 'branch_id')
     def _compute_default_journal(self):
         for rec in self:
-            company = rec.processing_company_id or rec.company_id
-            branch = rec.processing_branch_id or rec.branch_id
             
-            base_domain = [
-                ('company_id', '=', company.id),
-                ('type', 'in', ['bank', 'general']),
-            ]
-            
-            journal = self.env['account.journal'].search(
-                base_domain + [('allowed_branch_ids', 'in', [branch.id])], 
-                limit=1
-            )
-            
-            if not journal:
-                journal = self.env['account.journal'].search(base_domain, limit=1)
+            if rec.stage_id.is_approved_stage or not rec.bank_journal_id:
                 
-            rec.bank_journal_id = journal.id
+                company = rec.processing_company_id or rec.company_id
+                branch = rec.processing_branch_id or rec.branch_id
+                
+                base_domain = [
+                    ('company_id', '=', company.id),
+                    ('type', 'in', ['bank', 'general']),
+                ]
+                
+                journal = self.env['account.journal'].sudo().search(
+                    base_domain + [('allowed_branch_ids', 'in', [branch.id])], 
+                    limit=1
+                )
+                
+                if not journal:
+                    journal = self.env['account.journal'].sudo().search(base_domain, limit=1)
+                    
+                rec.bank_journal_id = journal.id
+            else:
+                # Keep existing value if not in approved stage (optional logic)
+                # or just let it recompute every time.
+                # To simply ensure it calculates, usually you just let the code above run without the 'if'.
+                pass
 
     def validate_po_line(self):
         '''if the stage requires PO confirmation'''
