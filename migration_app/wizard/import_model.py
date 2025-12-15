@@ -155,35 +155,66 @@ class ImportRecords(models.TransientModel):
             return new_district.id
     
     def create_department(self, name, company_id):
-        """Create department with company context - Search first, create only if not found for the company
-        args: company_id (returns id)
-        """
+        """Create department with company context - FIXED: Handles duplicates properly"""
         if not name:
             return None
-            
-        department_obj = self.env['hr.department'].sudo()
+        
         name = str(name).strip()
         
         if not company_id:
             default_company = self.sudo().env.ref('base.main_company', raise_if_not_found=False)
             company_id = default_company.id if default_company else self.env.company.id
         
+        Department = self.env['hr.department'].sudo()
         domain = [('name', '=', name), ('company_id', '=', company_id)]
-        depart_rec = department_obj.search(domain, limit=1)
+        
+        # Search with active_test=False to find archived departments
+        depart_rec = Department.with_context(active_test=False).search(domain, limit=1)
         
         if depart_rec:
-            if hasattr(depart_rec, 'active') and not depart_rec.active:
-                depart_rec.sudo().write({'active': True})
+            if not depart_rec.active:
+                try:
+                    depart_rec.write({'active': True})
+                    _logger.info(f"Reactivated department '{name}' (ID: {depart_rec.id})")
+                except Exception as e:
+                    _logger.warning(f"Failed to reactivate department '{name}': {e}")
             return depart_rec.id
-        else:
+        
+        # Department doesn't exist, create it
+        dept_vals = {'name': name, 'company_id': company_id}
+        
+        try:
+            dept_rec = Department.with_company(company_id).create(dept_vals)
+            _logger.info(f"Created new department '{name}' (ID: {dept_rec.id}) for company {company_id}")
+            return dept_rec.id
+            
+        except IntegrityError as ie:
+            error_str = str(ie)
+            _logger.warning(f"IntegrityError creating department '{name}': {error_str}")
+            
+            # Rollback and search again
+            self.env.cr.rollback()
+            
+            depart_rec = Department.with_context(active_test=False).search(domain, limit=1)
+            if depart_rec:
+                _logger.info(f"Found department '{name}' after IntegrityError (ID: {depart_rec.id})")
+                if not depart_rec.active:
+                    try:
+                        depart_rec.write({'active': True})
+                    except:
+                        pass
+                return depart_rec.id
+            
+            _logger.error(f"Department '{name}' still not found after IntegrityError")
+            return None
+            
+        except Exception as e:
+            _logger.error(f"Unexpected error creating department '{name}': {str(e)}\n{traceback.format_exc()}")
             try:
-                dept_vals = {'name': name, 'company_id': company_id}
-                department_id = department_obj.with_company(company_id).sudo().create(dept_vals).id
-                _logger.info(f"Created new department '{name}' for company {company_id}")
-                return department_id
-            except Exception as e:
-                _logger.error(f"Failed to create department {name}: {str(e)}")
-                return None
+                self.env.cr.rollback()
+            except:
+                pass
+            return None
 
     def get_level_id(self, name):
         if not name:
@@ -227,35 +258,77 @@ class ImportRecords(models.TransientModel):
             return self.env['hr.grade'].create({'name': name}).id
     
     def get_designation_id(self, name, departmentid, company_id):
-        """Get job/designation with company context - Search first, create only if not found for the company"""
+        """Get job/designation with company context - Search first, create only if not found for the company
+        """
         if not name:
             return False
-            
-        # if not company_id:
-        #     default_company = self.sudo().env.ref('base.main_company', raise_if_not_found=False)
-        #     company_id = default_company.id if default_company else self.env.company.id
         
+        name = str(name).strip()
+        
+        if not company_id:
+            default_company = self.sudo().env.ref('base.main_company', raise_if_not_found=False)
+            company_id = default_company.id if default_company else self.env.company.id
+        
+        # Search with active_test=False to find archived jobs too
         domain = [('name', '=', name), ('company_id', '=', company_id)]
         if departmentid:
             domain.append(('department_id', '=', departmentid))
-            
-        designationId = self.env['hr.job'].search(domain, limit=1)
+        
+        Job = self.env['hr.job'].sudo()
+        
+        # First search - include archived records
+        designationId = Job.with_context(active_test=False).search(domain, limit=1)
         
         if designationId:
-            if hasattr(designationId, 'active') and not designationId.active:
-                designationId.sudo().write({'active': True})
+            if not designationId.active:
+                try:
+                    designationId.write({'active': True})
+                    _logger.info(f"Reactivated job '{name}' (ID: {designationId.id})")
+                except Exception as e:
+                    _logger.warning(f"Failed to reactivate job '{name}': {e}")
             return designationId.id
-        else:
+        
+        # Job doesn't exist, try to create it
+        job_vals = {'name': name, 'company_id': company_id}
+        if departmentid:
+            job_vals['department_id'] = departmentid
+        
+        try:
+            # Create job
+            job_rec = Job.with_company(company_id).create(job_vals)
+            _logger.info(f"Created new job '{name}' (ID: {job_rec.id}) for company {company_id}, dept {departmentid}")
+            return job_rec.id
+            
+        except IntegrityError as ie:
+            # Duplicate key error - job was created by concurrent transaction
+            error_str = str(ie)
+            _logger.warning(f"IntegrityError creating job '{name}': {error_str}")
+            
+            # Rollback this failed operation
+            self.env.cr.rollback()
+            
+            # Search again - it should exist now
+            designationId = Job.with_context(active_test=False).search(domain, limit=1)
+            if designationId:
+                _logger.info(f"Found job '{name}' after IntegrityError (ID: {designationId.id})")
+                if not designationId.active:
+                    try:
+                        designationId.write({'active': True})
+                    except:
+                        pass
+                return designationId.id
+            
+            # Still not found - this is a real problem
+            _logger.error(f"Job '{name}' still not found after IntegrityError and search")
+            return None
+            
+        except Exception as e:
+            _logger.error(f"Unexpected error creating job '{name}': {str(e)}\n{traceback.format_exc()}")
             try:
-                job_vals = {'name': name, 'company_id': company_id}
-                if departmentid:
-                    job_vals['department_id'] = departmentid
-                job_id = self.env['hr.job'].with_company(company_id).sudo().create(job_vals).id
-                _logger.info(f"Created new job '{name}' for company {company_id}")
-                return job_id
-            except Exception as e:
-                _logger.error(f"Failed to create job {name}: {str(e)}")
-                return None
+                self.env.cr.rollback()
+            except:
+                pass
+            return None
 
     def get_unit_id(self, name):
         if not name:
@@ -572,14 +645,13 @@ class ImportRecords(models.TransientModel):
                 try:
                     user, password = generate_user(user_vals)
                     if user:
-                        self.env.cr.flush()  # Flush user creation
+                        self.env.cr.flush()
                 except Exception as e:
                     _logger.exception("generate_user raised an exception for %s: %s", user_vals.get('fullname'), e)
                     user, password = False, False
 
-                # Create employee WITHOUT user_id first
                 employee_rec = Employee.create(employee_vals)
-                self.env.cr.flush()  # Force immediate creation
+                self.env.cr.flush()
                 
                 _logger.info("Created employee: %s with ID: %s", employee_rec.name, employee_rec.id)
 
@@ -587,7 +659,6 @@ class ImportRecords(models.TransientModel):
                     _logger.error("Employee creation failed - record does not exist after create.")
                     return False
 
-                # Link the user if one was created/found
                 if user and target_company_id:
                     try:
                         # Check for conflicts RIGHT BEFORE linking
@@ -745,14 +816,40 @@ class ImportRecords(models.TransientModel):
                     row_label = row[0] if row and len(row) > 0 else 'Unknown'
                     
                     try:
-                        # Pre-check for existing employee BEFORE savepoint
+                        # Pre-check for existing employee
                         if len(row) > 1:
                             existing = find_existing_employee(row[1])
                             if existing:
                                 unsuccess_records.append(f'Row {row_label}: Employee {row[1]} already exists')
                                 continue
                         
-                        # Process within savepoint
+                        # Get company and branch
+                        company_id, branch_id = self.get_company_and_district_id(
+                            row[9] if len(row) > 9 else None,
+                            row[27] if len(row) > 27 else None
+                        )
+                        
+                        # Create department OUTSIDE savepoint
+                        departmentid = None
+                        if len(row) > 11 and row[11]:
+                            departmentid = self.create_department(row[11], company_id)
+                            if not departmentid:
+                                error_msg = f'Row {row_label}: Failed to create/find department {row[11]}'
+                                _logger.error(error_msg)
+                                unsuccess_records.append(error_msg)
+                                continue
+                        
+                        # Create job OUTSIDE savepoint
+                        job_id = None
+                        if len(row) > 16 and row[16]:
+                            job_id = self.get_designation_id(row[16], departmentid, company_id)
+                            if not job_id:
+                                error_msg = f'Row {row_label}: Failed to create/find job {row[16]}'
+                                _logger.error(error_msg)
+                                unsuccess_records.append(error_msg)
+                                continue
+                        
+                        # NOW process employee creation in savepoint
                         with self.env.cr.savepoint():
                             static_emp_date = '01/01/2014'
                             emp_date = datetime.strptime(static_emp_date, '%d/%m/%Y')
@@ -778,13 +875,8 @@ class ImportRecords(models.TransientModel):
 
                             dt = appt_date or emp_date
 
-                            company_id, branch_id = self.get_company_and_district_id(
-                                row[9] if len(row) > 9 else None,
-                                row[27] if len(row) > 27 else None
-                            )
                             hr_district_name = row[9] if len(row) > 9 else None
                             hr_district_id = self.get_hr_district_id(hr_district_name)
-                            departmentid = self.create_department(row[11], company_id) if len(row) > 11 and row[11] else None
 
                             name_data = self.parse_name(row[2] if len(row) > 2 else '')
 
@@ -804,7 +896,7 @@ class ImportRecords(models.TransientModel):
                                 sub_unit_id = self.get_sub_unit_id(row[13].strip()) if len(row) > 13 and row[13] else None,
                                 employment_date = dt,
                                 grade_id = self.get_grade_id(row[15].strip()) if len(row) > 15 and row[15] else None,
-                                job_id = self.get_designation_id(row[16], departmentid, company_id) if len(row) > 16 and row[16] else None,
+                                job_id = job_id,
                                 functional_appraiser_id = find_existing_employee(row[18]) if len(row) > 18 and row[18] else None,
                                 administrative_supervisor_name = row[19] if len(row) > 19 and row[19] else None,
                                 administrative_supervisor_id = find_existing_employee(str(row[20])) if len(row) > 20 and row[20] else None,
@@ -816,9 +908,12 @@ class ImportRecords(models.TransientModel):
                                 company_id = company_id,
                             )
                             
-                            create_employee(vals)
+                            employee_rec = create_employee(vals)
+                            
+                            if not employee_rec:
+                                raise Exception("Employee creation returned False")
                         
-                        # COMMIT immediately after successful processing
+                        # Commit after successful row
                         self.env.cr.commit()
                         
                         count += 1
@@ -826,14 +921,12 @@ class ImportRecords(models.TransientModel):
                         _logger.info("Successfully imported row %s: %s", row_label, vals.get('fullname'))
                         
                     except IntegrityError as ie:
-                        # Handle duplicate key violations specifically
                         self.env.cr.rollback()
-                        error_msg = f"Row {row_label}: Integrity error (duplicate/constraint) - {str(ie)}"
+                        error_msg = f"Row {row_label}: Integrity error - {str(ie)}"
                         _logger.warning(error_msg)
                         unsuccess_records.append(error_msg)
                         
                     except Exception as e:
-                        # Handle all other errors
                         self.env.cr.rollback()
                         error_msg = f"Row {row_label}: {str(e)}"
                         _logger.error("Error processing row %s: %s\n%s", row_label, error_msg, traceback.format_exc())
