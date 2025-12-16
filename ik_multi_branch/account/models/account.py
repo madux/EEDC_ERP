@@ -63,7 +63,7 @@ class AccountInvoice(models.Model):
     def _compute_suitable_journal_ids(self):
         for m in self:
             # journal_type = [m.invoice_filter_type_domain] or ['general', 'bank', 'cash']
-            journal_type = ['general', 'bank', 'cash']
+            journal_type = ['general', 'bank', 'cash', 'purchase', 'sale',]
             company_id = m.company_id.id or self.env.company.id
             Journals = self.env['account.journal'].sudo()
             account_major_user = (self.env.is_admin() or self.env.user.has_group('ik_multi_branch.account_major_user'))
