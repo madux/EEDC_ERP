@@ -1388,18 +1388,44 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
 
-			'change .destinationlocation-cls': function(ev){
-                let sourceLocationId = $('#source_location_id')
-				console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-				if(sourceLocationId.val() && $(ev.target).val()){
-                    if(sourceLocationId.val() == $(ev.target).val()){
-                        $(ev.target).val('');
-                        $(ev.target).addClass("is-invalid");
+			// 'change .destinationlocation-cls': function(ev){
+            //     let sourceLocationId = $('#source_location_id')
+			// 	console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
+			// 	if(sourceLocationId.val() && $(ev.target).val()){
+            //         if(sourceLocationId.val() == $(ev.target).val()){
+            //             $(ev.target).val('');
+            //             $(ev.target).addClass("is-invalid");
+            //             alert("Source Location and Destination Location must not be the same");
+            //             return true;
+            //         }
+            //         else{
+            //             $(ev.target).removeClass("is-invalid");
+            //         }
+            //     }
+            // },
+            'change .destinationlocation-cls': function(ev){
+                let sourceLocationId = $('#source_location_id');
+                let destinationLocationId = $(ev.target);
+                let isInterDistrictTransfer = $('#is_inter_district_transfer_config').is(':checked');
+                
+                console.log(`Destination changed: ${destinationLocationId.val()}, Inter-district: ${isInterDistrictTransfer}`);
+                
+                destinationLocationId.removeClass("is-invalid");
+                
+                if (destinationLocationId.val()) {
+                    if(sourceLocationId.val() && sourceLocationId.val() == destinationLocationId.val()){
+                        destinationLocationId.val('');
+                        destinationLocationId.addClass("is-invalid");
                         alert("Source Location and Destination Location must not be the same");
                         return true;
+                    } else {
+                        destinationLocationId.removeClass("is-invalid").addClass("is-valid");
                     }
-                    else{
-                        $(ev.target).removeClass("is-invalid");
+                } else {
+                    if (isInterDistrictTransfer) {
+                        destinationLocationId.addClass("is-invalid");
+                    } else {
+                        destinationLocationId.removeClass("is-invalid is-valid");
                     }
                 }
             },
@@ -1945,6 +1971,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 if (memo_type_key === "material_request" && selectedDistrict) {
                     var isInterDistrictTransfer = $('#isInterDistrictProcess').is(':checked');
                     
+                    
                     var requestBranchId = null;
                     
                     // Priority 1: From config option's branch_id attribute
@@ -2402,7 +2429,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             }
 
                             $('#source_location_id').attr('required', true);
-                            $('#destination_location_id').attr('required', true);
+                            // $('#destination_location_id').attr('required', true);
                             
                             // Show product form
                             displayNonLeaveElement();
@@ -3095,6 +3122,9 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#inter-source-location-div').addClass('d-none');
         $('#source_location_id').attr("required", false);
         $('#destination_location_id').attr("required", false);
+        
+        $('#destination_location_id').removeClass('is-invalid is-valid');
+        $('#source_location_id').removeClass('is-invalid is-valid');
 
         $('#leave_type_id').val('');
         $('#leave_start_date').val('');
