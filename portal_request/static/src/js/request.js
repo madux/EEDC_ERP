@@ -429,11 +429,22 @@ odoo.define('portal_request.portal_request', function (require) {
         return products
     }
 
-    var formatCurrency = function(value) {
-        if (value) {
-            return value.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    // var formatCurrency = function(value) {
+    //     if (value) {
+    //         return value.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
-        }
+    //     }
+    // }
+    var formatCurrency = function(value) {
+        if (!value && value !== 0) return '0.00';
+        
+        let val = parseFloat(value).toFixed(2);
+        
+        let parts = val.toString().split(".");
+        
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
+        return parts.join(".");
     }
 
     function getAmountQtyProcess(objVal, attrs, targetEv) {
@@ -486,9 +497,9 @@ odoo.define('portal_request.portal_request', function (require) {
             )
             total += amt
             rt_total += rt_amt
-            $(`.SUBTOTAL${row_co}`).val(amt)
+            $(`.SUBTOTAL${row_co}`).val(amt.toFixed(2))
             $(`.SUBTOTAL${row_co}`).addClass('is-invalid', true);
-            $(`.retireSubTotal${row_co}`).val(rt_amt)
+            $(`.retireSubTotal${row_co}`).val(rt_amt.toFixed(2))
         })
         var amount = formatCurrency(total)
         var rt_amount = formatCurrency(rt_total)
