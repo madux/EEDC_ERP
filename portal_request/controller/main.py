@@ -1597,6 +1597,20 @@ class PortalRequest(http.Controller):
         })
         return attachment_id
     
+    def _parse_float(self, value):
+        """
+        Safely convert string to float, handling commas and empty values.
+        """
+        if not value:
+            return 0.0
+        try:
+            val_str = str(value)
+            val_str = val_str.replace(',', '').strip()
+            return float(val_str)
+        except (ValueError, TypeError):
+            _logger.warning(f"Could not parse float value: {value}")
+            return 0.0
+    
      # portal_request data_process form post
     # @http.route(['/portal_data_process'], type='http', methods=['POST'],  website=True, auth="user", csrf=False)
     # def portal_data_process(self, **post):
@@ -2022,6 +2036,7 @@ class PortalRequest(http.Controller):
     #         _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
     #         return json.dumps({'status': False, 'message': str(ex) or "Form Submitted!"})
     
+    
     @http.route(['/portal_data_process'], type='http', methods=['POST'], website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):
         '''used to process portal data'''
@@ -2105,7 +2120,8 @@ class PortalRequest(http.Controller):
                 "payment_reference": post.get("PaymentcashAdvance"),
                 "phone": post.get("phone_number"),
                 "name": post.get("subject", ''),
-                "amountfig": post.get("amount_fig", 0),
+                # "amountfig": post.get("amount_fig", 0),
+                "amountfig": self._parse_float(post.get("amount_fig")),
                 "date": datetime.strptime(post.get("request_date",''), "%m/%d/%Y") if post.get("request_date") else fields.Date.today(), #format_to_odoo_date(post.get("request_date",'')),
                 "leave_type_id": post.get("leave_type_id", ""),
                 "leave_start_date": leave_start_date,
@@ -2303,15 +2319,25 @@ class PortalRequest(http.Controller):
             line_dest_location_id = False if line_dest_location_id in ['false', False, 'none', None, 0, '0', 'undefined'] else line_dest_location_id
             
             _logger.info(f"REQUESTS INCLUDES=====> MEMO IS {memo_id} -ID {memo_id.id} ---{rec} location is {line_source_location_id}")
+            
+            qty = self._parse_float(rec.get('qty'))
+            amount_total = self._parse_float(rec.get('amount_total'))
+            used_qty = self._parse_float(rec.get('used_qty'))
+            used_amount = self._parse_float(rec.get('used_amount'))
+            
             request_vals = {
                 'memo_id': memo_id.id,
                 'memo_type': memo_id.memo_type.id,
                 'memo_type_key': memo_id.memo_type_key,
-                'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
+                # 'quantity_available': float(rec.get('qty')) if rec.get('qty') else 0,
+                'quantity_available': qty,
                 'description': BeautifulSoup(desc, features="lxml").get_text(),
-                'used_qty': rec.get('used_qty'),
-                'amount_total': rec.get('amount_total'),
-                'used_amount': rec.get('used_amount'),
+                # 'used_qty': rec.get('used_qty'),
+                'used_qty': used_qty,
+                # 'amount_total': rec.get('amount_total'),
+                'amount_total': amount_total,
+                # 'used_amount': rec.get('used_amount'),
+                'used_amount': used_amount,
                 'note': rec.get('note'),
                 'source_location_id': line_source_location_id,
                 'dest_location_id': line_dest_location_id,
