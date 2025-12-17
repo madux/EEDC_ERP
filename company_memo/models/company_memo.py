@@ -774,7 +774,7 @@ class Memo_Model(models.Model):
         compute='_compute_default_journal',
         store=True,
         readonly=False,
-        domain="[('type', 'in', ['bank', 'general']), '|', ('company_id', '=', processing_company_id), ('company_id', '=', company_id)]"
+        domain="[('type', 'in', ['bank','purchase', 'sale', 'general']), '|', ('company_id', '=', processing_company_id), ('company_id', '=', company_id)]"
     )
     
     @api.depends('stage_id', 'processing_company_id', 'processing_branch_id', 'company_id', 'branch_id')
@@ -788,7 +788,7 @@ class Memo_Model(models.Model):
                 
                 base_domain = [
                     ('company_id', '=', company.id),
-                    ('type', 'in', ['bank', 'general']),
+                    ('type', 'in',  ['bank','purchase', 'sale', 'general']),
                 ]
                 
                 journal = self.env['account.journal'].sudo().search(

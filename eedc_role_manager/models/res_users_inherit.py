@@ -194,12 +194,27 @@ class ResUsers(models.Model):
                         'role_ids': [(6, 0, roles_granting_group.ids)]
                     })
             
-            cross_scope_roles = user.role_ids.filtered(lambda r: not r.limit_to_user_context)
-            desired_companies = cross_scope_roles.mapped('company_ids')
-            if desired_companies:
-                user.sudo().write({'company_ids': [(6, 0, desired_companies.ids)]})
-                if user.company_id not in desired_companies:
-                    user.sudo().write({'company_id': desired_companies[0].id})
+            # === Company sync - ONLY for cross-scope roles ===
+            # Roles with limit_to_user_context or limit_to_role_context should NOT grant company access
+            cross_scope_roles = user.role_ids.filtered(
+                lambda r: not r.limit_to_user_context and not r.limit_to_role_context
+            )
+            
+            if cross_scope_roles:
+                desired_companies = cross_scope_roles.mapped('company_ids')
+                if desired_companies:
+                    user.sudo().write({'company_ids': [(6, 0, desired_companies.ids)]})
+                    if user.company_id not in desired_companies:
+                        user.sudo().write({'company_id': desired_companies[0].id})
+                    _logger.info(
+                        "User %s: Updated company access from cross-scope roles: %s",
+                        user.name, desired_companies.mapped('name')
+                    )
+            else:
+                _logger.info(
+                    "User %s: No cross-scope roles, skipping company assignment",
+                    user.name
+                )
         
         return True
 
