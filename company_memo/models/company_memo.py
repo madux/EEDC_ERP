@@ -3331,7 +3331,7 @@ class Memo_Model(models.Model):
                 ('type', 'in', ['purchase']),
              ], limit=1)
             if not journal_id:
-                raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
+                raise UserError(f"No purchase journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
             inv = account_move.search([('memo_id', '=', self.id)], limit=1)
             # delete the invoice to recreate if error
