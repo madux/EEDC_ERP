@@ -269,6 +269,7 @@
                                                                     t-att-memo_type_key="ct.memo_key"  
                                                                     t-att-inter_district="'True' if ct.inter_district else 'False'"
                                                                     t-att-branch_id="ct.branch_id.id if ct.branch_id else ''"
+                                                                    t-att-processing_branch="ct.processing_branch_id.id if ct.processing_branch_id else ''"
                                                                     t-att-requires_district="'true' if ct.requires_processing_district else 'false'">
                                                                 <span t-esc="ct.name"/>
                                                                 <t t-if="ct.inter_district"> (Inter-District)</t>

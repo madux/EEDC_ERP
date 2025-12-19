@@ -483,7 +483,7 @@ class PortalRequest(http.Controller):
                 domain.append(('company_id', '=', request.env.user.company_id.id))
                 # domain.append(('company_id', '=', company_ids))
             
-            if district_id and district_id > 0 and not is_inter_company:
+            if district_id and district_id > 0:
                 domain.append(('branch_id', '=', district_id))
             
             if q:
