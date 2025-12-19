@@ -1148,50 +1148,233 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 });
             },
 
+            // 'click .approve_request': function(ev){
+            //     let targetElementId = $('.record_id').attr('id');
+            //     let $btn = $('.approve_request');
+            //     let $btnHtml = $btn.html()
+            //     $btn.attr('disabled', 'disabled');
+            //     $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+            //     $.blockUI({
+            //         'message': '<h2 class="card-name">Approving ...</h2>'
+            //     });
+            //     this._rpc({
+            //         route: `/my/request/update`,
+            //         params: {
+            //             'status': 'Approve',
+            //             'memo_id': targetElementId
+            //         },
+            //     }).then(function (data) {
+            //         if(data.status){
+            //             console.log('updating Approval status => '+ JSON.stringify(data))
+            //             // $('#successful_alert').show()
+            //             alert(data.message);
+            //             $('#div_supervisor_comment_message').addClass('d-none');
+            //             $btn.attr('disabled', false);
+            //             $btn.html($btnHtml)
+            //             $.unblockUI()
+            //             window.location.href = `/my/request/view/${targetElementId}`
+            //         }else{
+                        
+            //             alert(data.message);
+            //             $btn.attr('disabled', false);
+            //             $btn.html($btnHtml)
+            //             $.unblockUI()
+            //             if (data.link){
+            //                 // window.location.href = data.link
+            //                 window.open( data.link, '_blank');
+            //             }
+            //             // return false;
+            //         }
+                    
+            //     }).guardedCatch(function (error) {
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml)
+            //         $.unblockUI()
+            //         let msg = error.message.message
+            //         alert(`Unknown Error! ${msg}`)
+            //     });
+            // },
+            // 'click .approve_request': function(ev){
+            //     let targetElementId = $('.record_id').attr('id');
+            //     let $btn = $(ev.target); // Fix: ensure we grab the button correctly
+            //     let $btnHtml = $btn.html();
+                
+            //     // Check if we are sending a selected approver (from the modal)
+            //     let selectedApproverId = $btn.attr('data-selected-approver');
+                
+            //     $btn.attr('disabled', 'disabled');
+            //     $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                
+            //     $.blockUI({ 'message': '<h2 class="card-name">Processing...</h2>' });
+                
+            //     this._rpc({
+            //         route: `/my/request/update`,
+            //         params: {
+            //             'status': 'Approve',
+            //             'memo_id': targetElementId,
+            //             'selected_approver_id': selectedApproverId // Send this if selected from modal
+            //         },
+            //     }).then(function (data) {
+            //         $.unblockUI();
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml);
+
+            //         if(data.status){
+            //             // Success
+            //             alert(data.message);
+            //             $('#manual_approver_modal').modal('hide'); // Hide modal if open
+            //             window.location.reload();
+            //         } else {
+            //             // Check for Manual Selection Trigger
+            //             if (data.manual_select === true && data.approvers) {
+            //                 // 1. Populate the modal
+            //                 let $select = $('#manual_approver_select');
+            //                 $select.empty();
+            //                 data.approvers.forEach(function(app){
+            //                     $select.append(new Option(app.name, app.id));
+            //                 });
+                            
+            //                 // 2. Show the modal
+            //                 $('#manual_approver_modal').modal('show');
+                            
+            //                 // 3. Handle Confirm Button in Modal
+            //                 // We unbind click first to avoid duplicate events if clicked multiple times
+            //                 $('#btn_confirm_manual_approver').off('click').on('click', function(){
+            //                     let selectedId = $('#manual_approver_select').val();
+            //                     if(selectedId){
+            //                         // Store selected ID on the main approve button temporarily or call RPC directly
+            //                         // Let's trigger the main button again but with data
+            //                         $('.approve_request').attr('data-selected-approver', selectedId);
+            //                         $('.approve_request').trigger('click');
+            //                     }
+            //                 });
+            //             } else {
+            //                 // Standard Error
+            //                 alert(data.message);
+            //                 if (data.link){
+            //                     window.open(data.link, '_blank');
+            //                 }
+            //             }
+            //         }
+            //     }).guardedCatch(function (error) {
+            //         $.unblockUI();
+            //         $btn.attr('disabled', false);
+            //         $btn.html($btnHtml);
+            //         let msg = error.message ? error.message.message : error;
+            //         alert(`Error: ${msg}`);
+            //     });
+            // },
             'click .approve_request': function(ev){
                 let targetElementId = $('.record_id').attr('id');
-                let $btn = $('.approve_request');
-                let $btnHtml = $btn.html()
+                let $btn = $(ev.target); 
+                let $btnHtml = $btn.html();
+                
+                // 1. Retrieve all potential selected IDs from button attributes
+                let selectedApproverId = $btn.attr('data-selected-approver');
+                let selectedRouteId = $btn.attr('data-selected-route');
+                let selectedDistrictId = $btn.attr('data-selected-district');
+                
                 $btn.attr('disabled', 'disabled');
                 $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                $.blockUI({
-                    'message': '<h2 class="card-name">Approving ...</h2>'
-                });
+                
+                $.blockUI({ 'message': '<h2 class="card-name">Processing...</h2>' });
+                
                 this._rpc({
                     route: `/my/request/update`,
                     params: {
                         'status': 'Approve',
-                        'memo_id': targetElementId
+                        'memo_id': targetElementId,
+                        // Pass all 3 possible selections
+                        'selected_approver_id': selectedApproverId, 
+                        'selected_route_id': selectedRouteId,
+                        'selected_district_id': selectedDistrictId
                     },
                 }).then(function (data) {
-                    if(data.status){
-                        console.log('updating Approval status => '+ JSON.stringify(data))
-                        // $('#successful_alert').show()
-                        alert(data.message);
-                        $('#div_supervisor_comment_message').addClass('d-none');
-                        $btn.attr('disabled', false);
-                        $btn.html($btnHtml)
-                        $.unblockUI()
-                        window.location.href = `/my/request/view/${targetElementId}`
-                    }else{
-                        
-                        alert(data.message);
-                        $btn.attr('disabled', false);
-                        $btn.html($btnHtml)
-                        $.unblockUI()
-                        if (data.link){
-                            // window.location.href = data.link
-                            window.open( data.link, '_blank');
-                        }
-                        // return false;
-                    }
-                    
-                }).guardedCatch(function (error) {
+                    $.unblockUI();
                     $btn.attr('disabled', false);
-                    $btn.html($btnHtml)
-                    $.unblockUI()
-                    let msg = error.message.message
-                    alert(`Unknown Error! ${msg}`)
+                    $btn.html($btnHtml);
+
+                    if(data.status){
+                        alert(data.message);
+                        $('.modal').modal('hide'); 
+                        window.location.reload();
+                    } else {
+                        // === LOGIC BRANCHING FOR POPUPS ===
+
+                        // CASE A: Route/Sub-Approver Selection
+                        if (data.route_select === true && data.routes) {
+                            let $select = $('#manual_route_select');
+                            $select.empty();
+                            data.routes.forEach(function(r){
+                                $select.append(new Option(r.name, r.id));
+                            });
+                            $('#manual_route_modal').modal('show');
+                            
+                            $('#btn_confirm_manual_route').off('click').on('click', function(){
+                                let val = $('#manual_route_select').val();
+                                if(val){
+                                    $btn.attr('data-selected-route', val);
+                                    $btn.removeAttr('data-selected-approver'); 
+                                    $btn.removeAttr('data-selected-district');
+                                    $btn.trigger('click');
+                                }
+                            });
+                        }
+                        
+                        // CASE B: District Selection
+                        else if (data.district_select === true && data.districts) {
+                            let $select = $('#manual_district_select');
+                            $select.empty();
+                            data.districts.forEach(function(d){
+                                $select.append(new Option(d.name, d.id));
+                            });
+                            $('#manual_district_modal').modal('show');
+                            
+                            $('#btn_confirm_manual_district').off('click').on('click', function(){
+                                let val = $('#manual_district_select').val();
+                                if(val){
+                                    // Set District ID, Clear others
+                                    $btn.attr('data-selected-district', val);
+                                    $btn.removeAttr('data-selected-approver');
+                                    $btn.removeAttr('data-selected-route');
+                                    $btn.trigger('click');
+                                }
+                            });
+                        }
+
+                        // CASE C: Standard Approver Selection (Existing)
+                        else if (data.manual_select === true && data.approvers) {
+                            let $select = $('#manual_approver_select');
+                            $select.empty();
+                            data.approvers.forEach(function(app){
+                                $select.append(new Option(app.name, app.id));
+                            });
+                            $('#manual_approver_modal').modal('show');
+                            
+                            $('#btn_confirm_manual_approver').off('click').on('click', function(){
+                                let val = $('#manual_approver_select').val();
+                                if(val){
+                                    // Set Approver ID (Keep Route/District if they existed previously, 
+                                    // as this might be a secondary popup after selecting a district)
+                                    $btn.attr('data-selected-approver', val);
+                                    $btn.trigger('click');
+                                }
+                            });
+                        } 
+                        
+                        else {
+                            alert(data.message);
+                            if (data.link){
+                                window.open(data.link, '_blank');
+                            }
+                        }
+                    }
+                }).guardedCatch(function (error) {
+                    $.unblockUI();
+                    $btn.attr('disabled', false);
+                    $btn.html($btnHtml);
+                    let msg = error.message ? error.message.message : error;
+                    alert(`Error: ${msg}`);
                 });
             },
             'click .cancel_btn': function(ev){

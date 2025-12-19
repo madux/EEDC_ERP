@@ -260,8 +260,12 @@ class Memo_Model(models.Model):
     
     
     @api.depends('memo_setting_id', 'stage_id', 'stage_id.approver_ids')
-    def _compute_payment_processing_company(self):
+    def _compute_processing_company(self):
         for rec in self:
+            if rec.memo_setting_id.requires_processing_district and rec.processing_branch_id:
+                rec.processing_company_id = rec.processing_branch_id.company_id or rec.company_id
+                continue 
+
             if rec.memo_setting_id.processing_company_id:
                 rec.processing_company_id = rec.memo_setting_id.processing_company_id
                 rec.processing_branch_id = rec.memo_setting_id.processing_branch_id
@@ -272,9 +276,6 @@ class Memo_Model(models.Model):
             else:
                 rec.processing_company_id = rec.company_id
                 rec.processing_branch_id = rec.branch_id
-                
-            # rec.stock_processing_company_id = rec.company_id
-            # rec.stock_processing_branch_id = rec.branch_id
             
     
     
@@ -772,6 +773,44 @@ class Memo_Model(models.Model):
                                          'submit': [('required', True)],
                                          'submit':[('readonly', False)],
                                      }, index=True)
+    
+    bank_journal_id = fields.Many2one(
+        'account.journal', 
+        string='Journal',
+        compute='_compute_default_journal',
+        store=True,
+        readonly=False,
+        domain="[('type', 'in', ['bank','purchase', 'sale', 'general']), '|', ('company_id', '=', processing_company_id), ('company_id', '=', company_id)]"
+    )
+    
+    @api.depends('stage_id', 'processing_company_id', 'processing_branch_id', 'company_id', 'branch_id')
+    def _compute_default_journal(self):
+        for rec in self:
+            
+            if rec.stage_id.is_approved_stage or not rec.bank_journal_id:
+                
+                company = rec.processing_company_id or rec.company_id
+                branch = rec.processing_branch_id or rec.branch_id
+                
+                base_domain = [
+                    ('company_id', '=', company.id),
+                    ('type', 'in',  ['bank','purchase', 'sale', 'general']),
+                ]
+                
+                journal = self.env['account.journal'].sudo().search(
+                    base_domain + [('allowed_branch_ids', 'in', [branch.id])], 
+                    limit=1
+                )
+                
+                if not journal:
+                    journal = self.env['account.journal'].sudo().search(base_domain, limit=1)
+                    
+                rec.bank_journal_id = journal.id
+            else:
+                # Keep existing value if not in approved stage (optional logic)
+                # or just let it recompute every time.
+                # To simply ensure it calculates, usually you just let the code above run without the 'if'.
+                pass
 
     def validate_po_line(self):
         '''if the stage requires PO confirmation'''
@@ -1822,7 +1861,8 @@ class Memo_Model(models.Model):
             last_stage = mstages[-1] if mstages else False # 'e.g 9'
             if last_stage and last_stage.id != current_stage_id.id:
                 current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
-                if current_stage_index in [0, 1]:
+                # if current_stage_index in [0, 1]: # Check here very well
+                if current_stage_index == 0:
                     manager_can_approve = True
                 next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
             else:

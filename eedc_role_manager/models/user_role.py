@@ -10,7 +10,7 @@ class UserRole(models.Model):
     _order = 'name'
 
     name = fields.Char(string='Role Name', required=True, index=True)
-    description = fields.Text(string='Description')
+    description = fields.Text(string='Description', copy=False)
     
     group_ids = fields.Many2many(
         'res.groups', 
@@ -18,6 +18,7 @@ class UserRole(models.Model):
         'role_id', 
         'group_id',
         string='Security Groups',
+        copy=True,
         help="These are the Odoo security groups this role will grant to users."
     )
     
@@ -27,6 +28,7 @@ class UserRole(models.Model):
         'role_id', 
         'company_id',
         string='Allowed Companies',
+        copy=True,
         help="Users with this role will be approvers for memo stages in these companies only. Leave empty for all companies."
     )
     
@@ -36,11 +38,13 @@ class UserRole(models.Model):
         'role_id',
         'branch_id',
         string='Allowed Districts',
+        copy=True,
         help="Users with this role will be approvers for memo stages in these branches only. Leave empty for all branches."
     )
     
     is_request_approver = fields.Boolean(
         string='Is Request Approver?',
+        copy=True,
         help="Check this if this role designates the user as an approver in the ERP Request module."
     )
     
@@ -49,6 +53,7 @@ class UserRole(models.Model):
         'user_role_users_rel', 
         'role_id', 
         'user_id',
+        copy=True,
         string='Users with this Role'
     )
     
@@ -59,11 +64,13 @@ class UserRole(models.Model):
     )
     limit_to_user_context = fields.Boolean(
         string='Limit to User Context',
+        copy=True,
         help="If checked, the user will only be assigned as an approver in their specific company and/or branch, ignoring the role's allowed companies/districts."
     )
     
     limit_to_role_context = fields.Boolean(
         string='Limit to Role Context',
+        copy=True,
         help="If checked, the user will only be assigned as an approver in the role's allowed companies/districts. User's own companies/district will be ignored."
     )
     
@@ -126,8 +133,31 @@ class UserRole(models.Model):
             'sticky': False,
         }
     }
-
     
+    
+    def copy(self, default=None):
+        """Override copy to generate unique name for duplicated roles."""
+        self.ensure_one()
+        default = dict(default or {})
+        
+        if 'name' not in default:
+            new_name = _("%s (copy)") % self.name
+            
+            existing = self.search([('name', '=', new_name)], limit=1)
+            
+            if existing:
+                counter = 2
+                while True:
+                    new_name = _("%s (copy %s)") % (self.name, counter)
+                    existing = self.search([('name', '=', new_name)], limit=1)
+                    if not existing:
+                        break
+                    counter += 1
+            
+            default['name'] = new_name
+        
+        return super(UserRole, self).copy(default)
+
     
     def write(self, vals):
         """When role definition changes, sync all users who have this role."""

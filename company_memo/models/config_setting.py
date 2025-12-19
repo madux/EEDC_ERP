@@ -198,6 +198,32 @@ class MemoUserRole(models.Model):
         group_to_show_ids = self.env['res.groups'].search([('id', 'not in', [internal, admin, portal, public])])
         return [('id', 'in', group_to_show_ids.ids)] if group_to_show_ids else [('id', '=', 0)]
     
+    
+
+class MemoStageRoute(models.Model):
+    _name = "memo.stage.route"
+    _description = "Sub Approver Configuration"
+    _order = "sequence, id"
+
+    name = fields.Char("Label", required=True, help="e.g. 'Forward to Ogui Manager'")
+    sequence = fields.Integer(default=10)
+    stage_id = fields.Many2one("memo.stage", string="Parent Stage")
+    
+    approver_id = fields.Many2one('hr.employee', string="Approver", required=True)
+    branch_id = fields.Many2one('multi.branch', string="Update Processing District")
+    company_id = fields.Many2one('res.company', string="Update Processing Company")
+    
+    @api.onchange('approver_id')
+    def _onchange_approver_update_stage(self):
+        """
+        When a Sub-Approver is selected, automatically add them 
+        to the Parent Stage's main Approver list.
+        """
+        if self.approver_id and self.stage_id:
+            if self.approver_id.id not in self.stage_id.approver_ids.ids:
+                self.stage_id.approver_ids = [(4, self.approver_id.id)]
+
+    
 class MemoStage(models.Model):
     _name = "memo.stage"
     _description = "Request Stage"
@@ -231,6 +257,20 @@ class MemoStage(models.Model):
     # is_2nd_option = fields.Boolean(string="2nd Option",
     #                                   default=False, 
     #                                   help="when this is checked, system checks and jump to the next stage")
+    
+    routing_option = fields.Selection([
+        ('standard', 'Popup: Staff List (Default)'),
+        ('district', 'Popup: District List'),
+        ('sub_approver', 'Popup: Sub-Approvers')
+    ], string="Manual Routing Popup", default='standard', 
+       help="If Routing is Manual, what should the user select?")
+
+    route_ids = fields.One2many('memo.stage.route', 'stage_id', string="Sub Approvers")
+    no_popup_if_one_approver = fields.Boolean(
+        string="Auto-Select Single Option", 
+        default=True,
+        help="If checked, and Manual Routing is active: The system will skip the popup if there is only one Approver or one Route available."
+    )
     
 
     @api.onchange('memo_has_condition')
@@ -304,6 +344,66 @@ class MemoStage(models.Model):
                 ])
             if memo_duplicate and len(memo_duplicate.ids) > 1:
                 raise ValidationError("You have already created a stage with the same sequence")
+            
+    @api.onchange('route_ids')
+    def _onchange_sync_route_approvers(self):
+        """Syncs sub-approvers to main approver list when the table changes"""
+        new_approvers = []
+        for route in self.route_ids:
+            if route.approver_id and route.approver_id.id not in self.approver_ids.ids:
+                new_approvers.append(route.approver_id.id)
+        
+        if new_approvers:
+            self.approver_ids = [(4, x) for x in new_approvers]
+            
+    def action_generate_routes(self):
+        """
+        Generates memo.stage.route records for every employee in approver_ids
+        if a route does not already exist for them.
+        """
+        Route = self.env['memo.stage.route']
+        
+        for stage in self:
+            if not stage.approver_ids:
+                continue
+                
+            count = 0
+            for emp in stage.approver_ids:
+                # Check if route already exists for this stage and approver
+                existing_route = Route.search([
+                    ('stage_id', '=', stage.id),
+                    ('approver_id', '=', emp.id)
+                ], limit=1)
+                
+                if not existing_route:
+                    # Format: "Stage Name (District Name)"
+                    # Fallback to 'Global' if no branch is assigned to employee
+                    district_name = emp.branch_id.name or 'Global' 
+                    route_name = f"{stage.name} ({district_name})"
+                    
+                    vals = {
+                        'name': route_name,
+                        'stage_id': stage.id,
+                        'approver_id': emp.id,
+                        'branch_id': emp.branch_id.id if emp.branch_id else False,
+                        'company_id': emp.company_id.id if emp.company_id else False,
+                        'sequence': 10 + count  # Optional: stagger sequence
+                    }
+                    
+                    Route.create(vals)
+                    count += 1
+            
+        # Return a notification to let the user know it's done
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Routes Generated',
+                'message': 'Routes have been successfully generated from the approver list.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
     
     
 class MemoConfig(models.Model):
@@ -456,6 +556,12 @@ class MemoConfig(models.Model):
     
     inter_district = fields.Boolean(default=False, string="Inter-Company/District")
     inter_district_request = fields.Boolean(default=False, string="Is inter Company / district Material Request")
+    
+    allow_cross_company_requests = fields.Boolean(
+        string='Allow Cross-Company Requests',
+        default=False,
+        help="Allow districts to request from districts in other companies"
+    )
      
     payment_processing_company_id = fields.Many2one(
         'res.company',
@@ -483,8 +589,20 @@ class MemoConfig(models.Model):
         domain="[('company_id', '=', processing_company_id)]"
     )
     
+    routing_mode = fields.Selection([
+        ('standard', 'Standard'),
+        ('auto', 'Auto (Branch Based)'),
+        ('manual', 'Manual Selection')
+    ], string='Routing Mode', default='standard',
+       help="Standard: Random/Default. Auto: Matches Branch. Manual: User selects if multiple approvers exist.")
+    
+    requires_processing_district = fields.Boolean(
+        string="Require Processing District",
+        help="If checked, the user must select a specific district/branch to process this request on the portal."
+    )
+    
     @api.onchange('processing_company_id')
-    def _onchange_payment_processing_company(self):
+    def _onchange_processing_company(self):
         """Clear branch if company changes"""
         if self.processing_branch_id and \
            self.processing_branch_id.company_id != self.processing_company_id:

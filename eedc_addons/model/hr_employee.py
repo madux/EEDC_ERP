@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 import random
+from difflib import SequenceMatcher
 import logging
 from odoo.osv import expression
 
@@ -150,6 +151,110 @@ class HREmployee(models.Model):
         'employee_id', 
         string='Transfer History'
         )
+    
+    
+    def action_update_memo_model_employee(self):
+        """
+        Update memo.model records to reference the correct current employee.
+        Supports multi-record update via window action (active_ids).
+        """
+        MemoModel = self.env['memo.model']
+
+        rec_ids = self.env.context.get('active_ids', [])
+        employees = self.browse(rec_ids)
+
+        updated_count = 0
+        skipped_count = 0
+        error_count = 0
+
+        for employee in employees:
+            if not employee.user_id:
+                _logger.info(f"Employee {employee.name} has no linked user, skipping")
+                skipped_count += 1
+                continue
+
+            user = employee.user_id
+
+            # All memos created by that user
+            memo_records = MemoModel.sudo().search([('create_uid', '=', user.id)])
+
+            if not memo_records:
+                _logger.info(f"No memo records found for user {user.login} (employee: {employee.name})")
+                continue
+
+            _logger.info(f"Found {len(memo_records)} memo records for user {user.login}")
+
+            for memo in memo_records:
+                try:
+                    # If already correct, skip
+                    if memo.employee_id and memo.employee_id.id == employee.id:
+                        skipped_count += 1
+                        continue
+
+                    if memo.employee_id:
+                        old_employee = memo.employee_id
+
+                        similarity = self._calculate_name_similarity(
+                            old_employee.name or '',
+                            employee.name or ''
+                        )
+
+                        _logger.info(
+                            f"Memo {memo.id}: Old '{old_employee.name}' vs New '{employee.name}' "
+                            f"- Similarity: {similarity:.2%}"
+                        )
+
+                        # Only update if similarity >= 60%
+                        if similarity >= 0.60:
+                            memo.sudo().write({'employee_id': employee.id})
+                            _logger.info(f"Updated memo {memo.id}: {old_employee.name} -> {employee.name}")
+                            updated_count += 1
+                        else:
+                            _logger.warning(
+                                f"Skipped memo {memo.id}: Name mismatch "
+                                f"(similarity {similarity:.2%}). Old='{old_employee.name}', New='{employee.name}'"
+                            )
+                            skipped_count += 1
+                    else:
+                        # No employee assigned → assign directly
+                        memo.sudo().write({'employee_id': employee.id})
+                        _logger.info(f"Assigned employee to memo {memo.id}: {employee.name}")
+                        updated_count += 1
+
+                except Exception as e:
+                    _logger.exception(f"Error updating memo {memo.id}: {str(e)}")
+                    error_count += 1
+
+        # ---- FINAL RESPONSE ----
+        message_parts = []
+        if updated_count:
+            message_parts.append(f"{updated_count} memo(s) updated")
+        if skipped_count:
+            message_parts.append(f"{skipped_count} memo(s) skipped")
+        if error_count:
+            message_parts.append(f"{error_count} error(s) occurred")
+
+        message = ", ".join(message_parts) if message_parts else "No changes made"
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'EEDC Request Employee Update Complete',
+                'message': message,
+                'type': 'success' if not error_count else 'warning',
+                'sticky': True,
+            }
+        }
+
+
+    def _calculate_name_similarity(self, name1, name2):
+        """
+        Uses SequenceMatcher to get similarity between two names.
+        """
+        name1_norm = ' '.join(name1.lower().split())
+        name2_norm = ' '.join(name2.lower().split())
+        return SequenceMatcher(None, name1_norm, name2_norm).ratio()
     
     # @api.onchange('first_name', 'middle_name', 'last_name')
     # def onchange_update_full_name(self):
