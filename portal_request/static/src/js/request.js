@@ -2199,8 +2199,10 @@ odoo.define('portal_request.portal_request', function (require) {
 
                         // Store whether this config is inter-district
                         let isInterDistrictTransfer = (is_inter_district_config === 'True' || is_inter_district_config === 'true');
-                        let allowCrossCompany = (inter_company === 'True' || inter_company === 'true');
+                        // let allowCrossCompany = (inter_company === 'True' || inter_company === 'true');
+                        let allowCrossCompany = (inter_company === 'True' || inter_company === 'true' || isInterDistrictTransfer === true)? '1': 0;
                         $('#is_inter_district_transfer_config').prop('checked', isInterDistrictTransfer);
+                        console.log("INTER company field...", allowCrossCompany)
 
                         // ============================================================
                         // POPULATE PROCESSING DISTRICT DROPDOWN
@@ -2260,6 +2262,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 source_location_id, 
                                 'source', 
                                 allowCrossCompany,
+                                // '1',
                                 '', 
                                 0,
                                 locationDistrictId
