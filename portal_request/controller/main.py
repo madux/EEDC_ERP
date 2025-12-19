@@ -443,7 +443,6 @@ class PortalRequest(http.Controller):
     @http.route('/get-stock-location', type='http', auth='user', csrf=False, methods=['POST'])
     def get_stock_location(self, **kwargs):
         try:
-            # Get parameters from POST request
             q = request.params.get('q', '').strip()
             page_limit = int(request.params.get('page_limit', 10))
             page = int(request.params.get('page', 1))
@@ -474,7 +473,6 @@ class PortalRequest(http.Controller):
             
             _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id} testing_loc...")
             
-            # Build search domain
             domain = [('usage', '=', 'internal')]
             
             company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
@@ -483,7 +481,7 @@ class PortalRequest(http.Controller):
                 domain.append(('company_id', '=', request.env.user.company_id.id))
                 # domain.append(('company_id', '=', company_ids))
             
-            if district_id and district_id > 0 and not is_inter_company:
+            if district_id and district_id > 0:
                 domain.append(('branch_id', '=', district_id))
             
             if q:
@@ -507,7 +505,6 @@ class PortalRequest(http.Controller):
             
             _logger.info(f"Found {len(results)} locations")
             
-            # Return JSON response for Select2
             return request.make_response(
                 json.dumps({
                     "results": results,

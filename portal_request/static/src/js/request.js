@@ -2240,29 +2240,24 @@ odoo.define('portal_request.portal_request', function (require) {
                             // Determine which district to use for location filtering
                             let locationDistrictId = null;
                             
-                            // Priority 1: Use processing_branch from config if set
                             if (processing_branch && processing_branch !== 'False' && processing_branch !== 'false' && processing_branch !== '') {
                                 locationDistrictId = parseInt(processing_branch);
                                 console.log('Using processing_branch from config:', locationDistrictId);
                             }
-                            // Priority 2: Use request_branch (branch_id) from config
                             else if (request_branch && request_branch !== 'False' && request_branch !== 'false' && request_branch !== '') {
-                                locationDistrictId = parseInt(request_branch);
+                                locationDistrictId = (isInterDistrictTransfer == false)? parseInt(request_branch): '';
                                 console.log('Using request_branch from config:', locationDistrictId);
                             }
-                            // Priority 3: Use rquest district in the template
                             else {
-                                locationDistrictId = parseInt($('#portal-request').data('request-branch-id'));
+                                locationDistrictId = (isInterDistrictTransfer == false)? parseInt($('#portal-request').data('request-branch-id')) : '';
                                 console.log('Using user selected district:', locationDistrictId);
                             }
                             
-                            // Initialize source location search
                             console.log('Initializing source location with district:', locationDistrictId, 'allow cross-company:', allowCrossCompany);
                             searchStockLocation(
                                 source_location_id, 
                                 'source', 
                                 allowCrossCompany,
-                                // '1',
                                 '', 
                                 0,
                                 locationDistrictId
