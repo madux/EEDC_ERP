@@ -472,7 +472,7 @@ class PortalRequest(http.Controller):
             except (ValueError, TypeError):
                 selected_location_id = 0
             
-            _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id}")
+            _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id} testing_loc...")
             
             # Build search domain
             domain = [('usage', '=', 'internal')]
@@ -483,7 +483,7 @@ class PortalRequest(http.Controller):
                 domain.append(('company_id', '=', request.env.user.company_id.id))
                 # domain.append(('company_id', '=', company_ids))
             
-            if district_id and district_id > 0:
+            if district_id and district_id > 0 and not is_inter_company:
                 domain.append(('branch_id', '=', district_id))
             
             if q:
