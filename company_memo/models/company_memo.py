@@ -1840,39 +1840,112 @@ class Memo_Model(models.Model):
             initial_stage_id= self.env.ref('company_memo.memo_initial_stage')
         return initial_stage_id
 
+    # def get_next_stage_artifact(self, current_stage_id, from_website=False):
+    #     """
+    #     args: from_website: used to decide if the record is 
+    #     generated from the website or from odoo internal use
+    #     """
+    #     approver_ids = [] 
+    #     document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
+    #     helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
+    #     memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
+    #         else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
+    #             else self.memo_setting_id 
+    #     memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
+    #         lambda skp: skp.id != self.stage_to_skip.id
+    #     )
+    #     _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
+    #     if memo_settings and current_stage_id:
+    #         mstages = memo_settings.stage_ids # [3,6,8,9]
+    #         manager_can_approve = False
+    #         last_stage = mstages[-1] if mstages else False # 'e.g 9'
+    #         if last_stage and last_stage.id != current_stage_id.id:
+    #             current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+    #             # if current_stage_index in [0, 1]: # Check here very well
+    #             if current_stage_index == 0:
+    #                 manager_can_approve = True
+    #             next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
+    #         else:
+    #             next_stage_id = self.stage_id.id
+    #         next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
+    #         if next_stage_record:
+    #             approver_ids = next_stage_record.approver_ids.ids
+    #             if manager_can_approve:
+    #                 manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
+    #                 approver_ids.append(manager_id) 
+    #         return approver_ids, next_stage_record.id
+    #     else:
+    #         if not from_website:
+    #             raise ValidationError(
+    #                 "Please ensure to configure the Memo type for the employee department"
+    #                 )
+    #         else:
+    #             return False, False
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
         args: from_website: used to decide if the record is 
         generated from the website or from odoo internal use
         """
         approver_ids = [] 
-        document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
-        helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
-        memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
-            else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
-                else self.memo_setting_id 
+        
+        # === FIX: ROBUST CONFIG SELECTION ===
+        # 1. Start with the standard/default config (The safest bet)
+        memo_settings = self.memo_setting_id
+        
+        # 2. Check if this is a Document Management request
+        if self.to_create_document and self.document_memo_config_id:
+            memo_settings = self.document_memo_config_id
+            
+        # 3. Check if this is a Helpdesk request
+        # We check hasattr (field exists) AND if the field actually contains a record
+        elif hasattr(self, 'helpdesk_memo_config_id') and self.helpdesk_memo_config_id:
+             memo_settings = self.helpdesk_memo_config_id
+        # ====================================
+
+        # Filter out stages to skip
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
+        
         _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
+        
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
             manager_can_approve = False
-            last_stage = mstages[-1] if mstages else False # 'e.g 9'
+            last_stage = mstages[-1] if mstages else False 
+            
             if last_stage and last_stage.id != current_stage_id.id:
-                current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
-                # if current_stage_index in [0, 1]: # Check here very well
+                # Find where we are in the list
+                # Safety check: ensure current stage is actually in the filtered list
+                if current_stage_id.id in memo_setting_stages.ids:
+                    current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+                else:
+                    # Fallback if stage mismatch (e.g. config changed): Reset to 0
+                    current_stage_index = 0
+
+                # Manager Logic: Only allow manager override if moving from Draft (Index 0)
                 if current_stage_index == 0:
                     manager_can_approve = True
-                next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
+                
+                # Determine next stage
+                if current_stage_index + 1 < len(memo_setting_stages):
+                    next_stage_id = memo_setting_stages.ids[current_stage_index + 1] 
+                else:
+                    next_stage_id = current_stage_id.id # Stay on last stage if overflow
             else:
                 next_stage_id = self.stage_id.id
+            
             next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
+            
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
                 if manager_can_approve:
-                    manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
-                    approver_ids.append(manager_id) 
+                    # Add Line Manager and Admin Supervisor
+                    if self.sudo().employee_id.parent_id:
+                        approver_ids.append(self.sudo().employee_id.parent_id.id)
+                    if self.sudo().employee_id.administrative_supervisor_id:
+                        approver_ids.append(self.sudo().employee_id.administrative_supervisor_id.id)
+            
             return approver_ids, next_stage_record.id
         else:
             if not from_website:
@@ -1880,6 +1953,7 @@ class Memo_Model(models.Model):
                     "Please ensure to configure the Memo type for the employee department"
                     )
             else:
+                # This returns False which tells the Controller something is wrong
                 return False, False
     
     def build_po_line(self, order_id):

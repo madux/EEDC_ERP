@@ -689,36 +689,72 @@ odoo.define('portal_request.portal_request', function (require) {
           });
     }
 
+    // function TriggerProductField(lastRow_count){
+    //     // PRODUCTSEARCH
+    //     $(`input[special_id='${lastRow_count}']`).select2({
+    //         ajax: {
+    //           url: '/portal-request-product',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               productItems: JSON.stringify(setProductdata), //getSelectedProductItems(),
+    //               request_type: $('#selectRequestOption').val(), //getSelectedProductItems(),
+    //               source_locationId: $('#source_location_id').val(), //getSelectedProductItems(),
+    //               page_limit: 10, // page size
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             // console.log(data);
+    //             // localStorage.setItem('productStorage', JSON.stringify(data.results))
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 1,
+    //         multiple: false,
+    //         placeholder: 'Search for a Products',
+    //         allowClear: true,
+    //       });
+    // }
+
     function TriggerProductField(lastRow_count){
         // PRODUCTSEARCH
         $(`input[special_id='${lastRow_count}']`).select2({
             ajax: {
-              url: '/portal-request-product',
-              dataType: 'json',
-              delay: 30,
-              data: function (term, page) {
+            url: '/portal-request-product',
+            dataType: 'json',
+            delay: 30,
+            data: function (term, page) {
                 return {
-                  q: term, //search term
-                  productItems: JSON.stringify(setProductdata), //getSelectedProductItems(),
-                  request_type: $('#selectRequestOption').val(), //getSelectedProductItems(),
-                  source_locationId: $('#source_location_id').val(), //getSelectedProductItems(),
-                  page_limit: 10, // page size
-                  page: page, // page number
+                q: term, 
+                productItems: JSON.stringify(setProductdata),
+                request_type: $('#selectRequestOption').val(),
+                source_locationId: $('#source_location_id').val(),
+                
+                // --- ADD THESE LINES ---
+                processing_branch_id: $('#processing_branch_id').val(), // Get the selected district
+                memo_config_id: $('#selectConfigOptionId').val() || $('#selectConfigOption').val(), // Get config ID
+                // -----------------------
+                
+                page_limit: 10, 
+                page: page, 
                 };
-              },
-              results: function (data, page) {
+            },
+            results: function (data, page) {
                 var more = (page * 30) < data.total;
-                // console.log(data);
-                // localStorage.setItem('productStorage', JSON.stringify(data.results))
                 return {results: data.results, more: more};
-              },
-              cache: true
+            },
+            cache: true
             },
             minimumInputLength: 1,
             multiple: false,
             placeholder: 'Search for a Products',
             allowClear: true,
-          });
+        });
     }
 
 
