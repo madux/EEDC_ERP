@@ -221,7 +221,7 @@ class PortalRequest(http.Controller):
             # doform
             "user_id": request.env.user,
             "company_id": request.env.user.company_id,
-            "currency_ids": request.env['res.currency'].search([]),
+            "currency_ids": request.env['res.currency'].search([('active', '=', True)]),
             # 
             "has_inter_district_configs": has_inter_district_configs,
             "user_branch": user_branch,
@@ -1203,20 +1203,113 @@ class PortalRequest(http.Controller):
     #         }
     #     })
     
+    # @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
+    # def get_portal_product(self, **post):
+    #     productItems = json.loads(post.get('productItems'))
+    #     request_type_option = post.get('request_type')
+    #     source_locationId = post.get('source_locationId')
+    #     processing_branch = post.get('processing_branch')
+        
+    #     company = self.env['multi.branch'].search(processing_branch.company_id)
+        
+    #     _logger.info(f'productItems {productItems}')
+    #     query = request.params.get('q', '') 
+    #     productItems_List = [int(i) for i in productItems if i]
+    #     result = []
+        
+    #     domain = [
+    #         ('id', 'not in', productItems_List),
+    #         ('company_id', '=', company.id), 
+    #         ('active', '=', True), 
+    #         '|','|', 
+    #         ('name', 'ilike', query),
+    #         ('default_code', 'ilike', query),
+    #         ('barcode', 'ilike', query)
+    #     ]
+
+    #     service_allowed_types = ['procurement_request', 'sale_request']
+        
+    #     if request_type_option == "vehicle_request":
+    #         domain += [
+    #             ('is_vehicle_product', '=', True), 
+    #             ('detailed_type', 'in', ['service'])
+    #         ]
+    #     elif request_type_option == 'material_request':
+    #         domain += [('detailed_type', 'in', ['consu', 'product'])]
+    #     elif request_type_option in service_allowed_types:
+    #         domain += [('detailed_type', 'in', ['consu', 'product', 'service'])]
+    #     else:
+    #         domain += [('detailed_type', 'in', ['consu', 'product'])]
+
+    #     products = request.env["product.product"].sudo().search(domain, limit=20)
+        
+    #     for item in products:
+    #         qty_available = 0.0
+            
+    #         if source_locationId and str(source_locationId).isdigit():
+    #             qty_available = item.with_context(location=int(source_locationId)).qty_available
+    #         else:
+    #             qty_available = item.qty_available
+
+    #         result.append({
+    #             "id": item.id,
+    #             "text": f'{item.name} {item.default_code or ""}', 
+    #             "qty": qty_available
+    #         })
+        
+    #     return json.dumps({
+    #         "results": result,
+    #         "pagination": {
+    #             "more": len(products) == 20,
+    #         }
+    #     })
+    
     @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
     def get_portal_product(self, **post):
         productItems = json.loads(post.get('productItems'))
         request_type_option = post.get('request_type')
-        source_locationId = post.get('source_locationId')
         
-        _logger.info(f'productItems {productItems}')
+        # Get IDs from POST
+        source_locationId = post.get('source_locationId')
+        processing_branch_id = post.get('processing_branch_id')
+        memo_config_id = post.get('memo_config_id')
+        
+        _logger.info(f'Product Search - Source: {source_locationId}, Branch: {processing_branch_id}, Config: {memo_config_id}')
+        
         query = request.params.get('q', '') 
         productItems_List = [int(i) for i in productItems if i]
         result = []
+
+        # --- DETERMINE TARGET COMPANY LOGIC ---
+        target_company_id = request.env.user.company_id.id # Default fallback
+
+        # Priority 1: If Source Location is selected, use its company
+        if source_locationId and str(source_locationId).isdigit():
+            loc = request.env['stock.location'].sudo().browse(int(source_locationId))
+            if loc.company_id:
+                target_company_id = loc.company_id.id
         
+        # Priority 2: If Processing Branch is selected, use its company
+        elif processing_branch_id and str(processing_branch_id).isdigit():
+            branch = request.env['multi.branch'].sudo().browse(int(processing_branch_id))
+            if branch.company_id:
+                target_company_id = branch.company_id.id
+
+        # Priority 3: If Config is selected, check its defaults
+        elif memo_config_id and str(memo_config_id).isdigit():
+            config = request.env['memo.config'].sudo().browse(int(memo_config_id))
+            # Check processing company on config
+            if config.processing_company_id:
+                target_company_id = config.processing_company_id.id
+            # Or processing branch on config
+            elif config.processing_branch_id and config.processing_branch_id.company_id:
+                target_company_id = config.processing_branch_id.company_id.id
+        # ---------------------------------------
+
+        # Use target_company_id in the domain
         domain = [
             ('id', 'not in', productItems_List),
-            ('company_id', '=', request.env.user.company_id.id), 
+            ('company_id', '=', target_company_id), 
             ('active', '=', True), 
             '|','|', 
             ('name', 'ilike', query),
@@ -1227,10 +1320,7 @@ class PortalRequest(http.Controller):
         service_allowed_types = ['procurement_request', 'sale_request']
         
         if request_type_option == "vehicle_request":
-            domain += [
-                ('is_vehicle_product', '=', True), 
-                ('detailed_type', 'in', ['service'])
-            ]
+            domain += [('is_vehicle_product', '=', True), ('detailed_type', 'in', ['service'])]
         elif request_type_option == 'material_request':
             domain += [('detailed_type', 'in', ['consu', 'product'])]
         elif request_type_option in service_allowed_types:
@@ -1243,6 +1333,7 @@ class PortalRequest(http.Controller):
         for item in products:
             qty_available = 0.0
             
+            # Calculate quantity based on specific location context if available
             if source_locationId and str(source_locationId).isdigit():
                 qty_available = item.with_context(location=int(source_locationId)).qty_available
             else:
@@ -1250,7 +1341,7 @@ class PortalRequest(http.Controller):
 
             result.append({
                 "id": item.id,
-                "text": f'{item.name} {item.default_code or ""}', 
+                "text": f'{item.name} {item.default_code or ""} (Qty: {qty_available})', 
                 "qty": qty_available
             })
         
@@ -1477,7 +1568,8 @@ class PortalRequest(http.Controller):
             limit=1) 
             LocationObj = request.env['stock.location'].sudo()
             if product:
-                is_interdistrict = True if is_interdistrict in ['on', 'On', 'On', 'true', False] else False
+                # is_interdistrict = True if is_interdistrict in ['on', 'On', 'On', 'true', False] else False
+                is_interdistrict = True
                 if not is_interdistrict:
                     domain = [
                         ('company_id', '=', request.env.user.company_id.id),
@@ -2123,12 +2215,13 @@ class PortalRequest(http.Controller):
                 "leave_type_id": post.get("leave_type_id", ""),
                 "leave_start_date": leave_start_date,
                 "leave_end_date": leave_end_date,
-                "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") else False,
-                "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") else False,
-                "currency_id": int(post.get("currency_id")) if post.get("currency_id") else False,
-                "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False,  '', 'none', 'None'] else False,
-                "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False,  '', 'none', 'None', 0, '0'] else False,
-                'dest_location_id': post.get("destination_location_id") if post.get("destination_location_id") not in ['false', False,  '', 'none', 'None',0, '0'] else False,
+                "leave_Reliever": int(post.get("leave_reliever")) if post.get("leave_reliever") not in ['false', False, None, '', 'none', 'None'] else False,
+                "vendor_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False, None, '', 'none', 'None'] else False,
+                "currency_id": int(post.get("currency_id")) if post.get("currency_id") not in ['false', False, None, '', 'none', 'None'] else request.env.user.company_id.currency_id.id,
+                "conversion_rate": int(post.get("currency_rate")) if post.get("currency_rate") not in ['false', False, None, '', 'none', 'None'] else 0,
+                "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False, None, '', 'none', 'None'] else False,
+                "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False, None, '', 'none', 'None', 0, '0'] else False,
+                'dest_location_id': int(post.get("destination_location_id")) if post.get("destination_location_id") not in ['false', False,  None, '', 'none', 'None',0, '0'] else False,
                 
                 "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
@@ -2145,7 +2238,7 @@ class PortalRequest(http.Controller):
                 "state": "Sent",
                 "company_id": request.env.user.company_id.id,
                 "branch_id": request.env.user.branch_id and request.env.user.branch_id.id,
-                "currency_id": request.env.user.company_id.currency_id.id,
+                # "currency_id": request.env.user.company_id.currency_id.id,
                 "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
                 "users_followers": [(6, 0, inputFollowers)], 
                 "description": description_body, 

@@ -100,13 +100,13 @@ class RequestLine(models.Model):
     
     @api.onchange('quantity_available')
     def onchange_quantity_available(self):
-        if self.memo_type_key in ['material_request', 'procurement_request']:
+        if self.memo_type_key in ['material_request']:
             if self.quantity_available:
                 self.check_product_qty()
             
     @api.onchange('source_location_id')
     def onchange_location_check_available_qty(self):
-        if self.sudo().source_location_id:
+        if self.sudo().source_location_id and self.sudo().product_id:
             pr = self.sudo().product_id
             product = self.env['product.product'].search([
                 # '|', ('id', 'in', self.product_id.id),
@@ -206,8 +206,8 @@ class RequestLine(models.Model):
     memo_type_key = fields.Char('Request type key', readonly=True)#, related="memo_type.memo_key")
     
     def check_product_qty(self):
-        if not self.source_location_id or not self.product_id: 
-            raise UserError("Please select product and location")
+        # if not self.source_location_id or not self.product_id: 
+        #     raise UserError("Please select product and location")
         if self.quantity_available and self.quantity_available > 0:
             if self.product_id and self.memo_type_key in ['material_request']:# and self.product_id.detailed_type in ['product']:
                 domain = [('company_id', '=', self.company_id.id), ('branch_id', '=', self.env.user.branch_id.id)] 

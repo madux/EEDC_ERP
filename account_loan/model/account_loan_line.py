@@ -349,10 +349,10 @@ class AccountLoanLine(models.Model):
                 res.append(invoice.id)
                 for line in invoice.invoice_line_ids:
                     line.tax_ids = line._get_computed_taxes()
-                invoice.with_context(
-                    check_move_validity=False
-                )._recompute_dynamic_lines(recompute_all_taxes=True)
-                invoice._check_balanced()
+                # invoice.with_context(
+                #     check_move_validity=False
+                # )._recompute_dynamic_lines(recompute_all_taxes=True)
+                # invoice._check_balanced()
                 if (
                     record.long_term_loan_account_id
                     and record.long_term_principal_amount != 0

@@ -47,6 +47,6 @@ access_memo_assign_stage_wizard_id,access_memo_assign_stage_wizard,company_memo.
 access_dummy_memo_config_id,access_dummy_memo_config,company_memo.model_dummy_memo_config,,1,1,1,1
 access_res_group_role_id,access_res_group_role,company_memo.model_res_group_role,base.group_user,1,0,0,0
 access_admin_res_group_role_id,access_admin_res_group_role,company_memo.model_res_group_role,base.group_system,1,1,1,1
-
+access_memo_action_history_id,access_memo_action_history_role,company_memo.model_memo_action_history,base.group_user,1,1,1,1
 access_memo_stage_route_admin,memo.stage.route.admin,model_memo_stage_route,base.group_system,1,1,1,1
 access_memo_stage_route_user,memo.stage.route.user,model_memo_stage_route,base.group_user,1,0,0,0
