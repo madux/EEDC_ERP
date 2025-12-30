@@ -1888,21 +1888,14 @@ class Memo_Model(models.Model):
         """
         approver_ids = [] 
         
-        # === FIX: ROBUST CONFIG SELECTION ===
-        # 1. Start with the standard/default config (The safest bet)
         memo_settings = self.memo_setting_id
         
-        # 2. Check if this is a Document Management request
         if self.to_create_document and self.document_memo_config_id:
             memo_settings = self.document_memo_config_id
             
-        # 3. Check if this is a Helpdesk request
-        # We check hasattr (field exists) AND if the field actually contains a record
         elif hasattr(self, 'helpdesk_memo_config_id') and self.helpdesk_memo_config_id:
              memo_settings = self.helpdesk_memo_config_id
-        # ====================================
-
-        # Filter out stages to skip
+        
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
@@ -1915,23 +1908,19 @@ class Memo_Model(models.Model):
             last_stage = mstages[-1] if mstages else False 
             
             if last_stage and last_stage.id != current_stage_id.id:
-                # Find where we are in the list
-                # Safety check: ensure current stage is actually in the filtered list
                 if current_stage_id.id in memo_setting_stages.ids:
                     current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
                 else:
-                    # Fallback if stage mismatch (e.g. config changed): Reset to 0
                     current_stage_index = 0
 
-                # Manager Logic: Only allow manager override if moving from Draft (Index 0)
+                # if current_stage_index in [0, 1]: # Check here very well
                 if current_stage_index == 0:
                     manager_can_approve = True
                 
-                # Determine next stage
                 if current_stage_index + 1 < len(memo_setting_stages):
                     next_stage_id = memo_setting_stages.ids[current_stage_index + 1] 
                 else:
-                    next_stage_id = current_stage_id.id # Stay on last stage if overflow
+                    next_stage_id = current_stage_id.id
             else:
                 next_stage_id = self.stage_id.id
             
@@ -1940,10 +1929,9 @@ class Memo_Model(models.Model):
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
                 if manager_can_approve:
-                    # Add Line Manager and Admin Supervisor
                     if self.sudo().employee_id.parent_id:
                         approver_ids.append(self.sudo().employee_id.parent_id.id)
-                    if self.sudo().employee_id.administrative_supervisor_id:
+                    elif self.sudo().employee_id.administrative_supervisor_id:
                         approver_ids.append(self.sudo().employee_id.administrative_supervisor_id.id)
             
             return approver_ids, next_stage_record.id
@@ -1953,7 +1941,6 @@ class Memo_Model(models.Model):
                     "Please ensure to configure the Memo type for the employee department"
                     )
             else:
-                # This returns False which tells the Controller something is wrong
                 return False, False
     
     def build_po_line(self, order_id):
