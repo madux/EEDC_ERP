@@ -6,7 +6,7 @@ from odoo import http
 import random
 from lxml import etree
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, time
 from dateutil.relativedelta import relativedelta
 import logging
 _logger = logging.getLogger(__name__)
@@ -3192,32 +3192,82 @@ class Memo_Model(models.Model):
             'target': 'new'
             }
         
+    # def generate_leave_request(self, body_msg, body):
+    #     leave = self.env['hr.leave'].sudo()
+    #     vals = {
+    #         'employee_id': self.employee_id.id,
+    #         'request_date_from': self.leave_start_date,
+    #         'request_date_to': self.leave_end_date,
+    #         'date_from': self.leave_start_date,
+    #         'date_to': self.leave_end_date,
+    #         'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
+    #         'holiday_status_id': self.leave_type_id.id,
+    #         'origin': self.code,
+    #         'memo_id': self.id,
+    #     }
+    #     leave_id = leave.with_context(
+    #                     tracking_disable=False,
+    #                     mail_activity_automation_skip=False,
+    #                     leave_fast_create=True,
+    #                     leave_skip_state_check=True
+    #                 ).create(vals)
+    #     leave_id.action_approve()
+    #     leave_id.action_validate()
+    #     # update memo stages where the applicant exists with reliever
+    #     self.set_reliever_to_act_as_employee_on_leave(
+    #         self.sudo().employee_id,
+    #         self.sudo().leave_Reliever,
+    #     )
+    #     self.state = 'Done'
+    #     self.mail_sending_direct(body_msg)
+    
     def generate_leave_request(self, body_msg, body):
         leave = self.env['hr.leave'].sudo()
+        
+        # --- FIX: Set explicit Start/End times ---
+        # Odoo stores dates in UTC. 
+        # For Nigeria (GMT+1): 
+        # 07:00 UTC = 08:00 Local (Start of Work)
+        # 16:00 UTC = 17:00 Local (End of Work)
+        # This ensures the last day is counted fully.
+        start_time = time(7, 0, 0) 
+        end_time = time(16, 0, 0)
+        
+        # Combine the Date fields with the Time
+        dt_from = datetime.combine(self.leave_start_date, start_time)
+        dt_to = datetime.combine(self.leave_end_date, end_time)
+
         vals = {
             'employee_id': self.employee_id.id,
             'request_date_from': self.leave_start_date,
             'request_date_to': self.leave_end_date,
-            'date_from': self.leave_start_date,
-            'date_to': self.leave_end_date,
+            
+            'date_from': dt_from,
+            'date_to': dt_to,
+            
             'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
             'holiday_status_id': self.leave_type_id.id,
             'origin': self.code,
             'memo_id': self.id,
         }
+        
         leave_id = leave.with_context(
                         tracking_disable=False,
                         mail_activity_automation_skip=False,
                         leave_fast_create=True,
                         leave_skip_state_check=True
                     ).create(vals)
+        
+        leave_id._compute_number_of_days()
+        
         leave_id.action_approve()
         leave_id.action_validate()
-        # update memo stages where the applicant exists with reliever
+        
         self.set_reliever_to_act_as_employee_on_leave(
             self.sudo().employee_id,
             self.sudo().leave_Reliever,
         )
+        
         self.state = 'Done'
         self.mail_sending_direct(body_msg)
 
