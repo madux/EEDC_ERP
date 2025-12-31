@@ -1,7 +1,7 @@
 {
     'name': 'Employee Portal Request',
     'version': '16.0.1',
-    'author': "Maduka Sopulu",
+    'author': "Maduka Sopulu & Paul Ugwu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize modules for portal users',
     'depends': ['base', 'website', 'company_memo', 'portal'],

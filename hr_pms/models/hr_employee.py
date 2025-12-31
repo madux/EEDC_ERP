@@ -108,6 +108,28 @@ class HRLevel(models.Model):
     code = fields.Char(
         string="Code", 
         )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        default=lambda self: self.env.company,
+        required=True
+    )
+    _sql_constraints = [
+        ('code_company_uniq', 'unique (code, company_id)', 
+         'The code must be unique per company!')
+    ]
+    
+    def name_get(self):
+        result = []
+        show_company = self.env.context.get('show_company_in_name', False)
+        
+        for record in self:
+            if show_company and record.company_id:
+                name = f"{record.name} ({record.company_id.name})"
+            else:
+                name = record.name
+            result.append((record.id, name))
+        return result
     
 class HRUNIT(models.Model):
     _name = "hr.unit"
@@ -121,6 +143,18 @@ class HRUNIT(models.Model):
         string="Code", 
         )
     
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        default=lambda self: self.env.company,
+        required=True
+    )
+    
+    _sql_constraints = [
+        ('code_company_uniq', 'unique (code, company_id)', 
+         'The code must be unique per company!')
+    ]
+    
 class HRgrade(models.Model):
     _name = "hr.grade"
     _description = "HR grade"
@@ -132,6 +166,42 @@ class HRgrade(models.Model):
     code = fields.Char(
         string="Code", 
         )
+    
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        default=lambda self: self.env.company,
+        required=True
+    )
+    
+    _sql_constraints = [
+        ('code_company_uniq', 'unique (code, company_id)', 
+         'The code must be unique per company!')
+    ]
+    
+    def name_get(self):
+        result = []
+        show_company = self.env.context.get('show_company_in_name', False)
+        
+        for record in self:
+            if show_company and record.company_id:
+                name = f"{record.name} ({record.company_id.name})"
+            else:
+                name = record.name
+            result.append((record.id, name))
+        return result
+    
+    @api.model
+    def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
+        """Override to allow searching by company name as well"""
+        domain = domain or []
+        if name:
+            domain = [
+                '|',
+                ('name', operator, name),
+                ('company_id.name', operator, name)
+            ] + domain
+        return self._search(domain, limit=limit, order=order)
 
 # class HrEmployeePublicInherit(models.Model):
 #     _inherit = "hr.employee.public"

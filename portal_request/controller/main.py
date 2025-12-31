@@ -1280,7 +1280,6 @@ class PortalRequest(http.Controller):
         productItems_List = [int(i) for i in productItems if i]
         result = []
 
-        # --- DETERMINE TARGET COMPANY LOGIC ---
         target_company_id = request.env.user.company_id.id # Default fallback
 
         # Priority 1: If Source Location is selected, use its company
@@ -1289,19 +1288,15 @@ class PortalRequest(http.Controller):
             if loc.company_id:
                 target_company_id = loc.company_id.id
         
-        # Priority 2: If Processing Branch is selected, use its company
         elif processing_branch_id and str(processing_branch_id).isdigit():
             branch = request.env['multi.branch'].sudo().browse(int(processing_branch_id))
             if branch.company_id:
                 target_company_id = branch.company_id.id
 
-        # Priority 3: If Config is selected, check its defaults
         elif memo_config_id and str(memo_config_id).isdigit():
             config = request.env['memo.config'].sudo().browse(int(memo_config_id))
-            # Check processing company on config
             if config.processing_company_id:
                 target_company_id = config.processing_company_id.id
-            # Or processing branch on config
             elif config.processing_branch_id and config.processing_branch_id.company_id:
                 target_company_id = config.processing_branch_id.company_id.id
         # ---------------------------------------
@@ -1333,7 +1328,6 @@ class PortalRequest(http.Controller):
         for item in products:
             qty_available = 0.0
             
-            # Calculate quantity based on specific location context if available
             if source_locationId and str(source_locationId).isdigit():
                 qty_available = item.with_context(location=int(source_locationId)).qty_available
             else:
