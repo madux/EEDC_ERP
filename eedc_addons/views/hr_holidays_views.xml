@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hr_leave_allocation_view_form_manager_grade_level" model="ir.ui.view">
+            <field name="name">hr.leave.allocation.view.form.manager.grade.level</field>
+            <field name="model">hr.leave.allocation</field>
+            <field name="inherit_id" ref="hr_holidays.hr_leave_allocation_view_form_manager"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//field[@name='can_reset']" position="after">
+                    <field name="employee_company_id" invisible="1"/>
+                </xpath>
+                
+                <xpath expr="//field[@name='mode_company_id']" position="after">
+                    <field name="grade_id" groups="hr_holidays.group_hr_holidays_user"
+                        context="{'show_company_in_name': True}"
+                        attrs="{'required': [('holiday_type', '=', 'grade')], 'invisible': [('holiday_type', '!=', 'grade')]}"/>
+                    <field name="level_id" groups="hr_holidays.group_hr_holidays_user"
+                        context="{'show_company_in_name': True}"
+                        attrs="{'required': [('holiday_type', '=', 'level')], 'invisible': [('holiday_type', '!=', 'level')]}"/>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="hr_leave_allocation_view_tree_grade_level" model="ir.ui.view">
+            <field name="name">hr.leave.allocation.tree.grade.level</field>
+            <field name="model">hr.leave.allocation</field>
+            <field name="inherit_id" ref="hr_holidays.hr_leave_allocation_view_tree"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//field[@name='department_id']" position="after">
+                    <field name="grade_id" optional="hide"/>
+                    <field name="level_id" optional="hide"/>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="hr_leave_allocation_view_search_grade_level" model="ir.ui.view">
+            <field name="name">hr.leave.allocation.search.grade.level</field>
+            <field name="model">hr.leave.allocation</field>
+            <field name="inherit_id" ref="hr_holidays.view_hr_leave_allocation_filter"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//filter[@name='group_state']" position="after">
+                    <filter string="Grade" name="group_by_grade" 
+                            context="{'group_by': 'grade_id'}"/>
+                    <filter string="Level" name="group_by_level" 
+                            context="{'group_by': 'level_id'}"/>
+                </xpath>
+
+                <xpath expr="//field[@name='holiday_status_id']" position="after">
+                    <field name="grade_id"/>
+                    <field name="level_id"/>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>
