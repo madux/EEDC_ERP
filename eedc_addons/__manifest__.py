@@ -1,7 +1,7 @@
 {
     'name': 'EEDC Apps',
     'version': '16.0.1',
-    'author': "Maduka Sopulu",
+    'author': "Maduka Sopulu/Paul Ugwu",
     'category': 'ERP',
     'summary': 'ODOO Base Extension to customize base modules',
     'depends': ['base', 'hr', 'hr_pms', 'company_memo', 'stock_no_negative', 'purchase', 
@@ -13,6 +13,7 @@
         'views/base_view.xml',
         'views/hr_employee_transfer_view.xml',
         'views/hr_employee_inherit.xml',
+        'views/hr_holidays_views.xml',
         'views/res_state_inherit_view.xml',
         'data/state_data.xml',
         'data/lga_data.xml',

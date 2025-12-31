@@ -152,7 +152,7 @@
                                     
                                     <li><hr class="dropdown-divider"/></li>
                                     
-                                    <!-- Status Filters - Separated Concerns -->
+                                    <!-- Status Filters -->
                                     <li>
                                         <a class="dropdown-item" 
                                         t-attf-href="/my/requests?filter=completed{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
