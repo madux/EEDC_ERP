@@ -734,21 +734,16 @@ class PortalRequest(http.Controller):
             [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
             if employee:
                 _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
-                # get leave artifacts
                 leave_allocation = request.env['hr.leave.allocation'].sudo()
-                # Get today's year
-                current_year = date.today().year
-                # Define the range
-                within_this_start_year = date(current_year, 1, 1)    # Jan 1
-                within_this_end_year = date(current_year, 12, 31)    # Dec 31
+                today = date.today()
                 leave_allocation_id = leave_allocation.search([
                     ('holiday_status_id', '=', int(leave_type)),
                     ('employee_id', '=', employee.id),
-                    ('date_from', '>=', within_this_start_year),
-                    ('date_from', '<=', within_this_end_year),
+                    ('state', '=', 'validate'),
                     ('active', '=', True),
-                    # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
-                    ])
+                    ('date_from', '<=', today),
+                    '|', ('date_to', '=', False), ('date_to', '>=', today)
+                ])
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
                 number_of_days_display, leaves_taken = 0, 0
