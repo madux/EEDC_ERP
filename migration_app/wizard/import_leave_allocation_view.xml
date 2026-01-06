@@ -20,9 +20,22 @@
                         <field name="company_id" 
                                help="Optional: Select to use this company for all records instead of reading from Excel"/>
                     </group>
+
+                    <group string="Import Options">
+                    <field name="skip_duplicates" 
+                           help="Skip allocations that exactly match existing ones (same leave type, allocation name, and dates)"/>
+                    <field name="allow_overlap" 
+                           help="Allow creating allocations that overlap with existing ones. Uncheck to prevent duplicate allocations for the same period."/>
+                </group>
                 </group>
                 
                 <footer>
+                    <button name="download_template" 
+                            string="Download Template" 
+                            type="object"  
+                            class="btn-secondary"
+                            icon="fa-download"/>
+                            
                     <button name="import_leave_allocations" 
                             string="Import Leave Allocations" 
                             type="object"  
