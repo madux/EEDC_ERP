@@ -673,6 +673,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 back.addClass('d-none');
                 save.removeClass('d-none');
                 inputFollowers.removeClass('d-none');
+                $('#edit_document_div').removeClass('d-none');
                 discard.removeClass('d-none');
                 makeWritableFieldsEditable();
                 trigger_product_line();
@@ -691,67 +692,145 @@ odoo.define('portal_request.portal_request_form', function (require) {
             // },
 
 
+            // 'click #save': function(ev){
+            //     // hide save btn 
+            //     // hide discard button
+            //     // disable all fields to be readonly 
+            //     let cef = checkEditableRequiredFields()
+            //     if (cef){
+            //         alert(cef);
+            //         return false;
+            //     }
+            //     resetModificationProps()
+            //     let leave_type_id = $("#leave_type_id")
+            //     let leave_start_datex = $("#leave_start_datex")
+            //     let leave_end_datex = $("#leave_end_datex")
+            //     let leave_remaining = $("#leave_remaining")
+            //     let leave_reliever_ids = $("#leave_reliever_ids")
+            //     let description = $("#description")
+            //     let source_location_id = $("input[name=source_location_id]")
+            //     let dest_location_id = $("input[name=destination_location_id]")
+            //     let vendor_id_form = $("input[name=vendor_id_form]")
+            //     let payment_reference_form = $("#payment_reference_form")
+            //     let inputFollowers = $('#inputFollowers').select2('data')
+            //     let record_id = $(".record_id").attr('id')
+            //     console.log('saving record data => 1', saveProductitem())
+            //     // call a save route 
+                
+            //     this._rpc({
+            //         route: `/save/data`,
+            //         params: {
+            //             'leave_type_id': leave_type_id.val(),
+            //             'leave_start_date': leave_start_datex.val(),
+            //             'leave_end_date': leave_end_datex.val(),
+            //             'leave_Reliever': leave_reliever_ids.val(),
+            //             'description': description.val(),
+            //             'source_location_id': source_location_id.val(),
+            //             'dest_location_id': dest_location_id.val(),
+            //             'vendor_id': vendor_id_form.val(),
+            //             'client_id': vendor_id_form.val(),
+            //             'memo_id': record_id,
+            //             'payment_reference': payment_reference_form.val(),
+            //             'Dataitem': saveProductitem(),
+            //             'inputFollowers': inputFollowers
+            //         },
+            //     }).then(function (data) {
+            //         if(data.status){
+            //             console.log('return saved record data => ')
+            //             $("#is_edit_mode").prop('checked', false);
+            //             // lock all fields 
+            //             makeAllFieldsReadonly();
+            //         }else{
+            //             alert(data.message);
+            //         }
+                    
+            //     }).guardedCatch(function (error) {
+            //         let msg = error.message.message
+            //         alert(`Unknown Error! ${msg}`)
+            //     });
+            // },
             'click #save': function(ev){
-                // hide save btn 
-                // hide discard button
-                // disable all fields to be readonly 
-                let cef = checkEditableRequiredFields()
+                let cef = checkEditableRequiredFields();
                 if (cef){
                     alert(cef);
                     return false;
                 }
-                resetModificationProps()
-                let leave_type_id = $("#leave_type_id")
-                let leave_start_datex = $("#leave_start_datex")
-                let leave_end_datex = $("#leave_end_datex")
-                let leave_remaining = $("#leave_remaining")
-                let leave_reliever_ids = $("#leave_reliever_ids")
-                let description = $("#description")
-                let source_location_id = $("input[name=source_location_id]")
-                let dest_location_id = $("input[name=destination_location_id]")
-                let vendor_id_form = $("input[name=vendor_id_form]")
-                let payment_reference_form = $("#payment_reference_form")
-                let inputFollowers = $('#inputFollowers').select2('data')
-                let record_id = $(".record_id").attr('id')
-                console.log('saving record data => 1', saveProductitem())
-                // call a save route 
                 
-                this._rpc({
-                    route: `/save/data`,
-                    params: {
-                        'leave_type_id': leave_type_id.val(),
-                        'leave_start_date': leave_start_datex.val(),
-                        'leave_end_date': leave_end_datex.val(),
-                        'leave_Reliever': leave_reliever_ids.val(),
-                        'description': description.val(),
-                        'source_location_id': source_location_id.val(),
-                        'dest_location_id': dest_location_id.val(),
-                        'vendor_id': vendor_id_form.val(),
-                        'client_id': vendor_id_form.val(),
-                        'memo_id': record_id,
-                        'payment_reference': payment_reference_form.val(),
-                        'Dataitem': saveProductitem(),
-                        'inputFollowers': inputFollowers
+                // 1. Prepare FormData
+                var formData = new FormData();
+                
+                // 2. Append Files
+                var fileInput = $('#other_docs_edit')[0];
+                if (fileInput && fileInput.files.length > 0) {
+                    $.each(fileInput.files, function(i, file) {
+                        formData.append('other_docs', file);
+                    });
+                }
+
+                // 3. Append Standard Fields
+                formData.append('memo_id', $(".record_id").attr('id'));
+                formData.append('leave_type_id', $("#leave_type_id").val() || '');
+                formData.append('leave_start_date', $("#leave_start_datex").val() || '');
+                formData.append('leave_end_date', $("#leave_end_datex").val() || '');
+                formData.append('leave_Reliever', $("#leave_reliever_ids").val() || '');
+                formData.append('description', $("#description").val());
+                formData.append('source_location_id', $("input[name=source_location_id]").val() || '');
+                formData.append('dest_location_id', $("input[name=destination_location_id]").val() || '');
+                formData.append('vendor_id', $("input[name=vendor_id_form]").val() || '');
+                formData.append('payment_reference', $("#payment_reference_form").val() || '');
+                
+                // Handle Input Followers (Select2 Data is an array)
+                let followersData = $('#inputFollowers').select2('data');
+                formData.append('inputFollowers', JSON.stringify(followersData)); // Send as JSON string
+                
+                // Handle Data Items (Product Lines)
+                formData.append('Dataitem', JSON.stringify(saveProductitem()));
+
+                // 4. UI Blocking
+                let $btn = $(ev.target);
+                $btn.attr('disabled', true).prepend('<i class="fa fa-spinner fa-spin"/> ');
+                $.blockUI({ 'message': '<h2 class="card-name">Saving...</h2>' });
+
+                // 5. Send via AJAX (Not RPC)
+                $.ajax({
+                    url: '/save/data', // We need a new route that accepts files
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Important!
+                    contentType: false, // Important!
+                    cache: false,
+                    success: function(data) {
+                        $.unblockUI();
+                        $btn.attr('disabled', false).find('i').remove();
+                        
+                        // Parse JSON response if needed (depends on controller return)
+                        let result = typeof data === 'string' ? JSON.parse(data) : data;
+
+                        if(result.status){
+                            console.log('Saved successfully');
+                            resetModificationProps();
+                            $("#is_edit_mode").prop('checked', false);
+                            makeAllFieldsReadonly();
+                            $('#edit_document_div').addClass('d-none');
+                            $('#other_docs_edit').val('');
+                            window.location.reload(); // Reload to show new attachments
+                        } else {
+                            alert(result.message);
+                        }
                     },
-                }).then(function (data) {
-                    if(data.status){
-                        console.log('return saved record data => ')
-                        $("#is_edit_mode").prop('checked', false);
-                        // lock all fields 
-                        makeAllFieldsReadonly();
-                    }else{
-                        alert(data.message);
+                    error: function(xhr) {
+                        $.unblockUI();
+                        $btn.attr('disabled', false).find('i').remove();
+                        alert("Error saving data: " + xhr.statusText);
                     }
-                    
-                }).guardedCatch(function (error) {
-                    let msg = error.message.message
-                    alert(`Unknown Error! ${msg}`)
                 });
             },
 
             'click #discardbtn': function(ev){
                 discardRestoreOldFieldsValue();
                 $("#is_edit_mode").prop('checked', false);
+                $('#edit_document_div').addClass('d-none');
+                $('#other_docs_edit').val('');
                 // lock all fields 
                 makeAllFieldsReadonly();
                 resetModificationProps();

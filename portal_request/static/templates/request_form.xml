@@ -476,6 +476,15 @@
                                                 </div> 
                                             </div>
                                         </div> 
+                                        <div id="edit_document_div" class="row mb-4 d-none">
+                                            <strong class="col-md-4">Attach New Documents:</strong>
+                                            <div class="col-md-8">
+                                                <input type="file" class="form-control s_website_form_input" 
+                                                    name="other_docs" id="other_docs_edit" multiple="1" 
+                                                    placeholder="Select files..."/>
+                                                <small class="text-muted">You can upload additional files here.</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
