@@ -565,7 +565,17 @@
                                                         
                                                         <th width="30%">
                                                             <span t-att-id="prod.id">
-                                                                <input t-att-id="prod.id" t-att-special_id="prod.id" field_name= "product_id" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/>
+                                                                <!-- <input t-att-id="prod.id" t-att-special_id="prod.id" field_name= "product_id" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/> -->
+                                                                 <input t-att-id="prod.id" 
+                                                                    t-att-special_id="prod.id" 
+                                                                    field_name="product_id" 
+                                                                    disable="true" 
+                                                                    readonly="readonly" 
+                                                                    class="form-control productitemrow" 
+                                                                    name="product_item_id" 
+                                                                    
+                                                                    t-att-value="prod.product_id.id" 
+                                                                    t-att-data-init-text="prod.product_id.name"/>
                                                             </span>
                                                         </th>
                                                         <th width="35%">
