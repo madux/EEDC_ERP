@@ -1547,6 +1547,13 @@ class PortalRequest(http.Controller):
         Returns:
             dict: Response
         """
+        if request_type in ['procurement_request', 'sale_request', 'Payment', 'cash_advance']:
+            return {
+                "status": True,
+                "location_id": False,
+                "message": "", 
+            }
+            
         _logger.info(f'Checking product for {product_id},INTERDISTRICT {is_interdistrict}, SOURCE LOCATION {sourceLocationId} REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
         if product_id:# and type(product_id) in [int]:
             product = request.env['product.product'].sudo().search(
