@@ -736,14 +736,15 @@ class PortalRequest(http.Controller):
                 _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
                 leave_allocation = request.env['hr.leave.allocation'].sudo()
                 today = date.today()
-                leave_allocation_id = leave_allocation.search([
+                leave_allocation_id = request.env['hr.leave.allocation'].sudo().search([
                     ('holiday_status_id', '=', int(leave_type)),
                     ('employee_id', '=', employee.id),
                     ('state', '=', 'validate'),
                     ('active', '=', True),
                     ('date_from', '<=', today),
                     '|', ('date_to', '=', False), ('date_to', '>=', today)
-                ])
+                ], order='date_to asc, date_from asc')
+                
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
                 number_of_days_display, leaves_taken = 0, 0
