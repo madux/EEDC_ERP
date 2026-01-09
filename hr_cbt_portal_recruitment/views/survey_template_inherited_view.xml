@@ -42,9 +42,9 @@
                 <div class="row">
                     <div class="col">
                         <t t-if="survey.scoring_type != 'no_scoring'">
-                            <div>You scored <t t-esc="answer.scoring_percentage" />%</div>
+                            <!-- <div>You scored <t t-esc="answer.scoring_percentage" />%</div> -->
                             <t t-if="answer.scoring_success and survey.scoring_success_min">
-                                <div>Congratulations, you have passed the test!</div>
+                                <!-- <div>Congratulations, you have passed the test!</div> -->
 
                                 <div t-if="survey.certification" class="mt16 mb16">
                                     <a role="button"
