@@ -3579,13 +3579,123 @@ class PortalRequest(http.Controller):
     #                 "message": "No match memo record to save records",
     #                 }
     
+    # @http.route('/save/data', type='http', auth="user", methods=['POST'], website=True, csrf=False)
+    # def save_data(self, **post):
+    #     """
+    #     Handles saving data WITH file attachments via standard HTTP POST
+    #     """
+    #     try:
+    #         memo_id = int(post.get('memo_id'))
+    #         request_record = request.env['memo.model'].sudo().browse(memo_id)
+            
+    #         if not request_record.exists():
+    #             return json.dumps({'status': False, 'message': "Record not found"})
+
+    #         leave_start = self.compute_date_format(post.get("leave_start_date",''))
+    #         leave_end = self.compute_date_format(post.get("leave_end_date",''))
+            
+    #         followers_raw = post.get('inputFollowers')
+    #         inputFollowers = []
+    #         if followers_raw:
+    #             try:
+    #                 followers_json = json.loads(followers_raw)
+    #                 inputFollowers = [int(r.get('id')) for r in followers_json if r.get('id')]
+    #             except:
+    #                 pass
+
+    #         vals = {
+    #             'description': post.get('description'),
+    #             'leave_start_date': leave_start,
+    #             'leave_end_date': leave_end,
+    #             'leave_type_id': int(post.get('leave_type_id')) if post.get('leave_type_id') else False,
+    #             'leave_Reliever': int(post.get('leave_Reliever')) if post.get('leave_Reliever') else False,
+    #             'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
+    #             'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
+    #             'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
+    #             'payment_reference': post.get('payment_reference'),
+    #         }
+            
+    #         if inputFollowers:
+    #             vals['users_followers'] = [(4, fol) for fol in inputFollowers]
+
+    #         if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
+    #             vals['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
+    #             if not request_record.state:
+    #                 vals['state'] = 'submit'
+
+    #         request_record.write(vals)
+
+    #         data_items_raw = post.get('Dataitem')
+    #         if data_items_raw:
+    #             DataItems = json.loads(data_items_raw)
+    #             # Call your existing logic to update lines
+    #             # Note: You might need to adapt 'update_request_line' to work here
+    #             # Or reuse logic from save_data
+    #             for rec in DataItems:
+    #                 # ... (Your existing line update logic) ...
+    #                 # Copy-paste the logic from your old save_data method here
+    #                 desc = rec.get('description', '')
+    #                 _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
+                    
+    #                 request_line_id = int(rec.get('request_line_id'))
+    #                 line = request.env['request.line'].sudo().browse(request_line_id)
+    #                 if line.exists():
+    #                     line_vals = {
+    #                         'quantity_available': float(str(rec.get('qty',0)).replace(',', '')),
+    #                         'description': BeautifulSoup(desc, features="lxml").get_text(),
+    #                         'used_qty': rec.get('used_qty'),
+    #                         'used_amount': rec.get('used_amount'),
+    #                         'note': rec.get('note'),
+    #                         'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+    #                         'distance_from': rec.get('distance_from'),
+    #                         'distance_to': rec.get('distance_to'),
+    #                     }
+    #                     _amt = rec.get('amount_total')
+    #                     if _amt not in (None, ''):
+    #                         try:
+    #                             line_vals['amount_total'] = float(str(_amt).replace(',', '').strip())
+    #                         except Exception:
+    #                             _logger.warning('Could not parse amount_total for memo %s line %s: %s', request_record.id, rec.get('request_line_id'), _amt)
+    #                             line_vals['amount_total'] = 0.0
+    #                     _logger.info(f"UPDATED REQUESTS with VALS =====> {line_vals} ")
+                        
+    #                     if rec.get('product_id') and rec.get('product_id').isdigit():
+    #                         product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
+    #                         if product_id:
+    #                             line_vals.update({
+    #                                 'product_id': product_id.id, 
+    #                             })
+    #                         else:
+    #                             message = f"No product with ID {rec.get('product_id')} found on the system"
+    #                     line.write(line_vals)
+
+    #         # 4. HANDLE FILES
+    #         if 'other_docs' in request.httprequest.files:
+    #             attached_files = request.httprequest.files.getlist('other_docs')
+    #             for attachment in attached_files:
+    #                 if attachment.filename:
+    #                     file_name = attachment.filename
+    #                     datas = base64.b64encode(attachment.read())
+    #                     # Reuse your generate_attachment method
+    #                     self.generate_attachment(request_record.code, file_name, datas, request_record.id)
+
+    #         return json.dumps({'status': True, 'message': "Data saved successfully"})
+
+    #     except Exception as e:
+    #         _logger.exception("Error saving multipart data")
+    #         return json.dumps({'status': False, 'message': str(e)})
+    
     @http.route('/save/data', type='http', auth="user", methods=['POST'], website=True, csrf=False)
     def save_data(self, **post):
         """
-        Handles saving data WITH file attachments via standard HTTP POST
+        Handles saving data WITH file attachments via standard HTTP POST (Multipart)
         """
         try:
-            memo_id = int(post.get('memo_id'))
+            memo_id_raw = post.get('memo_id')
+            if not memo_id_raw:
+                 return json.dumps({'status': False, 'message': "Missing Memo ID"})
+                 
+            memo_id = int(memo_id_raw)
             request_record = request.env['memo.model'].sudo().browse(memo_id)
             
             if not request_record.exists():
@@ -3600,7 +3710,8 @@ class PortalRequest(http.Controller):
                 try:
                     followers_json = json.loads(followers_raw)
                     inputFollowers = [int(r.get('id')) for r in followers_json if r.get('id')]
-                except:
+                except Exception:
+                    _logger.warning("Failed to parse followers JSON")
                     pass
 
             vals = {
@@ -3616,7 +3727,7 @@ class PortalRequest(http.Controller):
             }
             
             if inputFollowers:
-                vals['users_followers'] = [(4, fol) for fol in inputFollowers]
+                vals['users_followers'] = [(6, 0, inputFollowers)]
 
             if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
                 vals['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
@@ -3627,31 +3738,67 @@ class PortalRequest(http.Controller):
 
             data_items_raw = post.get('Dataitem')
             if data_items_raw:
-                DataItems = json.loads(data_items_raw)
-                # Call your existing logic to update lines
-                # Note: You might need to adapt 'update_request_line' to work here
-                # Or reuse logic from save_data
-                for rec in DataItems:
-                    # ... (Your existing line update logic) ...
-                    # Copy-paste the logic from your old save_data method here
-                    request_line_id = int(rec.get('request_line_id'))
-                    line = request.env['request.line'].sudo().browse(request_line_id)
-                    if line.exists():
-                        line_vals = {
-                            'quantity_available': float(str(rec.get('qty',0)).replace(',', '')),
-                            'description': rec.get('description'),
-                            # ... other fields
-                        }
-                        line.write(line_vals)
+                try:
+                    DataItems = json.loads(data_items_raw)
+                    
+                    for rec in DataItems:
+                        if not rec.get('request_line_id'):
+                            continue
+                            
+                        request_line_id = int(rec.get('request_line_id'))
+                        line = request.env['request.line'].sudo().browse(request_line_id)
+                        
+                        if line.exists():
+                            desc = rec.get('description', '')
+                            clean_desc = BeautifulSoup(desc, features="lxml").get_text() if desc else ''
+                            
+                            qty_str = str(rec.get('qty', 0)).replace(',', '').strip()
+                            try:
+                                qty_val = float(qty_str) if qty_str else 0.0
+                            except:
+                                qty_val = 0.0
 
-            # 4. HANDLE FILES
+                            line_vals = {
+                                'quantity_available': qty_val,
+                                'description': clean_desc,
+                                'used_qty': rec.get('used_qty'),
+                                'used_amount': rec.get('used_amount'),
+                                'note': rec.get('note'),
+                                'to_retire': True if rec.get('line_checked') in ['on', 'On', 'true', True] else False,
+                                'distance_from': rec.get('distance_from'),
+                                'distance_to': rec.get('distance_to'),
+                            }
+                            
+                            _amt = rec.get('amount_total')
+                            if _amt not in (None, ''):
+                                try:
+                                    amt_str = str(_amt).replace(',', '').strip()
+                                    line_vals['amount_total'] = float(amt_str)
+                                except Exception:
+                                    _logger.warning(f'Could not parse amount_total for memo {memo_id} line {request_line_id}: {_amt}')
+                                    line_vals['amount_total'] = 0.0
+                            
+                            prod_id_raw = rec.get('product_id')
+                            if prod_id_raw and str(prod_id_raw).isdigit():
+                                product_id = int(prod_id_raw)
+                                if request.env['product.product'].sudo().browse(product_id).exists():
+                                    line_vals['product_id'] = product_id
+                                else:
+                                    _logger.warning(f"Product ID {product_id} not found")
+                            
+                            _logger.info(f"UPDATING REQUEST LINE {request_line_id} with VALS =====> {line_vals}")
+                            line.write(line_vals)
+                            
+                except json.JSONDecodeError:
+                    _logger.error("Failed to decode Dataitem JSON")
+                    return json.dumps({'status': False, 'message': "Invalid data format for lines"})
+
             if 'other_docs' in request.httprequest.files:
                 attached_files = request.httprequest.files.getlist('other_docs')
                 for attachment in attached_files:
                     if attachment.filename:
                         file_name = attachment.filename
                         datas = base64.b64encode(attachment.read())
-                        # Reuse your generate_attachment method
                         self.generate_attachment(request_record.code, file_name, datas, request_record.id)
 
             return json.dumps({'status': True, 'message': "Data saved successfully"})
@@ -3660,17 +3807,7 @@ class PortalRequest(http.Controller):
             _logger.exception("Error saving multipart data")
             return json.dumps({'status': False, 'message': str(e)})
    
-    #'2024-11-18 00:00:00' does not match format '%m/%d/%Y'
-    # def compute_date_format(self, date_format):
-    #     # date_format: '2024-11-18 00:00:00 or '11/08/2024'
-    #     date = False
-    #     if date_format:
-    #         if '-' in date_format:
-    #             datefmt = datetime.strptime(date_format, "%Y-%m-%d %H:%M:%S")
-    #             date = datetime.strptime(datefmt.strftime('%m/%d/%Y'), '%m/%d/%Y')
-    #         else:
-    #             date = datetime.strptime(date_format, "%m/%d/%Y")
-    #     return date
+   
     def compute_date_format(self, date_format):
         date = False
         

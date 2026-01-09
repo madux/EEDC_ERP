@@ -156,38 +156,81 @@ odoo.define('portal_request.portal_request_form', function (require) {
         });
     }
 
+    // function TriggerProductField(lastRow_count){
+    //     // PRODUCTSEARCH
+    //     let oldValue = $(`input[special_id='${lastRow_count}']`).val()
+    //     $(`input[special_id='${lastRow_count}']`).select2({
+    //         ajax: {
+    //           url: '/portal-request-product',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               productItems: JSON.stringify(setProductdata), 
+    //               request_type: $('#selectRequestOption').val(),
+    //               source_locationId: $('#source_location_id').attr('id'),
+    //               page_limit: 10, // page size
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             // console.log(data);
+    //             // localStorage.setItem('productStorage', JSON.stringify(data.results))
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 2,
+    //         multiple: false,
+    //         placeholder: 'Search for a Products',
+    //         allowClear: true,
+    //       });
+    //       $(`div#s2id_${lastRow_count} > a.select2-choice > span.select2-chosen`).text(oldValue)
+    // }
     function TriggerProductField(lastRow_count){
-        // PRODUCTSEARCH
-        let oldValue = $(`input[special_id='${lastRow_count}']`).val()
-        $(`input[special_id='${lastRow_count}']`).select2({
+        let $input = $(`input[special_id='${lastRow_count}']`);
+        
+        let initialText = $input.attr('data-init-text'); 
+        let initialId = $input.val();
+
+        $input.select2({
             ajax: {
               url: '/portal-request-product',
               dataType: 'json',
               delay: 30,
               data: function (term, page) {
                 return {
-                  q: term, //search term
+                  q: term, 
                   productItems: JSON.stringify(setProductdata), 
                   request_type: $('#selectRequestOption').val(),
-                  source_locationId: $('#source_location_id').attr('id'),
-                  page_limit: 10, // page size
-                  page: page, // page number
+                  source_locationId: $('#source_location_id').val(), // or .attr('id') depending on your flow
+                  page_limit: 10, 
+                  page: page,
                 };
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
-                // console.log(data);
-                // localStorage.setItem('productStorage', JSON.stringify(data.results))
                 return {results: data.results, more: more};
               },
               cache: true
             },
-            minimumInputLength: 2,
+            minimumInputLength: 0, // Changed to 0 so they can click to see options immediately
             multiple: false,
             placeholder: 'Search for a Products',
             allowClear: true,
-          });
-          $(`div#s2id_${lastRow_count} > a.select2-choice > span.select2-chosen`).text(oldValue)
+            
+            initSelection: function(element, callback) {
+                if(initialId && initialText) {
+                    callback({id: initialId, text: initialText});
+                }
+            }
+        });
+
+        if(initialId && initialText) {
+            $input.select2("data", { id: initialId, text: initialText });
+        }
     }
 
     let trigger_product_line = function(){
