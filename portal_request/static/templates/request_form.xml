@@ -298,11 +298,17 @@
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
                                                 <span t-field="req.stage_id.name" field_name="status" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                <t t-if="req.memo_type_key == 'cash_advance' and req.is_cash_advance_retired">
+                                                    <span class="badge rounded-pill text-bg-success ms-1">Retired</span>
+                                                </t>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div id="card_body" class="card-body">
+                                        <div class="row mb-4">
+                                            <strong class="col-md-4">District</strong>: <span class="col-md-6" t-field="req.branch_id"/>
+                                        </div>
                                         <div class="row mb-4">
                                             <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" field_name="request_date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                         </div><br/>
@@ -319,6 +325,26 @@
                                                     <input type="text" class="vendor-cls form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" t-attf-id="{{req.vendor_id.id}}" name="vendor_id_form" readonly="true" required="true" labelfor="Vendor"/>
                                                 </span>
                                             </div> 
+                                        </t>
+
+                                        <t t-if="req.memo_type.memo_key == 'soe'">
+                                            <div class="row mb-4">
+                                                <strong class="col-md-4">Linked Cash Advance</strong>
+                                                <span class="col-md-6">
+                                                    <t t-if="req.cash_advance_reference">
+                                                        <a t-attf-href="/my/request/view/{{req.cash_advance_reference.id}}?back_url=/my/request/view/{{req.id}}" target="_blank" class="btn btn-link p-0 text-decoration-none">
+                                                            <span t-field="req.cash_advance_reference.code" class="fw-bold"/>
+                                                            <i class="fa fa-external-link ms-1 small"/>
+                                                        </a>
+                                                        <!-- <div class="small text-muted mt-1">
+                                                            (Amount: <span t-field="req.cash_advance_reference.amountfig" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/>)
+                                                        </div> -->
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted fst-italic">No linked cash advance found</span>
+                                                    </t>
+                                                </span>
+                                            </div>
                                         </t>
 
                                         <t t-if="req.memo_type.memo_key in ['leave_request']">
