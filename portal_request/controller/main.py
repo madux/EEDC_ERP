@@ -461,7 +461,6 @@ class PortalRequest(http.Controller):
             else:
                 district_id = 0
                 
-            # Get location type
             location_type = request.params.get('location_type', 'source')
             
             # Get selected_location_id to exclude
@@ -995,6 +994,10 @@ class PortalRequest(http.Controller):
         page_limit = int(post.get('page_limit', 10))
         page = int(post.get('page', 1))
         
+        is_inter_district = post.get('is_inter_district', 'false')
+        is_inter_district = is_inter_district in ['true', 'True', '1', 'on', True]
+        _logger.info(f"This is..._ {is_inter_district}")
+        
         _logger.info(f'Searching cash advances: query={query}, staff_num={staff_num}')
         
         if not staff_num:
@@ -1021,7 +1024,8 @@ class PortalRequest(http.Controller):
             ('active', '=', True),
             ('memo_type.memo_key', '=', 'cash_advance'),
             ('is_cash_advance_retired', '=', False),
-            ('state', 'in', ['Done'])
+            ('state', 'in', ['Done']),
+            ('memo_setting_id.inter_district', '=', is_inter_district)
         ]
         
         if query:

@@ -766,6 +766,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 return {
                     q: term,
                     staff_num: $('#staff_id').val(),
+                    is_inter_district: $('#isInterDistrictProcess').is(':checked') || $('#is_inter_district_transfer_config').is(':checked'),
                     page_limit: 10,
                     page: page,
                 };
@@ -2217,7 +2218,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#subject').val('');
                 $('#description').val('');
                 $('#amount_fig').val('');
-                $('#existing_order').val('');
+                $('#existing_order').val(null).select2('val', null);
                 $('#request_status').val('');
                 $('#tbody_product').empty();
                 $('#tbody_employee').empty();
@@ -3211,7 +3212,7 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#div_system_requirement').addClass('d-none');
         $('#request_end_date').addClass('d-none');
         $('#request_end_date').attr('required', false);
-        $('#existing_order').val('');
+        $('#existing_order').val(null).select2('val', null);
         $('#request_status').val('');
         $('#product_ids').val('').trigger('change');
         $('#product_form_div').addClass('d-none');
