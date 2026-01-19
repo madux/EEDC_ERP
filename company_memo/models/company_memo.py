@@ -62,7 +62,6 @@ class Memo_Model(models.Model):
         if 'state' in vals and vals.get('state') == 'Done':
             for rec in self:
                 if rec.memo_type_key == 'soe' and rec.cash_advance_reference:
-                    # Mark the linked cash advance as retired
                     rec.cash_advance_reference.sudo().write({
                         'is_cash_advance_retired': True
                     })
@@ -80,12 +79,11 @@ class Memo_Model(models.Model):
         cash_advances = self.env['memo.model'].sudo().search([
             ('memo_type_key', '=', 'cash_advance'),
             ('is_cash_advance_retired', '=', False),
-            ('state', '=', 'Done')  # Only completed cash advances
+            ('state', '=', 'Done')
         ])
         
         marked_count = 0
         for ca in cash_advances:
-            # Check if there's a linked SOE in Done state
             linked_soe = self.env['memo.model'].sudo().search([
                 ('cash_advance_reference', '=', ca.id),
                 ('memo_type_key', '=', 'soe'),
@@ -269,6 +267,36 @@ class Memo_Model(models.Model):
         'memo.model', 
         string="Payment Cash advance ID", 
         compute="compute_cash_advance_payment_reference")
+    
+    retirement_soe_id = fields.Many2one('memo.model', compute='_compute_retirement_soe_id', string="Retirement SOE")
+
+    def _compute_retirement_soe_id(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.is_cash_advance_retired:
+                rec.retirement_soe_id = self.env['memo.model'].search([
+                    ('cash_advance_reference', '=', rec.id),
+                    ('memo_type_key', '=', 'soe'),
+                    ('state', '=', 'Done')
+                ], limit=1)
+            else:
+                rec.retirement_soe_id = False
+
+    @api.constrains('state', 'memo_type_key')
+    def check_cash_advance_limit(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.state not in ['Refuse', 'submit']: 
+                limit = rec.employee_id.maximum_cash_advance_limit or 5
+                # Count non-retired cash advances for this employee
+                domain = [
+                    ('employee_id', '=', rec.employee_id.id),
+                    ('memo_type_key', '=', 'cash_advance'),
+                    ('is_cash_advance_retired', '=', False),
+                    ('state', 'not in', ['Refuse', 'submit']), 
+                    ('id', '!=', rec.id)
+                ]
+                count = self.env['memo.model'].search_count(domain)
+                if count >= limit:
+                    raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
     
     
     payment_processing_company_id = fields.Many2one(

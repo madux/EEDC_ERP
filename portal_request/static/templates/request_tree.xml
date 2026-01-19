@@ -229,7 +229,12 @@
                                     </td>
                                     <td id="request_retired" class="text-center p-2">
                                         <t t-if="request.memo_type_key == 'cash_advance' and request.is_cash_advance_retired">
-                                            <span class="badge rounded-pill text-bg-success">Retired</span>
+                                            <span class="badge rounded-pill text-bg-success" style="font-size: 0.75rem;">Retired</span>
+                                            <t t-if="request.retirement_soe_id">
+                                                <a t-attf-href="/my/request/view/{{request.retirement_soe_id.id}}" target="_blank" class="ms-1 text-success" title="View Retirement SOE">
+                                                    <i class="fa fa-external-link"/>
+                                                </a>
+                                            </t>
                                         </t>
                                     </td>
                                 </tr>
