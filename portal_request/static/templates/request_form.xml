@@ -329,7 +329,7 @@
                                                 <strong class="col-md-4">Linked Cash Advance</strong>
                                                 <span class="col-md-6">
                                                     <t t-if="req.cash_advance_reference">
-                                                        <a t-attf-href="/my/request/view/{{req.cash_advance_reference.id}}?back_url=/my/request/view/{{req.id}}" class="btn btn-link p-0 text-decoration-none">
+                                                        <a t-attf-href="/my/request/view/{{req.cash_advance_reference.id}}?back_url=/my/request/view/{{req.id}}" target="_blank" class="btn btn-link p-0 text-decoration-none">
                                                             <span t-field="req.cash_advance_reference.code" class="fw-bold"/>
                                                             <i class="fa fa-external-link ms-1 small"/>
                                                         </a>
