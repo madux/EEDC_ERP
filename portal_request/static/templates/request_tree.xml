@@ -201,7 +201,8 @@
                                     <th class="text-end" t-if="groupby != 'create_date'">Approver</th>
                                     <th id="ticket_user_date">Request Date</th>
                                     <th id="ticket_user_header">Employee</th>
-                                    <th colspan="5" class="text-end">Status</th>
+                                    <th class="text-end">Status</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
                             
@@ -225,6 +226,11 @@
                                             <span t-attf-class="badge rounded-pill text-bg-info me-2"
                                                 t-esc="request.stage_id.name"/>
                                         </a>
+                                    </td>
+                                    <td id="request_retired" class="text-center p-2">
+                                        <t t-if="request.memo_type_key == 'cash_advance' and request.is_cash_advance_retired">
+                                            <span class="badge rounded-pill text-bg-success">Retired</span>
+                                        </t>
                                     </td>
                                 </tr>
                             </t>

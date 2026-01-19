@@ -298,6 +298,9 @@
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
                                                 <span t-field="req.stage_id.name" field_name="status" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
+                                                <t t-if="req.memo_type_key == 'cash_advance' and req.is_cash_advance_retired">
+                                                    <span class="badge rounded-pill text-bg-success ms-1">Retired</span>
+                                                </t>
                                             </div>
                                         </div>
                                     </div>
