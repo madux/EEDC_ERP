@@ -2341,9 +2341,15 @@ class PortalRequest(http.Controller):
             leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
             leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
                 if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
-            if post.get("selectRequestOption") == "soe":
-                cash_advance_id = request.env['memo.model'].sudo().search([
-                ('code', '=ilike', existing_order)], limit=1)
+            if post.get("selectRequestOption") == "soe" and existing_order:
+                # existing_order may be an ID (from Select2) or a code string
+                if str(existing_order).isdigit():
+                    cash_advance_id = request.env['memo.model'].sudo().browse(int(existing_order))
+                    if not cash_advance_id.exists():
+                        cash_advance_id = False
+                else:
+                    cash_advance_id = request.env['memo.model'].sudo().search([
+                        ('code', '=ilike', existing_order)], limit=1)
             else:
                 cash_advance_id = False
             systemRequirementOptions = [

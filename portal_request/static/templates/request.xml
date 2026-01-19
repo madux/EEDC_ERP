@@ -376,7 +376,6 @@
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <!-- Keep as input, select2 will transform it -->
                                                     <input type="text" 
                                                         class="form-control s_website_form_input" 
                                                         name="existing_order" 
