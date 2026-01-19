@@ -329,7 +329,7 @@
 
                                         <t t-if="req.memo_type.memo_key == 'soe'">
                                             <div class="row mb-4">
-                                                <strong class="col-md-4">Linked Cash Advance</strong>
+                                                <strong class="col-md-4">Cash Advance Ref.</strong>
                                                 <span class="col-md-6">
                                                     <t t-if="req.cash_advance_reference">
                                                         <a t-attf-href="/my/request/view/{{req.cash_advance_reference.id}}?back_url=/my/request/view/{{req.id}}" target="_blank" class="btn btn-link p-0 text-decoration-none">
