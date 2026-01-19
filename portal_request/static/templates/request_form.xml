@@ -304,6 +304,9 @@
 
                                     <div id="card_body" class="card-body">
                                         <div class="row mb-4">
+                                            <strong class="col-md-4">District</strong>: <span class="col-md-6" t-field="req.branch_id"/>
+                                        </div>
+                                        <div class="row mb-4">
                                             <strong class="col-md-4">Request date</strong>: <span class="col-md-6" t-field="req.date" field_name="request_date" t-options="{&quot;widget&quot;: &quot;datetime&quot;, &quot;hide_seconds&quot;: True}"/>
                                         </div><br/>
                                         <t t-if="req.memo_type.memo_key in ['Payment']">
