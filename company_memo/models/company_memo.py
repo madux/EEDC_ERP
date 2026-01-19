@@ -55,6 +55,57 @@ class Memo_Model(models.Model):
         result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         return result
     
+    def write(self, vals):
+        result = super(Memo_Model, self).write(vals)
+        
+        # Auto-mark cash advance as retired when SOE reaches Done stage
+        if 'state' in vals and vals.get('state') == 'Done':
+            for rec in self:
+                if rec.memo_type_key == 'soe' and rec.cash_advance_reference:
+                    rec.cash_advance_reference.sudo().write({
+                        'is_cash_advance_retired': True
+                    })
+                    _logger.info(f"Marked cash advance {rec.cash_advance_reference.code} as retired via SOE {rec.code}")
+        
+        return result
+    
+    def action_mark_retired_cash_advances(self):
+        """
+        Bulk action to mark all cash advances as retired if they have 
+        a linked SOE that is in 'Done' state.
+        This is for retroactively fixing cash advances that weren't marked retired.
+        """
+        # Find all cash advances that are not yet marked as retired
+        cash_advances = self.env['memo.model'].sudo().search([
+            ('memo_type_key', '=', 'cash_advance'),
+            ('is_cash_advance_retired', '=', False),
+            ('state', '=', 'Done')
+        ])
+        
+        marked_count = 0
+        for ca in cash_advances:
+            linked_soe = self.env['memo.model'].sudo().search([
+                ('cash_advance_reference', '=', ca.id),
+                ('memo_type_key', '=', 'soe'),
+                ('state', '=', 'Done')
+            ], limit=1)
+            
+            if linked_soe:
+                ca.write({'is_cash_advance_retired': True})
+                marked_count += 1
+                _logger.info(f"Bulk marked cash advance {ca.code} as retired (linked SOE: {linked_soe.code})")
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Cash Advance Retirement',
+                'message': f'Marked {marked_count} cash advances as retired.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+    
     def _compute_attachment_number(self):
         attachment_data = self.env['ir.attachment'].sudo().read_group([
             ('res_model', '=', 'memo.model'), 
@@ -216,6 +267,36 @@ class Memo_Model(models.Model):
         'memo.model', 
         string="Payment Cash advance ID", 
         compute="compute_cash_advance_payment_reference")
+    
+    retirement_soe_id = fields.Many2one('memo.model', compute='_compute_retirement_soe_id', string="Retirement SOE")
+
+    def _compute_retirement_soe_id(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.is_cash_advance_retired:
+                rec.retirement_soe_id = self.env['memo.model'].search([
+                    ('cash_advance_reference', '=', rec.id),
+                    ('memo_type_key', '=', 'soe'),
+                    ('state', '=', 'Done')
+                ], limit=1)
+            else:
+                rec.retirement_soe_id = False
+
+    @api.constrains('state', 'memo_type_key')
+    def check_cash_advance_limit(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.state not in ['Refuse', 'submit']: 
+                limit = rec.employee_id.maximum_cash_advance_limit or 5
+                # Count non-retired cash advances for this employee
+                domain = [
+                    ('employee_id', '=', rec.employee_id.id),
+                    ('memo_type_key', '=', 'cash_advance'),
+                    ('is_cash_advance_retired', '=', False),
+                    ('state', 'not in', ['Refuse', 'submit']), 
+                    ('id', '!=', rec.id)
+                ]
+                count = self.env['memo.model'].search_count(domain)
+                if count >= limit:
+                    raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
     
     
     payment_processing_company_id = fields.Many2one(

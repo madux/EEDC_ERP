@@ -886,5 +886,16 @@
         
         ################################
 
+        <!-- Server Action to mark retired cash advances -->
+        <record id="action_mark_retired_cash_advances" model="ir.actions.server">
+            <field name="name">Mark Retired Cash Advances</field>
+            <field name="model_id" ref="company_memo.model_memo_model"/>
+            <field name="binding_model_id" ref="company_memo.model_memo_model"/>
+            <field name="state">code</field>
+            <field name="code">
+action = model.action_mark_retired_cash_advances()
+            </field>
+        </record>
+
 	</data>
 </odoo>

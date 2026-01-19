@@ -461,7 +461,6 @@ class PortalRequest(http.Controller):
             else:
                 district_id = 0
                 
-            # Get location type
             location_type = request.params.get('location_type', 'source')
             
             # Get selected_location_id to exclude
@@ -987,126 +986,318 @@ class PortalRequest(http.Controller):
                 "message": "Staff Number required" 
             }
 
+    @http.route(['/portal-request-cash-advance'], type='http', website=True, auth="user", csrf=False)
+    def get_portal_cash_advance(self, **post):
+        """Search for unretired cash advances for the current employee"""
+        query = request.params.get('q', '').strip()
+        staff_num = post.get('staff_num', '').strip()
+        page_limit = int(post.get('page_limit', 10))
+        page = int(post.get('page', 1))
+        
+        is_inter_district = post.get('is_inter_district', 'false')
+        is_inter_district = is_inter_district in ['true', 'True', '1', 'on', True]
+        _logger.info(f"This is..._ {is_inter_district}")
+        
+        _logger.info(f'Searching cash advances: query={query}, staff_num={staff_num}')
+        
+        if not staff_num:
+            return json.dumps({
+                "results": [],
+                "total": 0,
+                "pagination": {"more": False}
+            })
+        
+        employee = request.env['hr.employee'].sudo().search([
+            ('employee_number', '=', staff_num),
+            ('active', '=', True)
+        ], limit=1)
+        
+        if not employee:
+            return json.dumps({
+                "results": [],
+                "total": 0,
+                "pagination": {"more": False}
+            })
+        
+        domain = [
+            ('employee_id', '=', employee.id),
+            ('active', '=', True),
+            ('memo_type.memo_key', '=', 'cash_advance'),
+            ('is_cash_advance_retired', '=', False),
+            ('state', 'in', ['Done']),
+            ('memo_setting_id.inter_district', '=', is_inter_district)
+        ]
+        
+        if query:
+            domain.append('|')
+            domain.append(('code', 'ilike', query))
+            domain.append(('name', 'ilike', query))
+        
+        offset = (page - 1) * page_limit
+        cash_advances = request.env['memo.model'].sudo().search(
+            domain, 
+            limit=page_limit,
+            offset=offset,
+            order='create_date desc'
+        )
+        
+        total_count = request.env['memo.model'].sudo().search_count(domain)
+        
+        results = []
+        for ca in cash_advances:
+            amount_display = f"{ca.request_total_amount:,.2f}" if ca.request_total_amount else "0.00"
+            date_display = ca.date.strftime('%d-%b-%Y') if ca.date else ''
+            
+            results.append({
+                "id": ca.id,
+                "text": f"{ca.code} - {ca.name} (₦{amount_display}) - {date_display}",
+                "code": ca.code
+            })
+        
+        return json.dumps({
+            "results": results,
+            "total": total_count,
+            "pagination": {
+                "more": (page * page_limit) < total_count
+            }
+        })
+
+    # @http.route(['/check_order'], type='json', website=True, auth="user", csrf=False)
+    # def check_order(self, **post):
+    #     staff_num = post.get('staff_num')
+    #     existing_order = post.get('existing_order')
+    #     request_type = post.get('request_type')
+    #     # staff_num, existing_order
+    #     """Check existing order No.
+    #     Args:
+    #         existing_order (str): The Id No to be validated
+    #         staff num (str): staff num of the employee 
+    #     Returns:
+    #         dict: Response
+    #     """
+    #     _logger.info(f'Checking check_order No {existing_order}...{request_type}')
+    #     user = request.env.user 
+    #     if staff_num:
+    #         domain = [
+    #             ('employee_id.employee_number', '=', staff_num),
+    #             ('active', '=', True),
+    #             ('employee_id.user_id.id', '=', user.id),
+    #             ('code', '=ilike', existing_order) 
+    #         ]
+    #         if request_type == "soe":
+    #             '''this should only return the request cash advance that has
+    #               been approved and taken out from the account side
+    #             '''
+    #             domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
+    #         else:
+    #             domain += [('state', 'in', ['submit'])]
+    #         memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
+    #         _logger.info(f"DOMAAAN {domain}")
+    #         if memo_request: 
+    #             if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
+    #                 return {
+    #                 "status": False,
+    #                 "link": False,
+                    
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": 'You cannot process with retirement as All cash advance lines has been retired' 
+    #                 }
+    #             existing_soe_inprogress = request.env['memo.model'].sudo().search([
+    #                 ('cash_advance_reference.code', '=', existing_order.upper()), 
+    #                 ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])], limit=1) 
+    #             is_internal_user = request.env.user.has_group('base.group_user')
+    #             if request_type == "soe" and existing_soe_inprogress:
+    #                 return {
+    #                 "status": False,
+    #                 "link": get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}',
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed" 
+    #                 }
+    #             return {
+    #                 "status": True,
+    #                 "link": False,
+    #                 "data": {
+    #                     'name': memo_request.employee_id.name,
+    #                     'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
+    #                     'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
+    #                     'work_email': memo_request.employee_id.work_email,
+    #                     'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
+    #                     'description': memo_request.description or "",
+    #                     'amount': sum([
+    #                         rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
+    #                             if memo_request.product_ids else memo_request.amountfig,
+    #                     # 'district_id': memo_request.employee_id.ps_district_id.id,
+    #                     # 'district_id': memo_request.employee_id.ps_district_id.id,
+    #                     'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
+    #                     'product_ids': [
+    #                         {'id': q.product_id.id, 
+    #                         'name': q.product_id.name if q.product_id else q.description, 
+    #                         'qty': q.quantity_available,
+    #                         # building lines for cash advance and soe
+    #                         'used_qty': q.quantity_available, # q.used_qty,
+    #                         'amount_total': q.amount_total, # FIXME PLEASE DONT CHANGE RATHER ADD THE SUB TOTAL AMOUNT ON THE DYNAMIC RENDERING
+    #                         'used_amount': q.amount_total, # q.used_amount, 
+    #                         'sub_total_amount': q.sub_total_amount, # q.used_amount,
+    #                         'description': q.description or "",
+    #                         'request_line_id': q.id,
+    #                         } 
+    #                         for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
+    #                     ]
+    #                 },
+    #                 "message": "", 
+    #                 }
+    #         else:
+    #             message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
+    #             if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
+    #             return {
+    #                 "status": False,
+    #                 "link": False,
+                    
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     # 'district_id': "",
+    #                     # 'district_id': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": message 
+    #                 }
+
     @http.route(['/check_order'], type='json', website=True, auth="user", csrf=False)
     def check_order(self, **post):
         staff_num = post.get('staff_num')
         existing_order = post.get('existing_order')
+        existing_order_id = post.get('existing_order_id')
         request_type = post.get('request_type')
-        # staff_num, existing_order
-        """Check existing order No.
-        Args:
-            existing_order (str): The Id No to be validated
-            staff num (str): staff num of the employee 
-        Returns:
-            dict: Response
-        """
-        _logger.info(f'Checking check_order No {existing_order}...{request_type}')
+        
+        _logger.info(f'Checking order: existing_order={existing_order}, existing_order_id={existing_order_id}, type={request_type}')
+        
         user = request.env.user 
-        if staff_num:
-            domain = [
-                ('employee_id.employee_number', '=', staff_num),
-                ('active', '=', True),
-                ('employee_id.user_id.id', '=', user.id),
-                ('code', '=ilike', existing_order) 
+        
+        if not staff_num:
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": "Staff number is required"
+            }
+        
+        domain = [
+            ('employee_id.employee_number', '=', staff_num),
+            ('active', '=', True),
+            ('employee_id.user_id.id', '=', user.id),
+        ]
+        
+        if existing_order_id:
+            domain.append(('id', '=', int(existing_order_id)))
+        elif existing_order:
+            domain.append(('code', '=ilike', existing_order))
+        else:
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": "Please provide cash advance reference"
+            }
+        
+        if request_type == "soe":
+            domain += [
+                ('state', 'in', ['Done']), 
+                ('memo_type.memo_key', 'in', ['cash_advance'])
             ]
-            if request_type == "soe":
-                '''this should only return the request cash advance that has
-                  been approved and taken out from the account side
-                '''
-                domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
-            else:
-                domain += [('state', 'in', ['submit'])]
-            memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
-            _logger.info(f"DOMAAAN {domain}")
-            if memo_request: 
-                if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
-                    return {
-                    "status": False,
-                    "link": False,
-                    
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": 'You cannot process with retirement as All cash advance lines has been retired' 
-                    }
-                existing_soe_inprogress = request.env['memo.model'].sudo().search([
-                    ('cash_advance_reference.code', '=', existing_order.upper()), 
-                    ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])], limit=1) 
-                is_internal_user = request.env.user.has_group('base.group_user')
-                if request_type == "soe" and existing_soe_inprogress:
-                    return {
-                    "status": False,
-                    "link": get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}',
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed" 
-                    }
-                return {
-                    "status": True,
-                    "link": False,
-                    "data": {
-                        'name': memo_request.employee_id.name,
-                        'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
-                        'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
-                        'work_email': memo_request.employee_id.work_email,
-                        'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
-                        'description': memo_request.description or "",
-                        'amount': sum([
-                            rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
-                                if memo_request.product_ids else memo_request.amountfig,
-                        # 'district_id': memo_request.employee_id.ps_district_id.id,
-                        # 'district_id': memo_request.employee_id.ps_district_id.id,
-                        'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
-                        'product_ids': [
-                            {'id': q.product_id.id, 
-                            'name': q.product_id.name if q.product_id else q.description, 
-                            'qty': q.quantity_available,
-                            # building lines for cash advance and soe
-                            'used_qty': q.quantity_available, # q.used_qty,
-                            'amount_total': q.amount_total, # FIXME PLEASE DONT CHANGE RATHER ADD THE SUB TOTAL AMOUNT ON THE DYNAMIC RENDERING
-                            'used_amount': q.amount_total, # q.used_amount, 
-                            'sub_total_amount': q.sub_total_amount, # q.used_amount,
-                            'description': q.description or "",
-                            'request_line_id': q.id,
-                            } 
-                            for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
-                        ]
-                    },
-                    "message": "", 
-                    }
-            else:
-                message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
+        else:
+            domain += [('state', 'in', ['submit'])]
+        
+        memo_request = request.env['memo.model'].sudo().search(domain, limit=1)
+        
+        _logger.info(f"Search domain: {domain}")
+        
+        if not memo_request:
+            message = "Sorry! Ref does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
                 if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
-                return {
-                    "status": False,
-                    "link": False,
-                    
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        # 'district_id': "",
-                        # 'district_id': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": message 
-                    }
+            
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": message
+            }
+        
+        if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": 'You cannot proceed with retirement as all cash advance lines have been retired'
+            }
+        
+        existing_soe_inprogress = request.env['memo.model'].sudo().search([
+            ('cash_advance_reference.code', '=', memo_request.code.upper()), 
+            ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])
+        ], limit=1)
+        
+        is_internal_user = request.env.user.has_group('base.group_user')
+        
+        if request_type == "soe" and existing_soe_inprogress:
+            link = get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}'
+            return {
+                "status": False,
+                "link": link,
+                "data": {},
+                "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed"
+            }
+        
+        return {
+            "status": True,
+            "link": False,
+            "data": {
+                'name': memo_request.employee_id.name,
+                'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
+                'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
+                'work_email': memo_request.employee_id.work_email,
+                'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
+                'description': memo_request.description or "",
+                'amount': sum([
+                    rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids
+                ]) if memo_request.product_ids else memo_request.amountfig,
+                'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
+                'product_ids': [
+                    {
+                        'id': q.product_id.id, 
+                        'name': q.product_id.name if q.product_id else q.description, 
+                        'qty': q.quantity_available,
+                        'used_qty': q.quantity_available,
+                        'amount_total': q.amount_total,
+                        'used_amount': q.amount_total,
+                        'sub_total_amount': q.sub_total_amount,
+                        'description': q.description or "",
+                        'request_line_id': q.id,
+                    } 
+                    for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
+                ]
+            },
+            "message": ""
+        }
             
     @http.route(["/portal-success"], type='http', auth='user', website=True, website_published=True)
     def portal_success(self):
