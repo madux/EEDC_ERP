@@ -324,6 +324,26 @@
                                             </div> 
                                         </t>
 
+                                        <t t-if="req.memo_type.memo_key == 'soe'">
+                                            <div class="row mb-4">
+                                                <strong class="col-md-4">Linked Cash Advance</strong>
+                                                <span class="col-md-6">
+                                                    <t t-if="req.cash_advance_reference">
+                                                        <a t-attf-href="/my/request/view/{{req.cash_advance_reference.id}}?back_url=/my/request/view/{{req.id}}" class="btn btn-link p-0 text-decoration-none">
+                                                            <span t-field="req.cash_advance_reference.code" class="fw-bold"/>
+                                                            <i class="fa fa-external-link ms-1 small"/>
+                                                        </a>
+                                                        <!-- <div class="small text-muted mt-1">
+                                                            (Amount: <span t-field="req.cash_advance_reference.amountfig" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/>)
+                                                        </div> -->
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted fst-italic">No linked cash advance found</span>
+                                                    </t>
+                                                </span>
+                                            </div>
+                                        </t>
+
                                         <t t-if="req.memo_type.memo_key in ['leave_request']">
                                             <div class="row mb-4" t-if="req.employee_id.employee_number">
                                                 <strong class="col-md-4">Staff ID</strong>:
