@@ -24,9 +24,9 @@
 					<button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
 					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
 					<button name="set_draft" states="Refuse" string="ReSet &amp; Forward" type="object"/>
-                    <button name="return_memo" id="return_id" string="Return Memo" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
+                    <button name="return_memo" id="return_id" string="Return Request" icon="fa-redo" attrs="{'invisible': [('state','not in',['Sent', 'Approve','Approve2', 'Refuse'])]}" type="object"/>
 					<button name="Cancel" states="Sent" string="Cancel" type="object" attrs="{'invisible':[('state','!=',['sent'])]}" confirm="Are you sure to cancel?"/>
-					<button name="print_memo" string="Print Memo" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
+					<button name="print_memo" string="Print Request" icon="fa-print" attrs="{'invisible':[('state','in',['Sent', 'Refuse'])]}" type="object" class="oe_highlight"/>
 					<field name="computed_stage_ids" invisible="1" />
 					<field name="stage_id" widget="statusbar" force_save="1" readonly="1" domain="[('id', 'in', computed_stage_ids)]" />
 				</header>
@@ -889,6 +889,17 @@
                 groups="base.group_user"/>
         
         ################################
+
+        <!-- Server Action to mark retired cash advances -->
+        <record id="action_mark_retired_cash_advances" model="ir.actions.server">
+            <field name="name">Mark Retired Cash Advances</field>
+            <field name="model_id" ref="company_memo.model_memo_model"/>
+            <field name="binding_model_id" ref="company_memo.model_memo_model"/>
+            <field name="state">code</field>
+            <field name="code">
+action = model.action_mark_retired_cash_advances()
+            </field>
+        </record>
 
 	</data>
 </odoo>

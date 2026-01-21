@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Leave Allocation Import Wizard Form -->
+    <record id="hr_leave_allocation_import_form_view" model="ir.ui.view">
+        <field name="name">hr.leave.allocation.import.wizard.form</field>
+        <field name="model">hr.leave.allocation.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Leave Allocations">
+                <group>
+                    <group string="File Settings">
+                        <field name="filename" invisible="1"/> 
+                        <field name="data_file" filename="filename" required="1"/>
+                        <field name="index" help="Sheet index in the workbook (0 for first sheet)"/> 
+                        <field name="batch_size" help="Process records in batches for better performance"/>
+                    </group>
+                    
+                    <group string="Override Options">
+                        <field name="leave_type_id" 
+                               help="Optional: Select to use this leave type for all records instead of reading from Excel"/>
+                        <field name="company_id" 
+                               help="Optional: Select to use this company for all records instead of reading from Excel"/>
+                    </group>
+
+                    <group string="Import Options">
+                    <field name="skip_duplicates" 
+                           help="Skip allocations that exactly match existing ones (same leave type, allocation name, and dates)"/>
+                    <field name="allow_overlap" 
+                           help="Allow creating allocations that overlap with existing ones. Uncheck to prevent duplicate allocations for the same period."/>
+                </group>
+                </group>
+                
+                <footer>
+                    <button name="download_template" 
+                            string="Download Template" 
+                            type="object"  
+                            class="btn-secondary"
+                            icon="fa-download"/>
+                            
+                    <button name="import_leave_allocations" 
+                            string="Import Leave Allocations" 
+                            type="object"  
+                            class="oe_highlight"/>
+                    or
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Leave Allocation Import Confirm Dialog -->
+    <!-- <record id="leave_allocation_import_confirm_dialog_view" model="ir.ui.view">
+        <field name="name">leave.allocation.import.confirm.dialog.form</field>
+        <field name="model">leave.allocation.import.confirm.dialog</field>
+        <field name="arch" type="xml">
+            <form string="Import Result">
+                <field name="name" nolabel="1" widget="text"/>
+                
+                <footer>
+                    <button string="OK" class="btn-primary" special="cancel"/>
+                </footer>               
+            </form>
+        </field>    
+    </record> -->
+    
+    <!-- Action to Open Leave Allocation Import Wizard -->
+    <record id="action_wizard_leave_allocation_import" model="ir.actions.act_window">
+        <field name="name">Import Leave Allocations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.leave.allocation.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    
+    <!-- Menu Items -->
+    <menuitem id="menu_leave_allocation_import" 
+              name="Import Leave Allocations" 
+              sequence="17" 
+              parent="migration_app.menu_import_gt_first_level" 
+              action="action_wizard_leave_allocation_import"/>
+              
+    <!-- Alternative menu under HR configuration if preferred -->
+    <!-- <menuitem id="menu_leave_allocation_import_config" 
+              name="Import Leave Allocations" 
+              sequence="20" 
+              parent="hr.menu_hr_configuration" 
+              action="action_wizard_leave_allocation_import"/> -->
+</odoo>

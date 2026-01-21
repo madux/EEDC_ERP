@@ -152,7 +152,7 @@
                                     
                                     <li><hr class="dropdown-divider"/></li>
                                     
-                                    <!-- Status Filters - Separated Concerns -->
+                                    <!-- Status Filters -->
                                     <li>
                                         <a class="dropdown-item" 
                                         t-attf-href="/my/requests?filter=completed{{('&amp;type=' + current_memo_type_key) if current_memo_type_key else ''}}">
@@ -201,7 +201,8 @@
                                     <th class="text-end" t-if="groupby != 'create_date'">Approver</th>
                                     <th id="ticket_user_date">Request Date</th>
                                     <th id="ticket_user_header">Employee</th>
-                                    <th colspan="5" class="text-end">Status</th>
+                                    <th class="text-end">Status</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
                             
@@ -225,6 +226,16 @@
                                             <span t-attf-class="badge rounded-pill text-bg-info me-2"
                                                 t-esc="request.stage_id.name"/>
                                         </a>
+                                    </td>
+                                    <td id="request_retired" class="text-center p-2">
+                                        <t t-if="request.memo_type_key == 'cash_advance' and request.is_cash_advance_retired">
+                                            <span class="badge rounded-pill text-bg-success" style="font-size: 0.75rem;">Retired</span>
+                                            <t t-if="request.retirement_soe_id">
+                                                <a t-attf-href="/my/request/view/{{request.retirement_soe_id.id}}" target="_blank" class="ms-1 text-success" title="View Retirement SOE">
+                                                    <i class="fa fa-external-link"/>
+                                                </a>
+                                            </t>
+                                        </t>
                                     </td>
                                 </tr>
                             </t>

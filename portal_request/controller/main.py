@@ -461,7 +461,6 @@ class PortalRequest(http.Controller):
             else:
                 district_id = 0
                 
-            # Get location type
             location_type = request.params.get('location_type', 'source')
             
             # Get selected_location_id to exclude
@@ -734,21 +733,17 @@ class PortalRequest(http.Controller):
             [('employee_number', '=', staff_num), ('active', '=', True)], limit=1) 
             if employee:
                 _logger.info(f'Lets us see ====> staff {staff_num} == {int(leave_type)} ==employee {employee.id}...')
-                # get leave artifacts
                 leave_allocation = request.env['hr.leave.allocation'].sudo()
-                # Get today's year
-                current_year = date.today().year
-                # Define the range
-                within_this_start_year = date(current_year, 1, 1)    # Jan 1
-                within_this_end_year = date(current_year, 12, 31)    # Dec 31
-                leave_allocation_id = leave_allocation.search([
+                today = date.today()
+                leave_allocation_id = request.env['hr.leave.allocation'].sudo().search([
                     ('holiday_status_id', '=', int(leave_type)),
                     ('employee_id', '=', employee.id),
-                    ('date_from', '>=', within_this_start_year),
-                    ('date_from', '<=', within_this_end_year),
+                    ('state', '=', 'validate'),
                     ('active', '=', True),
-                    # ('holiday_status_id.requires_allocation', '=', 'yes'), # ensure not all leave type
-                    ])
+                    ('date_from', '<=', today),
+                    '|', ('date_to', '=', False), ('date_to', '>=', today)
+                ], order='date_to asc, date_from asc')
+                
                 leave_type_obj = request.env['hr.leave.type'].sudo().browse([int(leave_type)])
                 # _logger.info('staff number found ...')
                 number_of_days_display, leaves_taken = 0, 0
@@ -991,126 +986,318 @@ class PortalRequest(http.Controller):
                 "message": "Staff Number required" 
             }
 
+    @http.route(['/portal-request-cash-advance'], type='http', website=True, auth="user", csrf=False)
+    def get_portal_cash_advance(self, **post):
+        """Search for unretired cash advances for the current employee"""
+        query = request.params.get('q', '').strip()
+        staff_num = post.get('staff_num', '').strip()
+        page_limit = int(post.get('page_limit', 10))
+        page = int(post.get('page', 1))
+        
+        is_inter_district = post.get('is_inter_district', 'false')
+        is_inter_district = is_inter_district in ['true', 'True', '1', 'on', True]
+        _logger.info(f"This is..._ {is_inter_district}")
+        
+        _logger.info(f'Searching cash advances: query={query}, staff_num={staff_num}')
+        
+        if not staff_num:
+            return json.dumps({
+                "results": [],
+                "total": 0,
+                "pagination": {"more": False}
+            })
+        
+        employee = request.env['hr.employee'].sudo().search([
+            ('employee_number', '=', staff_num),
+            ('active', '=', True)
+        ], limit=1)
+        
+        if not employee:
+            return json.dumps({
+                "results": [],
+                "total": 0,
+                "pagination": {"more": False}
+            })
+        
+        domain = [
+            ('employee_id', '=', employee.id),
+            ('active', '=', True),
+            ('memo_type.memo_key', '=', 'cash_advance'),
+            ('is_cash_advance_retired', '=', False),
+            ('state', 'in', ['Done']),
+            ('memo_setting_id.inter_district', '=', is_inter_district)
+        ]
+        
+        if query:
+            domain.append('|')
+            domain.append(('code', 'ilike', query))
+            domain.append(('name', 'ilike', query))
+        
+        offset = (page - 1) * page_limit
+        cash_advances = request.env['memo.model'].sudo().search(
+            domain, 
+            limit=page_limit,
+            offset=offset,
+            order='create_date desc'
+        )
+        
+        total_count = request.env['memo.model'].sudo().search_count(domain)
+        
+        results = []
+        for ca in cash_advances:
+            amount_display = f"{ca.request_total_amount:,.2f}" if ca.request_total_amount else "0.00"
+            date_display = ca.date.strftime('%d-%b-%Y') if ca.date else ''
+            
+            results.append({
+                "id": ca.id,
+                "text": f"{ca.code} - {ca.name} (₦{amount_display}) - {date_display}",
+                "code": ca.code
+            })
+        
+        return json.dumps({
+            "results": results,
+            "total": total_count,
+            "pagination": {
+                "more": (page * page_limit) < total_count
+            }
+        })
+
+    # @http.route(['/check_order'], type='json', website=True, auth="user", csrf=False)
+    # def check_order(self, **post):
+    #     staff_num = post.get('staff_num')
+    #     existing_order = post.get('existing_order')
+    #     request_type = post.get('request_type')
+    #     # staff_num, existing_order
+    #     """Check existing order No.
+    #     Args:
+    #         existing_order (str): The Id No to be validated
+    #         staff num (str): staff num of the employee 
+    #     Returns:
+    #         dict: Response
+    #     """
+    #     _logger.info(f'Checking check_order No {existing_order}...{request_type}')
+    #     user = request.env.user 
+    #     if staff_num:
+    #         domain = [
+    #             ('employee_id.employee_number', '=', staff_num),
+    #             ('active', '=', True),
+    #             ('employee_id.user_id.id', '=', user.id),
+    #             ('code', '=ilike', existing_order) 
+    #         ]
+    #         if request_type == "soe":
+    #             '''this should only return the request cash advance that has
+    #               been approved and taken out from the account side
+    #             '''
+    #             domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
+    #         else:
+    #             domain += [('state', 'in', ['submit'])]
+    #         memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
+    #         _logger.info(f"DOMAAAN {domain}")
+    #         if memo_request: 
+    #             if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
+    #                 return {
+    #                 "status": False,
+    #                 "link": False,
+                    
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": 'You cannot process with retirement as All cash advance lines has been retired' 
+    #                 }
+    #             existing_soe_inprogress = request.env['memo.model'].sudo().search([
+    #                 ('cash_advance_reference.code', '=', existing_order.upper()), 
+    #                 ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])], limit=1) 
+    #             is_internal_user = request.env.user.has_group('base.group_user')
+    #             if request_type == "soe" and existing_soe_inprogress:
+    #                 return {
+    #                 "status": False,
+    #                 "link": get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}',
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed" 
+    #                 }
+    #             return {
+    #                 "status": True,
+    #                 "link": False,
+    #                 "data": {
+    #                     'name': memo_request.employee_id.name,
+    #                     'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
+    #                     'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
+    #                     'work_email': memo_request.employee_id.work_email,
+    #                     'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
+    #                     'description': memo_request.description or "",
+    #                     'amount': sum([
+    #                         rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
+    #                             if memo_request.product_ids else memo_request.amountfig,
+    #                     # 'district_id': memo_request.employee_id.ps_district_id.id,
+    #                     # 'district_id': memo_request.employee_id.ps_district_id.id,
+    #                     'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
+    #                     'product_ids': [
+    #                         {'id': q.product_id.id, 
+    #                         'name': q.product_id.name if q.product_id else q.description, 
+    #                         'qty': q.quantity_available,
+    #                         # building lines for cash advance and soe
+    #                         'used_qty': q.quantity_available, # q.used_qty,
+    #                         'amount_total': q.amount_total, # FIXME PLEASE DONT CHANGE RATHER ADD THE SUB TOTAL AMOUNT ON THE DYNAMIC RENDERING
+    #                         'used_amount': q.amount_total, # q.used_amount, 
+    #                         'sub_total_amount': q.sub_total_amount, # q.used_amount,
+    #                         'description': q.description or "",
+    #                         'request_line_id': q.id,
+    #                         } 
+    #                         for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
+    #                     ]
+    #                 },
+    #                 "message": "", 
+    #                 }
+    #         else:
+    #             message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
+    #             if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
+    #             return {
+    #                 "status": False,
+    #                 "link": False,
+                    
+    #                 "data": {
+    #                     'name': "",
+    #                     'phone': "",
+    #                     'work_email': "",
+    #                     'subject': "",
+    #                     'description': "",
+    #                     # 'district_id': "",
+    #                     # 'district_id': "",
+    #                     'request_date': "",
+    #                     'product_ids': "",
+    #                 },
+    #                 "message": message 
+    #                 }
+
     @http.route(['/check_order'], type='json', website=True, auth="user", csrf=False)
     def check_order(self, **post):
         staff_num = post.get('staff_num')
         existing_order = post.get('existing_order')
+        existing_order_id = post.get('existing_order_id')
         request_type = post.get('request_type')
-        # staff_num, existing_order
-        """Check existing order No.
-        Args:
-            existing_order (str): The Id No to be validated
-            staff num (str): staff num of the employee 
-        Returns:
-            dict: Response
-        """
-        _logger.info(f'Checking check_order No {existing_order}...{request_type}')
+        
+        _logger.info(f'Checking order: existing_order={existing_order}, existing_order_id={existing_order_id}, type={request_type}')
+        
         user = request.env.user 
-        if staff_num:
-            domain = [
-                ('employee_id.employee_number', '=', staff_num),
-                ('active', '=', True),
-                ('employee_id.user_id.id', '=', user.id),
-                ('code', '=ilike', existing_order) 
+        
+        if not staff_num:
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": "Staff number is required"
+            }
+        
+        domain = [
+            ('employee_id.employee_number', '=', staff_num),
+            ('active', '=', True),
+            ('employee_id.user_id.id', '=', user.id),
+        ]
+        
+        if existing_order_id:
+            domain.append(('id', '=', int(existing_order_id)))
+        elif existing_order:
+            domain.append(('code', '=ilike', existing_order))
+        else:
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": "Please provide cash advance reference"
+            }
+        
+        if request_type == "soe":
+            domain += [
+                ('state', 'in', ['Done']), 
+                ('memo_type.memo_key', 'in', ['cash_advance'])
             ]
-            if request_type == "soe":
-                '''this should only return the request cash advance that has
-                  been approved and taken out from the account side
-                '''
-                domain += [('state', 'in', ['Done']), ('memo_type.memo_key', 'in', ['cash_advance'])]
-            else:
-                domain += [('state', 'in', ['submit'])]
-            memo_request = request.env['memo.model'].sudo().search(domain, limit=1) 
-            _logger.info(f"DOMAAAN {domain}")
-            if memo_request: 
-                if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
-                    return {
-                    "status": False,
-                    "link": False,
-                    
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": 'You cannot process with retirement as All cash advance lines has been retired' 
-                    }
-                existing_soe_inprogress = request.env['memo.model'].sudo().search([
-                    ('cash_advance_reference.code', '=', existing_order.upper()), 
-                    ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])], limit=1) 
-                is_internal_user = request.env.user.has_group('base.group_user')
-                if request_type == "soe" and existing_soe_inprogress:
-                    return {
-                    "status": False,
-                    "link": get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}',
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed" 
-                    }
-                return {
-                    "status": True,
-                    "link": False,
-                    "data": {
-                        'name': memo_request.employee_id.name,
-                        'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
-                        'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
-                        'work_email': memo_request.employee_id.work_email,
-                        'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
-                        'description': memo_request.description or "",
-                        'amount': sum([
-                            rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids]) \
-                                if memo_request.product_ids else memo_request.amountfig,
-                        # 'district_id': memo_request.employee_id.ps_district_id.id,
-                        # 'district_id': memo_request.employee_id.ps_district_id.id,
-                        'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
-                        'product_ids': [
-                            {'id': q.product_id.id, 
-                            'name': q.product_id.name if q.product_id else q.description, 
-                            'qty': q.quantity_available,
-                            # building lines for cash advance and soe
-                            'used_qty': q.quantity_available, # q.used_qty,
-                            'amount_total': q.amount_total, # FIXME PLEASE DONT CHANGE RATHER ADD THE SUB TOTAL AMOUNT ON THE DYNAMIC RENDERING
-                            'used_amount': q.amount_total, # q.used_amount, 
-                            'sub_total_amount': q.sub_total_amount, # q.used_amount,
-                            'description': q.description or "",
-                            'request_line_id': q.id,
-                            } 
-                            for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
-                        ]
-                    },
-                    "message": "", 
-                    }
-            else:
-                message = "Sorry !!! ReF does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
+        else:
+            domain += [('state', 'in', ['submit'])]
+        
+        memo_request = request.env['memo.model'].sudo().search(domain, limit=1)
+        
+        _logger.info(f"Search domain: {domain}")
+        
+        if not memo_request:
+            message = "Sorry! Ref does not exist or You cannot do an SOE because the request Cash Advance has not been approved" \
                 if request_type == "soe" else "Request ID with staff ID does not exist / has been submitted already. Contact Admin"
-                return {
-                    "status": False,
-                    "link": False,
-                    
-                    "data": {
-                        'name': "",
-                        'phone': "",
-                        'work_email': "",
-                        'subject': "",
-                        'description': "",
-                        # 'district_id': "",
-                        # 'district_id': "",
-                        'request_date': "",
-                        'product_ids': "",
-                    },
-                    "message": message 
-                    }
+            
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": message
+            }
+        
+        if request_type == "soe" and not memo_request.mapped('product_ids').filtered(lambda x: not x.retired):
+            return {
+                "status": False,
+                "link": False,
+                "data": {},
+                "message": 'You cannot proceed with retirement as all cash advance lines have been retired'
+            }
+        
+        existing_soe_inprogress = request.env['memo.model'].sudo().search([
+            ('cash_advance_reference.code', '=', memo_request.code.upper()), 
+            ('state', 'in', ['Sent', 'Approve', 'Approve2', 'Done'])
+        ], limit=1)
+        
+        is_internal_user = request.env.user.has_group('base.group_user')
+        
+        if request_type == "soe" and existing_soe_inprogress:
+            link = get_model_url(existing_soe_inprogress.id, 'memo.model') if is_internal_user else f'/my/request/view/{existing_soe_inprogress.id}'
+            return {
+                "status": False,
+                "link": link,
+                "data": {},
+                "message": f"There is an existing retirement with REF: {existing_soe_inprogress.code} still in progress. You will be redirected to the record to cancel or refuse it, then proceed"
+            }
+        
+        return {
+            "status": True,
+            "link": False,
+            "data": {
+                'name': memo_request.employee_id.name,
+                'phone': memo_request.employee_id.work_phone or memo_request.employee_id.mobile_phone,
+                'state': 'Draft' if memo_request.state == 'submit' else 'Waiting For Payment / Confirmation' if memo_request.state == 'Approve' else 'Approved' if memo_request.state == 'Approve2' else 'Done' if memo_request.state == 'Done' else 'Refused',
+                'work_email': memo_request.employee_id.work_email,
+                'subject': f"RETIREMENT FOR {memo_request.code} - {memo_request.name}",
+                'description': memo_request.description or "",
+                'amount': sum([
+                    rec.amount_total or rec.product_id.list_price for rec in memo_request.product_ids
+                ]) if memo_request.product_ids else memo_request.amountfig,
+                'request_date': memo_request.date.strftime("%m/%d/%Y") if memo_request.date else "",
+                'product_ids': [
+                    {
+                        'id': q.product_id.id, 
+                        'name': q.product_id.name if q.product_id else q.description, 
+                        'qty': q.quantity_available,
+                        'used_qty': q.quantity_available,
+                        'amount_total': q.amount_total,
+                        'used_amount': q.amount_total,
+                        'sub_total_amount': q.sub_total_amount,
+                        'description': q.description or "",
+                        'request_line_id': q.id,
+                    } 
+                    for q in memo_request.mapped('product_ids').filtered(lambda x: not x.retired)
+                ]
+            },
+            "message": ""
+        }
             
     @http.route(["/portal-success"], type='http', auth='user', website=True, website_published=True)
     def portal_success(self):
@@ -1203,20 +1390,108 @@ class PortalRequest(http.Controller):
     #         }
     #     })
     
+    # @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
+    # def get_portal_product(self, **post):
+    #     productItems = json.loads(post.get('productItems'))
+    #     request_type_option = post.get('request_type')
+    #     source_locationId = post.get('source_locationId')
+    #     processing_branch = post.get('processing_branch')
+        
+    #     company = self.env['multi.branch'].search(processing_branch.company_id)
+        
+    #     _logger.info(f'productItems {productItems}')
+    #     query = request.params.get('q', '') 
+    #     productItems_List = [int(i) for i in productItems if i]
+    #     result = []
+        
+    #     domain = [
+    #         ('id', 'not in', productItems_List),
+    #         ('company_id', '=', company.id), 
+    #         ('active', '=', True), 
+    #         '|','|', 
+    #         ('name', 'ilike', query),
+    #         ('default_code', 'ilike', query),
+    #         ('barcode', 'ilike', query)
+    #     ]
+
+    #     service_allowed_types = ['procurement_request', 'sale_request']
+        
+    #     if request_type_option == "vehicle_request":
+    #         domain += [
+    #             ('is_vehicle_product', '=', True), 
+    #             ('detailed_type', 'in', ['service'])
+    #         ]
+    #     elif request_type_option == 'material_request':
+    #         domain += [('detailed_type', 'in', ['consu', 'product'])]
+    #     elif request_type_option in service_allowed_types:
+    #         domain += [('detailed_type', 'in', ['consu', 'product', 'service'])]
+    #     else:
+    #         domain += [('detailed_type', 'in', ['consu', 'product'])]
+
+    #     products = request.env["product.product"].sudo().search(domain, limit=20)
+        
+    #     for item in products:
+    #         qty_available = 0.0
+            
+    #         if source_locationId and str(source_locationId).isdigit():
+    #             qty_available = item.with_context(location=int(source_locationId)).qty_available
+    #         else:
+    #             qty_available = item.qty_available
+
+    #         result.append({
+    #             "id": item.id,
+    #             "text": f'{item.name} {item.default_code or ""}', 
+    #             "qty": qty_available
+    #         })
+        
+    #     return json.dumps({
+    #         "results": result,
+    #         "pagination": {
+    #             "more": len(products) == 20,
+    #         }
+    #     })
+    
     @http.route(['/portal-request-product'], type='http', website=True, auth="user", csrf=False)
     def get_portal_product(self, **post):
         productItems = json.loads(post.get('productItems'))
         request_type_option = post.get('request_type')
-        source_locationId = post.get('source_locationId')
         
-        _logger.info(f'productItems {productItems}')
+        # Get IDs from POST
+        source_locationId = post.get('source_locationId')
+        processing_branch_id = post.get('processing_branch_id')
+        memo_config_id = post.get('memo_config_id')
+        
+        _logger.info(f'Product Search - Source: {source_locationId}, Branch: {processing_branch_id}, Config: {memo_config_id}')
+        
         query = request.params.get('q', '') 
         productItems_List = [int(i) for i in productItems if i]
         result = []
+
+        target_company_id = request.env.user.company_id.id # Default fallback
+
+        # Priority 1: If Source Location is selected, use its company
+        if source_locationId and str(source_locationId).isdigit():
+            loc = request.env['stock.location'].sudo().browse(int(source_locationId))
+            if loc.company_id:
+                target_company_id = loc.company_id.id
         
+        elif processing_branch_id and str(processing_branch_id).isdigit():
+            branch = request.env['multi.branch'].sudo().browse(int(processing_branch_id))
+            if branch.company_id:
+                target_company_id = branch.company_id.id
+
+        elif memo_config_id and str(memo_config_id).isdigit():
+            config = request.env['memo.config'].sudo().browse(int(memo_config_id))
+            if config.processing_company_id:
+                target_company_id = config.processing_company_id.id
+            elif config.processing_branch_id and config.processing_branch_id.company_id:
+                target_company_id = config.processing_branch_id.company_id.id
+        # ---------------------------------------
+
+        # Use target_company_id in the domain
         domain = [
             ('id', 'not in', productItems_List),
-            ('company_id', '=', request.env.user.company_id.id), 
+            ('company_id', '=', target_company_id), 
             ('active', '=', True), 
             '|','|', 
             ('name', 'ilike', query),
@@ -1227,10 +1502,7 @@ class PortalRequest(http.Controller):
         service_allowed_types = ['procurement_request', 'sale_request']
         
         if request_type_option == "vehicle_request":
-            domain += [
-                ('is_vehicle_product', '=', True), 
-                ('detailed_type', 'in', ['service'])
-            ]
+            domain += [('is_vehicle_product', '=', True), ('detailed_type', 'in', ['service'])]
         elif request_type_option == 'material_request':
             domain += [('detailed_type', 'in', ['consu', 'product'])]
         elif request_type_option in service_allowed_types:
@@ -1250,7 +1522,7 @@ class PortalRequest(http.Controller):
 
             result.append({
                 "id": item.id,
-                "text": f'{item.name} {item.default_code or ""}', 
+                "text": f'{item.name} {item.default_code or ""} (Qty: {qty_available})', 
                 "qty": qty_available
             })
         
@@ -1466,6 +1738,13 @@ class PortalRequest(http.Controller):
         Returns:
             dict: Response
         """
+        if request_type in ['procurement_request', 'sale_request', 'Payment', 'cash_advance']:
+            return {
+                "status": True,
+                "location_id": False,
+                "message": "", 
+            }
+            
         _logger.info(f'Checking product for {product_id},INTERDISTRICT {is_interdistrict}, SOURCE LOCATION {sourceLocationId} REQUEST TYPE {request_type} District {request.env.user.branch_id.id} check_ qty No ...{qty}')
         if product_id:# and type(product_id) in [int]:
             product = request.env['product.product'].sudo().search(
@@ -1477,7 +1756,8 @@ class PortalRequest(http.Controller):
             limit=1) 
             LocationObj = request.env['stock.location'].sudo()
             if product:
-                is_interdistrict = True if is_interdistrict in ['on', 'On', 'On', 'true', False] else False
+                # is_interdistrict = True if is_interdistrict in ['on', 'On', 'On', 'true', False] else False
+                is_interdistrict = True
                 if not is_interdistrict:
                     domain = [
                         ('company_id', '=', request.env.user.company_id.id),
@@ -2061,9 +2341,15 @@ class PortalRequest(http.Controller):
             leave_start_date = datetime.strptime(post.get("leave_start_datex",''), "%m/%d/%Y") if post.get("leave_start_datex") else fields.Date.today()
             leave_end_date = datetime.strptime(post.get("leave_end_datex",''), "%m/%d/%Y") \
                 if post.get("leave_start_datex") else leave_start_date + relativedelta(days=1)
-            if post.get("selectRequestOption") == "soe":
-                cash_advance_id = request.env['memo.model'].sudo().search([
-                ('code', '=ilike', existing_order)], limit=1)
+            if post.get("selectRequestOption") == "soe" and existing_order:
+                # existing_order may be an ID (from Select2) or a code string
+                if str(existing_order).isdigit():
+                    cash_advance_id = request.env['memo.model'].sudo().browse(int(existing_order))
+                    if not cash_advance_id.exists():
+                        cash_advance_id = False
+                else:
+                    cash_advance_id = request.env['memo.model'].sudo().search([
+                        ('code', '=ilike', existing_order)], limit=1)
             else:
                 cash_advance_id = False
             systemRequirementOptions = [
@@ -3140,7 +3426,11 @@ class PortalRequest(http.Controller):
                 
                 memoStage_ids = request_record.memo_setting_id.stage_ids.ids 
                 if memoStage_ids:
-                    stage_id = memoStage_ids[0]
+                    if len(memoStage_ids) > 1:
+                        stage_id = memoStage_ids[1]
+                    else:
+                        stage_id = memoStage_ids[0]
+                        
                     next_stage = request.env['memo.stage'].browse(stage_id)
                     
                     request_record._log_action(
@@ -3401,109 +3691,348 @@ class PortalRequest(http.Controller):
             return {"status": False, "message": "No matching record found"}
         
     
-    @http.route('/save/data', type='json', auth="user", website=True)
+    # @http.route('/save/data', type='json', auth="user", website=True)
+    # def save_data(self, **post):
+    #     memo = request.env['memo.model'].sudo()
+    #     domain = [
+    #         ('id', '=', int(post.get('memo_id'))),
+    #     ]
+    #     request_record = memo.search(domain, limit=1)
+    #     DataItems = post.get('Dataitem')
+    #     _logger.info(f"""retriving memo update {request_record}...
+    #            POST DATAITEMS {post.get('Dataitem')}""")
+    #     message = []
+    #     if request_record:
+    #         leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
+    #         leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
+    #         # _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
+    #         Data_inputFollowers = post.get('inputFollowers') # [{'id': 342233}]
+    #         _logger.info(f"""SEE FOLLOWERS HERE {post.get('inputFollowers')} ---{type(Data_inputFollowers)}""")
+    #         inputFollowers = [r.get('id') for r in Data_inputFollowers] if Data_inputFollowers else [] 
+    #         values = {
+    #             'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
+    #             'leave_start_date': leave_start_date,
+    #             'leave_end_date': leave_end_date,
+    #             "leave_Reliever": int(post.get("leave_Reliever")) if post.get("leave_Reliever") else False,
+    #             'description': post.get('description'),
+    #             'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
+    #             'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
+    #             'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
+    #             'users_followers': [(4, fol) for fol in inputFollowers],
+                
+    #         }
+    #         request_record.update(values)
+            
+    #         if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
+    #             values['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
+    #             if not request_record.state:
+    #                 values['state'] = 'submit' 
+                    
+    #         # updated_request = self.update_request_line(DataItems, request_record)
+    #         for rec in DataItems:
+    #             desc = rec.get('description', '')
+    #             _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
+    #             request_vals = { 
+    #                     'quantity_available': float(str(rec.get('qty')).replace(',', '').strip()) if rec.get('qty') else 0,
+    #                     'description': BeautifulSoup(desc, features="lxml").get_text(),
+    #                     'used_qty': rec.get('used_qty'),
+    #                     # 'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
+    #                     'used_amount': rec.get('used_amount'),
+    #                     'note': rec.get('note'),
+    #                     # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
+    #                     # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
+    #                     'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+    #                     'distance_from': rec.get('distance_from'),
+    #                     'distance_to': rec.get('distance_to'),
+    #                 }
+                
+    #             _amt = rec.get('amount_total')
+    #             if _amt not in (None, ''):
+    #                 try:
+    #                     request_vals['amount_total'] = float(str(_amt).replace(',', '').strip())
+    #                 except Exception:
+    #                     _logger.warning('Could not parse amount_total for memo %s line %s: %s', request_record.id, rec.get('request_line_id'), _amt)
+    #                     request_vals['amount_total'] = 0.0
+    #             _logger.info(f"UPDATED REQUESTS with VALS =====> {request_vals} ")
+    #             # productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
+                
+    #             request_line = request.env['request.line'].sudo().search([('id', '=', int(rec.get('request_line_id'))), ('memo_id', '=', request_record.id)])
+    #             if not request_line:
+    #                 message=f"No request line with this memo ID {request_record.id} found on the system"
+    #                 return {
+    #                     "status": False,
+    #                     "message": message,
+    #                     }
+    #             if rec.get('product_id') and rec.get('product_id').isdigit():
+    #                 # raise ValidationError(f"{rec.get('product_id')}")
+    #                 product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
+    #                 if product_id:
+    #                     request_vals.update({
+    #                         'product_id': product_id.id, 
+    #                     })
+    #                 else:
+    #                     message = f"No product with ID {rec.get('product_id')} found on the system"
+    #             request_line.update(request_vals)
+            
+    #         return {
+    #                 "status": True,
+    #                 "message": "Data successfully Updated",
+    #                 }
+    #     else:
+    #         return {
+    #                 "status": False,
+    #                 "message": "No match memo record to save records",
+    #                 }
+    
+    # @http.route('/save/data', type='http', auth="user", methods=['POST'], website=True, csrf=False)
+    # def save_data(self, **post):
+    #     """
+    #     Handles saving data WITH file attachments via standard HTTP POST
+    #     """
+    #     try:
+    #         memo_id = int(post.get('memo_id'))
+    #         request_record = request.env['memo.model'].sudo().browse(memo_id)
+            
+    #         if not request_record.exists():
+    #             return json.dumps({'status': False, 'message': "Record not found"})
+
+    #         leave_start = self.compute_date_format(post.get("leave_start_date",''))
+    #         leave_end = self.compute_date_format(post.get("leave_end_date",''))
+            
+    #         followers_raw = post.get('inputFollowers')
+    #         inputFollowers = []
+    #         if followers_raw:
+    #             try:
+    #                 followers_json = json.loads(followers_raw)
+    #                 inputFollowers = [int(r.get('id')) for r in followers_json if r.get('id')]
+    #             except:
+    #                 pass
+
+    #         vals = {
+    #             'description': post.get('description'),
+    #             'leave_start_date': leave_start,
+    #             'leave_end_date': leave_end,
+    #             'leave_type_id': int(post.get('leave_type_id')) if post.get('leave_type_id') else False,
+    #             'leave_Reliever': int(post.get('leave_Reliever')) if post.get('leave_Reliever') else False,
+    #             'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
+    #             'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
+    #             'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
+    #             'payment_reference': post.get('payment_reference'),
+    #         }
+            
+    #         if inputFollowers:
+    #             vals['users_followers'] = [(4, fol) for fol in inputFollowers]
+
+    #         if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
+    #             vals['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
+    #             if not request_record.state:
+    #                 vals['state'] = 'submit'
+
+    #         request_record.write(vals)
+
+    #         data_items_raw = post.get('Dataitem')
+    #         if data_items_raw:
+    #             DataItems = json.loads(data_items_raw)
+    #             # Call your existing logic to update lines
+    #             # Note: You might need to adapt 'update_request_line' to work here
+    #             # Or reuse logic from save_data
+    #             for rec in DataItems:
+    #                 # ... (Your existing line update logic) ...
+    #                 # Copy-paste the logic from your old save_data method here
+    #                 desc = rec.get('description', '')
+    #                 _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
+                    
+    #                 request_line_id = int(rec.get('request_line_id'))
+    #                 line = request.env['request.line'].sudo().browse(request_line_id)
+    #                 if line.exists():
+    #                     line_vals = {
+    #                         'quantity_available': float(str(rec.get('qty',0)).replace(',', '')),
+    #                         'description': BeautifulSoup(desc, features="lxml").get_text(),
+    #                         'used_qty': rec.get('used_qty'),
+    #                         'used_amount': rec.get('used_amount'),
+    #                         'note': rec.get('note'),
+    #                         'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
+    #                         'distance_from': rec.get('distance_from'),
+    #                         'distance_to': rec.get('distance_to'),
+    #                     }
+    #                     _amt = rec.get('amount_total')
+    #                     if _amt not in (None, ''):
+    #                         try:
+    #                             line_vals['amount_total'] = float(str(_amt).replace(',', '').strip())
+    #                         except Exception:
+    #                             _logger.warning('Could not parse amount_total for memo %s line %s: %s', request_record.id, rec.get('request_line_id'), _amt)
+    #                             line_vals['amount_total'] = 0.0
+    #                     _logger.info(f"UPDATED REQUESTS with VALS =====> {line_vals} ")
+                        
+    #                     if rec.get('product_id') and rec.get('product_id').isdigit():
+    #                         product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
+    #                         if product_id:
+    #                             line_vals.update({
+    #                                 'product_id': product_id.id, 
+    #                             })
+    #                         else:
+    #                             message = f"No product with ID {rec.get('product_id')} found on the system"
+    #                     line.write(line_vals)
+
+    #         # 4. HANDLE FILES
+    #         if 'other_docs' in request.httprequest.files:
+    #             attached_files = request.httprequest.files.getlist('other_docs')
+    #             for attachment in attached_files:
+    #                 if attachment.filename:
+    #                     file_name = attachment.filename
+    #                     datas = base64.b64encode(attachment.read())
+    #                     # Reuse your generate_attachment method
+    #                     self.generate_attachment(request_record.code, file_name, datas, request_record.id)
+
+    #         return json.dumps({'status': True, 'message': "Data saved successfully"})
+
+    #     except Exception as e:
+    #         _logger.exception("Error saving multipart data")
+    #         return json.dumps({'status': False, 'message': str(e)})
+    
+    @http.route('/save/data', type='http', auth="user", methods=['POST'], website=True, csrf=False)
     def save_data(self, **post):
-        memo = request.env['memo.model'].sudo()
-        domain = [
-            ('id', '=', int(post.get('memo_id'))),
-        ]
-        request_record = memo.search(domain, limit=1)
-        DataItems = post.get('Dataitem')
-        _logger.info(f"""retriving memo update {request_record}...
-               POST DATAITEMS {post.get('Dataitem')}""")
-        message = []
-        if request_record:
-            leave_start_date = self.compute_date_format(post.get("leave_start_date",''))
-            leave_end_date = self.compute_date_format(post.get("leave_end_date",''))
-            # _logger.info(f"""Let us see {int(post.get('source_location_id'))} ==== {int(post.get('dest_location_id'))}""")
-            Data_inputFollowers = post.get('inputFollowers') # [{'id': 342233}]
-            _logger.info(f"""SEE FOLLOWERS HERE {post.get('inputFollowers')} ---{type(Data_inputFollowers)}""")
-            inputFollowers = [r.get('id') for r in Data_inputFollowers] if Data_inputFollowers else [] 
-            values = {
-                'leave_type_id': int(post.get('leave_type_id') or 0) if post.get('leave_type_id') else False,
-                'leave_start_date': leave_start_date,
-                'leave_end_date': leave_end_date,
-                "leave_Reliever": int(post.get("leave_Reliever")) if post.get("leave_Reliever") else False,
+        """
+        Handles saving data WITH file attachments via standard HTTP POST (Multipart)
+        """
+        try:
+            memo_id_raw = post.get('memo_id')
+            if not memo_id_raw:
+                 return json.dumps({'status': False, 'message': "Missing Memo ID"})
+                 
+            memo_id = int(memo_id_raw)
+            request_record = request.env['memo.model'].sudo().browse(memo_id)
+            
+            if not request_record.exists():
+                return json.dumps({'status': False, 'message': "Record not found"})
+
+            leave_start = self.compute_date_format(post.get("leave_start_date",''))
+            leave_end = self.compute_date_format(post.get("leave_end_date",''))
+            
+            followers_raw = post.get('inputFollowers')
+            inputFollowers = []
+            if followers_raw:
+                try:
+                    followers_json = json.loads(followers_raw)
+                    inputFollowers = [int(r.get('id')) for r in followers_json if r.get('id')]
+                except Exception:
+                    _logger.warning("Failed to parse followers JSON")
+                    pass
+
+            vals = {
                 'description': post.get('description'),
+                'leave_start_date': leave_start,
+                'leave_end_date': leave_end,
+                'leave_type_id': int(post.get('leave_type_id')) if post.get('leave_type_id') else False,
+                'leave_Reliever': int(post.get('leave_Reliever')) if post.get('leave_Reliever') else False,
                 'source_location_id': int(post.get('source_location_id')) if post.get('source_location_id') else False,
                 'dest_location_id': int(post.get('dest_location_id')) if post.get('dest_location_id') else False,
                 'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
-                'users_followers': [(4, fol) for fol in inputFollowers],
-                
+                'payment_reference': post.get('payment_reference'),
             }
-            request_record.update(values)
             
+            if inputFollowers:
+                vals['users_followers'] = [(6, 0, inputFollowers)]
+
             if not request_record.stage_id and request_record.memo_setting_id.stage_ids:
-                values['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
+                vals['stage_id'] = request_record.memo_setting_id.stage_ids[0].id
                 if not request_record.state:
-                    values['state'] = 'submit' 
+                    vals['state'] = 'submit'
+
+            request_record.write(vals)
+
+            data_items_raw = post.get('Dataitem')
+            if data_items_raw:
+                try:
+                    DataItems = json.loads(data_items_raw)
                     
-            # updated_request = self.update_request_line(DataItems, request_record)
-            for rec in DataItems:
-                desc = rec.get('description', '')
-                _logger.info(f"UPDATING REQUESTS INCLUDES=====> MEMO IS {request_record} -ID {request_record.id} ---{rec}")
-                request_vals = { 
-                        'quantity_available': float(str(rec.get('qty')).replace(',', '').strip()) if rec.get('qty') else 0,
-                        'description': BeautifulSoup(desc, features="lxml").get_text(),
-                        'used_qty': rec.get('used_qty'),
-                        # 'amount_total': float(rec.get('amount_total').replace(',', '')) if rec.get('amount_total') and type(rec.get('amount_total').replace(',', '')) in [float, int] else 0,
-                        'used_amount': rec.get('used_amount'),
-                        'note': rec.get('note'),
-                        # 'request_line_id': int(rec.get('request_line_id')) if rec.get('request_line_id') else 0,
-                        # 'code': rec.get('code') if rec.get('code') else f"{memo_id.code} - {counter}",
-                        'to_retire': True if rec.get('line_checked') in ['on', 'On'] else False,
-                        'distance_from': rec.get('distance_from'),
-                        'distance_to': rec.get('distance_to'),
-                    }
-                
-                _amt = rec.get('amount_total')
-                if _amt not in (None, ''):
-                    try:
-                        request_vals['amount_total'] = float(str(_amt).replace(',', '').strip())
-                    except Exception:
-                        _logger.warning('Could not parse amount_total for memo %s line %s: %s', request_record.id, rec.get('request_line_id'), _amt)
-                        request_vals['amount_total'] = 0.0
-                _logger.info(f"UPDATED REQUESTS with VALS =====> {request_vals} ")
-                # productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
-                
-                request_line = request.env['request.line'].sudo().search([('id', '=', int(rec.get('request_line_id'))), ('memo_id', '=', request_record.id)])
-                if not request_line:
-                    message=f"No request line with this memo ID {request_record.id} found on the system"
-                    return {
-                        "status": False,
-                        "message": message,
-                        }
-                if rec.get('product_id') and rec.get('product_id').isdigit():
-                    # raise ValidationError(f"{rec.get('product_id')}")
-                    product_id = request.env['product.product'].sudo().browse([int(rec.get('product_id'))])
-                    if product_id:
-                        request_vals.update({
-                            'product_id': product_id.id, 
-                        })
-                    else:
-                        message = f"No product with ID {rec.get('product_id')} found on the system"
-                request_line.update(request_vals)
-            
-            return {
-                    "status": True,
-                    "message": "Data successfully Updated",
-                    }
-        else:
-            return {
-                    "status": False,
-                    "message": "No match memo record to save records",
-                    }
+                    for rec in DataItems:
+                        if not rec.get('request_line_id'):
+                            continue
+                            
+                        request_line_id = int(rec.get('request_line_id'))
+                        line = request.env['request.line'].sudo().browse(request_line_id)
+                        
+                        if line.exists():
+                            desc = rec.get('description', '')
+                            clean_desc = BeautifulSoup(desc, features="lxml").get_text() if desc else ''
+                            
+                            qty_str = str(rec.get('qty', 0)).replace(',', '').strip()
+                            try:
+                                qty_val = float(qty_str) if qty_str else 0.0
+                            except:
+                                qty_val = 0.0
+
+                            line_vals = {
+                                'quantity_available': qty_val,
+                                'description': clean_desc,
+                                'used_qty': rec.get('used_qty'),
+                                'used_amount': rec.get('used_amount'),
+                                'note': rec.get('note'),
+                                'to_retire': True if rec.get('line_checked') in ['on', 'On', 'true', True] else False,
+                                'distance_from': rec.get('distance_from'),
+                                'distance_to': rec.get('distance_to'),
+                            }
+                            
+                            _amt = rec.get('amount_total')
+                            if _amt not in (None, ''):
+                                try:
+                                    amt_str = str(_amt).replace(',', '').strip()
+                                    line_vals['amount_total'] = float(amt_str)
+                                except Exception:
+                                    _logger.warning(f'Could not parse amount_total for memo {memo_id} line {request_line_id}: {_amt}')
+                                    line_vals['amount_total'] = 0.0
+                            
+                            prod_id_raw = rec.get('product_id')
+                            if prod_id_raw and str(prod_id_raw).isdigit():
+                                product_id = int(prod_id_raw)
+                                if request.env['product.product'].sudo().browse(product_id).exists():
+                                    line_vals['product_id'] = product_id
+                                else:
+                                    _logger.warning(f"Product ID {product_id} not found")
+                            
+                            _logger.info(f"UPDATING REQUEST LINE {request_line_id} with VALS =====> {line_vals}")
+                            line.write(line_vals)
+                            
+                except json.JSONDecodeError:
+                    _logger.error("Failed to decode Dataitem JSON")
+                    return json.dumps({'status': False, 'message': "Invalid data format for lines"})
+
+            if 'other_docs' in request.httprequest.files:
+                attached_files = request.httprequest.files.getlist('other_docs')
+                for attachment in attached_files:
+                    if attachment.filename:
+                        file_name = attachment.filename
+                        datas = base64.b64encode(attachment.read())
+                        self.generate_attachment(request_record.code, file_name, datas, request_record.id)
+
+            return json.dumps({'status': True, 'message': "Data saved successfully"})
+
+        except Exception as e:
+            _logger.exception("Error saving multipart data")
+            return json.dumps({'status': False, 'message': str(e)})
    
-    #'2024-11-18 00:00:00' does not match format '%m/%d/%Y'
+   
     def compute_date_format(self, date_format):
-        # date_format: '2024-11-18 00:00:00 or '11/08/2024'
         date = False
-        if date_format:
+        
+        if not date_format or date_format == 'undefined' or date_format == 'null':
+            return False
+
+        try:
             if '-' in date_format:
-                datefmt = datetime.strptime(date_format, "%Y-%m-%d %H:%M:%S")
-                date = datetime.strptime(datefmt.strftime('%m/%d/%Y'), '%m/%d/%Y')
+                # Handle YYYY-MM-DD
+                if ':' in date_format: # Handle YYYY-MM-DD HH:MM:SS
+                    datefmt = datetime.strptime(date_format, "%Y-%m-%d %H:%M:%S")
+                    date = datetime.strptime(datefmt.strftime('%m/%d/%Y'), '%m/%d/%Y')
+                else:
+                    date = datetime.strptime(date_format, "%Y-%m-%d")
             else:
+                # Handle MM/DD/YYYY
                 date = datetime.strptime(date_format, "%m/%d/%Y")
+        except ValueError:
+            return False
+            
         return date
 
     @http.route('/update/data', type='json', auth="user", website=True)

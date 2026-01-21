@@ -17,6 +17,7 @@
         'wizard/import_employee_view.xml',
         'wizard/import_product_wizard.xml',
         'wizard/import_data.xml',
+        'wizard/import_leave_allocation_view.xml',
         
     ],
     "sequence": 3,

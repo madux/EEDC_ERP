@@ -6,7 +6,7 @@ from odoo import http
 import random
 from lxml import etree
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, time
 from dateutil.relativedelta import relativedelta
 import logging
 _logger = logging.getLogger(__name__)
@@ -54,6 +54,57 @@ class Memo_Model(models.Model):
         # result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         result.code = vals['code'] if 'code' in vals and vals.get('code') not in ['', False, None] else f"{project_prefix}/{current_month}/{result.id}"
         return result
+    
+    def write(self, vals):
+        result = super(Memo_Model, self).write(vals)
+        
+        # Auto-mark cash advance as retired when SOE reaches Done stage
+        if 'state' in vals and vals.get('state') == 'Done':
+            for rec in self:
+                if rec.memo_type_key == 'soe' and rec.cash_advance_reference:
+                    rec.cash_advance_reference.sudo().write({
+                        'is_cash_advance_retired': True
+                    })
+                    _logger.info(f"Marked cash advance {rec.cash_advance_reference.code} as retired via SOE {rec.code}")
+        
+        return result
+    
+    def action_mark_retired_cash_advances(self):
+        """
+        Bulk action to mark all cash advances as retired if they have 
+        a linked SOE that is in 'Done' state.
+        This is for retroactively fixing cash advances that weren't marked retired.
+        """
+        # Find all cash advances that are not yet marked as retired
+        cash_advances = self.env['memo.model'].sudo().search([
+            ('memo_type_key', '=', 'cash_advance'),
+            ('is_cash_advance_retired', '=', False),
+            ('state', '=', 'Done')
+        ])
+        
+        marked_count = 0
+        for ca in cash_advances:
+            linked_soe = self.env['memo.model'].sudo().search([
+                ('cash_advance_reference', '=', ca.id),
+                ('memo_type_key', '=', 'soe'),
+                ('state', '=', 'Done')
+            ], limit=1)
+            
+            if linked_soe:
+                ca.write({'is_cash_advance_retired': True})
+                marked_count += 1
+                _logger.info(f"Bulk marked cash advance {ca.code} as retired (linked SOE: {linked_soe.code})")
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Cash Advance Retirement',
+                'message': f'Marked {marked_count} cash advances as retired.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
     
     def _compute_attachment_number(self):
         attachment_data = self.env['ir.attachment'].sudo().read_group([
@@ -216,6 +267,36 @@ class Memo_Model(models.Model):
         'memo.model', 
         string="Payment Cash advance ID", 
         compute="compute_cash_advance_payment_reference")
+    
+    retirement_soe_id = fields.Many2one('memo.model', compute='_compute_retirement_soe_id', string="Retirement SOE")
+
+    def _compute_retirement_soe_id(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.is_cash_advance_retired:
+                rec.retirement_soe_id = self.env['memo.model'].search([
+                    ('cash_advance_reference', '=', rec.id),
+                    ('memo_type_key', '=', 'soe'),
+                    ('state', '=', 'Done')
+                ], limit=1)
+            else:
+                rec.retirement_soe_id = False
+
+    @api.constrains('state', 'memo_type_key')
+    def check_cash_advance_limit(self):
+        for rec in self:
+            if rec.memo_type_key == 'cash_advance' and rec.state not in ['Refuse', 'submit']: 
+                limit = rec.employee_id.maximum_cash_advance_limit or 5
+                # Count non-retired cash advances for this employee
+                domain = [
+                    ('employee_id', '=', rec.employee_id.id),
+                    ('memo_type_key', '=', 'cash_advance'),
+                    ('is_cash_advance_retired', '=', False),
+                    ('state', 'not in', ['Refuse', 'submit']), 
+                    ('id', '!=', rec.id)
+                ]
+                count = self.env['memo.model'].search_count(domain)
+                if count >= limit:
+                    raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
     
     
     payment_processing_company_id = fields.Many2one(
@@ -1840,39 +1921,100 @@ class Memo_Model(models.Model):
             initial_stage_id= self.env.ref('company_memo.memo_initial_stage')
         return initial_stage_id
 
+    # def get_next_stage_artifact(self, current_stage_id, from_website=False):
+    #     """
+    #     args: from_website: used to decide if the record is 
+    #     generated from the website or from odoo internal use
+    #     """
+    #     approver_ids = [] 
+    #     document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
+    #     helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
+    #     memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
+    #         else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
+    #             else self.memo_setting_id 
+    #     memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
+    #         lambda skp: skp.id != self.stage_to_skip.id
+    #     )
+    #     _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
+    #     if memo_settings and current_stage_id:
+    #         mstages = memo_settings.stage_ids # [3,6,8,9]
+    #         manager_can_approve = False
+    #         last_stage = mstages[-1] if mstages else False # 'e.g 9'
+    #         if last_stage and last_stage.id != current_stage_id.id:
+    #             current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+    #             # if current_stage_index in [0, 1]: # Check here very well
+    #             if current_stage_index == 0:
+    #                 manager_can_approve = True
+    #             next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
+    #         else:
+    #             next_stage_id = self.stage_id.id
+    #         next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
+    #         if next_stage_record:
+    #             approver_ids = next_stage_record.approver_ids.ids
+    #             if manager_can_approve:
+    #                 manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
+    #                 approver_ids.append(manager_id) 
+    #         return approver_ids, next_stage_record.id
+    #     else:
+    #         if not from_website:
+    #             raise ValidationError(
+    #                 "Please ensure to configure the Memo type for the employee department"
+    #                 )
+    #         else:
+    #             return False, False
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
         args: from_website: used to decide if the record is 
         generated from the website or from odoo internal use
         """
         approver_ids = [] 
-        document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
-        helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
-        memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
-            else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
-                else self.memo_setting_id 
+        
+        memo_settings = self.memo_setting_id
+        
+        if self.to_create_document and self.document_memo_config_id:
+            memo_settings = self.document_memo_config_id
+            
+        elif hasattr(self, 'helpdesk_memo_config_id') and self.helpdesk_memo_config_id:
+             memo_settings = self.helpdesk_memo_config_id
+        
         memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
             lambda skp: skp.id != self.stage_to_skip.id
         )
+        
         _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
+        
         if memo_settings and current_stage_id:
             mstages = memo_settings.stage_ids # [3,6,8,9]
             manager_can_approve = False
-            last_stage = mstages[-1] if mstages else False # 'e.g 9'
+            last_stage = mstages[-1] if mstages else False 
+            
             if last_stage and last_stage.id != current_stage_id.id:
-                current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+                if current_stage_id.id in memo_setting_stages.ids:
+                    current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
+                else:
+                    current_stage_index = 0
+
                 # if current_stage_index in [0, 1]: # Check here very well
                 if current_stage_index == 0:
                     manager_can_approve = True
-                next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
+                
+                if current_stage_index + 1 < len(memo_setting_stages):
+                    next_stage_id = memo_setting_stages.ids[current_stage_index + 1] 
+                else:
+                    next_stage_id = current_stage_id.id
             else:
                 next_stage_id = self.stage_id.id
+            
             next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
+            
             if next_stage_record:
                 approver_ids = next_stage_record.approver_ids.ids
                 if manager_can_approve:
-                    manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
-                    approver_ids.append(manager_id) 
+                    if self.sudo().employee_id.parent_id:
+                        approver_ids.append(self.sudo().employee_id.parent_id.id)
+                    elif self.sudo().employee_id.administrative_supervisor_id:
+                        approver_ids.append(self.sudo().employee_id.administrative_supervisor_id.id)
+            
             return approver_ids, next_stage_record.id
         else:
             if not from_website:
@@ -3131,32 +3273,82 @@ class Memo_Model(models.Model):
             'target': 'new'
             }
         
+    # def generate_leave_request(self, body_msg, body):
+    #     leave = self.env['hr.leave'].sudo()
+    #     vals = {
+    #         'employee_id': self.employee_id.id,
+    #         'request_date_from': self.leave_start_date,
+    #         'request_date_to': self.leave_end_date,
+    #         'date_from': self.leave_start_date,
+    #         'date_to': self.leave_end_date,
+    #         'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
+    #         'holiday_status_id': self.leave_type_id.id,
+    #         'origin': self.code,
+    #         'memo_id': self.id,
+    #     }
+    #     leave_id = leave.with_context(
+    #                     tracking_disable=False,
+    #                     mail_activity_automation_skip=False,
+    #                     leave_fast_create=True,
+    #                     leave_skip_state_check=True
+    #                 ).create(vals)
+    #     leave_id.action_approve()
+    #     leave_id.action_validate()
+    #     # update memo stages where the applicant exists with reliever
+    #     self.set_reliever_to_act_as_employee_on_leave(
+    #         self.sudo().employee_id,
+    #         self.sudo().leave_Reliever,
+    #     )
+    #     self.state = 'Done'
+    #     self.mail_sending_direct(body_msg)
+    
     def generate_leave_request(self, body_msg, body):
         leave = self.env['hr.leave'].sudo()
+        
+        # --- FIX: Set explicit Start/End times ---
+        # Odoo stores dates in UTC. 
+        # For Nigeria (GMT+1): 
+        # 07:00 UTC = 08:00 Local (Start of Work)
+        # 16:00 UTC = 17:00 Local (End of Work)
+        # This ensures the last day is counted fully.
+        start_time = time(7, 0, 0) 
+        end_time = time(16, 0, 0)
+        
+        # Combine the Date fields with the Time
+        dt_from = datetime.combine(self.leave_start_date, start_time)
+        dt_to = datetime.combine(self.leave_end_date, end_time)
+
         vals = {
             'employee_id': self.employee_id.id,
             'request_date_from': self.leave_start_date,
             'request_date_to': self.leave_end_date,
-            'date_from': self.leave_start_date,
-            'date_to': self.leave_end_date,
+            
+            'date_from': dt_from,
+            'date_to': dt_to,
+            
             'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
             'holiday_status_id': self.leave_type_id.id,
             'origin': self.code,
             'memo_id': self.id,
         }
+        
         leave_id = leave.with_context(
                         tracking_disable=False,
                         mail_activity_automation_skip=False,
                         leave_fast_create=True,
                         leave_skip_state_check=True
                     ).create(vals)
+        
+        leave_id._compute_number_of_days()
+        
         leave_id.action_approve()
         leave_id.action_validate()
-        # update memo stages where the applicant exists with reliever
+        
         self.set_reliever_to_act_as_employee_on_leave(
             self.sudo().employee_id,
             self.sudo().leave_Reliever,
         )
+        
         self.state = 'Done'
         self.mail_sending_direct(body_msg)
 

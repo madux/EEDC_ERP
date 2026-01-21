@@ -14,6 +14,20 @@
             
         </record>
 
+        <!-- Multi-company rule for hr.grade -->
+        <record id="hr_grade_comp_rule" model="ir.rule">
+            <field name="name">Grade: multi-company</field>
+            <field name="model_id" ref="model_hr_grade"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Multi-company rule for hr.level -->
+        <record id="hr_level_comp_rule" model="ir.rule">
+            <field name="name">Level: multi-company</field>
+            <field name="model_id" ref="hr_pms.model_hr_level"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        
         <!-- menu items -->
         <menuitem id="menu_eedc_addons_inventory_import_product_wizard" name="Import / Update Products" groups="base.group_system,user_group_see_products" sequence="12" parent="stock.menu_stock_root" action="migration_app.action_import_product_wizard"/> 
 

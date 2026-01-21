@@ -365,21 +365,37 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required d-none" id="div_existing_order" data-type="char" data-name="Field">
+                                        <div class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" 
+                                            id="div_existing_order" data-type="char" data-name="Field">
                                             <div class="row s_col_no_resize s_col_no_bgcolor">
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="existing_order">
-                                                    <span class="s_website_form_label_content" id="existing_ref_label">Existing Ref #</span>
+                                                <label class="col-form-label col-sm-auto s_website_form_label" 
+                                                    style="width: 200px" for="existing_order">
+                                                    <span class="s_website_form_label_content" id="existing_ref_label">
+                                                        Cash Advance Ref #
+                                                    </span>
                                                     <span class="s_website_form_mark"> *</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                     <!-- data-fill-with="name" -->
-                                                    <input type="text" class="form-control s_website_form_input" name="existing_order" placeholder="e.g REF00001" required="0" id="existing_order" labelfor="Existing Order"/>
+                                                    <input type="text" 
+                                                        class="form-control s_website_form_input" 
+                                                        name="existing_order" 
+                                                        placeholder="Search cash advance reference..." 
+                                                        required="0" 
+                                                        id="existing_order" 
+                                                        labelfor="Cash Advance Reference"/>
                                                 </div>
-                                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="request_status">
+                                                <label class="col-form-label col-sm-auto s_website_form_label" 
+                                                    style="width: 200px" for="request_status">
                                                     <span class="s_website_form_label_content">Request Status</span>
                                                 </label>
                                                 <div class="col-sm">
-                                                    <input type="request_status" class="form-control s_website_form_input" name="request_status" required="false" readonly="1" id="request_status" labelfor="Request Status"/>
+                                                    <input type="text" 
+                                                        class="form-control s_website_form_input" 
+                                                        name="request_status" 
+                                                        required="false" 
+                                                        readonly="1" 
+                                                        id="request_status" 
+                                                        labelfor="Request Status"/>
                                                 </div>
                                             </div>
                                         </div>
