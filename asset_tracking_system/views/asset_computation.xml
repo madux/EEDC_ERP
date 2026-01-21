@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo> 
+    <!-- ACTION WINDOW -->
+    <record id="action_asset_computation_wizard" model="ir.actions.act_window">
+        <field name="name">Compute Depreciation</field>
+        <field name="res_model">asset.computation</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+    <!-- MENU ITEM -->
+    <menuitem id="menu_asset_compute_root"
+        name="Compute Depreciation"
+        sequence="11"
+        action="action_asset_computation_wizard"
+        web_icon="asset_tracking_system,static/description/depreciation.png"/>
+
+    <!-- FORM VIEW -->
+    <record id="view_asset_computation_form" model="ir.ui.view">
+        <field name="name">asset.computation.form</field>
+        <field name="model">asset.computation</field>
+        <field name="arch" type="xml">
+            <form string="Compute Depreciation">
+                <group>
+                    <group>
+                        <field name="selected_month" required="0" invisible="0"/>
+                        <field name="fiscal_year_id" required="0"/>
+                        <field name="override_the_period" required="0" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="auto_post" required="0" invisible="0"/>
+                        <field name="current_date" string="Use selected Date" help="Use this as default date for the asset start date"/>
+                    </group>
+                </group>
+                <div class="row">
+                    <div class="col-12 d-flex justify-content-center gap-3 mt-2">
+                        <!-- <button name="action_load_assets"
+                                type="object"
+                                class="btn-primary"
+                                string="Preview depreciation"/> -->
+                        <button name="button_compute_depreciation"
+                                type="object"
+                                string="Run &amp; Post Depreciation"
+                                class="btn-success"/>
+                    </div>
+                </div>
+                <notebook>
+                    <page string="help lines">
+                        <div class="alert alert-info" role="alert">
+                            <h4># How it works: <br/>
+                            1. Run depreciation for a period: select fiscal year and month,  <br/>
+                            2. Check the overide box: if you want to Rerun the ones that was corrected in amount. <br/>
+                              i.e. Make Modification on one of the depreciation account move<br/>
+                                 e.g set Jan 2025 and run for it again<br/>
+                                it will create new move entry if the difference is found <br/>
+                                if negative difference - post expense depreciation to credit <br/>
+                                if positive difference - post depreciation account to debit, <br/>
+                                if no line found modified, post nothing <br/><br/>
+                            3. Then run Run &amp; Post depreciation<br/><br/>
+                            4. Check to see that the system generated depreciation for the months not running
+                            </h4>
+                        </div>
+
+                        <!-- <field name="asset_line_ids" readonly="1" >
+                            <tree string="Assets" sample="1">
+                                <field name="name" string="Asset Number"/>
+                                <field name="prorata_date" string="Start date"/>
+                                <field name="original_value" string="Purchase Value"/>
+                                <field name="method"/>
+                                <field name="value_residual" widget="monetary"/>
+                                <field name="account_asset_id" optional="hide"/>
+                                <field name="account_depreciation_id" optional="hide"/>
+                                <field name="account_depreciation_expense_id" optional="hide"/>
+                                <field name="currency_id" optional="hide"/>
+                                <field name="company_id" optional="hide"/>
+                                <field name="state"/> 
+                            </tree>
+                        </field> -->
+                    </page>
+                </notebook> 
+            </form>
+        </field>
+    </record>
+</odoo>

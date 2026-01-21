@@ -232,7 +232,11 @@
                                         <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])],'required': [('product_id', '=', False)]}"/> 
 										<field name="quantity_available" string="Unit" force_save="1" sum="Total" 
 										attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
-                                        <field name="amount_total" string="Unit Price" force_save="1" sum="Total" 
+                                        <field name="qty_to_issue" force_save="1" attrs="{'readonly': [('state', 'not in', ['Approve2','Approve'])]}" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
+										<field name="issue_qty" force_save="1" readonly="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
+										<field name="open_qty" force_save="1" readonly="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
+										
+										<field name="amount_total" string="Unit Price" force_save="1" sum="Total" 
 										attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['recruitment_request','employee_update', 'material_request'])]}"/>
 										<!-- <field name="amount_total" string="Unit Price" force_save="1" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request', 'material_request'])], 'readonly':['|',('state','not in',['submit','Refuse']), ('memo_type_key', 'in', ['soe'])], 'invisible': [('memo_type_key', 'in', ['Payment','recruitment_request','employee_update', 'material_request'])]}"/> -->
 										<field name="sub_total_amount" optional="hide" readonly="1" force_save="1" string="Subtotal" sum="Total" attrs="{'column_invisible': [('parent.memo_type_key', 'in', ['procurement_request','material_request'])], 'invisible': [('memo_type_key', 'not in', ['Payment','recruitment_request', 'soe', 'employee_update', 'material_request', 'cash_advance', 'procurement_request'])]}"/>
@@ -413,7 +417,7 @@
 							<!-- <page name="PurchaseOrder" string="Purchase Order" attrs="{'invisible': [('has_po','=', False)]}"> -->
 							<!-- attrs="{'invisible': [('memo_type_key','in', ['leave_request'])]}" -->
 							<page name="PurchaseOrder" string="Purchase Order" 
-                            attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment', 'sale_request'])]}">
+                            attrs="{'invisible': [('memo_type_key','in', ['leave_request', 'cash_advance', 'soe', 'Payment', 'sale_request', 'Internal'])]}">
 								<button name="generate_po_from_request" type="object" class="oe_highlight oe_left sm pl-3" string="Generate Purchase Order"/>
 								<!-- <field name="po_ids" force_save="1" readonly="0" domain="[('id', '=', 0)]" -->
 								<field name="po_ids" force_save="1" readonly="0"

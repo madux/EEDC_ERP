@@ -68,6 +68,21 @@ class RequestLine(models.Model):
         compute="compute_balance_difference",
         help="Balance between total cash advance amount and To retired balance")
     
+    remaining_qty = fields.Float(string="On Hand Qty", default=0, store=True)
+    issue_qty = fields.Float(string="Issued Qty", default=0, store=True, readonly=False)
+    open_qty = fields.Float(string="Open Qty", compute="compute_open_qty")
+    qty_to_issue = fields.Float(string="Qty to issue")
+    qty_to_procure = fields.Float(string="Qty to procure")
+    
+    @api.depends('issue_qty')
+    def compute_open_qty(self):
+        for rec in self: 
+            if rec.issue_qty:# and rec.memo_id.state in ['Done', 'done']:
+                result = rec.quantity_available - rec.issue_qty 
+                rec.open_qty = result 
+            else:
+                rec.open_qty = 0
+                
     @api.depends("sub_total_amount", "retire_sub_total_amount")
     def compute_balance_difference(self):
         for rec in self:

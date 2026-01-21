@@ -1,0 +1,17 @@
+1. Locate a paused or running asset with asset code 
+2. Check the depreciation board, 
+3. Go to asset tracking module -> click manage asset and tracking, 
+4. search the asset tracking using the code (Note: use an existing record, you cannot create duplicate tracking record, )
+5. Open or create new tracking, 
+6. enter the asset Number, (system will find the asset if its running or throw validation
+6. Fill in the form, assign to individual. 
+
+7. if it's transfer, select location (Note: if you select a location, 
+system will move the old asset details to a new asset and used the 
+remaining depreciation value to compute and run the new asset to location. 
+e.g Go to depreciation board of the old asset and post any line, system will deducted posted
+entries from the new computation that will be created)
+
+8. Once completed, click on the Transfer and compute button to validate the processes. 
+
+

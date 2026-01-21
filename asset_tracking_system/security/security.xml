@@ -1,0 +1,23 @@
+<odoo>
+  <record id="model_asset_tracking_rule" model="ir.rule">
+    <field name="name">Asset Tracking User Rule</field>
+    <field name="model_id" ref="model_asset_tracking"/>
+    <field name="groups" eval="[(4, ref('base.group_system')),
+    (4, ref('account.group_account_manager'))]"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+  </record>
+
+  <record id="asset_tracking_user_rule" model="ir.rule">
+    <field name="name">Asset - User-based Access</field>
+    <field name="model_id" ref="model_asset_tracking"/>
+    <field name="global" eval="False"/>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    <field name="domain_force">
+      ['|', '|',
+        ('assigned_to', '=', user.id),
+        ('create_uid','=', user.id),
+        ('write_uid','=', user.id),
+      ]
+    </field>
+  </record>
+</odoo>

@@ -505,7 +505,7 @@ class Memo_Model(models.Model):
         
         message_parts.append(f"<p><small><i>{fields.Datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i></small></p>")
         
-        self.message_post(
+        self.sudo().message_post(
             body="".join(message_parts),
             message_type='notification',
             subtype_xmlid='mail.mt_note',

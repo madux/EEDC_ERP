@@ -2551,7 +2551,7 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
                             displayNonLeaveElement();
-                            $('#product_form_div').removeClass('d-none');
+                            $('#product_form_div').addClass('d-none');
                         }
                     }
                 }).guardedCatch(function (error) {

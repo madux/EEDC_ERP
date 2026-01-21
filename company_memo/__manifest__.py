@@ -29,6 +29,9 @@
         'views/account_account_view.xml',
         'views/memo_view_document.xml',
         'views/account_move.xml',
+        # 'views/asset_computation.xml',
+        'views/asset_view.xml',
+        
         'views/hr_employee.xml',
         'views/docum.xml',
         'views/document_kanban_view.xml',
