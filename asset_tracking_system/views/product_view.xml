@@ -18,9 +18,9 @@
         <record model="ir.ui.view" id="view_product_category_form_memomodel_inherit">
             <field name="name">product category Memo model Inherit</field>
             <field name="model">product.category</field>
-            <field name="inherit_id" ref="product.product_category_all"/>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='removal_strategy_id']" position="after">
+                <xpath expr="//field[@name='parent_id']" position="after">
                     <field name="sum_up_total" invisible="0"/> 
                     <field name="account_asset_model" readonly="0" force_save="1" invisible="0"
                     context="{'default_state': 'model'}" domain="[('state', '=', 'model')]"/>

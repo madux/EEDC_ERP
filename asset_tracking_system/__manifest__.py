@@ -12,7 +12,7 @@
         'sequence/sequence.xml',
         'views/account_asset.xml',
         'views/asset_tracking_view.xml',
-        'views/asset_computation.xml',
+        # 'views/asset_computation.xml',
         'views/product_view.xml',
         'views/menu.xml',
     ],

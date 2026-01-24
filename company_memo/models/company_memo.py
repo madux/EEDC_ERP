@@ -283,21 +283,21 @@ class Memo_Model(models.Model):
 
     @api.constrains('state', 'memo_type_key')
     def check_cash_advance_limit(self):
-        for rec in self:
-            if rec.memo_type_key == 'cash_advance' and rec.state not in ['Refuse', 'submit']: 
-                limit = rec.employee_id.maximum_cash_advance_limit or 5
+        # for rec in self:
+        if self.memo_type_key == 'cash_advance':# and self.state not in ['Refuse', 'submit']: 
+            limit = self.employee_id.maximum_cash_advance_limit or 5
+            if self.create_uid.id == self.env.user.id:
                 # Count non-retired cash advances for this employee
                 domain = [
-                    ('employee_id', '=', rec.employee_id.id),
+                    ('employee_id', '=', self.employee_id.id),
                     ('memo_type_key', '=', 'cash_advance'),
                     ('is_cash_advance_retired', '=', False),
-                    ('state', 'not in', ['Refuse', 'submit']), 
-                    ('id', '!=', rec.id)
+                    ('state', 'in', ['Approve', 'Done', 'Approve2']), 
+                    ('id', '!=', self.id)
                 ]
                 count = self.env['memo.model'].search_count(domain)
                 if count >= limit:
                     raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
-    
     
     payment_processing_company_id = fields.Many2one(
         'res.company',

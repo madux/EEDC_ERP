@@ -50,3 +50,12 @@ class ProductTemplate(models.Model):
     part_number = fields.Char(
         string="Part number",
         )
+    
+    sum_up_total = fields.Boolean(
+        'Sum up total', 
+        help="If set, procurement price_total = total tax inclusive",
+        related="categ_id.sum_up_total",
+        default=False,
+        store=True,
+        readonly=True,
+        )
