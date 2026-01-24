@@ -51,7 +51,9 @@
 							<field name="x_saladv"/>
 							<field name="x_thrift3"/>
 							<field name="x_emp_type"/>
+							<field name="x_bank"/>
 							<field name="x_accountno"/>
+							<field name="x_RSA_PIN"/>
 							<field name="x_pfa2"/>
 							<field name="x_banksortcode" string="Sort code 1"/>
 							<field name="x_banksortcode1" string="Sort code 1"/>
