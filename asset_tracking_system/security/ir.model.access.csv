@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_asset_tracking_user,access.asset.tracking,model_asset_tracking,base.group_user,1,1,0,0
 access_admin_tracking_user,access.admin.tracking,model_asset_tracking,base.group_system,1,1,1,1
 access_accountant_tracking_user,access.accountant.tracking,model_asset_tracking,account.group_account_manager,1,1,1,1
+access_import_asset_wizard_user,access_import_asset_wizard,model_import_asset_wizard,,1,1,1,1

@@ -16,6 +16,7 @@ class AccountAsset(models.Model):
     date_of_transfer = fields.Date('Transfer Date')
     date_of_assignment = fields.Date('Assigned Date')
     date_received = fields.Date('Transfer Received')
+    origin_ref = fields.Char('Origin Ref')
     qty_received = fields.Float('Recieved Qty') 
     asset_history_ids = fields.One2many('asset.tracking', inverse_name='new_asset_id', string="History old", help="Used to get previous moves of asset transfers")
     asset_tracking_history_ids = fields.Many2many(

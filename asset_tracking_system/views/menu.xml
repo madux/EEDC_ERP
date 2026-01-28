@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data> 
+    <data>
       <menuitem id="menu_asset_root" name="Asset &amp; Tracking" sequence="10" web_icon="asset_tracking_system,static/description/investment.png"/>
       <menuitem id="menu_asset_assets" name="Assets Register" parent="asset_tracking_system.menu_asset_root" action="account_asset.action_account_asset_form" sequence="1"/>
 
@@ -12,18 +12,20 @@
           <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
           <field name="code">action=model.sudo().get_filtered_received_record()</field>
       </record>
+
       <record id="menu_action_tracking_assets" model="ir.actions.act_window">
         <field name="name">Assets</field>
         <field name="res_model">asset.tracking</field>
         <field name="view_mode">tree,form</field>
-      </record> 
+      </record>
+
       <record id="menu_action_transfer_tracking_assets" model="ir.actions.act_window">
         <field name="name">Assets transfer</field>
         <field name="res_model">asset.tracking</field>
         <field name="view_mode">tree,form</field>
         <field name="domain">[('state', 'in', ['draft','received'])]</field>
       </record>  
- 
+
       <menuitem id="menu_asset_setup"
                 name="Setup"
                 sequence="100"
@@ -33,18 +35,18 @@
                 name="Manage Assets &amp; Tracking"
                 parent="menu_asset_root"
                 sequence="20" />
+
       <menuitem id="menu_asset_transfered_items"
                 name="Transfered Assets"
                 parent="menu_asset_items"
                 sequence="10"
                 action="menu_action_transfer_tracking_assets"/>
+    
       <menuitem id="menu_asset_receive_items"
                 name="Assets to Receive"
                 parent="menu_asset_items"
                 sequence="20"
                 action="ir_action_server_receive_asset"/>
-
-        
 
       <menuitem id="menu_parent_asset_items"
                 name="Parent Assets"
