@@ -18,9 +18,9 @@ class ImportAssetWizard(models.TransientModel):
     update_existing_asset = fields.Boolean("Update Existing Non running Asset")
     
     index = fields.Integer("Sheet Index", default=0) # e.g 0, 1, 2
-    company_id = fields.Many2one(comodel="res.company", string="Company", required=True, default=lambda self: self.env.user.company_id.id)
-    location_id = fields.Many2one(comodel="multi.branch", string="Location", required=True, default=lambda self: self.env.user.branch_id.id)
-    asset_model = fields.Many2one(comodel="account.asset", string="Asset model", required=True)
+    company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.user.company_id.id)
+    location_id = fields.Many2one("multi.branch", string="Location", required=True, default=lambda self: self.env.user.branch_id.id)
+    asset_model = fields.Many2one('account.asset', string="Asset model", required=True)
     
     def get_asset_model(self, asset_model_obj):
         return dict(
@@ -28,28 +28,28 @@ class ImportAssetWizard(models.TransientModel):
             method_number = asset_model_obj.method_number,
             method_period = asset_model_obj.method_period,
             prorata_computation_type = asset_model_obj.prorata_computation_type,
-            account_asset_id = asset_model_obj.account_asset_id, # cost or fixed asset account
-            account_depreciation_id = asset_model_obj.account_depreciation_id,
-            account_depreciation_expense_id = asset_model_obj.account_depreciation_expense_id,
-            journal_id = asset_model_obj.journal_id,
+            account_asset_id = asset_model_obj.account_asset_id.id, # cost or fixed asset account
+            account_depreciation_id = asset_model_obj.account_depreciation_id.id,
+            account_depreciation_expense_id = asset_model_obj.account_depreciation_expense_id.id,
+            journal_id = asset_model_obj.journal_id.id,
         )
         
     def create_asset(self, **kwargs):
         # create account asset using asset model and values of our excel template
         asset_model = self.get_asset_model(self.asset_model)
-        model_id = self.asset_model.id,
-        location_id = self.location_id.id,
+        model_id = self.asset_model.id
+        location_id = self.location_id.id
+        _logger.info(f'what is asset model ===> {asset_model}')
+        method = asset_model.get('method')
+        prorata_computation_type = asset_model.get('prorata_computation_type')
+        account_asset_id = asset_model.get('account_asset_id')
+        account_depreciation_id = asset_model.get('account_depreciation_id')
+        account_depreciation_expense_id = asset_model.get('account_depreciation_expense_id')
+        journal_id = asset_model.get('journal_id')
+        method_period = asset_model.get('method_period')
         
-        method = asset_model.method
-        prorata_computation_type = asset_model.get('prorata_computation_type'),
-        account_asset_id = asset_model.get('account_asset_id'),
-        account_depreciation_id = asset_model.get('account_depreciation_id'),
-        account_depreciation_expense_id = asset_model.get('account_depreciation_expense_id'),
-        journal_id = asset_model.get('journal_id'),
-        method_period = asset_model.get('method_period'),
-        
-        method_number = kwargs.get('method_number'),
-        name = kwargs.get('name'),
+        method_number = kwargs.get('method_number')
+        name = kwargs.get('name')
         original_value = kwargs.get('original_value')
         prorata_date = kwargs.get('prorata_date')
         product_desc = kwargs.get('product_desc')
@@ -57,8 +57,8 @@ class ImportAssetWizard(models.TransientModel):
         serial_number = kwargs.get('serial_number')
         asset_code = kwargs.get('asset_code')
         origin_ref = kwargs.get('origin_ref')
-        
-        self.env['account.asset'].sudo().create({
+         
+        asset = self.env['account.asset'].sudo().create({
             'method': method,
             'method_number': method_number,
             'method_period': method_period,
@@ -69,7 +69,7 @@ class ImportAssetWizard(models.TransientModel):
             'journal_id': journal_id,
             'name': name,
             'model_id': model_id,
-            'location_id': location_id,
+            'source_location_id': location_id,
             'original_value': original_value,
             'prorata_date': prorata_date,
             'product_desc': product_desc,
@@ -77,7 +77,9 @@ class ImportAssetWizard(models.TransientModel):
             'serial_number': serial_number,
             'asset_code': asset_code,
             'origin_ref': origin_ref,
+            'asset_type': 'purchase',
         })
+        asset.update({'name': name})
         
     def _clean_numeric_value(self, value):
         """Clean and convert various formats to float"""
@@ -99,6 +101,31 @@ class ImportAssetWizard(models.TransientModel):
             except ValueError:
                 return 0.0
         return 0.0
+    
+
+    def compute_date_format(self, date_str):
+        """Convert various date formats to datetime object"""
+        appt_date = None
+        if date_str:
+            
+            if type(date_str) in [int, float]:
+                appt_date = datetime(*xlrd.xldate_as_tuple(date_str, 0)) 
+            elif type(date_str) in [str]:
+                if '-' in date_str:
+                    datesplit = date_str.split('-')
+                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                    appt_date = f"{d}-{m}-20{y}"
+                    appt_date = datetime.strptime(appt_date.strip(), '%d-%b-%Y') 
+                elif '/' in date_str:
+                    datesplit = date_str.split('/')
+                    d, m, y = datesplit[0], datesplit[1], datesplit[2]
+                    appt_date = f"{d}-{m}-20{y}"
+                    appt_date = datetime.strptime(appt_date.strip(), '%d-%b-%Y') 
+                else:
+                    appt_date = datetime(*xlrd.xldate_as_tuple(float(date_str), 0))
+        # raise ValidationError(f"Please provide name , {appt_date}, {date_str}")
+        
+        return appt_date
 
     def import_records_action(self):
         if self.data_file: 
@@ -125,12 +152,12 @@ class ImportAssetWizard(models.TransientModel):
                 code = str(int(asset_code)) if type(asset_code) in [float, int] else asset_code 
                 serial_number = str(int(serial_number)) if type(serial_number) in [float, int] else serial_number 
                 account_asset = self.env['account.asset'].sudo().search([
-                    ('asset_code', '=', code),
                     ('company_id', '=', self.company_id.id), 
-                    '|', ('serial_number', '=', serial_number), 
+                    '|', ('asset_code', '=', code), 
+                    ('serial_number', '=', serial_number), 
                     ], limit = 1)
                 if account_asset:
-                    asset_id = account_asset.id
+                    asset_id = account_asset
                 else:
                     asset_id = False 
             return asset_id
@@ -138,7 +165,7 @@ class ImportAssetWizard(models.TransientModel):
         for row in file_data:
             # try:
             sequence = row[0]
-            prorata_date = datetime.strptime(row[1], '%d/%m/%Y')
+            prorata_date = self.compute_date_format(row[1])
             origin_ref = row[2]
             asset_code = row[3]
             serial_number = row[4]
@@ -154,16 +181,17 @@ class ImportAssetWizard(models.TransientModel):
                 code = asset_code or serial_number
                 if self.update_existing_asset and found_asset_id.state == 'draft': 
                     found_asset_id.update({
-                        'name': name,
-                        'prorata_date': prorata_date,
-                        'origin_ref': name,
+                        'name': f"{asset_code or ''} - {name}",
+                        'prorata_date': prorata_date or fields.Date.today(),
+                        'origin_ref': name or asset_code,
                         'asset_code': asset_code,
                         'product_desc': product_desc,
                         'serial_number': serial_number,
-                        'location_id': location_id,
+                        'source_location_id': location_id,
                         'qty_received': qty_received,
                         'original_value': original_value,
                         'method_number': method_number,
+                        'asset_type': 'purchase',
                         
                         'method': self.asset_model.method,
                         'method_period': self.asset_model.method_period,
@@ -179,9 +207,9 @@ class ImportAssetWizard(models.TransientModel):
             else:
                 self.create_asset(
                     sequence=sequence,
-                    prorata_date=prorata_date,
+                    prorata_date=prorata_date or fields.Date.today(),
                     origin_ref=origin_ref,
-                    name=name,
+                    name=f"{asset_code or ''} - {name}",
                     asset_code=asset_code,
                     serial_number=serial_number,
                     product_desc=product_desc,

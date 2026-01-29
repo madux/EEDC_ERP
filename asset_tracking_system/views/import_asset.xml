@@ -9,9 +9,15 @@
                     <button name="import_records_action" string="Import Asset" type="object"  class="oe_highlight"/>
                     <!-- <button string="Cancel" class="oe_link" special="cancel"/> -->
                 </header>
+                <div class="row alert-info">
+                    <h4>
+                        For sample emplate: <a href='/asset_tracking_system/static/template/EEDC_Fixed Assets Register_Sample.xlsx' target="_blank"> Click to Download</a><br/>
+                        <!-- <a href="https://youtu.be/oSj1nknA4CA" target="_blank"> Watch Video</a> -->
+                    </h4>
+                </div>
                 <group>
                     <group>
-                        <field name="data_file" filename="name"/>
+                        <field name="data_file" filename="name" accept=".xlsx,.xls,.csv"/>
                         <field name="filename" invisible="1"/> 
                         <field name="update_existing_asset"/> 
                     </group>
@@ -32,7 +38,7 @@
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">import.asset.wizard</field>
         <field name="view_mode">tree,form</field>
-        <field name="target">current</field>
+        <field name="target">new</field>
     </record>
     
     <menuitem id="menu_import_asset_wizard" name="Import Asset" groups="base.group_system" sequence="12" parent="asset_tracking_system.menu_asset_root" action="action_import_asset_wizard"/> 
