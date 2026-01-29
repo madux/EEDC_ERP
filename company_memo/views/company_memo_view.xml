@@ -232,7 +232,7 @@
                                         <field name="description" string="Description" force_save="1" invisible="0" attrs="{'readonly':[('state','not in',['submit','Refuse'])],'required': [('product_id', '=', False)]}"/> 
 										<field name="quantity_available" string="Unit" force_save="1" sum="Total" 
 										attrs="{'readonly':[('state','not in',['submit','Refuse'])], 'invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])],'column_invisible': [('memo_type_key', 'in', ['Internal', 'leave_request'])]}"/> 
-                                        <field name="qty_to_issue" force_save="1" attrs="{'readonly': [('state', 'not in', ['Approve2','Approve'])]}" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
+                                        <field name="qty_to_issue" force_save="1" attrs="{'readonly': [('state', 'not in', ['Approve2','Approve'])],'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
 										<field name="issue_qty" force_save="1" readonly="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
 										<field name="open_qty" force_save="1" readonly="1" attrs="{'column_invisible': [('memo_type_key', 'not in', ['material_request'])]}"/>
 										

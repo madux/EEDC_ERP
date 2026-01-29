@@ -35,38 +35,38 @@
                 <!-- <xpath expr="//div[@name='branch_id']" position="replace">
                 </xpath> -->
                 <div class="oe_title">
-                    <label for="name" name="name_label" string="Asset number" invisible="state == 'model'"/>
-                    <label for="name" name="model_name_label" string="Asset Model number" invisible="state != 'model'"/>
+                    <label for="name" name="name_label" string="Asset number" attrs="{'invisible': [('state', '=', 'model')]}"/>
+                    <label for="name" name="model_name_label" string="Asset Model number" attrs="{'invisible': [('state', '!=', 'model')]}"/>
                     <h1>
-                        <field name="name" placeholder="e.g 1230043" string="Asset number" required="0" readonly="state != 'draft'"/>
+                        <field name="name" placeholder="e.g 1230043" string="Asset number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                     </h1>
                 </div>
                 <xpath expr="//page[@name='main_page']/group/group[3]" position="after">
                    
                     <separator string="Identification Other Description"/>
                     <group name="asset_info2">
-                        <field name="customer_id" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
+                        <field name="customer_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="state" invisible="1"/>
-                        <field name="branch_id" required="1" string="Business Unit" options="{'no_create':'True'}" readonly="state != 'draft'"/>
-                        <field name="asset_code" string="Asset Number" required="0" readonly="state != 'draft'" force_save="1" invisible="1" class="form-control"/>
-                        <field name="fleet_number" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="serial_number" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="product_desc" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="model_id" string="Parent Asset" domain="[('state', '=', 'model')]" options="{'no_quick_create': True}" context="{'default_state': 'model','default_account_asset_id': account_asset_id,'default_account_depreciation_id': account_depreciation_id, 'default_account_depreciation_expense_id': account_depreciation_expense_id}" readonly="state != 'draft'"/>
+                        <field name="branch_id" required="1" string="Business Unit" options="{'no_create':'True'}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        <field name="asset_code" string="Asset Number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="1" class="form-control"/>
+                        <field name="fleet_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="serial_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="product_desc" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="model_id" string="Parent Asset" domain="[('state', '=', 'model')]" options="{'no_quick_create': True}" context="{'default_state': 'model','default_account_asset_id': account_asset_id,'default_account_depreciation_id': account_depreciation_id, 'default_account_depreciation_expense_id': account_depreciation_expense_id}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                         <field name="parent_number" required="0" readonly="1" force_save="1" invisible="0" class="form-control"/>
                         <field name="transfer_status" readonly="1" />
-                    <field name="awaiting_transfer_location" readonly="1" invisible="transfer_status != 'Transfered &amp; Awaiting Receipt'"/>
-                    <field name="modify_action" force_save="1" invisible="1" readonly="state != 'draft'"/>
-                        <field name="date_of_commission" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="acquisition_date" required="0" readonly="state != 'draft'" force_save="1" invisible="0" string="Date Acquired" class="form-control"/>
-                        <field name="disposed_date" readonly="state != 'draft'" force_save="1" invisible="0" string="Date Disposed" required="modify_action == 'dispose'"/>
-                        <field name="insurance_policy_id" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="insurance_policy_number" required="insurance_policy_id != False" readonly="state != 'draft'" force_save="1" invisible="insurance_policy_id == False" class="form-control"/>
-                        <field name="product_age" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="responsible_employee_id" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="inventory_number" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="purchase_order" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
-                        <field name="qty_received" required="0" readonly="state != 'draft'" force_save="1" invisible="0" class="form-control"/>
+                    <field name="awaiting_transfer_location" readonly="1" attrs="{'invisible': [('transfer_status', '!=', 'Transfered &amp; Awaiting Receipt')]}" />
+                    <field name="modify_action" force_save="1" invisible="1" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        <field name="date_of_commission" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="acquisition_date" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" string="Date Acquired" class="form-control"/>
+                        <field name="disposed_date" attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('modify_action', '=', dispose)]}" force_save="1" invisible="0" string="Date Disposed"/>
+                        <field name="insurance_policy_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="insurance_policy_number" attrs="{'required': [('insurance_policy_id', '!=', False)], 'readonly': [('state', '!=', 'draft')], 'invisible': [('insurance_policy_id', '=',False)]}" force_save="1" class="form-control"/>
+                        <field name="product_age" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="responsible_employee_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="inventory_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="purchase_order" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="qty_received" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="to_transfer_expense" required="0" readonly="1" force_save="1"/>
                         <field name="date_received" required="0" readonly="1" force_save="1"/>
                         <field name="is_asset_from_procurement" required="0" readonly="1" force_save="1" invisible="0" class="form-control"/>
@@ -89,20 +89,7 @@
                     <field name="is_asset_additional_period" readonly="1"/>
                 </xpath>
             </field>
-        </record>
-        <!-- <record model="ir.ui.view" id="account_asset.view_account_asset_model_tree">
-            <field name="name">account.asset.register</field>
-            <field name="model">account.asset</field>
-            <field name="inherit_id" ref="account_asset.view_account_asset_tree"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='parent_id']" position="after">
-                    <field name="date_of_assignment"/>
-                    <field name="previous_location" required="0" readonly="0" force_save="1" invisible="0" string="Previous Location"/>
-                    <field name="source_location_id" required="0" readonly="0" force_save="1" invisible="0" string="Asset Location"/>
-                    <field name="date_of_transfer" optional="show"/>
-                </xpath>
-            </field>
-        </record> --> 
+        </record> 
 
         <record id="memo_asset_model_tree_view" model="ir.ui.view">
             <field name="name">Account Asset Register - list (override)</field>
@@ -132,37 +119,36 @@
                     </header>
                 </xpath>
                 <xpath expr="//field[@name='name']" position="after">
-                    <field name="product_desc" readonly="state == 'close'" string="Asset Description"/>
-                    <field name="source_location_id" readonly="state == 'close'"/>
+                    <field name="product_desc" attrs="{'readonly': [('state', '=', 'close')]}" string="Asset Description"/>
+                    <field name="source_location_id" attrs="{'readonly': [('state', '=', 'close')]}"/>
 
-                    <field name="serial_number" readonly="state == 'close'"/>
+                    <field name="serial_number" attrs="{'readonly': [('state', '=', 'close')]}"/>
                     <field name="model_id" string="Asset Model" domain="[('state','=', 'model')]" options="{'no_create':'True'}"/>
-                    <field name="category_id" options="{'no_create':'True'}" readonly="state == 'close'"/>
-                    <field name="branch_id" readonly="state == 'close'"/>
+                    <field name="category_id" options="{'no_create':'True'}" attrs="{'readonly': [('state', '=', 'close')]}"/>
+                    <field name="branch_id" attrs="{'readonly': [('state', '=', 'close')]}"/>
                     <field name="customer_id" readonly="1"/>
-                    <field name="responsible_bu" readonly="state == 'close'"/>
+                    <field name="responsible_bu" attrs="{'readonly': [('state', '=', 'close')]}"/>
                     <field name="previous_location" required="0" readonly="0" force_save="1" invisible="0" string="Previous Location" optional="show"/>
-                    <field name="prorata_date" readonly="state == 'close'" string="Start Date"/>
+                    <field name="prorata_date" attrs="{'readonly': [('state', '=', 'close')]}" string="Start Date"/>
                     <field name="original_value" string="Purchase Value (VAT)"
-                        readonly="state not in ['draft','model']"/>
+                        attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
 
-                    <field name="purchase_value_without_tax" 
-                        readonly="state not in ['draft','model']" optional="hide"/>
+                    <field name="purchase_value_without_tax" attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" optional="hide"/>
                     <field name="foreign_currency_amount" optional="hide"/> 
                     
-                    <field name="inventory_number" readonly="state == 'close'"/>
-                    <field name="account_asset_id" readonly="state == 'close'"/>
-                    <field name="account_depreciation_id" readonly="state == 'close'"/>
+                    <field name="inventory_number" attrs="{'readonly': [('state', '=', 'close')]}"/>
+                    <field name="account_asset_id" attrs="{'readonly': [('state', '=', 'close')]}"/>
+                    <field name="account_depreciation_id" attrs="{'readonly': [('state', '=', 'close')]}"/>
                     <field name="account_depreciation_expense_id"/>
                     <field name="acquisition_date" optional="hide"/>
                     <field name="method"
-                        readonly="state not in ['draft','model']"/>
+                        attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
                     <field name="method_number" string="Life (Months)"
-                        readonly="state not in ['draft','model']"/>
+                        attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
                     <field name="method_period" string="Period length"
-                        readonly="state not in ['draft','model']"/>
+                        attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
                     <field name="company_id" column_invisible="True"
-                        readonly="state != 'draft'"/>
+                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                     <field name="state" column_invisible="True"/>
                     <field name="date_of_assignment" optional="hide"/>
                     <field name="date_of_transfer" optional="hide"/>
@@ -175,12 +161,8 @@
                     <field name="depreciation_progress" widget="progressbar" optional="show"/>
                     <button name="view_asset_line" type="object" class="btn-sm" string="View"/>
                 </xpath>
-
             </field>
-        </record>
-
-        
-
+        </record> 
         <record model="ir.ui.view" id="memo_invisible_view_account_asset_model_tree">
             <field name="name">account.asset</field>
             <field name="model">account.asset</field>
@@ -198,19 +180,6 @@
                 <xpath expr="//field[@name='name']" position="attributes">
                     <attribute name="string">Asset number</attribute>
                 </xpath>
-                
-                <!-- <xpath expr="//field[@name='method_number']" position="attributes">
-                    <attribute name="column_invisible">1</attribute>
-                </xpath>
-                <xpath expr="//field[@name='method_period']" position="attributes">
-                    <attribute name="column_invisible">1</attribute>
-                </xpath> -->
-                <!-- <xpath expr="//field[@name='parent_id']" position="after">
-                    <field name="date_of_assignment"/>
-                    <field name="previous_location" required="0" readonly="0" force_save="1" invisible="0" string="Previous Location"/>
-                    <field name="source_location_id" required="0" readonly="0" force_save="1" invisible="0" string="Asset Location"/>
-                    <field name="date_of_transfer" optional="show"/>
-                </xpath> -->
             </field>
         </record> 
 
@@ -292,42 +261,6 @@
                 <xpath expr="//field[@name='name']" position="attributes">
                     <attribute name="string">Asset Number</attribute>
                 </xpath> 
-                <!-- <xpath expr="//field[@name='original_value']" position="attributes">
-                    <attribute name="string">Purchase Value (+TAX)</attribute>
-                </xpath>
-                <xpath expr="//field[@name='original_value']" position="after">
-                    <field name="purchase_value_without_tax" optional="show" required="0" readonly="0" force_save="1" invisible="0"/>
-                </xpath> -->
-                
-                <!-- <xpath expr="//field[@name='name']" position="after">
-                    <field name="product_desc" optional="show" required="0" string="Asset Description" readonly="0" force_save="1" invisible="0"/>
-                </xpath> -->
-                <!-- <xpath expr="//field[@name='acquisition_date']" position="after">
-                    <field name="product_age" optional="show" required="0" readonly="0" force_save="1" invisible="0" string="Asset Age(yrs)"/>
-                    <field name="serial_number" optional="show" required="0" readonly="0" force_save="1" invisible="0" string="Serial Number"/>
-                    <field name="modify_action" required="0" readonly="0" force_save="1" invisible="0" string="Asset Status"/>
-                    <field name="branch_id" required="0" readonly="0" force_save="1" invisible="0" string="Business unit"/>
-                    <field name="responsible_bu" optional="show" required="0" readonly="0" force_save="1" invisible="0" string="Responsible BU"/>
-                    <field name="inventory_number" optional="show" force_save="1" invisible="0" string="Inventory number"/>
-                    <field name="disposed_date"/>
-                    <field name="insurance_policy_id" optional="show"/>
-                    <field name="insurance_policy_number" optional="show"/>
-                    <field name="parent_number" optional="show"/>
-                    <field name="fleet_number" optional="show"/>
-                    <field name="account_asset_id" optional="show"/>
-                    <field name="account_depreciation_id" optional="show"/>
-                    <field name="account_depreciation_expense_id" optional="show"/>
-                    <field name="method" optional="show"/>
-                    <field name="method_number" optional="show"/>
-                    <field name="method_period" optional="show"/>
-                    <field name="prorata_date" optional="show"/>
-                    <field name="original_value" optional="show"/>
-                    <field name="book_value" optional="show"/>
-                    <field name="salvage_value" optional="show"/>
-                    <field name="gross_increase_value" optional="hide"/>
-                    <field name="value_residual" optional="hide"/> 
-
-                </xpath>-->
             </field>
         </record>
 
@@ -344,7 +277,6 @@
                     <field name="asset_remaining_value"/>
                     <filter string="Branch" name="add_filter" domain="[('branch_id','!=', False)]"/>
                     <filter string="Draft" name="state_by_draft" domain="[('state', '=', 'draft')]"/>
-                    <!-- <filter string="Running" name="state_by_running" domain="[('state', '=', 'running')]"/> -->
                     <filter string="Post" name="state_by_post" domain="[('state', '=', 'post')]"/>
                     <group expand='0' string='Group by...'>
                         <filter name="group_by_ref_id" string='Asset' domain="[]" context="{'group_by' : 'ref'}"/>
@@ -385,8 +317,6 @@
             <field name="domain">[('asset_id', '!=', False),('state', 'in', ['posted'])]</field>
             <field name="search_view_id" ref="company_memo.view_account_move_asset_filter"/>
             <field name="context">{'search_default_group_by_asset_batch_number_id': 1, 'search_default_group_by_branch_id': 1, 'search_default_group_by_asset_parent_id': 1}</field>
-
-            <!-- <field name="context">{'default_external_memo_request': True, 'default_is_internal_transfer': True,'default_is_fund_transfer': True,'default_payment_type': 'outbound'}</field>-->
         </record>
         <record id="view_depreciation_report_tree_action_bind" model="ir.actions.act_window.view">
             <field name="act_window_id" ref="company_memo.menu_action_depreciation_report"/>
@@ -413,8 +343,6 @@
                     <field name="asset_batch_number" string="Batch #"/>
                     <filter string="Branch" name="add_filter" domain="[('branch_id','!=', False)]"/>
                     <filter string="Cost center" name="add_cost_center_filter" domain="[('responsible_bu','!=', False)]"/>
-                    <!-- <filter string="Draft" name="state_by_draft" domain="[('parent_state', '=', 'draft')]"/>
-                    <filter string="Post" name="state_by_post" domain="[('parent_state', '=', 'post')]"/> -->
                     <group expand='0' string='Group by...'>
                         <filter name="group_by_ref_id" string='Asset' domain="[]" context="{'group_by' : 'ref'}"/>
                         <filter name="group_by_asset_batch_number_id" string='Batch Number' domain="[]" context="{'group_by' : 'asset_batch_number'}"/>

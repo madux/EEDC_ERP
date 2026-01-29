@@ -102,6 +102,7 @@ class accountAsset(models.Model):
     memo_id = fields.Many2one('memo.model', string="Memo id") 
     product_id = fields.Many2one('product.product', string="Product id", copy=True) 
     responsible_bu = fields.Many2one('multi.branch', string="Responsible Business Unit") 
+    branch_id = fields.Many2one('multi.branch', string="Branch") 
     responsible_employee_id = fields.Many2one('hr.employee', string="Responsible Employee ID") 
     disposed_date = fields.Datetime(string="Date Disposed", copy=True) 
     inventory_number = fields.Char(string="Inventory Number", copy=True) 
