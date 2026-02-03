@@ -179,7 +179,7 @@ class APIControllers(http.Controller):
             ]
         if create_date:
             domain = domain + [
-                ('create_date', '=>', create_date),
+                ('create_date', '>=', create_date),
             ]
         if employee_id:
             domain = domain + [
@@ -236,12 +236,12 @@ class APIControllers(http.Controller):
             ]
         if create_date:
             domain = domain + [
-                ('date_from', '=>', create_date),
+                ('date_from', '>=', create_date),
             ]
             
         if end_date:
             domain = domain + [
-                ('date_to', '<=', create_date),
+                ('date_to', '<=', end_date),
             ]
         if employee_id:
             domain = domain + [
@@ -251,6 +251,8 @@ class APIControllers(http.Controller):
         if leaves:
             for emp in leaves:
                 responseData = {
+                    'id': emp.id,
+                    'employee_id': emp.employee_id.id,
                     'company_id': emp.company_id.id,
                     'company_name': emp.company_id.name,
                     'full_name': emp.employee_id.name,
@@ -266,8 +268,11 @@ class APIControllers(http.Controller):
                     'district_name': emp.employee_id.branch_id.name,
                     'description': emp.name,
                     'duration': emp.duration_display,
-                    'start_date': emp.date_from,
-                    'end_date': emp.date_to,
+                    # 'start_date': emp.date_from,
+                    # 'end_date': emp.date_to,
+                    
+                    'start_date': emp.date_from.strftime('%d/%m/%Y %H:%M:%S') if emp.date_from else False,
+                    'end_date': emp.date_to.strftime('%d/%m/%Y %H:%M:%S') if emp.date_to else False,
                     'leave_status': 'Approved' if emp.state in ['validate', 'validate1'] \
                         else 'Submitted' if emp.state in ['draft'] else 'To be Approved' if emp.state in ['confirm'] else 'Refused',
                 }
@@ -279,7 +284,7 @@ class APIControllers(http.Controller):
         else:
             return json.dumps({
                 'status': False, 
-                'message': 'UnSuccessful: No employee data found with your defined filters ',
+                'message': 'UnSuccessful: No leave data found with your defined filters ',
                 'data': employee_details
                 })
         
