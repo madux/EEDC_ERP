@@ -181,7 +181,7 @@
 		<field name="arch" type="xml">
 			<xpath expr="//button[@name='action_paid']" position="after">
 				<button string="Report total" name="compute_payslip_total" type="object" class="oe_highlight"/>
-			</field>
+			</xpath>
 		</field>
     </record>
 </odoo>
