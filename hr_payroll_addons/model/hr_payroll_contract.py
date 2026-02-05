@@ -161,7 +161,22 @@ class HrContract(models.Model):
         if contracts and self.list_of_available_staff:
             for con in contracts:
                 if con.employee_id.employee_number not in eval(self.list_of_available_staff):
-                    con.active = False 
+                    con.active = False
+                    
+    def get_staff_not_in_list_of_available_staff(self):
+        employees = eval(self.list_of_available_staff)
+        error = []
+        if employees:
+            for emp in employees:
+                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp)],limit=1)
+                contracts = self.env['hr.contract'].search([('employee_id', '=', emp_id.id)], limit=1)
+                if not contracts:
+                    error.append(emp_id)
+                # if not contracts:
+                #     if con.employee_id.employee_number not in eval(self.list_of_available_staff):
+                #     con.active = False
+                
+        raise ValidationError(error)
                     
     @api.model
     def create(self, vals_list):
