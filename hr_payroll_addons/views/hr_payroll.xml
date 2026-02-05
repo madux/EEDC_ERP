@@ -72,9 +72,11 @@
 							<field name="x_houseloan"/>
 							<field name="x_dev"/>
 							<field name="x_district1"/>
-
 						</group>
 					</group>
+				</page>
+				<page string="Staff IDs" name="donotuse">
+					<field name ="list_of_available_staff"/>
 				</page>
 			</xpath>
 		</field>
