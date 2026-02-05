@@ -109,6 +109,7 @@ class HrContract(models.Model):
     converted_entry = fields.Boolean(string="Converted Entry")
     salary_advance = fields.Float(string="Salary Advance")
     list_of_available_staff = fields.Text(string="Available staff")
+    list_of_available_staff_with_details = fields.Text(string="Available staff details")
     
     x_PRORATA = fields.Float(string='PRORATA', default=30)
     # x_type = fields.Float(string='Is Contract Dont use', default=False)
@@ -177,6 +178,61 @@ class HrContract(models.Model):
                 #     con.active = False
                 
         raise ValidationError(error)
+    
+    def create_employee_contract(self):
+        '''if monthly wage is selected, use the fixed monthly wage of use existing eployee monthly wage configured'''
+        if not self.list_of_available_staff_with_details:
+            raise ValidationError("Error: please provide obj in this form [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]")
+        else:
+            employees_data = eval(self.list_of_available_staff_with_details) 
+            # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]
+            for emp in employees_data:
+                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id'))],limit=1)
+                if emp_id:
+                    contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
+                    if not contracts:
+                        monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
+                        structure_id = self.env['hr.payroll.structure'].search([('name', '=', emp.get('grade'))], limit=1)
+                        vals = {
+                                'name': f"Contract for {emp_id.name}",
+                                'employee_id': emp_id.id,
+                                'date_start': fields.Date.today(),
+                                # 'date_end': fields.Date.today() + timedelta(months),
+                                'structure_id': structure_id and structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+                                'department_id': emp_id.department_id.id,
+                                'hr_responsible_id': self.env.uid,
+                                'work_entry_source': 'calendar',
+                                'wage_type': 'monthly',
+                                'job_id': emp_id.job_id.id,
+                                'wage': monthly_wage,
+                                'monthly_yearly_costs': monthly_wage,
+                                'final_yearly_costs': monthly_wage * 12,
+                                'state': 'open',
+                            }
+                        contract_id = self.env['hr.contract'].create(vals)
+                        emp_id.contract_id = contract_id.id
+                        # else:
+                        #     if self.update_existing_contract:
+                        #         update_vals = {
+                        #         'date_start': self.contract_start_date,
+                        #         'date_end': self.contract_end_date,
+                        #         'structure_type_id': self.structure_type_id and self.structure_type_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+                        #         'department_id': emp.department_id.id,
+                        #         'hr_responsible_id': self.env.uid,
+                        #         'wage_type': 'monthly',
+                        #         'job_id': emp.job_id.id,
+                        #         'wage': monthly_wage,
+                        #         'monthly_yearly_costs': monthly_wage,
+                        #         'final_yearly_costs': self.contract_end_date * 12,
+                        #         'state': 'open',
+                        #     }
+                        #     emp.contract_id.write(update_vals)
+                    # else:
+                    #     raise ValidationError(
+                    #         '''
+                    #         Please provide contract start date
+                    #         '''
+                    #     )
                     
     @api.model
     def create(self, vals_list):
