@@ -171,7 +171,7 @@ class HrContract(models.Model):
                 emp_id = self.env['hr.employee'].search([('employee_number', '=', emp)],limit=1)
                 contracts = self.env['hr.contract'].search([('employee_id', '=', emp_id.id)], limit=1)
                 if not contracts:
-                    error.append(emp_id)
+                    error.append(emp_id.id)
                 # if not contracts:
                 #     if con.employee_id.employee_number not in eval(self.list_of_available_staff):
                 #     con.active = False
