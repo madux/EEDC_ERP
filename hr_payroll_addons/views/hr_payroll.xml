@@ -3,6 +3,17 @@
 	 Copyright 2016 Antonio Espinosa <antonio.espinosa@tecnativa.com>
 	 License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
+
+	<record id="hr_salary_rule_form_inherited" model="ir.ui.view">
+		<field name="name">hr.salary.rule</field>
+		<field name="model">hr.salary.rule</field>
+		<field name="inherit_id" ref="hr_payroll.hr_salary_rule_form"/>
+		<field name="arch" type="xml">
+			<field name="sequence" position="after">
+				<field name="compute_related_field" required="1"/>
+			</field>
+		</field>
+    </record>
 	<record id="view_hr_contact_kanban" model="ir.ui.view">
         <field name="name">hr.contract.kanban</field>
         <field name="model">hr.contract</field>
@@ -55,7 +66,7 @@
 							<field name="x_accountno"/>
 							<field name="x_RSA_PIN"/>
 							<field name="x_pfa2"/>
-							<field name="x_banksortcode" string="Sort code 1"/>
+							<field name="x_banksortcode" string="Sort code"/>
 							<field name="x_banksortcode1" string="Sort code 1"/>
 							<field name="x_banksortcode2" string="Sort code 2"/>
 						</group>
@@ -118,4 +129,59 @@
 			</xpath>
 		</field>
 	</record>
+
+
+
+	<record id="view_hr_payslip_addons_form_inherited" model="ir.ui.view">
+		<field name="name">hr.payslip</field> 
+		<field name="model">hr.payslip</field>
+		<field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+		<field name="arch" type="xml">
+			<xpath expr="//page[last()]" position="after">
+				<page string="Totals" name="information_total">
+					<group name="info_total1">
+						<group name="Detail">
+							<field name="x_compute_PRORATA"/>
+							<field name="x_compute_ARREARS"/>
+							<field name="x_compute_shiftall"/>
+							<field name="x_compute_cashiersall"/>
+							<field name="x_compute_uniondue"/>
+							<field name="x_compute_overpay"/>
+							<field name="x_compute_saladv"/>
+							<field name="x_compute_surcharge"/>
+							<field name="x_compute_thrift3"/>
+							<field name="x_compute_banksortcode" string="Sort code"/>
+							<field name="x_compute_banksortcode1" string="Sort code 1"/>
+							<field name="x_compute_banksortcode2" string="Sort code 2"/>
+						</group>
+						<group name="oasgrp">
+							<field name="x_compute_HMO1"/>
+							<field name="x_compute_HMO2"/>
+							<field name="x_compute_HMO3"/>
+							<field name="x_compute_HMO4"/>
+							<field name="x_compute_nhf_loan"/>
+							<field name="x_compute_volpfa"/>
+							<field name="x_compute_ssadue"/>
+							<field name="x_compute_cashadv"/>
+							<field name="x_compute_cashadv2"/>
+							<field name="x_compute_houseloan"/>
+							<field name="x_compute_dev"/>
+						</group>
+					</group>
+				</page>
+			</xpath>
+		</field>
+	</record>
+
+
+	<record id="hr_payslip_run_form_addons_form_inherited" model="ir.ui.view">
+		<field name="name">hr.payslip.run</field>
+		<field name="model">hr.payslip.run</field>
+		<field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+		<field name="arch" type="xml">
+			<xpath expr="//button[@name='action_paid']" position="after">
+				<button string="Report total" name="compute_payslip_total" type="object" class="oe_highlight"/>
+			</field>
+		</field>
+    </record>
 </odoo>
