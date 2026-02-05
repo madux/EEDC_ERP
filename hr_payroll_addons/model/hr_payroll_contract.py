@@ -240,7 +240,7 @@ class HrContract(models.Model):
                                 'employee_number': emp_id.employee_number,
                                 # 'date_start': fields.Date.today(),
                                 # 'date_end': fields.Date.today() + timedelta(months),
-                                # 'structure_id': structure_id and structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+                                'structure_id': structure_id and structure_id.id or contracts.structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
                                 'department_id': emp_id.department_id.id,
                                 'hr_responsible_id': self.env.uid,
                                 'work_entry_source': 'calendar',
