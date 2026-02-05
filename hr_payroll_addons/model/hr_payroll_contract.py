@@ -145,7 +145,7 @@ class HrContract(models.Model):
     x_banksortcode = fields.Char(string='Bank Sort code 3')
     x_RSA_PIN = fields.Char(string='RSA PIN')
     x_district1 = fields.Char(string='District', default=0)
-    x_district = fields.Char(string='District', default=0)  
+    x_district = fields.Char(string='District', default=0) 
     
     @api.onchange('employee_id')
     def onchange_employee(self):
