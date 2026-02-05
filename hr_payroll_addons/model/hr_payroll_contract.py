@@ -266,6 +266,8 @@ class HrContract(models.Model):
                                 'x_HMO3': emp.get('x_HMO3'),
                                 'x_bank': emp.get('x_bank'),
                                 'x_banksortcode1': emp.get('x_banksortcode1'),
+                                'x_banksortcode2': emp.get('x_banksortcode1'),
+                                'x_banksortcode': emp.get('x_banksortcode1'),
                                 'pension_company': emp.get('pension_company'),
                                 'x_accountno': emp.get('x_accountno'),
                                 'x_bank': emp.get('x_bank'),

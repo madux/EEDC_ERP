@@ -55,7 +55,7 @@
 							<field name="x_accountno"/>
 							<field name="x_RSA_PIN"/>
 							<field name="x_pfa2"/>
-							<field name="x_banksortcode" string="Sort code 1"/>
+							<field name="x_banksortcode" string="Sort code"/>
 							<field name="x_banksortcode1" string="Sort code 1"/>
 							<field name="x_banksortcode2" string="Sort code 2"/>
 						</group>
