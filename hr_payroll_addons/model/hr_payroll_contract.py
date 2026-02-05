@@ -114,7 +114,8 @@ class HrContract(models.Model):
     x_PRORATA = fields.Float(string='PRORATA', default=30)
     # x_type = fields.Float(string='Is Contract Dont use', default=False)
     x_type = fields.Boolean(string='Contract', default=False)
-    x_ARREARS = fields.Float(string='SURCHARGE', default=0) 
+    x_ARREARS = fields.Float(string='ARREARS', default=0) 
+    x_surcharge = fields.Float(string='SURCHAGE', default=0) 
     x_shiftall = fields.Float(string='Shift Allowance', default=0)
     x_cashiersall = fields.Float(string='Cashiers Allowance', default=0)
     x_uniondue = fields.Float(string='NUEE', help="Union Due", default=0)
@@ -138,6 +139,7 @@ class HrContract(models.Model):
     
     x_pfa2 = fields.Selection([('False','None'),('STANBIC IBTC PENSION MANAGERS','STANBIC IBTC PENSION MANAGERS'),('OAK PENSIONS LIMITED','OAK PENSIONS LIMITED'),('FUG PENSIONS','FUG PENSIONS'),('CRUSADER STERLING PENSIONS','CRUSADER STERLING PENSIONS'),('GUARANTY TRUST PENSION MANAGERS LIMITED','GUARANTY TRUST PENSION MANAGERS LIMITED'),('FIDELITY','FIDELITY') ,('IGI PENSION FUND MANAGERS LTD','IGI PENSION FUND MANAGERS LTD'),('PAL PENSIONS','PAL PENSIONS'),('AXA MANSARD PENSIONS','AXA MANSARD PENSIONS'),('LEADWAY PENSION','LEADWAY PENSION'),('SIGMA PENSIONS LIMITED','SIGMA PENSIONS LIMITED'),('ARM PENSION MANAGERS','ARM PENSION MANAGERS') ,('AIICO','AIICO'),('FIRST GUARANTEE PENSION LIMITED','FIRST GUARANTEE PENSION LIMITED'),(' TANGERINE APT PENSIONS','TANGERINE APT PENSIONS'),('NLPC PFA LTD','NLPC PFA LTD'),('TRUST FUND PENSIONS PLC','TRUST FUND PENSIONS PLC'),('NORRENBERGER PENSIONS','NORRENBERGER PENSIONS') ,('FCMB PENSIONS','FCMB PENSIONS'),('NPF PENSIONS LIMITED','N.P.F. PENSIONS LIMITED'),('PREMIUM PENSION LIMITED','PREMIUM PENSION LIMITED'),('ACCESS PENSIONS LIMITED','ACCESS PENSIONS LIMITED')], 
                                  string='PFA')
+    pension_company = fields.Char(string='PENSION Company')
     x_banksortcode1 = fields.Char(string='Bank Sort code')
     x_banksortcode2 = fields.Char(string='Bank Sort Code 2', help="sort code 2")
     x_banksortcode = fields.Char(string='Bank Sort code 3')
@@ -185,14 +187,14 @@ class HrContract(models.Model):
             raise ValidationError("Error: please provide obj in this form [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]")
         else:
             employees_data = eval(self.list_of_available_staff_with_details) 
-            # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]
+            # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00, }]
             for emp in employees_data:
                 emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id'))],limit=1)
                 if emp_id:
                     contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
+                    monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
+                    structure_id = self.env['hr.payroll.structure'].search([('name', '=', emp.get('grade'))], limit=1)
                     if not contracts:
-                        monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
-                        structure_id = self.env['hr.payroll.structure'].search([('name', '=', emp.get('grade'))], limit=1)
                         vals = {
                                 'name': f"Contract for {emp_id.name}",
                                 'employee_id': emp_id.id,
@@ -208,31 +210,69 @@ class HrContract(models.Model):
                                 'monthly_yearly_costs': monthly_wage,
                                 'final_yearly_costs': monthly_wage * 12,
                                 'state': 'open',
+                                'x_ARREARS': emp.get('x_ARREARS'),
+                                'x_shiftall': emp.get('x_shiftall'),
+                                'x_cashiersall': emp.get('x_cashiersall'),
+                                'x_dev': emp.get('x_dev'),
+                                'x_surcharge': emp.get('x_surcharge'),
+                                'x_thrift3': emp.get('x_thrift3'),
+                                'x_saladv': emp.get('x_saladv'),
+                                'x_uniondue': emp.get('x_uniondue'),
+                                'x_ssadue': emp.get('x_ssadue'),
+                                'x_nhf_loan': emp.get('x_nhf_loan'),
+                                'x_volpfa': emp.get('x_volpfa'),
+                                'x_HMO1': emp.get('x_HMO1'),
+                                'x_HMO2': emp.get('x_HMO2'),
+                                'x_HMO3': emp.get('x_HMO3'),
+                                'x_bank': emp.get('x_bank'),
+                                'x_banksortcode1': emp.get('x_banksortcode1'),
+                                'pension_company': emp.get('pension_company'),
+                                'x_accountno': emp.get('x_accountno'),
+                                'x_bank': emp.get('x_bank'),
+                                'x_RSA_PIN': emp.get('x_RSA_PIN'),
                             }
                         contract_id = self.env['hr.contract'].create(vals)
                         emp_id.contract_id = contract_id.id
-                        # else:
-                        #     if self.update_existing_contract:
-                        #         update_vals = {
-                        #         'date_start': self.contract_start_date,
-                        #         'date_end': self.contract_end_date,
-                        #         'structure_type_id': self.structure_type_id and self.structure_type_id.id or self.env.ref('hr_contract.structure_type_employee').id,
-                        #         'department_id': emp.department_id.id,
-                        #         'hr_responsible_id': self.env.uid,
-                        #         'wage_type': 'monthly',
-                        #         'job_id': emp.job_id.id,
-                        #         'wage': monthly_wage,
-                        #         'monthly_yearly_costs': monthly_wage,
-                        #         'final_yearly_costs': self.contract_end_date * 12,
-                        #         'state': 'open',
-                        #     }
-                        #     emp.contract_id.write(update_vals)
-                    # else:
-                    #     raise ValidationError(
-                    #         '''
-                    #         Please provide contract start date
-                    #         '''
-                    #     )
+                    else:
+                        update_vals = {
+                                'name': f"Contract for {emp_id.name}",
+                                'employee_id': emp_id.id,
+                                'employee_number': emp_id.employee_number,
+                                # 'date_start': fields.Date.today(),
+                                # 'date_end': fields.Date.today() + timedelta(months),
+                                'structure_id': structure_id and structure_id.id or contracts.structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+                                'department_id': emp_id.department_id.id,
+                                'hr_responsible_id': self.env.uid,
+                                'work_entry_source': 'calendar',
+                                'wage_type': 'monthly',
+                                'job_id': emp_id.job_id.id,
+                                'wage': monthly_wage,
+                                'monthly_yearly_costs': monthly_wage,
+                                'final_yearly_costs': monthly_wage * 12,
+                                'state': 'open',
+                                'x_ARREARS': emp.get('x_ARREARS'),
+                                'x_shiftall': emp.get('x_shiftall'),
+                                'x_cashiersall': emp.get('x_cashiersall'),
+                                'x_dev': emp.get('x_dev'),
+                                'x_surcharge': emp.get('x_surcharge'),
+                                'x_thrift3': emp.get('x_thrift3'),
+                                'x_saladv': emp.get('x_saladv'),
+                                'x_uniondue': emp.get('x_uniondue'),
+                                'x_ssadue': emp.get('x_ssadue'),
+                                'x_nhf_loan': emp.get('x_nhf_loan'),
+                                'x_volpfa': emp.get('x_volpfa'),
+                                'x_HMO1': emp.get('x_HMO1'),
+                                'x_HMO2': emp.get('x_HMO2'),
+                                'x_HMO3': emp.get('x_HMO3'),
+                                'x_bank': emp.get('x_bank'),
+                                'x_banksortcode1': emp.get('x_banksortcode1'),
+                                'pension_company': emp.get('pension_company'),
+                                'x_accountno': emp.get('x_accountno'),
+                                'x_bank': emp.get('x_bank'),
+                                'x_RSA_PIN': emp.get('x_RSA_PIN'),
+                            }
+                        contracts.write(update_vals)
+                     
                     
     @api.model
     def create(self, vals_list):
