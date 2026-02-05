@@ -59,7 +59,14 @@ class APIControllers(http.Controller):
                 )
 
             request.session.uid = access_token_data.user_id.id
-            request.update_env(user=access_token_data.user_id.id, context=None, su=None)
+            
+            request.session.session_token = token
+            request.update_env(
+                user=access_token_data.user_id.id,
+                context=dict(request.env.context),
+                su=False
+            )
+            # request.update_env(user=access_token_data.user_id.id, context=None, su=None)
             return func(self, *args, **kwargs)
         return wrap
     
