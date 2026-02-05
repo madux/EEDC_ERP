@@ -165,7 +165,23 @@
 							<field name="x_compute_cashadv"/>
 							<field name="x_compute_cashadv2"/>
 							<field name="x_compute_houseloan"/>
-							<field name="x_compute_dev"/>
+							<field name="x_compute_house_loan"/>
+							<field name="x_compute_basic"/>
+							<field name="x_compute_total_net"/>
+							<field name="x_compute_tax_compute_paid"/>
+							<field name="x_compute_tax_compute_income"/>
+							<field name="x_compute_tax_compute_relief"/>
+							<field name="x_compute_total_gross"/>
+							<field name="x_compute_life_assurance_premium"/>
+							<field name="x_compute_national_housing_fund"/>
+							<field name="x_compute_union_due_local"/>
+							<field name="x_compute_house_allowance"/>
+							<field name="x_compute_utility"/>
+							<field name="x_compute_meal"/>
+							<field name="x_compute_rent_relief"/>
+							<field name="x_compute_hazard"/>
+							<field name="x_compute_transport_allowance"/>
+							<field name="x_compute_pfa_employee_amount"/>
 						</group>
 					</group>
 				</page>

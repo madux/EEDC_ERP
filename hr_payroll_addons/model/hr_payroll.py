@@ -72,7 +72,7 @@ class HRPayslip(models.Model):
     x_compute_uniondue = fields.Float(string='Compute NUEE', help="Union Due", default=0,store=True,)
     x_compute_overpay = fields.Float(string='Compute Overpay', default=0,store=True,)
     x_compute_saladv = fields.Float(string='Compute SALARY ADV', default=0,store=True)
-    x_compute_thrift3 = fields.Float(string='Compute Cooperative', default=0,store=True)
+    x_compute_thrift3 = fields.Float(string='Compute Cooperative/ thrift', default=0,store=True)
     x_compute_HMO1 = fields.Float(string='Compute HMP Pre Family', default=0,store=True)
     x_compute_HMO2 = fields.Float(string='Compute HMP Pre Single', default=0,store=True)
     x_compute_HMO3 = fields.Float(string='Compute HMO Std Family', default=0,store=True)
@@ -84,17 +84,120 @@ class HRPayslip(models.Model):
     x_compute_cashadv2 = fields.Float(string='Compute DIST CASH ADV', default=0,store=True)
     x_compute_houseloan = fields.Float(string='Compute HOUSE LOAN DED', default=0,store=True)
     x_compute_dev = fields.Float(string='Compute Development Levy', default=0,store=True)
-    x_compute_bank = fields.Char(string='Bank')
-    x_compute_emp_type = fields.Char(string='Employee type')
-    x_compute_accountno = fields.Char(string='Account No')
+    x_compute_bank = fields.Char(string='Bank', related="contract_id.x_bank")
+    x_compute_emp_type = fields.Char(string='Employee type', related="contract_id.x_emp_type")
+    x_compute_accountno = fields.Char(string='Account No', related="contract_id.x_accountno")
     
     x_compute_pfa2 = fields.Selection([('False','None'),('STANBIC IBTC PENSION MANAGERS','STANBIC IBTC PENSION MANAGERS'),('OAK PENSIONS LIMITED','OAK PENSIONS LIMITED'),('FUG PENSIONS','FUG PENSIONS'),('CRUSADER STERLING PENSIONS','CRUSADER STERLING PENSIONS'),('GUARANTY TRUST PENSION MANAGERS LIMITED','GUARANTY TRUST PENSION MANAGERS LIMITED'),('FIDELITY','FIDELITY') ,('IGI PENSION FUND MANAGERS LTD','IGI PENSION FUND MANAGERS LTD'),('PAL PENSIONS','PAL PENSIONS'),('AXA MANSARD PENSIONS','AXA MANSARD PENSIONS'),('LEADWAY PENSION','LEADWAY PENSION'),('SIGMA PENSIONS LIMITED','SIGMA PENSIONS LIMITED'),('ARM PENSION MANAGERS','ARM PENSION MANAGERS') ,('AIICO','AIICO'),('FIRST GUARANTEE PENSION LIMITED','FIRST GUARANTEE PENSION LIMITED'),(' TANGERINE APT PENSIONS','TANGERINE APT PENSIONS'),('NLPC PFA LTD','NLPC PFA LTD'),('TRUST FUND PENSIONS PLC','TRUST FUND PENSIONS PLC'),('NORRENBERGER PENSIONS','NORRENBERGER PENSIONS') ,('FCMB PENSIONS','FCMB PENSIONS'),('NPF PENSIONS LIMITED','N.P.F. PENSIONS LIMITED'),('PREMIUM PENSION LIMITED','PREMIUM PENSION LIMITED'),('ACCESS PENSIONS LIMITED','ACCESS PENSIONS LIMITED')], 
-                                 string='PFA')
-    x_compute_pension_company = fields.Char(string='PENSION Company')
-    x_compute_banksortcode1 = fields.Char(string='Bank Sort code')
-    x_compute_banksortcode2 = fields.Char(string='Bank Sort Code 2', help="sort code 2")
-    x_compute_banksortcode = fields.Char(string='Bank Sort code 3')
-    x_compute_RSA_PIN = fields.Char(string='RSA PIN')
+                                 string='PFA', related="contract_id.x_pfa2")
+    x_compute_pension_company = fields.Char(string='PENSION Company', related="contract_id.x_pfa2")
+    x_compute_banksortcode1 = fields.Char(string='Bank Sort code', related="contract_id.x_banksortcode1")
+    x_compute_banksortcode2 = fields.Char(string='Bank Sort Code 2', help="sort code 2", related="contract_id.x_banksortcode2")
+    x_compute_banksortcode = fields.Char(string='Bank Sort code 3', related="contract_id.x_banksortcode")
+    x_compute_RSA_PIN = fields.Char(string='RSA PIN', related="contract_id.x_RSA_PIN")
+    
+    
+    x_compute_transport_allowance = fields.Float(
+        string='Transport Allowance',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_rent_relief = fields.Float(
+        string='Rent Relief',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_hazard = fields.Float(
+        string='Hazard',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_meal = fields.Float(
+        string='Meal',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_utility = fields.Float(
+        string='Utility',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_house_allowance = fields.Float(
+        string='House Allowance',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_union_due_local = fields.Float(
+        string='Union Due (Local)',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_national_housing_fund = fields.Float(
+        string='National Housing Fund',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_pfa_employee_amount = fields.Float(
+        string='PFA Employee Amount',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_life_assurance_premium = fields.Float(
+        string='Life Assurance Premium',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_total_gross = fields.Float(
+        string='Total Gross',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_relief = fields.Float(
+        string='Tax Relief',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_income = fields.Float(
+        string='Taxable Income',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_paid = fields.Float(
+        string='Tax Paid',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_total_net = fields.Float(
+        string='Total Net',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_basic = fields.Float(
+        string='Basic Salary',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_house_loan = fields.Float(
+        string='House Loan',
+        default=0.0,
+        stsore=True
+    )
     
     def compute_payslip_total(self):
         """
