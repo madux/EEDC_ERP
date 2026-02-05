@@ -3,6 +3,7 @@ from odoo.exceptions import ValidationError
 from datetime import datetime, date
 import logging
 
+
 _logger = logging.getLogger(__name__)
 
 class HREmployee(models.Model):
@@ -104,7 +105,10 @@ class HrContract(models.Model):
     hmo = fields.Char(string="HMO")
     nhf_loan = fields.Float(string="NHF LOAN")
     overpay = fields.Float(string="Overpay")
+    active = fields.Boolean(string="Active")
+    converted_entry = fields.Boolean(string="Converted Entry")
     salary_advance = fields.Float(string="Salary Advance")
+    list_of_available_staff = fields.Text(string="Available staff")
     
     x_PRORATA = fields.Float(string='PRORATA', default=30)
     # x_type = fields.Float(string='Is Contract Dont use', default=False)
@@ -151,7 +155,14 @@ class HrContract(models.Model):
         active_contract_ids = self.env['hr.contract'].search([('employee_id.active', '=', True)])
         for ct in active_contract_ids:
             ct.state = 'open'
-
+            
+    def remove_staff_not_listed(self):
+        contracts = self.env['hr.contract'].search([])
+        if contracts and self.list_of_available_staff:
+            for con in contracts:
+                if con.employee_id.employee_number not in eval(self.list_of_available_staff):
+                    con.active = False 
+                    
     @api.model
     def create(self, vals_list):
         """Override create to support import validation and employee mapping."""
