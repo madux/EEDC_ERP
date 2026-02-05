@@ -102,7 +102,6 @@ class HrContract(models.Model):
     bank = fields.Char(string="Bank")
     bank_account = fields.Char(string="Bank Account")
     hmo = fields.Char(string="HMO")
-    salary_advance = fields.Float(string="Salary Advance")
     nhf_loan = fields.Float(string="NHF LOAN")
     overpay = fields.Float(string="Overpay")
     salary_advance = fields.Float(string="Salary Advance")
@@ -128,7 +127,7 @@ class HrContract(models.Model):
     x_cashadv2 = fields.Float(string='DIST CASH ADV', default=0)
     x_houseloan = fields.Float(string='HOUSE LOAN DED', default=0)
     x_dev = fields.Float(string='Development Levy', default=0)
-    x_bank = fields.Char(string='Bank Account')
+    x_bank = fields.Char(string='Bank')
     x_emp_type = fields.Char(string='Employee type')
     x_accountno = fields.Char(string='Account No')
     
