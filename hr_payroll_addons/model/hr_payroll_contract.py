@@ -189,8 +189,9 @@ class HrContract(models.Model):
         else:
             employees_data = eval(self.list_of_available_staff_with_details) 
             # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00, }]
+            errors = []
             for emp in employees_data:
-                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id'))],limit=1)
+                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id')), ('active', 'in', [True, False])],limit=1)
                 if emp_id:
                     contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
                     monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
@@ -275,8 +276,12 @@ class HrContract(models.Model):
                                 'x_RSA_PIN': emp.get('x_RSA_PIN'),
                             }
                         contracts.write(update_vals)
-                     
-                    
+                    emp_id.active = True
+                else:
+                    errors.append(f"{emp.get('staff_id')} does not exist")     
+            if errors:
+                raise ValidationError(errors)     
+               
     @api.model
     def create(self, vals_list):
         """Override create to support import validation and employee mapping."""
