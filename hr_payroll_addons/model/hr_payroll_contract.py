@@ -3,7 +3,7 @@ from odoo.exceptions import ValidationError
 from datetime import datetime, date
 import logging
 
-
+import json
 _logger = logging.getLogger(__name__)
 
 class HREmployee(models.Model):
@@ -195,107 +195,199 @@ class HrContract(models.Model):
                     'is_external_staff': True, 
                 })
             # raise ValidationError(employees)
-    
+            
     def create_employee_contract(self):
-        '''if monthly wage is selected, use the fixed monthly wage of use existing eployee monthly wage configured'''
         if not self.list_of_available_staff_with_details:
-            raise ValidationError("Error: please provide obj in this form [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]")
-        else:
-            employees_data = eval(self.list_of_available_staff_with_details) 
-            # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00, }]
-            errors = []
-            for emp in employees_data:
-                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id')), ('active', 'in', [True, False])],limit=1)
-                if emp_id:
-                    contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
-                    monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
-                    structure_id = self.env['hr.payroll.structure'].search([('name', '=', emp.get('grade'))], limit=1)
-                    if not contracts:
-                        vals = {
-                                'name': f"Contract for {emp_id.name}",
-                                'employee_id': emp_id.id,
-                                'date_start': fields.Date.today(),
-                                # 'date_end': fields.Date.today() + timedelta(months),
-                                'structure_id': structure_id and structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
-                                'department_id': emp_id.department_id.id,
-                                'hr_responsible_id': self.env.uid,
-                                'work_entry_source': 'calendar',
-                                'wage_type': 'monthly',
-                                'job_id': emp_id.job_id.id,
-                                'wage': monthly_wage,
-                                'monthly_yearly_costs': monthly_wage,
-                                'final_yearly_costs': monthly_wage * 12,
-                                'state': 'open',
-                                'x_ARREARS': emp.get('x_ARREARS'),
-                                'x_shiftall': emp.get('x_shiftall'),
-                                'x_cashiersall': emp.get('x_cashiersall'),
-                                'x_dev': emp.get('x_dev'),
-                                'x_surcharge': emp.get('x_surcharge'),
-                                'x_thrift3': emp.get('x_thrift3'),
-                                'x_saladv': emp.get('x_saladv'),
-                                'x_uniondue': emp.get('x_uniondue'),
-                                'x_ssadue': emp.get('x_ssadue'),
-                                'x_nhf_loan': emp.get('x_nhf_loan'),
-                                'x_volpfa': emp.get('x_volpfa'),
-                                'x_HMO1': emp.get('x_HMO1'),
-                                'x_HMO2': emp.get('x_HMO2'),
-                                'x_HMO3': emp.get('x_HMO3'),
-                                'x_bank': emp.get('x_bank'),
-                                'x_banksortcode1': emp.get('x_banksortcode1'),
-                                'pension_company': emp.get('pension_company'),
-                                'x_accountno': emp.get('x_accountno'),
-                                'x_bank': emp.get('x_bank'),
-                                'x_RSA_PIN': emp.get('x_RSA_PIN'),
-                            }
-                        contract_id = self.env['hr.contract'].create(vals)
-                        emp_id.contract_id = contract_id.id
-                    else:
-                        update_vals = {
-                                'name': f"Contract for {emp_id.name}",
-                                'employee_id': emp_id.id,
-                                'employee_number': emp_id.employee_number,
-                                # 'date_start': fields.Date.today(),
-                                # 'date_end': fields.Date.today() + timedelta(months),
-                                'structure_id': structure_id and structure_id.id or contracts.structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
-                                'department_id': emp_id.department_id.id,
-                                'hr_responsible_id': self.env.uid,
-                                'work_entry_source': 'calendar',
-                                'wage_type': 'monthly',
-                                'job_id': emp_id.job_id.id,
-                                'wage': monthly_wage,
-                                'monthly_yearly_costs': monthly_wage,
-                                'final_yearly_costs': monthly_wage * 12,
-                                'state': 'open',
-                                'x_ARREARS': emp.get('x_ARREARS'),
-                                'x_shiftall': emp.get('x_shiftall'),
-                                'x_cashiersall': emp.get('x_cashiersall'),
-                                'x_dev': emp.get('x_dev'),
-                                'x_surcharge': emp.get('x_surcharge'),
-                                'x_thrift3': emp.get('x_thrift3'),
-                                'x_saladv': emp.get('x_saladv'),
-                                'x_uniondue': emp.get('x_uniondue'),
-                                'x_ssadue': emp.get('x_ssadue'),
-                                'x_nhf_loan': emp.get('x_nhf_loan'),
-                                'x_volpfa': emp.get('x_volpfa'),
-                                'x_HMO1': emp.get('x_HMO1'),
-                                'x_HMO2': emp.get('x_HMO2'),
-                                'x_HMO3': emp.get('x_HMO3'),
-                                'x_bank': emp.get('x_bank'),
-                                'x_banksortcode1': emp.get('x_banksortcode1'),
-                                'x_banksortcode2': emp.get('x_banksortcode1'),
-                                'x_banksortcode': emp.get('x_banksortcode1'),
-                                'pension_company': emp.get('pension_company'),
-                                'x_accountno': emp.get('x_accountno'),
-                                'x_bank': emp.get('x_bank'),
-                                'x_RSA_PIN': emp.get('x_RSA_PIN'),
-                            }
-                        contracts.write(update_vals)
-                    emp_id.active = True
-                    _logger.info(f"RUNNING DICT 1===> {emp.get('staff_id')}")
-                else:
-                    errors.append(f"{emp.get('staff_id')} does not exist")     
-            if errors:
-                raise ValidationError(errors)     
+            raise ValidationError(
+                "Provide data like: [{'staff_id':'34542','grade':'345/b','wage':324.00}]"
+            )
+
+        try:
+            employees_data = json.loads(self.list_of_available_staff_with_details)
+        except Exception:
+            raise ValidationError("Invalid JSON format")
+
+        staff_ids = [emp.get('staff_id') for emp in employees_data if emp.get('staff_id')]
+
+        # 🔥 Fetch employees ONCE (ignore active flag)
+        employees = self.env['hr.employee']\
+            .with_context(active_test=False)\
+            .search([('employee_number', 'in', staff_ids)])
+
+        emp_map = {emp.employee_number: emp for emp in employees}
+
+        # 🔥 Fetch contracts ONCE
+        contracts = self.env['hr.contract'].search([
+            ('employee_id', 'in', employees.ids),
+            ('active', '=', True)
+        ])
+        contract_map = {c.employee_id.id: c for c in contracts}
+
+        # 🔥 Fetch structures ONCE
+        grades = list({emp.get('grade') for emp in employees_data if emp.get('grade')})
+        structures = self.env['hr.payroll.structure'].search([('name', 'in', grades)])
+        structure_map = {s.name: s.id for s in structures}
+
+        errors = []
+
+        for emp in employees_data:
+            staff_id = emp.get('staff_id')
+            employee = emp_map.get(staff_id)
+
+            if not employee:
+                errors.append(f"{staff_id} does not exist")
+                continue
+
+            monthly_wage = float(emp.get('wage') or 0)
+            structure_id = structure_map.get(emp.get('grade'))
+
+            vals = {
+                'name': f"Contract for {employee.name}",
+                'employee_id': employee.id,
+                'date_start': fields.Date.today(),
+                'structure_id': structure_id or self.env.ref(
+                    'hr_contract.structure_type_employee'
+                ).id,
+                'department_id': employee.department_id.id,
+                'hr_responsible_id': self.env.uid,
+                'work_entry_source': 'calendar',
+                'wage_type': 'monthly',
+                'job_id': employee.job_id.id,
+                'wage': monthly_wage,
+                'monthly_yearly_costs': monthly_wage,
+                'final_yearly_costs': monthly_wage * 12,
+                'state': 'open',
+                'x_ARREARS': emp.get('x_ARREARS'),
+                'x_shiftall': emp.get('x_shiftall'),
+                'x_cashiersall': emp.get('x_cashiersall'),
+                'x_dev': emp.get('x_dev'),
+                'x_surcharge': emp.get('x_surcharge'),
+                'x_thrift3': emp.get('x_thrift3'),
+                'x_saladv': emp.get('x_saladv'),
+                'x_uniondue': emp.get('x_uniondue'),
+                'x_ssadue': emp.get('x_ssadue'),
+                'x_nhf_loan': emp.get('x_nhf_loan'),
+                'x_volpfa': emp.get('x_volpfa'),
+                'x_HMO1': emp.get('x_HMO1'),
+                'x_HMO2': emp.get('x_HMO2'),
+                'x_HMO3': emp.get('x_HMO3'),
+                'x_bank': emp.get('x_bank'),
+                'x_accountno': emp.get('x_accountno'),
+                'x_RSA_PIN': emp.get('x_RSA_PIN'),
+                'pension_company': emp.get('pension_company'),
+            }
+
+            contract = contract_map.get(employee.id)
+            if contract:
+                contract.write(vals)
+            else:
+                self.env['hr.contract'].create(vals)
+
+            employee.active = True
+
+        if errors:
+            raise ValidationError("\n".join(errors))
+    
+    # def create_employee_contract(self):
+    #     '''if monthly wage is selected, use the fixed monthly wage of use existing eployee monthly wage configured'''
+    #     if not self.list_of_available_staff_with_details:
+    #         raise ValidationError("Error: please provide obj in this form [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00}]")
+    #     else:
+    #         employees_data = eval(self.list_of_available_staff_with_details) 
+    #         # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00, }]
+    #         errors = []
+    #         for emp in employees_data:
+    #             emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id')), ('active', 'in', [True, False])],limit=1)
+    #             if emp_id:
+    #                 contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
+    #                 monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
+    #                 structure_id = self.env['hr.payroll.structure'].search([('name', '=', emp.get('grade'))], limit=1)
+    #                 if not contracts:
+    #                     vals = {
+    #                             'name': f"Contract for {emp_id.name}",
+    #                             'employee_id': emp_id.id,
+    #                             'date_start': fields.Date.today(),
+    #                             # 'date_end': fields.Date.today() + timedelta(months),
+    #                             'structure_id': structure_id and structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+    #                             'department_id': emp_id.department_id.id,
+    #                             'hr_responsible_id': self.env.uid,
+    #                             'work_entry_source': 'calendar',
+    #                             'wage_type': 'monthly',
+    #                             'job_id': emp_id.job_id.id,
+    #                             'wage': monthly_wage,
+    #                             'monthly_yearly_costs': monthly_wage,
+    #                             'final_yearly_costs': monthly_wage * 12,
+    #                             'state': 'open',
+    #                             'x_ARREARS': emp.get('x_ARREARS'),
+    #                             'x_shiftall': emp.get('x_shiftall'),
+    #                             'x_cashiersall': emp.get('x_cashiersall'),
+    #                             'x_dev': emp.get('x_dev'),
+    #                             'x_surcharge': emp.get('x_surcharge'),
+    #                             'x_thrift3': emp.get('x_thrift3'),
+    #                             'x_saladv': emp.get('x_saladv'),
+    #                             'x_uniondue': emp.get('x_uniondue'),
+    #                             'x_ssadue': emp.get('x_ssadue'),
+    #                             'x_nhf_loan': emp.get('x_nhf_loan'),
+    #                             'x_volpfa': emp.get('x_volpfa'),
+    #                             'x_HMO1': emp.get('x_HMO1'),
+    #                             'x_HMO2': emp.get('x_HMO2'),
+    #                             'x_HMO3': emp.get('x_HMO3'),
+    #                             'x_bank': emp.get('x_bank'),
+    #                             'x_banksortcode1': emp.get('x_banksortcode1'),
+    #                             'pension_company': emp.get('pension_company'),
+    #                             'x_accountno': emp.get('x_accountno'),
+    #                             'x_bank': emp.get('x_bank'),
+    #                             'x_RSA_PIN': emp.get('x_RSA_PIN'),
+    #                         }
+    #                     contract_id = self.env['hr.contract'].create(vals)
+    #                     emp_id.contract_id = contract_id.id
+    #                 else:
+    #                     update_vals = {
+    #                             'name': f"Contract for {emp_id.name}",
+    #                             'employee_id': emp_id.id,
+    #                             'employee_number': emp_id.employee_number,
+    #                             # 'date_start': fields.Date.today(),
+    #                             # 'date_end': fields.Date.today() + timedelta(months),
+    #                             'structure_id': structure_id and structure_id.id or contracts.structure_id.id or self.env.ref('hr_contract.structure_type_employee').id,
+    #                             'department_id': emp_id.department_id.id,
+    #                             'hr_responsible_id': self.env.uid,
+    #                             'work_entry_source': 'calendar',
+    #                             'wage_type': 'monthly',
+    #                             'job_id': emp_id.job_id.id,
+    #                             'wage': monthly_wage,
+    #                             'monthly_yearly_costs': monthly_wage,
+    #                             'final_yearly_costs': monthly_wage * 12,
+    #                             'state': 'open',
+    #                             'x_ARREARS': emp.get('x_ARREARS'),
+    #                             'x_shiftall': emp.get('x_shiftall'),
+    #                             'x_cashiersall': emp.get('x_cashiersall'),
+    #                             'x_dev': emp.get('x_dev'),
+    #                             'x_surcharge': emp.get('x_surcharge'),
+    #                             'x_thrift3': emp.get('x_thrift3'),
+    #                             'x_saladv': emp.get('x_saladv'),
+    #                             'x_uniondue': emp.get('x_uniondue'),
+    #                             'x_ssadue': emp.get('x_ssadue'),
+    #                             'x_nhf_loan': emp.get('x_nhf_loan'),
+    #                             'x_volpfa': emp.get('x_volpfa'),
+    #                             'x_HMO1': emp.get('x_HMO1'),
+    #                             'x_HMO2': emp.get('x_HMO2'),
+    #                             'x_HMO3': emp.get('x_HMO3'),
+    #                             'x_bank': emp.get('x_bank'),
+    #                             'x_banksortcode1': emp.get('x_banksortcode1'),
+    #                             'x_banksortcode2': emp.get('x_banksortcode1'),
+    #                             'x_banksortcode': emp.get('x_banksortcode1'),
+    #                             'pension_company': emp.get('pension_company'),
+    #                             'x_accountno': emp.get('x_accountno'),
+    #                             'x_bank': emp.get('x_bank'),
+    #                             'x_RSA_PIN': emp.get('x_RSA_PIN'),
+    #                         }
+    #                     contracts.write(update_vals)
+    #                 emp_id.active = True
+    #                 _logger.info(f"RUNNING DICT 1===> {emp.get('staff_id')}")
+    #             else:
+    #                 errors.append(f"{emp.get('staff_id')} does not exist")     
+    #         if errors:
+    #             raise ValidationError(errors)     
                
     @api.model
     def create(self, vals_list):
