@@ -174,12 +174,27 @@ class HrContract(models.Model):
                 emp_id = self.env['hr.employee'].search([('employee_number', '=', emp)],limit=1)
                 contracts = self.env['hr.contract'].search([('employee_id', '=', emp_id.id)], limit=1)
                 if not contracts:
-                    error.append(emp_id.id)
+                    # error.append(emp_id.id)
+                    error.append(emp)
                 # if not contracts:
                 #     if con.employee_id.employee_number not in eval(self.list_of_available_staff):
                 #     con.active = False
                 
         raise ValidationError(error)
+    
+    def get_staff_not_existing_in_payroll(self):
+        is_exter =self.env['hr.employee'].search([('is_external_staff', '=', True)])
+        for r in is_exter:
+            r.is_external_staff = False 
+            
+        list_of_available_staff = eval(self.list_of_available_staff)
+        employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('employee_number', 'not in', list_of_available_staff)])
+        if employees:
+            for rec in employees:
+                rec.update({
+                    'is_external_staff': True, 
+                })
+            # raise ValidationError(employees)
     
     def create_employee_contract(self):
         '''if monthly wage is selected, use the fixed monthly wage of use existing eployee monthly wage configured'''
@@ -188,8 +203,9 @@ class HrContract(models.Model):
         else:
             employees_data = eval(self.list_of_available_staff_with_details) 
             # e.g  [{'staff_id': '34542', 'grade': '345/b', 'wage': 324.00, }]
+            errors = []
             for emp in employees_data:
-                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id'))],limit=1)
+                emp_id = self.env['hr.employee'].search([('employee_number', '=', emp.get('staff_id')), ('active', 'in', [True, False])],limit=1)
                 if emp_id:
                     contracts = self.env['hr.contract'].search([('active', '=', True), '|',('employee_id', '=', emp_id.id), ('employee_number', '=', emp.get('staff_id'))], limit=1)
                     monthly_wage = float(emp.get('wage')) if emp.get('wage') else 0
@@ -274,8 +290,13 @@ class HrContract(models.Model):
                                 'x_RSA_PIN': emp.get('x_RSA_PIN'),
                             }
                         contracts.write(update_vals)
-                     
-                    
+                    emp_id.active = True
+                    _logger.info(f"RUNNING DICT 1===> {emp.get('staff_id')}")
+                else:
+                    errors.append(f"{emp.get('staff_id')} does not exist")     
+            if errors:
+                raise ValidationError(errors)     
+               
     @api.model
     def create(self, vals_list):
         """Override create to support import validation and employee mapping."""
