@@ -89,7 +89,7 @@
 				<page string="Staff IDs" name="donotuse">
 					<button name="remove_staff_not_listed" string="Remove Non existing contract" type="object" class="oe_highlight" confirm="Are you sure want to run?"/>
 					<button name="get_staff_not_in_list_of_available_staff" string="Fetch Missing employee data" type="object" class="oe_highlight" confirm="Are you sure want to run?"/>
-
+					<button name="get_staff_not_existing_in_payroll" string="Get staff not in payroll" type="object" class="oe_highlight" confirm="Are you sure want to run?"/>
 					<field name ="list_of_available_staff"/>
 				</page>
 				<page string="Staff Contract objects" name="donotuse2">
