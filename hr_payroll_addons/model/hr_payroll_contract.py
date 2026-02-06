@@ -183,8 +183,12 @@ class HrContract(models.Model):
         raise ValidationError(error)
     
     def get_staff_not_existing_in_payroll(self):
+        is_exter =self.env['hr.employee'].search([('is_external_staff', '=', True)])
+        for r in is_exter:
+            r.is_external_staff = False 
+            
         list_of_available_staff = eval(self.list_of_available_staff)
-        employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('id', 'not in', list_of_available_staff)])
+        employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('employee_number', 'not in', list_of_available_staff)])
         if employees:
             for rec in employees:
                 rec.update({
