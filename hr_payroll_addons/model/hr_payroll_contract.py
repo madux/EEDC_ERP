@@ -174,7 +174,6 @@ class HrContract(models.Model):
                 emp_id = self.env['hr.employee'].search([('employee_number', '=', emp)],limit=1)
                 contracts = self.env['hr.contract'].search([('employee_id', '=', emp_id.id)], limit=1)
                 if not contracts:
-                    # error.append(emp_id.id)
                     error.append(emp)
                 # if not contracts:
                 #     if con.employee_id.employee_number not in eval(self.list_of_available_staff):
@@ -194,21 +193,18 @@ class HrContract(models.Model):
                 rec.update({
                     'is_external_staff': True, 
                 })
-            # raise ValidationError(employees)
             
     def create_employee_contract(self):
         if not self.list_of_available_staff_with_details:
             raise ValidationError(
                 "Provide data like: [{'staff_id':'34542','grade':'345/b','wage':324.00}]"
             )
-
         try:
             employees_data = json.loads(self.list_of_available_staff_with_details)
         except Exception:
             raise ValidationError("Invalid JSON format")
 
         staff_ids = [emp.get('staff_id') for emp in employees_data if emp.get('staff_id')]
-
         # 🔥 Fetch employees ONCE (ignore active flag)
         employees = self.env['hr.employee']\
             .with_context(active_test=False)\
