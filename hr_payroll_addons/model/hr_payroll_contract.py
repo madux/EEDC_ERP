@@ -182,6 +182,16 @@ class HrContract(models.Model):
                 
         raise ValidationError(error)
     
+    def get_staff_not_existing_in_payroll(self):
+        list_of_available_staff = eval(self.list_of_available_staff)
+        employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('id', 'not in', list_of_available_staff)])
+        if employees:
+            for rec in employees:
+                rec.update({
+                    'is_external_staff': True, 
+                })
+            # raise ValidationError(employees)
+    
     def create_employee_contract(self):
         '''if monthly wage is selected, use the fixed monthly wage of use existing eployee monthly wage configured'''
         if not self.list_of_available_staff_with_details:
@@ -277,6 +287,7 @@ class HrContract(models.Model):
                             }
                         contracts.write(update_vals)
                     emp_id.active = True
+                    _logger.info(f"RUNNING DICT 1===> {emp.get('staff_id')}")
                 else:
                     errors.append(f"{emp.get('staff_id')} does not exist")     
             if errors:
