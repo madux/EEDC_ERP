@@ -193,7 +193,7 @@ class APIControllers(http.Controller):
                 ('id', '=', employee_id),
             ]
         _logger.info(f"What is domain {domain} == params == {data} ====={kwargs} ====")
-        employees = request.env['hr.employee'].sudo().search(domain, limit=10)
+        employees = request.env['hr.employee'].sudo().search(domain)
         if employees:
             for emp in employees:
                 responseData = {
