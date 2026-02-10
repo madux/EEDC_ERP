@@ -159,6 +159,16 @@ class HrContract(models.Model):
         for ct in active_contract_ids:
             ct.state = 'open'
             
+    def action_reset_fields_to_percentage(self):
+        active_contract_ids = self.env['hr.contract'].search([])
+        for cont in active_contract_ids:
+            if cont.x_uniondue > 0:
+                cont.x_uniondue = (cont.x_uniondue / cont.wage) * 100
+            if cont.x_ssadue > 0:
+                cont.x_ssadue = (cont.x_ssadue / cont.wage) * 100
+            if cont.x_shiftall > 0:
+                cont.x_shiftall = (cont.x_shiftall / cont.wage) * 100
+            
     def remove_staff_not_listed(self):
         contracts = self.env['hr.contract'].search([])
         if contracts and self.list_of_available_staff:
