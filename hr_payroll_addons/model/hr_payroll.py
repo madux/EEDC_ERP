@@ -291,7 +291,7 @@ class HrPayslipEmployees(models.TransientModel):
             ('date_stop', '>=', payslip_run.date_start),
             ('employee_id', 'in', employees.ids),
         ])
-        raise ValidationError(f"{len(payslip_run.slip_ids)} === EMPLOYEES {employees} {len(employees)} ==> contracts =={len(contracts)}")
+        # raise ValidationError(f"{len(payslip_run.slip_ids)} === EMPLOYEES {employees} {len(employees)} ==> contracts =={len(contracts)}")
         
         '''REMOVED THE CODES OF WORK ENTRY BELOW BECAUSE
         IT IS NOT APPLICATION WITH EEDC '''
