@@ -222,7 +222,8 @@ class APIControllers(http.Controller):
                 }
                 employee_details.append(responseData)
             return request.make_response(
-                json.dumps(employee_details),
+                json.dumps({'status': True, 'message': 'successful', 'data': employee_details}),
+                # json.dumps(employee_details),
                 headers=[('Content-Type', 'application/json')]
                 )
         else:
@@ -286,7 +287,7 @@ class APIControllers(http.Controller):
                 }
                 employee_details.append(responseData)
             return request.make_response(
-                json.dumps(employee_details),
+                json.dumps({'status': True, 'message': 'successful', 'data': employee_details}),
                 headers=[('Content-Type', 'application/json')]
                 )
         else:
