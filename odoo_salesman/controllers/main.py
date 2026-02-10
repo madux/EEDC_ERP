@@ -217,6 +217,7 @@ class APIControllers(http.Controller):
                     'manager_name': emp.parent_id.name,
                     'supervisor_id': emp.administrative_supervisor_id.id,
                     'supervisor_name': emp.administrative_supervisor_id.name,
+                    'is_contract_staff': True if emp.is_external_staff else False, 
                     # 'image': emp.image_1920,
                     # 'image': base64.b64encode(emp.image_1920).decode('utf-8') if emp.image_1920 else False,
                 }
