@@ -83,7 +83,7 @@ class HRPayslip(models.Model):
     x_compute_cashadv = fields.Float(string='CHQ Cash advance', default=0,store=True)
     x_compute_cashadv2 = fields.Float(string='DIST CASH ADV', default=0,store=True)
     x_compute_houseloan = fields.Float(string='HOUSE LOAN DED', default=0,store=True)
-    x_compute_dev = fields.Float(string='Development Levy', default=0,store=True)
+    x_compute_dev = fields.Float(string='Compute Development Levy', default=0,store=True)
     x_compute_bank = fields.Char(string='Bank', related="contract_id.x_bank")
     x_compute_emp_type = fields.Char(string='Employee type', related="contract_id.x_emp_type")
     x_compute_accountno = fields.Char(string='Account No', related="contract_id.x_accountno")
@@ -285,16 +285,16 @@ class HrPayslipEmployees(models.TransientModel):
         contracts = employees._get_contracts(
             payslip_run.date_start, payslip_run.date_end, states=['open', 'close']
         ).filtered(lambda c: c.active)
-        contracts._generate_work_entries(payslip_run.date_start, payslip_run.date_end)
-        work_entries = self.env['hr.work.entry'].search([
-            ('date_start', '<=', payslip_run.date_end),
-            ('date_stop', '>=', payslip_run.date_start),
-            ('employee_id', 'in', employees.ids),
-        ])
-        # raise ValidationError(f"{len(payslip_run.slip_ids)} === EMPLOYEES {employees} {len(employees)} ==> contracts =={len(contracts)}")
         
         '''REMOVED THE CODES OF WORK ENTRY BELOW BECAUSE
         IT IS NOT APPLICATION WITH EEDC '''
+        # contracts._generate_work_entries(payslip_run.date_start, payslip_run.date_end)
+        # work_entries = self.env['hr.work.entry'].search([
+        #     ('date_start', '<=', payslip_run.date_end),
+        #     ('date_stop', '>=', payslip_run.date_start),
+        #     ('employee_id', 'in', employees.ids),
+        # ])
+        
         # self._check_undefined_slots(work_entries, payslip_run)
 
         # if(self.structure_id.type_id.default_struct_id == self.structure_id):
