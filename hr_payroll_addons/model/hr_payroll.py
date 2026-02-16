@@ -222,6 +222,7 @@ class HRPayslip(models.Model):
             updates = {}
 
             for line in rec.line_ids:
+                line.x_compute_pfa2 = line.contract_id.x_pfa2
                 field = line.salary_rule_id.compute_related_field
                 if not field or field.name not in rec._fields:
                     continue
