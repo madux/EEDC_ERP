@@ -197,7 +197,8 @@
 		<field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
 		<field name="arch" type="xml">
 			<xpath expr="//button[@name='action_paid']" position="after">
-				<button string="Report total" name="compute_payslip_total" type="object" class="oe_highlight"/>
+				<button string="Update Report" name="compute_payslip_total" type="object" class="oe_highlight"/>
+				<button string="Reset Development Levy" name="reset_payslip_x_dev_to_zero" type="object"/>
 			</xpath>
 		</field>
     </record>

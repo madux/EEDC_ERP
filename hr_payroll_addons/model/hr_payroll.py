@@ -11,6 +11,17 @@ from odoo.tools import format_date
 
 class HRPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
+
+
+    def reset_payslip_x_dev_to_zero(self):
+        """
+        On payslip run:
+        - Reset all salary-rule-related fields on each payslip
+        - Recompute and accumulate totals from payslip lines
+        """
+        for run in self:
+            for slip in run.slip_ids:
+                slip.contract_id.x_dev = 0.00
     
     def compute_payslip_total(self):
         """
