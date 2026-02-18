@@ -919,7 +919,7 @@ class PortalRequest(http.Controller):
                 #         "status": False,
                 #         "message": '''
                 #         Sorry! You are not allowed to
-                #         use this option for now''' 
+                #         use this option for now ''' 
                 #         }
                 # else:
                 _logger.info('Employee is internal allowed user')
