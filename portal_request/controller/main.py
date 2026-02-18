@@ -911,31 +911,31 @@ class PortalRequest(http.Controller):
                     } 
             else:
                 _logger.info('Found memo setting for thee')
-                if employee_id.is_external_staff and not employee_id.external_company_id.id in memo_setting_id.mapped('allowed_for_company_ids').ids:
-                # .filtered(
-                # 	lambda partner: partner.id !=  employee_id.external_company_id.id): 
-                    _logger.info('Employee not an external user')
-                    return {
-                        "status": False,
-                        "message": '''
-                        Sorry! You are not allowed to
-                        use this option for now''' 
-                        }
-                else:
-                    _logger.info('Employee is internal allowed user')
-                    
-                    district_domain = []
-                    if not memo_setting_id.allow_cross_company_requests:
-                        district_domain = [('company_id', '=', request.env.user.company_id.id)] #AAdd allowed companies
-                    districts = request.env['multi.branch'].sudo().search(district_domain)
-                    return {
-                        "status": True,
-                        "message": "", 
-                        "data": {
-                            'inter_district_request': memo_setting_id.inter_district,
-                            'districts': [{'id': d.id, 'name': d.name} for d in districts], 
-                        }
-                        }
+                # if employee_id.is_external_staff and not employee_id.external_company_id.id in memo_setting_id.mapped('allowed_for_company_ids').ids:
+                # # .filtered(
+                # # 	lambda partner: partner.id !=  employee_id.external_company_id.id): 
+                #     _logger.info('Employee not an external user')
+                #     return {
+                #         "status": False,
+                #         "message": '''
+                #         Sorry! You are not allowed to
+                #         use this option for now''' 
+                #         }
+                # else:
+                _logger.info('Employee is internal allowed user')
+                
+                district_domain = []
+                if not memo_setting_id.allow_cross_company_requests:
+                    district_domain = [('company_id', '=', request.env.user.company_id.id)] #AAdd allowed companies
+                districts = request.env['multi.branch'].sudo().search(district_domain)
+                return {
+                    "status": True,
+                    "message": "", 
+                    "data": {
+                        'inter_district_request': memo_setting_id.inter_district,
+                        'districts': [{'id': d.id, 'name': d.name} for d in districts], 
+                    }
+                    }
             # else:
             # 	msg = """
             # 	No Employee record found or employee department 

@@ -90,6 +90,7 @@ class HRPayslip(models.Model):
     x_compute_HMO4 = fields.Float(string='HMO Std Single', default=0,store=True)
     x_compute_volpfa = fields.Float(string='VOL Pension', default=0,store=True)
     x_compute_nhf_loan = fields.Float(string='NHF Loan', default=0,store=True)
+    x_compute_nhf_fund = fields.Float(string='NHF (FUND)', default=0,store=True)
     x_compute_ssadue = fields.Float(string='SSAEAC', default=0,store=True)
     x_compute_cashadv = fields.Float(string='CHQ Cash advance', default=0,store=True)
     x_compute_cashadv2 = fields.Float(string='DIST CASH ADV', default=0,store=True)

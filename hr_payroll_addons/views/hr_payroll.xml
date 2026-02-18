@@ -161,6 +161,7 @@
 							<field name="x_compute_HMO3"/>
 							<field name="x_compute_HMO4"/>
 							<field name="x_compute_nhf_loan"/>
+							<field name="x_compute_nhf_fund"/>
 							<field name="x_compute_volpfa"/>
 							<field name="x_compute_ssadue"/>
 							<field name="x_compute_cashadv"/>
