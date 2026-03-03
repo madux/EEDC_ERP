@@ -285,10 +285,6 @@ class Memo_Model(models.Model):
     def check_cash_advance_limit(self):
         # for rec in self:
         if self.memo_type_key == 'cash_advance':# and self.state not in ['Refuse', 'submit']: 
-            limit = self.employee_id.maximum_cash_advance_limit
-            if self.create_uid.id == self.env.user.id:
-        # for rec in self:
-        if self.memo_type_key == 'cash_advance':# and self.state not in ['Refuse', 'submit']: 
             limit = self.employee_id.maximum_cash_advance_limit or 5
             if self.create_uid.id == self.env.user.id:
                 # Count non-retired cash advances for this employee
