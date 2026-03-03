@@ -59,7 +59,14 @@ class APIControllers(http.Controller):
                 )
 
             request.session.uid = access_token_data.user_id.id
-            request.update_env(user=access_token_data.user_id.id, context=None, su=None)
+            
+            request.session.session_token = token
+            request.update_env(
+                user=access_token_data.user_id.id,
+                context=dict(request.env.context),
+                su=False
+            )
+            # request.update_env(user=access_token_data.user_id.id, context=None, su=None)
             return func(self, *args, **kwargs)
         return wrap
     
@@ -186,7 +193,7 @@ class APIControllers(http.Controller):
                 ('id', '=', employee_id),
             ]
         _logger.info(f"What is domain {domain} == params == {data} ====={kwargs} ====")
-        employees = request.env['hr.employee'].sudo().search(domain, limit=10)
+        employees = request.env['hr.employee'].sudo().search(domain)
         if employees:
             for emp in employees:
                 responseData = {
@@ -210,11 +217,14 @@ class APIControllers(http.Controller):
                     'manager_name': emp.parent_id.name,
                     'supervisor_id': emp.administrative_supervisor_id.id,
                     'supervisor_name': emp.administrative_supervisor_id.name,
-                    'image': emp.image_1920,
+                    'is_contract_staff': True if emp.is_external_staff else False, 
+                    # 'image': emp.image_1920,
+                    # 'image': base64.b64encode(emp.image_1920).decode('utf-8') if emp.image_1920 else False,
                 }
                 employee_details.append(responseData)
             return request.make_response(
-                json.dumps(employee_details),
+                json.dumps({'status': True, 'message': 'successful', 'data': employee_details}),
+                # json.dumps(employee_details),
                 headers=[('Content-Type', 'application/json')]
                 )
         else:
@@ -278,7 +288,7 @@ class APIControllers(http.Controller):
                 }
                 employee_details.append(responseData)
             return request.make_response(
-                json.dumps(employee_details),
+                json.dumps({'status': True, 'message': 'successful', 'data': employee_details}),
                 headers=[('Content-Type', 'application/json')]
                 )
         else:

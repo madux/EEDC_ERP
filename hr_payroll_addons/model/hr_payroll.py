@@ -8,9 +8,244 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import format_date
 
-# class HRPayslip(models.Model):
-#     _inherit = "hr.payslip"
 
+class HRPayslipRun(models.Model):
+    _inherit = "hr.payslip.run"
+
+
+    def reset_payslip_x_dev_to_zero(self):
+        """
+        On payslip run:
+        - Reset all salary-rule-related fields on each payslip
+        - Recompute and accumulate totals from payslip lines
+        """
+        for run in self:
+            for slip in run.slip_ids:
+                slip.contract_id.x_dev = 0.00
+    
+    def compute_payslip_total(self):
+        """
+        On payslip run:
+        - Reset all salary-rule-related fields on each payslip
+        - Recompute and accumulate totals from payslip lines
+        """
+        for run in self:
+            for slip in run.slip_ids:
+
+                # 1️⃣ Collect all target fields from salary rules
+                target_fields = set(
+                    slip.line_ids
+                    .mapped('salary_rule_id.compute_related_field')
+                    .filtered(lambda f: f and f.name in slip._fields)
+                    .mapped('name')
+                )
+
+                # 2️⃣ Reset fields to 0.0
+                if target_fields:
+                    slip.write({field: 0.0 for field in target_fields})
+
+                # 3️⃣ Accumulate totals
+                updates = {}
+
+                for line in slip.line_ids:
+                    field = line.salary_rule_id.compute_related_field
+                    if not field or field.name not in slip._fields:
+                        continue
+
+                    updates[field.name] = updates.get(field.name, 0.0) + line.total
+
+                # 4️⃣ Write totals
+                if updates:
+                    slip.write(updates)
+    
+class HRPayslip(models.Model):
+    _inherit = "hr.salary.rule"
+    
+    def get_domain_fields(self):
+        hr_payslip_fields = self.env['ir.model.fields'].sudo().search([('model_id.model', '=', 'hr.payslip')])
+        return [('id', 'in', hr_payslip_fields.ids if hr_payslip_fields else [])]
+    
+    compute_related_field = fields.Many2one('ir.model.fields', string='Compute Related fields', 
+                                            domain="[('name', 'ilike', 'x_compute')]",
+                                            help="to be used to set which fields is related to it for computation")
+    
+    
+class HRPayslip(models.Model):
+    _inherit = "hr.payslip"
+    
+    x_compute_PRORATA = fields.Float(string='PRORATA', default=30, store=True,)
+    # x_compute_type = fields.Float(string='Is Contract Dont use', default=False)
+    x_compute_type = fields.Boolean(string='Contract', default=False)
+    x_compute_ARREARS = fields.Float(string='ARREARS', default=0, store=True, ) 
+    x_compute_surcharge = fields.Float(string='SURCHAGE', default=0,store=True,) 
+    x_compute_shiftall = fields.Float(string='Shift Allowance', default=0,store=True,)
+    x_compute_cashiersall = fields.Float(string='Cashiers Allowance', default=0,store=True,)
+    x_compute_uniondue = fields.Float(string='NUEE', help="Union Due", default=0,store=True,)
+    x_compute_overpay = fields.Float(string='Overpay', default=0,store=True,)
+    x_compute_saladv = fields.Float(string='SALARY ADV', default=0,store=True)
+    x_compute_thrift3 = fields.Float(string='Cooperative/ thrift', default=0,store=True)
+    x_compute_HMO1 = fields.Float(string='HMP Pre Family', default=0,store=True)
+    x_compute_HMO2 = fields.Float(string='HMP Pre Single', default=0,store=True)
+    x_compute_HMO3 = fields.Float(string='HMO Std Family', default=0,store=True)
+    x_compute_HMO4 = fields.Float(string='HMO Std Single', default=0,store=True)
+    x_compute_volpfa = fields.Float(string='VOL Pension', default=0,store=True)
+    x_compute_nhf_loan = fields.Float(string='NHF Loan', default=0,store=True)
+    x_compute_nhf_fund = fields.Float(string='NHF (FUND)', default=0,store=True)
+    x_compute_ssadue = fields.Float(string='SSAEAC', default=0,store=True)
+    x_compute_cashadv = fields.Float(string='CHQ Cash advance', default=0,store=True)
+    x_compute_cashadv2 = fields.Float(string='DIST CASH ADV', default=0,store=True)
+    x_compute_houseloan = fields.Float(string='HOUSE LOAN DED', default=0,store=True)
+    x_compute_dev = fields.Float(string='Compute Development Levy', default=0,store=True)
+    x_compute_bank = fields.Char(string='Bank', related="contract_id.x_bank")
+    x_compute_emp_type = fields.Char(string='Employee type', related="contract_id.x_emp_type")
+    x_compute_accountno = fields.Char(string='Account No', related="contract_id.x_accountno")
+    
+    x_compute_pfa2 = fields.Selection([('False','None'),('STANBIC IBTC PENSION MANAGERS','STANBIC IBTC PENSION MANAGERS'),('OAK PENSIONS LIMITED','OAK PENSIONS LIMITED'),('FUG PENSIONS','FUG PENSIONS'),('CRUSADER STERLING PENSIONS','CRUSADER STERLING PENSIONS'),('GUARANTY TRUST PENSION MANAGERS LIMITED','GUARANTY TRUST PENSION MANAGERS LIMITED'),('FIDELITY','FIDELITY') ,('IGI PENSION FUND MANAGERS LTD','IGI PENSION FUND MANAGERS LTD'),('PAL PENSIONS','PAL PENSIONS'),('AXA MANSARD PENSIONS','AXA MANSARD PENSIONS'),('LEADWAY PENSION','LEADWAY PENSION'),('SIGMA PENSIONS LIMITED','SIGMA PENSIONS LIMITED'),('ARM PENSION MANAGERS','ARM PENSION MANAGERS') ,('AIICO','AIICO'),('FIRST GUARANTEE PENSION LIMITED','FIRST GUARANTEE PENSION LIMITED'),(' TANGERINE APT PENSIONS','TANGERINE APT PENSIONS'),('NLPC PFA LTD','NLPC PFA LTD'),('TRUST FUND PENSIONS PLC','TRUST FUND PENSIONS PLC'),('NORRENBERGER PENSIONS','NORRENBERGER PENSIONS') ,('FCMB PENSIONS','FCMB PENSIONS'),('NPF PENSIONS LIMITED','N.P.F. PENSIONS LIMITED'),('PREMIUM PENSION LIMITED','PREMIUM PENSION LIMITED'),('ACCESS PENSIONS LIMITED','ACCESS PENSIONS LIMITED')], 
+                                 string='PFA')
+    x_compute_pension_company = fields.Char(string='PENSION Company Amount')
+    x_compute_banksortcode1 = fields.Char(string='Bank Sort code', related="contract_id.x_banksortcode1")
+    x_compute_banksortcode2 = fields.Char(string='Bank Sort Code 2', help="sort code 2", related="contract_id.x_banksortcode2")
+    x_compute_banksortcode = fields.Char(string='Bank Sort code 3', related="contract_id.x_banksortcode")
+    x_compute_RSA_PIN = fields.Char(string='RSA PIN', related="contract_id.x_RSA_PIN")
+    
+    
+    x_compute_transport_allowance = fields.Float(
+        string='Transport Allowance',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_rent_relief = fields.Float(
+        string='Rent Relief',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_hazard = fields.Float(
+        string='Hazard',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_meal = fields.Float(
+        string='Meal',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_utility = fields.Float(
+        string='Utility',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_house_allowance = fields.Float(
+        string='House Allowance',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_union_due_local = fields.Float(
+        string='Union Due (Local)',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_national_housing_fund = fields.Float(
+        string='National Housing Fund',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_pfa_employee_amount = fields.Float(
+        string='PFA Employee Amount',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_life_assurance_premium = fields.Float(
+        string='Life Assurance Premium',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_total_gross = fields.Float(
+        string='Total Gross',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_relief = fields.Float(
+        string='Tax Relief',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_income = fields.Float(
+        string='Taxable Income',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_tax_compute_paid = fields.Float(
+        string='Tax Paid',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_total_net = fields.Float(
+        string='Total Net',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_basic = fields.Float(
+        string='Basic Salary',
+        default=0.0,
+        store=True
+    )
+
+    x_compute_house_loan = fields.Float(
+        string='House Loan',
+        default=0.0,
+        stsore=True
+    )
+    
+    def compute_payslip_total(self):
+        """
+        Reset all salary-rule-related fields to 0,
+        then recompute and accumulate payslip line totals.
+        """
+        for rec in self:
+
+            # 1️⃣ Collect all target fields from salary rules
+            target_fields = set(
+                rec.line_ids
+                .mapped('salary_rule_id.compute_related_field')
+                .filtered(lambda f: f and f.name in rec._fields)
+                .mapped('name')
+            )
+
+            # 2️⃣ Reset fields to 0.0
+            if target_fields:
+                rec.write({field: 0.0 for field in target_fields})
+
+            # 3️⃣ Accumulate totals
+            updates = {}
+
+            for line in rec.line_ids:
+                line.x_compute_pfa2 = line.contract_id.x_pfa2
+                field = line.salary_rule_id.compute_related_field
+                if not field or field.name not in rec._fields:
+                    continue
+
+                updates[field.name] = updates.get(field.name, 0.0) + line.total
+
+            # 4️⃣ Write computed totals
+            if updates:
+                rec.write(updates)
+                
+                
 class HrPayslipEmployees(models.TransientModel):
     _inherit = 'hr.payslip.employees'
     _description = 'Generate payslips for all selected employees'
@@ -63,14 +298,16 @@ class HrPayslipEmployees(models.TransientModel):
         contracts = employees._get_contracts(
             payslip_run.date_start, payslip_run.date_end, states=['open', 'close']
         ).filtered(lambda c: c.active)
-        contracts._generate_work_entries(payslip_run.date_start, payslip_run.date_end)
-        work_entries = self.env['hr.work.entry'].search([
-            ('date_start', '<=', payslip_run.date_end),
-            ('date_stop', '>=', payslip_run.date_start),
-            ('employee_id', 'in', employees.ids),
-        ])
+        
         '''REMOVED THE CODES OF WORK ENTRY BELOW BECAUSE
         IT IS NOT APPLICATION WITH EEDC '''
+        # contracts._generate_work_entries(payslip_run.date_start, payslip_run.date_end)
+        # work_entries = self.env['hr.work.entry'].search([
+        #     ('date_start', '<=', payslip_run.date_end),
+        #     ('date_stop', '>=', payslip_run.date_start),
+        #     ('employee_id', 'in', employees.ids),
+        # ])
+        
         # self._check_undefined_slots(work_entries, payslip_run)
 
         # if(self.structure_id.type_id.default_struct_id == self.structure_id):

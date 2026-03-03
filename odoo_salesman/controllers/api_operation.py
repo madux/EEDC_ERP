@@ -57,6 +57,7 @@ class OperationController(http.Controller):
                 )
 
             request.session.uid = access_token_data.user_id.id
+            request.session.session_token = token
             request.update_env(user=access_token_data.user_id.id, context=None, su=None)
             return func(self, *args, **kwargs)
         return wrap 
