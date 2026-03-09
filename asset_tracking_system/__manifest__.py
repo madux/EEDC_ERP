@@ -10,11 +10,11 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         'sequence/sequence.xml',
+        'views/menu.xml',
         'views/account_asset.xml',
         'views/asset_tracking_view.xml',
         'views/import_asset.xml',
         'views/product_view.xml',
-        'views/menu.xml',
     ],
     'application': True,
 }
