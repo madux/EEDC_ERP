@@ -38,6 +38,12 @@ class RequestLine(models.Model):
         string="Product ID",
         # domain=lambda self: self._get_product_domain()
         )
+
+    tax_ids = fields.Many2many(
+        "account.tax", 
+        string="Taxes",
+        )
+
     code = fields.Char(
         string="Product code", 
         related="product_id.default_code"
@@ -48,6 +54,7 @@ class RequestLine(models.Model):
     # district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested", default=1)
     amount_total = fields.Float(string="Unit Price", default=0)
+    amount_tax = fields.Char(string="Tax Total", default=0)
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
     difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
@@ -62,6 +69,32 @@ class RequestLine(models.Model):
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
     
+    # @api.depends('tax_ids')
+    def compute_taxes(self):
+        for rec in self:
+            result = 0
+            if rec.tax_ids:
+                total_tax = 0 # e.g -7.5 + -5 = -12
+                for tax in rec.tax_ids:
+                    total_tax += tax.amount
+                # result = tax
+                percentage_tax = total_tax / 100
+                # amount_untaxed = (rec.quantity_available * rec.amount_total)
+                result = percentage_tax # * amount_untaxed
+            return result
+
+                
+                
+    # def compute_added_tax(self, amount_untaxed):
+    #     for line in self:
+    #         amount_tax = 0 
+    #         if line.added_tax_ids:
+    #             for atx in line.added_tax_ids:
+    #                 amount_tax += atx.amount
+    #         tax_perc = amount_tax / 100     
+    #         y = tax_perc * amount_untaxed
+    #         return abs(y)
+            
     omit_record = fields.Boolean(string="Exclude", help="Check this to avoid registry to inventory")
     total_balance_difference = fields.Float(
         string="Balance Diff", 
@@ -90,9 +123,15 @@ class RequestLine(models.Model):
             
     @api.depends("quantity_available", "amount_total")
     def compute_sub_total(self):
-        for x in self:
+        for x in self: 
             if (x.amount_total and x.quantity_available):
-                x.sub_total_amount =  x.quantity_available * x.amount_total
+                total_untaxed = x.quantity_available * x.amount_total 
+                if rec.tax_ids:
+                    tax = self.compute_taxes()
+                    x.sub_total_amount = total_untaxed * tax
+                    x.amount_tax = tax 
+                else:
+                    x.sub_total_amount = total_untaxed
             else:
                 x.sub_total_amount = 0.00
 
