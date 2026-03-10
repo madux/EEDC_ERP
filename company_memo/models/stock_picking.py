@@ -43,11 +43,12 @@ class StockPicking(models.Model):
                 external_stock_picking_id.button_validate()
         return res
     
-    # def action_confirm(self):
-    #     res = super(StockPicking, self).action_confirm()
-    #     for mv in self.move_ids_without_package:
-    #         self.location_check_available_qty(mv.product_id,mv.location_id, mv.quantity_done)
-    #     return res 
+    def action_confirm(self):
+        res = super(StockPicking, self).action_confirm()
+        self.state = "confirmed"
+        # for mv in self.move_ids_without_package:
+        #     self.location_check_available_qty(mv.product_id,mv.location_id, mv.quantity_done)
+        return res 
     
     
     def location_check_available_qty(self, product_id, source_location_id, quantity_done):

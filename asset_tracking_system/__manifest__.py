@@ -1,0 +1,20 @@
+{
+    'name': 'Asset Tracking System',
+    'version': '1.0',
+    'category': 'Asset Operations',
+    'version': '17.0',
+    'author': 'Maach Services',
+    'summary': 'Track physical assets across locations and users',
+    'depends': ['base', 'mail', 'account', 'account_asset', 'stock', 'ik_multi_branch'],
+    'data': [
+        'security/security.xml',
+        'security/ir.model.access.csv',
+        'sequence/sequence.xml',
+        'views/menu.xml',
+        'views/account_asset.xml',
+        'views/asset_tracking_view.xml',
+        'views/import_asset.xml',
+        'views/product_view.xml',
+    ],
+    'application': True,
+}

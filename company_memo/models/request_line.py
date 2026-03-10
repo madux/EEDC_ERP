@@ -38,6 +38,12 @@ class RequestLine(models.Model):
         string="Product ID",
         # domain=lambda self: self._get_product_domain()
         )
+
+    tax_ids = fields.Many2many(
+        "account.tax", 
+        string="Taxes",
+        )
+
     code = fields.Char(
         string="Product code", 
         related="product_id.default_code"
@@ -48,6 +54,7 @@ class RequestLine(models.Model):
     # district_id = fields.Many2one("hr.district", string="District ID")
     quantity_available = fields.Float(string="Qty Requested", default=1)
     amount_total = fields.Float(string="Unit Price", default=0)
+    amount_tax = fields.Char(string="Tax Total", default=0)
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
     difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
@@ -62,22 +69,58 @@ class RequestLine(models.Model):
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
     
+    def compute_taxes(self):
+        result = 0
+        if self.tax_ids:
+            total_tax = 0 # e.g -7.5 + -5 = -12
+            for tax in self.tax_ids:
+                total_tax += tax.amount
+            # result = tax
+            percentage_tax = total_tax / 100
+            result = percentage_tax
+        return result
+
     omit_record = fields.Boolean(string="Exclude", help="Check this to avoid registry to inventory")
     total_balance_difference = fields.Float(
         string="Balance Diff", 
         compute="compute_balance_difference",
         help="Balance between total cash advance amount and To retired balance")
     
+    remaining_qty = fields.Float(string="On Hand Qty", default=0, store=True)
+    issue_qty = fields.Float(string="Issued Qty", default=0, store=True, readonly=False)
+    open_qty = fields.Float(string="Open Qty", compute="compute_open_qty")
+    qty_to_issue = fields.Float(string="Qty to issue")
+    qty_to_procure = fields.Float(string="Qty to procure")
+    
+    def edit_mode_button(self):
+        self.memo_id.edit_mode = True 
+        self.edit_mode = True 
+
+    @api.depends('issue_qty')
+    def compute_open_qty(self):
+        for rec in self: 
+            if rec.issue_qty:# and rec.memo_id.state in ['Done', 'done']:
+                result = rec.quantity_available - rec.issue_qty 
+                rec.open_qty = result 
+            else:
+                rec.open_qty = 0
+                
     @api.depends("sub_total_amount", "retire_sub_total_amount")
     def compute_balance_difference(self):
         for rec in self:
             rec.total_balance_difference = rec.sub_total_amount - rec.retire_sub_total_amount
             
-    @api.depends("quantity_available", "amount_total")
+    @api.depends("quantity_available", "amount_total", "tax_ids")
     def compute_sub_total(self):
-        for x in self:
+        for x in self: 
             if (x.amount_total and x.quantity_available):
-                x.sub_total_amount =  x.quantity_available * x.amount_total
+                total_untaxed = x.quantity_available * x.amount_total 
+                if self.tax_ids:
+                    tax = self.compute_taxes()
+                    x.sub_total_amount = total_untaxed + (total_untaxed * tax)
+                    x.amount_tax = total_untaxed * tax 
+                else:
+                    x.sub_total_amount = total_untaxed
             else:
                 x.sub_total_amount = 0.00
 

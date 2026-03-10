@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Branch Filter Template -->
+    <template id="search_template_branch" inherit_id="account_reports.search_template">
+        <xpath expr="//div[@id='extra_options_dropdown']" position="before">
+            <div class="btn-group dropdown o_account_reports_filter_branch" t-if="options.get('multi_branch')">
+                <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle account_branch_filter" data-bs-toggle="dropdown">
+                    <span class="fa fa-building"/> 
+                    Branches:
+                    <t t-set="branch_value">All</t>
+                    <t t-foreach="options['multi_branch']" t-as="branch">
+                        <t t-if="branch.get('selected') == True">
+                            <t t-set="branch_value" t-value="''"/>
+                            <t t-out="branch.get('name')"/>
+                        </t>
+                    </t>
+                    <t t-out="branch_value"/>
+                </button>
+                <ul class="dropdown-menu o_filter_menu" role="menu">
+                    <li class="o_account_report_search js_account_branch_m2m"/>
+                </ul>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Account Type Filter Template (Enhanced Version) -->
+    <template id="search_template_account_type_enhanced" inherit_id="account_reports.search_template">
+        <xpath expr="//div[@class='btn-group dropdown o_account_reports_filter_account_type']" position="replace">
+            <div class="btn-group dropdown o_account_reports_filter_account_type" t-if="options.get('account_type') != None">
+                <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <span class="fa fa-list-alt"/>
+                    Account Type:
+                    <t t-set="names_selected" t-value="[options['account_type'][n]['name'] for n in range(len(options['account_type'])) if options['account_type'][n].get('selected', False)]"/>
+                    <t t-set="num_selected" t-value="len(names_selected)"/>
+                    <t t-if="num_selected == 0">All</t>
+                    <t t-elif="num_selected == 1">
+                        <t t-out="names_selected[0]"/>
+                    </t>
+                    <t t-else="">
+                        <t t-out="str(num_selected) + ' selected'"/>
+                    </t>
+                </button>
+                <div class="dropdown-menu o_filter_menu" role="menu">
+                    <a role="menuitem" 
+                       class="dropdown-item js_account_report_choice_filter" 
+                       data-filter="account_type"
+                       data-id="all"
+                       title="All Account Types">
+                        All Account Types
+                    </a>
+                    <div role="separator" class="dropdown-divider"/>
+                    <t t-foreach="options['account_type']" t-as="account_type">
+                        <a t-att-title="account_type.get('name', '')"
+                            t-att-data-id="account_type.get('id', '')"
+                            data-filter="account_type"
+                            class="dropdown-item js_account_report_choice_filter"
+                            role="menuitem">
+                            <t t-out="account_type.get('name', '')"/>
+                        </a>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Add branch info to filter info template -->
+    <template id="filter_info_template_branch" inherit_id="account_reports.filter_info_template">
+        <xpath expr="//div[@class='col-12'][last()]" position="after">
+            <div class="col-12" name="filter_info_template_branches">
+                <t t-if="options.get('multi_branch')">
+                    Branches:
+                    <t t-set="branch_value">All</t>
+                    <t t-foreach="options['multi_branch']" t-as="branch">
+                        <t t-if="branch.get('selected') == True">
+                            <t t-set="branch_value" t-value="''"/>
+                            <t t-out="branch.get('name')"/>
+                        </t>
+                    </t>
+                    <t t-out="branch_value"/>
+                </t>
+            </div>
+            <div class="col-12" name="filter_info_template_account_types">
+                <t t-if="options.get('account_type')">
+                    Account Types:
+                    <t t-set="account_type_value">All</t>
+                    <t t-foreach="options['account_type']" t-as="acc_type">
+                        <t t-if="acc_type.get('selected') == True">
+                            <t t-set="account_type_value" t-value="''"/>
+                            <t t-out="acc_type.get('name')"/>
+                        </t>
+                    </t>
+                    <t t-out="account_type_value"/>
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

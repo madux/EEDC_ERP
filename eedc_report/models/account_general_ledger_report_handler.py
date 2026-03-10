@@ -1,0 +1,188 @@
+# -*- coding: utf-8 -*-
+from odoo import models, api, _
+from odoo.tools.misc import format_date
+
+
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
+    """
+    Enhanced General Ledger Report Handler with Branch and Account Type Filters
+    """
+    _inherit = 'account.general.ledger.report.handler'
+
+    def _custom_options_initializer(self, report, options, previous_options=None):
+        """Initialize custom filter options for branch and account type"""
+        super()._custom_options_initializer(report, options, previous_options)
+        
+        # Initialize branch filter if enabled
+        if getattr(report, 'filter_multi_branch', False):
+            self._init_branch_filter(report, options, previous_options)
+        
+        # Initialize account type filter if enabled
+        if getattr(report, 'filter_account_type', False):
+            self._init_account_type_filter(report, options, previous_options)
+
+    def _init_branch_filter(self, report, options, previous_options):
+        """Initialize branch filter options"""
+        # Get all available branches
+        branches = self.env['multi.branch'].search([], order='name')
+        
+        # Get previously selected branches if any
+        previous_branches = (previous_options or {}).get('multi_branch', [])
+        selected_branch_ids = [b['id'] for b in previous_branches if b.get('selected')]
+        
+        # Build branch options list
+        branch_options = []
+        for branch in branches:
+            branch_options.append({
+                'id': branch.id,
+                'name': branch.name,
+                'selected': branch.id in selected_branch_ids if selected_branch_ids else False,
+                'model': 'multi.branch',
+            })
+        
+        # Store in options
+        options['multi_branch'] = branch_options
+        options['selected_branch_names'] = [b['name'] for b in branch_options if b.get('selected')]
+
+    def _init_account_type_filter(self, report, options, previous_options):
+        """Initialize account type filter options"""
+        # Get all account types (user types)
+        account_types = self.env['account.account.type'].search([], order='name')
+        
+        # Get previously selected account types if any
+        previous_acc_types = (previous_options or {}).get('account_type', [])
+        selected_type_ids = [t['id'] for t in previous_acc_types if t.get('selected')]
+        
+        # Build account type options list
+        account_type_options = []
+        for acc_type in account_types:
+            account_type_options.append({
+                'id': acc_type.id,
+                'name': acc_type.name,
+                'selected': acc_type.id in selected_type_ids if selected_type_ids else False,
+                'model': 'account.account.type',
+            })
+        
+        # Store in options
+        options['account_type'] = account_type_options
+        options['selected_account_type_names'] = [t['name'] for t in account_type_options if t.get('selected')]
+        
+        # Set display name based on selection
+        if not selected_type_ids:
+            options['account_display_name'] = 'All'
+        elif len(selected_type_ids) == 1:
+            options['account_display_name'] = [t['name'] for t in account_type_options if t.get('selected')][0]
+        else:
+            options['account_display_name'] = f"{len(selected_type_ids)} selected"
+
+    @api.model
+    def _get_query_domain(self, report, options):
+        """Add branch and account type domain to report query"""
+        domain = []
+        
+        # Get base domain from parent
+        if hasattr(super(), '_get_query_domain'):
+            domain = super()._get_query_domain(report, options)
+        
+        # Add branch domain if branch filter is active
+        if options.get('multi_branch'):
+            selected_branches = [b['id'] for b in options['multi_branch'] if b.get('selected')]
+            if selected_branches:
+                # Add domain filter for branch
+                # Adjust the field name based on your implementation
+                # Common field names: 'branch_id', 'x_branch_id', 'multi_branch_id'
+                domain.append(('branch_id', 'in', selected_branches))
+        
+        # Add account type domain if account type filter is active
+        if options.get('account_type'):
+            selected_types = [t['id'] for t in options['account_type'] if t.get('selected')]
+            if selected_types:
+                # Filter by account user type
+                domain.append(('account_id.user_type_id', 'in', selected_types))
+        
+        return domain
+
+    def _do_query(self, options, line_id):
+        """Override to apply custom filters to the query"""
+        # Apply filters to domain
+        custom_domain = self._get_query_domain(self.env['account.report'].browse(options['report_id']), options)
+        
+        # Get the base query result
+        results = super()._do_query(options, line_id)
+        
+        # If we have custom domain filters, we need to apply them
+        if custom_domain:
+            # Filter the results based on custom domain
+            filtered_results = self._apply_custom_domain_to_results(results, custom_domain, options)
+            return filtered_results
+        
+        return results
+
+    def _apply_custom_domain_to_results(self, results, domain, options):
+        """Apply custom domain filters to query results"""
+        if not domain:
+            return results
+        
+        # Extract branch and account type filters from domain
+        branch_ids = None
+        account_type_ids = None
+        
+        for condition in domain:
+            if len(condition) == 3:
+                field, operator, value = condition
+                if field == 'branch_id' and operator == 'in':
+                    branch_ids = value
+                elif field == 'account_id.user_type_id' and operator == 'in':
+                    account_type_ids = value
+        
+        # Filter results
+        filtered_results = {}
+        for account_id, account_data in results.items():
+            # Get account record
+            account = self.env['account.account'].browse(account_id)
+            
+            # Check account type filter
+            if account_type_ids and account.user_type_id.id not in account_type_ids:
+                continue
+            
+            # If we have branch filter, filter the lines
+            if branch_ids:
+                filtered_lines = []
+                for line in account_data.get('lines', []):
+                    # Get the move line record
+                    move_line = self.env['account.move.line'].browse(line.get('id'))
+                    if move_line.branch_id.id in branch_ids:
+                        filtered_lines.append(line)
+                
+                if filtered_lines:
+                    account_data['lines'] = filtered_lines
+                    # Recalculate totals
+                    account_data['debit'] = sum(l.get('debit', 0) for l in filtered_lines)
+                    account_data['credit'] = sum(l.get('credit', 0) for l in filtered_lines)
+                    account_data['balance'] = sum(l.get('balance', 0) for l in filtered_lines)
+                    filtered_results[account_id] = account_data
+            else:
+                filtered_results[account_id] = account_data
+        
+        return filtered_results
+
+
+
+    @api.model
+    def _get_options_domain(self, options, date_scope):
+        """Override to add custom domain filters"""
+        domain = super()._get_options_domain(options, date_scope)
+        
+        # Add branch filter
+        if options.get('multi_branch'):
+            selected_branches = [b['id'] for b in options['multi_branch'] if b.get('selected')]
+            if selected_branches:
+                domain.append(('branch_id', 'in', selected_branches))
+        
+        # Add account type filter
+        if options.get('account_type'):
+            selected_types = [t['id'] for t in options['account_type'] if t.get('selected')]
+            if selected_types:
+                domain.append(('account_id.user_type_id', 'in', selected_types))
+        
+        return domain

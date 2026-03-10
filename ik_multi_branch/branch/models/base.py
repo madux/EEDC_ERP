@@ -13,23 +13,19 @@ class ResUsers(models.Model):
     def _get_default_branch(self):
         return self.env.user.branch_id
     
-    # @api.model
-    # def create(self, vals):
-    #     user = super().create(vals)
-    #     if vals.get("branch_id"):
-    #         employee = self.env["hr.employee"].search([("user_id", "=", user.id)], limit=1)
-    #         if employee:
-    #             employee.branch_id = vals["branch_id"]
-    #     return user
-
-    # def write(self, vals):
-    #     res = super().write(vals)
-    #     if "branch_id" in vals:
-    #         for user in self:
-    #             employee = self.env["hr.employee"].search([("user_id", "=", user.id)], limit=1)
-    #             if employee:
-    #                 employee.branch_id = vals["branch_id"]
-    #     return res
+    def check_allowed_user_branches(self, branches):
+        allowed = False
+        allowed_branches = self.branch_ids.ids + [self.branch_id.id]
+        if branches:
+            for rec in branches:
+                if rec in allowed_branches:
+                    allowed = True 
+                    break
+        return allowed
+    
+    def get_user_allowed_branches(self):
+        allowed_branches = self.branch_ids.ids + [self.branch_id.id]
+        return allowed_branches if allowed_branches else []
     
     @api.constrains('groups_id')
     def _check_one_user_type(self):

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="account_move_asset_tracking_inherit_view_form">
+          <field name="name">account.asset</field>
+          <field name="model">account.asset</field>
+          <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+          <field name="arch" type="xml">
+            <xpath expr="//field[@name='depreciation_move_ids']" position="before">
+                <button name="button_confirm_move" type="object" string="Post Entry" class="oe_highlight btn-sm" id="pe" data-hotkey="q"/>
+                <button name="action_select_all" type="object" string="Toggle Select" class="btn-primary btn-sm" id="spe" data-hotkey="q"/>
+            </xpath> 
+            <xpath expr="//field[@name='depreciation_move_ids']//tree//field[@name='currency_id']" position="after">
+                <field name="select"/>
+              </xpath>
+              <xpath expr="//field[@name='depreciation_move_ids']//tree//field[@name='asset_remaining_value']" position="attributes">
+                  <attribute name="sum">Total</attribute>
+              </xpath>
+              <xpath expr="//field[@name='depreciation_move_ids']//tree//field[@name='state']" position="after">
+                  <button name="button_view_asset_move" type="object" string="View" class="oe_highlight btn-sm" id="view_asset" data-hotkey="q"/>
+                  <button name="action_post" type="object" string="Post" attrs="{'invisible': [('state', '=', 'posted')]}" class="oe_highlight btn-sm" id="confirm_asset" data-hotkey="q"/>
+              </xpath> 
+
+              <xpath expr="//field[@name='depreciation_move_ids']//tree//field[@name='state']" position="after">
+                  <button name="button_view_asset_move" type="object" string="View" class="oe_highlight btn-sm" id="view_asset" data-hotkey="q"/>
+                  <button name="action_post" type="object" string="Post" attrs="{'invisible': [('state', '=', 'posted')]}" class="oe_highlight btn-sm" id="confirm_asset" data-hotkey="q"/>
+              </xpath> 
+              <xpath expr="//page[last()]" position="after">
+                    <page name="asset_Historypage" string="Asset History" id="asset_History_page">
+                        <field
+                            name="asset_tracking_history_ids"
+                            readonly="1"
+                            domain="[('active', 'in', [True, False])]">
+                            <tree string="History">
+                                <field name="name"/>
+                                <field name="date_of_transfer"/>
+                                <field name="assigned_to"/>
+                                <field name="previous_location" string="From"/>
+                                <field name="source_location_id" string="To"/>
+                            </tree>
+                        </field>
+                    </page>
+              </xpath> 
+              
+ 
+              
+          </field>
+      </record>
+    </data>
+  </odoo>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="search_template_branch" inherit_id="account_reports.search_template">
+        <xpath expr="//div[hasclass('o_account_reports_filter_journals')]" position="after">
+            <div class="btn-group dropdown o_account_reports_filter_branch">
+                <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <span class="fa fa-building"/> Branches:
+                    <t t-set="branch_value">All</t>
+                    <t t-foreach="options['multi_branch']" t-as="branch">
+                        <t t-if="branch.get('selected')">
+                            <t t-set="branch_value" t-value="''"/>
+                            <t t-out="branch.get('name')"/>
+                        </t>
+                    </t>
+                    <t t-out="branch_value"/>
+                </button>
+                <ul class="dropdown-menu o_filter_menu" role="menu">
+                    <li class="o_account_report_search js_account_branch_m2m"/>
+                </ul>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="search_template_account_type" inherit_id="account_reports.search_template">
+        <xpath expr="//div[hasclass('o_account_reports_filter_branch')]" position="after">
+            <div class="btn-group dropdown o_account_reports_filter_account_type" t-if="options.get('account_type')">
+                <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <span class="fa fa-list-alt"/> Account Type:
+                    <t t-out="options.get('account_display_name', 'All')"/>
+                </button>
+                <div class="dropdown-menu o_filter_menu" role="menu">
+                    <t t-foreach="options['account_type']" t-as="acc_type">
+                        <a role="menuitem" class="dropdown-item js_account_report_choice_filter"
+                           t-att-data-id="acc_type.get('id')"
+                           data-filter="account_type">
+                            <t t-out="acc_type.get('name')"/>
+                        </a>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

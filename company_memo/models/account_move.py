@@ -11,6 +11,14 @@ class AccountMoveMemo(models.Model):
     _inherit = 'account.move'
     _check_company_auto = False
 
+    depreciation_percentage = fields.Float(string="Depreciation percentage(%)", required=False) 
+    is_asset_additional_period = fields.Boolean(string="Is asset additional period", required=False) 
+    is_first_depreciation = fields.Boolean(string="Is First Depreciation", store= True, required=False) 
+    select = fields.Boolean(string="")
+    asset_batch_number = fields.Char(string="Asset batch number")
+    asset_modified_amount = fields.Float(string="Modified Asset Value", 
+                                         help="During asset computation, If asset has been modified, system finds it and generate move for the modified different value")
+   
     lock_fields_from_memo = fields.Boolean(
         string='locks field',
         default=False

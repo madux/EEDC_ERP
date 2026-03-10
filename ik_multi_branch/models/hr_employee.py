@@ -47,4 +47,4 @@ class HrEmployee(models.Model):
                 continue
 
             if len(user.branch_ids) == 1:
-                employee.branch_id = user.branch_ids.id
+                employee.branch_id = user.branch_id.id

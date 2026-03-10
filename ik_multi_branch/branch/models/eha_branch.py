@@ -29,7 +29,13 @@ class EhaBranch(models.Model):
     district_id = fields.Many2one('hr.district', string='Related District')
     simplybook_location_id = fields.Char(string="Simplybook ID")
     active = fields.Boolean(default=True)
-
+    account_depreciation_id = fields.Many2one(
+        'account.account', string='Depreciation Account ')
+    account_depreciation_expense_id = fields.Many2one(
+        'account.account', string='Expense Account')
+    account_asset_id = fields.Many2one(
+        'account.account', string='Asset Account')
+    
     @api.model
     @api.returns('self', lambda value: value.id)
     def _branch_default_get(self):

@@ -285,7 +285,7 @@ class Memo_Model(models.Model):
     def check_cash_advance_limit(self):
         # for rec in self:
         if self.memo_type_key == 'cash_advance':# and self.state not in ['Refuse', 'submit']: 
-            limit = self.employee_id.maximum_cash_advance_limit
+            limit = self.employee_id.maximum_cash_advance_limit or 5
             if self.create_uid.id == self.env.user.id:
                 # Count non-retired cash advances for this employee
                 domain = [
@@ -299,12 +299,11 @@ class Memo_Model(models.Model):
                 if count >= limit:
                     pass 
                     # raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
-    
                 
     payment_processing_company_id = fields.Many2one(
         'res.company',
         string='Processing Company',
-        compute='_compute_payment_processing_company',
+        # compute='_compute_payment_processing_company',
         store=True,
         help="Company that will actually process the payment (may differ from memo company)"
     )
@@ -312,7 +311,7 @@ class Memo_Model(models.Model):
     payment_processing_branch_id = fields.Many2one(
         'multi.branch',
         string='Processing Branch',
-        compute='_compute_payment_processing_company',
+        # compute='_compute_payment_processing_company',
         store=True,
     )
     
@@ -588,7 +587,7 @@ class Memo_Model(models.Model):
         
         message_parts.append(f"<p><small><i>{fields.Datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i></small></p>")
         
-        self.message_post(
+        self.sudo().message_post(
             body="".join(message_parts),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
@@ -3608,8 +3607,9 @@ class Memo_Model(models.Model):
                             'account_id': self.get_cashadvance_debit_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.sub_total_amount if pr.sub_total_amount > 0 else pr.amount_total * pr.quantity_available, 
                             'code': pr.code,
+                            'tax_ids': pr.tax_ids.ids,
                     }) for pr in self.product_ids] + [(0, 0, {
-                                                            'name': 'Credit balance',
+                                                            'name': 'Credit Entry',
                                                             'account_id': self.get_cashadvance_credit_account(journal_id).id,
                                                             'credit': sum([r.sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
