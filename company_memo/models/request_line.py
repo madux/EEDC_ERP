@@ -69,7 +69,6 @@ class RequestLine(models.Model):
     source_location_id = fields.Many2one("stock.location", string="Source Location")
     dest_location_id = fields.Many2one("stock.location", string="Destination Location")
     
-    # @api.depends('tax_ids')
     def compute_taxes(self):
         result = 0
         if self.tax_ids:
@@ -78,22 +77,9 @@ class RequestLine(models.Model):
                 total_tax += tax.amount
             # result = tax
             percentage_tax = total_tax / 100
-            # amount_untaxed = (self.quantity_available * self.amount_total)
-            result = percentage_tax # * amount_untaxed
+            result = percentage_tax
         return result
 
-                
-                
-    # def compute_added_tax(self, amount_untaxed):
-    #     for line in self:
-    #         amount_tax = 0 
-    #         if line.added_tax_ids:
-    #             for atx in line.added_tax_ids:
-    #                 amount_tax += atx.amount
-    #         tax_perc = amount_tax / 100     
-    #         y = tax_perc * amount_untaxed
-    #         return abs(y)
-            
     omit_record = fields.Boolean(string="Exclude", help="Check this to avoid registry to inventory")
     total_balance_difference = fields.Float(
         string="Balance Diff", 
@@ -124,7 +110,7 @@ class RequestLine(models.Model):
         for rec in self:
             rec.total_balance_difference = rec.sub_total_amount - rec.retire_sub_total_amount
             
-    @api.depends("quantity_available", "amount_total")
+    @api.depends("quantity_available", "amount_total", "tax_ids")
     def compute_sub_total(self):
         for x in self: 
             if (x.amount_total and x.quantity_available):

@@ -290,11 +290,8 @@ class Memo_Model(models.Model):
                 # Count non-retired cash advances for this employee
                 domain = [
                     ('employee_id', '=', self.employee_id.id),
-                    ('employee_id', '=', self.employee_id.id),
                     ('memo_type_key', '=', 'cash_advance'),
                     ('is_cash_advance_retired', '=', False),
-                    ('state', 'in', ['Approve', 'Done', 'Approve2']), 
-                    ('id', '!=', self.id)
                     ('state', 'in', ['Approve', 'Done', 'Approve2']), 
                     ('id', '!=', self.id)
                 ]
