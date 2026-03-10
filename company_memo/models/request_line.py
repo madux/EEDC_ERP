@@ -71,17 +71,16 @@ class RequestLine(models.Model):
     
     # @api.depends('tax_ids')
     def compute_taxes(self):
-        for rec in self:
-            result = 0
-            if rec.tax_ids:
-                total_tax = 0 # e.g -7.5 + -5 = -12
-                for tax in rec.tax_ids:
-                    total_tax += tax.amount
-                # result = tax
-                percentage_tax = total_tax / 100
-                # amount_untaxed = (rec.quantity_available * rec.amount_total)
-                result = percentage_tax # * amount_untaxed
-            return result
+        result = 0
+        if self.tax_ids:
+            total_tax = 0 # e.g -7.5 + -5 = -12
+            for tax in self.tax_ids:
+                total_tax += tax.amount
+            # result = tax
+            percentage_tax = total_tax / 100
+            # amount_untaxed = (self.quantity_available * self.amount_total)
+            result = percentage_tax # * amount_untaxed
+        return result
 
                 
                 
@@ -107,6 +106,10 @@ class RequestLine(models.Model):
     qty_to_issue = fields.Float(string="Qty to issue")
     qty_to_procure = fields.Float(string="Qty to procure")
     
+    def edit_mode_button(self):
+        self.memo_id.edit_mode = True 
+        self.edit_mode = True 
+
     @api.depends('issue_qty')
     def compute_open_qty(self):
         for rec in self: 
@@ -126,10 +129,10 @@ class RequestLine(models.Model):
         for x in self: 
             if (x.amount_total and x.quantity_available):
                 total_untaxed = x.quantity_available * x.amount_total 
-                if rec.tax_ids:
+                if self.tax_ids:
                     tax = self.compute_taxes()
-                    x.sub_total_amount = total_untaxed * tax
-                    x.amount_tax = tax 
+                    x.sub_total_amount = total_untaxed + (total_untaxed * tax)
+                    x.amount_tax = total_untaxed * tax 
                 else:
                     x.sub_total_amount = total_untaxed
             else:

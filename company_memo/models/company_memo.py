@@ -3610,8 +3610,9 @@ class Memo_Model(models.Model):
                             'account_id': self.get_cashadvance_debit_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.sub_total_amount if pr.sub_total_amount > 0 else pr.amount_total * pr.quantity_available, 
                             'code': pr.code,
+                            'tax_ids': pr.tax_ids.ids,
                     }) for pr in self.product_ids] + [(0, 0, {
-                                                            'name': 'Credit balance',
+                                                            'name': 'Credit Entry',
                                                             'account_id': self.get_cashadvance_credit_account(journal_id).id,
                                                             'credit': sum([r.sub_total_amount for r in self.product_ids]),
                                                             'debit': 0.00,
