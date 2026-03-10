@@ -35,6 +35,9 @@ class StockQuant(models.Model):
                 msg_add = ""
                 if quant.lot_id:
                     msg_add = _(" lot {}").format(quant.lot_id.name_get()[0][1])
+                # raise ValidationError(f"""{quant.id} -- {float_compare(quant.quantity, 0, precision_digits=p) == -1} / {quant.product_id.type}
+                # / {quant.location_id.usage}, {disallowed_by_product} / {disallowed_by_location}
+                # """)
                 raise ValidationError(
                     _(
                         "You cannot validate this stock operation because the "

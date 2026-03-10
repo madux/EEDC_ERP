@@ -8,7 +8,7 @@
           <form string="Asset">
             <header>
                 <button name="transfer_asset" string="Transfer" attrs="{'invisible': [('state', '!=', 'draft')]}" help="This will set state to transfer" confirm="You have already running asset, Are you sure you want to Transfer?" type="object" class="oe_highlight"/>
-                <button name="receive_and_calculate" string="Receive &amp; Compute" invisible="state != 'transfer'" confirm="You have already running asset, Are you sure you want to Receive &amp; Compute?" type="object" class="oe_highlight"/>
+                <button name="receive_and_calculate" string="Receive &amp; Compute" attrs="{'invisible': [('state', '!=', 'transfer')]}" confirm="You have already running asset, Are you sure you want to Receive &amp; Compute?" type="object" class="oe_highlight"/>
                 <button name="action_view_asset_history" string="View Asset History" type="object"/>
                 <field name="state" widget="statusbar" statusbar_visible="draft,transfer,received" readonly="1"/>
             </header>

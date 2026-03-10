@@ -32,6 +32,7 @@ class StockPicking(models.Model):
     #     return res
 
     def button_validate(self):
+        # raise ValidationError("testing !!!")
         # if self.origin and self.env['sale.order'].search([('name', '=', self.origin), ('is_crusher_order', '=', True)], limit=1):
         #     if not all(self.actual_shipment_date, self.truck_driver_name, self.truck_reg, self.truck_driver_phone, self.truck_company_name):
         #         raise ValidationError(f"Fields such as [Driver name,Driver phone, truck registration number, company, actual shipment date] must be provided. Check the Drivers / Truck Information tab")
@@ -55,22 +56,27 @@ class StockPicking(models.Model):
                 memo_id = self.memo_id
                 _logger.info(f"Generate this assets MEEEMAO DO {memo_id}")
             else:
-                memo_id = self.purchase_line_id and self.purchase_line_id[0] or self.env['purchase.order'].search([
+                memo_id = self.purchase_id and self.purchase_id[0] or self.env['purchase.order'].search([
                 ('name', '=', self.origin)
                 ], limit=1)
                 memo_id = memo_id and memo_id.memo_id
                 _logger.info(f"FOUND MEMOO Generate this assets {memo_id}")
-            if memo_id.po_ids:
-                assets = memo_id.generate_asset(po_ids=memo_id.po_ids, generate_all=False, store_number=self.name, memo_id = memo_id.id)
-                _logger.info(f"Generate this assets xxxxxx {[rec for rec in assets]}")
+            if memo_id:
+                if memo_id.po_ids:
+                    assets = memo_id.generate_asset(po_ids=memo_id.po_ids, generate_all=False, store_number=self.name, memo_id = memo_id.id)
+                    _logger.info(f"Generate this assets xxxxxx {[rec for rec in assets]}")
+            # else:
+            #     raise ValidationError("bimm")
         else:
-            po_id = self.purchase_line_id and self.purchase_line_id[0]
+            po_id = self.purchase_id and self.purchase_id[0]
             if po_id:
+                # raise ValidationError("pfir")
                 self.generate_asset(po_ids= po_id, generate_all=False, store_number=self.name, memo_id = False)
             # else:
             #     raise ValidationError("There is no PO to generate asset for")
      
     def generate_asset(self, po_ids=False, generate_all = False, **kwargs):
+        raise ValidationError("fir")
         '''generate_all = True => generates the total number of asset quantites, else it generates it as one single parent asset, asset people will now run the asset'''
         assets = []
         asset_obj = self.env['account.asset']
@@ -84,6 +90,8 @@ class StockPicking(models.Model):
                 if po.product_id: 
                     asset_model = po.product_id.account_asset_model or po.product_id.categ_id.account_asset_model
                     '''CHECK AND CREATE ASSET BASED ON THE NUMBER OF QUANTITY'''
+                    raise ValidationError(f"fir == {asset_model}")
+                    
                     if asset_model:
                         '''the product is linked to asset model, so it will generate asset'''
                         item_number = 101

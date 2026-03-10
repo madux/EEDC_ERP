@@ -52,6 +52,19 @@ class accountMove(models.Model):
         for rec in self:
             rec.asset_parent_id = rec.asset_id.model_id.id if rec.asset_id and rec.asset_id.model_id else False
     
+class AccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
+    _order = "id desc"
+
+    code = fields.Char(string="Code")
+    select = fields.Boolean(string="Select")
+    asset_id = fields.Many2one('account.asset', string="Asset", store=True, related="move_id.asset_id")
+    responsible_bu = fields.Many2one('multi.branch', string="Responsible BU")
+    asset_number = fields.Char(string="Asset number",store=True)# , related="move_id.asset_id.name")
+    asset_batch_number = fields.Char(string="Asset batch #",store=True, related="move_id.asset_batch_number")
+    asset_modified_amount = fields.Float(string="Modified Asset Value", 
+                                         help="During asset computation, If asset has been modified, system finds it and generate move for the modified different value")
+    
 
 class accountAsset(models.Model):
     _inherit = 'account.asset'
@@ -91,10 +104,10 @@ class accountAsset(models.Model):
     index=True) 
     memo_state = fields.Char(string="Memo state") 
     insurance_policy_number = fields.Char(string="Insurance Policy Number", copy=True) 
-    insurance_policy_id = fields.Many2one(
-        "memo.insurance.agreement", 
-        string="Insurance Policy", copy=True
-        )
+    # insurance_policy_id = fields.Many2one(
+    #     "memo.insurance.agreement", 
+    #     string="Insurance Policy", copy=True
+    #     )
     src_location_id = fields.Many2one('stock.location', string="Asset Location", copy=True)
     date_of_commission = fields.Datetime(string="Commissioning Date", copy=True) 
     acquisition_date = fields.Date(string="Acquisition date", default=fields.Date.today()) 

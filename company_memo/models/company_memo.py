@@ -302,12 +302,11 @@ class Memo_Model(models.Model):
                 if count >= limit:
                     pass 
                     # raise ValidationError(f"You have reached the maximum limit of {limit} active (non-retired) cash advances. Please retire existing cash advances before requesting a new one.")
-    
                 
     payment_processing_company_id = fields.Many2one(
         'res.company',
         string='Processing Company',
-        compute='_compute_payment_processing_company',
+        # compute='_compute_payment_processing_company',
         store=True,
         help="Company that will actually process the payment (may differ from memo company)"
     )
@@ -315,7 +314,7 @@ class Memo_Model(models.Model):
     payment_processing_branch_id = fields.Many2one(
         'multi.branch',
         string='Processing Branch',
-        compute='_compute_payment_processing_company',
+        # compute='_compute_payment_processing_company',
         store=True,
     )
     

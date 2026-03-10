@@ -47,7 +47,7 @@
                     <group name="asset_info2">
                         <field name="customer_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="state" invisible="1"/>
-                        <field name="branch_id" required="1" string="Business Unit" options="{'no_create':'True'}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        <field name="branch_id" required="0" string="Business Unit" options="{'no_create':'True'}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                         <field name="asset_code" string="Asset Number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="1" class="form-control"/>
                         <field name="fleet_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="serial_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
@@ -59,9 +59,9 @@
                     <field name="modify_action" force_save="1" invisible="1" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                         <field name="date_of_commission" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="acquisition_date" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" string="Date Acquired" class="form-control"/>
-                        <field name="disposed_date" attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('modify_action', '=', dispose)]}" force_save="1" invisible="0" string="Date Disposed"/>
-                        <field name="insurance_policy_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
-                        <field name="insurance_policy_number" attrs="{'required': [('insurance_policy_id', '!=', False)], 'readonly': [('state', '!=', 'draft')], 'invisible': [('insurance_policy_id', '=',False)]}" force_save="1" class="form-control"/>
+                        <field name="disposed_date" attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('modify_action', '=', 'dispose')]}" force_save="1" invisible="0" string="Date Disposed"/>
+                        <!-- <field name="insurance_policy_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
+                        <field name="insurance_policy_number" attrs="{'required': [('insurance_policy_id', '!=', False)], 'readonly': [('state', '!=', 'draft')], 'invisible': [('insurance_policy_id', '=',False)]}" force_save="1" class="form-control"/> -->
                         <field name="product_age" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="responsible_employee_id" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
                         <field name="inventory_number" required="0" attrs="{'readonly': [('state', '!=', 'draft')]}" force_save="1" invisible="0" class="form-control"/>
@@ -91,11 +91,11 @@
             </field>
         </record> 
 
-        <record id="memo_asset_model_tree_view" model="ir.ui.view">
+        <record model="ir.ui.view" id="memo_asset_model_tree_view">
             <field name="name">Account Asset Register - list (override)</field>
             <field name="model">account.asset</field>
-            <field name="inherit_id" ref="account_asset.view_account_asset_model_tree"/>
-            <field name="arch" type="xml">
+            <field name="inherit_id" ref="account_asset.view_account_asset_purchase_tree"/>
+            <field name="arch" type="xml">  
                 <xpath expr="/tree" position="attributes">
                     <attribute name="editable">bottom</attribute>
                     <attribute name="create">0</attribute> 
@@ -147,13 +147,13 @@
                         attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
                     <field name="method_period" string="Period length"
                         attrs="{'readonly': [('state', 'not in', ['draft','model'])]}" />
-                    <field name="company_id" column_invisible="True"
+                    <field name="company_id" invisible="True"
                         attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                    <field name="state" column_invisible="True"/>
+                    <field name="state" invisible="True"/>
                     <field name="date_of_assignment" optional="hide"/>
                     <field name="date_of_transfer" optional="hide"/>
                     <field name="qty_received" optional="show"/>
-                    <field name="is_asset_from_procurement" optional="show" column_invisible="True"/>
+                    <field name="is_asset_from_procurement" optional="show" invisible="True"/>
                     <field name="depreciation_months_done" optional="show"/>
                     <field name="depreciation_months_remaining" optional="show"/>
                     <field name="depreciation_amount_posted" optional="show"/>
@@ -169,13 +169,13 @@
             <field name="inherit_id" ref="company_memo.memo_asset_model_tree_view"/>
             <field name="arch" type="xml"> 
                 <xpath expr="//field[@name='account_asset_id']" position="attributes">
-                    <attribute name="column_invisible">1</attribute>
+                    <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//field[@name='account_depreciation_id']" position="attributes">
-                    <attribute name="column_invisible">1</attribute>
+                    <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//field[@name='method']" position="attributes">
-                    <attribute name="column_invisible">1</attribute>
+                    <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//field[@name='name']" position="attributes">
                     <attribute name="string">Asset number</attribute>
@@ -248,7 +248,7 @@
         <record model="ir.ui.view" id="account_asset_inherit_view_tree">
             <field name="name">account.asset</field>
             <field name="model">account.asset</field>
-            <field name="inherit_id" ref="account_asset.view_account_asset_tree"/>
+            <field name="inherit_id" ref="account_asset.view_account_asset_purchase_tree"/>
             <field name="arch" type="xml">
                 <xpath expr="/tree" position="inside">
                     <header>
@@ -294,16 +294,16 @@
 			<field name="model">account.move</field>
 			<field name="arch" type="xml">
 				<tree string="Depreciation Lines" decoration-info="state == 'draft'" create="0" edit="0" default_order="date asc, id asc" editable="top">
-                    <field name="date" string="Depreciation Date" readonly="state in ['cancel', 'posted']"/>
+                    <field name="date" string="Depreciation Date" attrs="{'readonly': [('state', 'in', ['cancel', 'posted'])]}"/>
                     <field name="ref" invisible="0"/>
                     <field name="asset_parent_id" invisible="0"/>
                     <field name="reversal_move_id" widget="deprec_lines_reversed"/>
-                    <field name="depreciation_value" sum="Total" widget="monetary" string="Depreciation" options="{'currency_field': 'currency_id'}" readonly="state == 'posted'"/>
+                    <field name="depreciation_value" sum="Total" widget="monetary" string="Depreciation" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('state', 'in', ['posted'])]}"/>
                     <field name="asset_depreciated_value" sum="Total" readonly="1" force_save="1" options="{'currency_field': 'currency_id'}"/>
                     <field name="asset_remaining_value" sum="Total" readonly="1" widget="monetary" force_save="1" options="{'currency_field': 'currency_id'}"/>
                     <field name="name" readonly="1" string="Entry #"/>
-                    <field name="currency_id" column_invisible="False" readonly="state in ['cancel', 'posted']"/>
-                    <field name="state" column_invisible="False"/>
+                    <field name="currency_id" invisible="1" attrs="{'readonly': [('state', 'in', ['cancel', 'posted'])]}"/>
+                    <field name="state" invisible="1"/>
                 </tree>
 			</field>
 		</record>
@@ -361,7 +361,7 @@
 				<tree string="Depreciation Lines" decoration-info="parent_state == 'draft'" create="0" edit="0" default_order="date asc, id asc">
                     <field name="date" string="Depreciation Date"/>
                     <field name="move_name"/>
-                    <field name="asset_id" column_invisible="True"/>
+                    <field name="asset_id" invisible="True"/>
                     <field name="asset_number"/>
                     <field name="asset_batch_number"/>
                     <field name="account_id"/>
@@ -372,7 +372,7 @@
                     <field name="asset_id" string="Asset"/>
                     <field name="asset_number" string="Asset #"/>
                     <field name="responsible_bu"/>
-                    <field name="parent_state" column_invisible="True"/>
+                    <field name="parent_state" invisible="True"/>
 
                 </tree>
 			</field>
@@ -396,12 +396,12 @@
             name="Asset Move Report"
             parent="asset_tracking_system.menu_asset_root"
             sequence="25"
-            action="menu_action_depreciation_report" groups="company_memo.asset_officer_id"/>
+            action="menu_action_depreciation_report"/>
         <menuitem id="menu_posted_asset_depreciation_report"
             name="Posted Depreciation Report"
             parent="asset_tracking_system.menu_asset_root"
             sequence="30"
-            action="menu_action_depreciation_line_report" groups="company_memo.asset_officer_id"/>
+            action="menu_action_depreciation_line_report"/>
  
     </data>
 </odoo>
