@@ -1862,8 +1862,10 @@ odoo.define('portal_request.portal_request', function (require) {
                         }
 
                         else if (selectedTarget == "material_request") {
+                            console.log("Material request selectedddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
                             $('#interdistrict-checkbox-div').removeClass('d-none');
                             display_material_request_location(true);
+                            $('#product_form_div').removeClass('d-none');
                         }
                         // else if(selectedTarget == "cash_advance" || selectedTarget == "soe"){
                         else if (selectedTarget == "cash_advance") {
@@ -2293,9 +2295,9 @@ odoo.define('portal_request.portal_request', function (require) {
 
 
                         if (memo_type_key === "material_request") {
-                            console.log('Material request selected - Initializing locations');
+                            console.log('Material request selectedXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - Initializing locations');
                             console.log('Config: Inter-district:', isInterDistrictTransfer, 'Cross-company:', allowCrossCompany, 'Request Branch:', request_branch, 'Processing Branch:', processing_branch);
-
+                            $('#product_form_div').removeClass('d-none');
                             // Show the location fields container
                             $('#material_request_locations').removeClass('d-none');
 
@@ -2496,14 +2498,9 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('.add_item').removeClass('d-none');
                             $('#product_form_div').removeClass('d-none');
 
-                        } else {
-                            // Not a material request - hide location fields
-                            $('#material_request_locations').addClass('d-none');
-                            $('#source_location_id').attr('required', false);
-                            $('#destination_location_id').attr('required', false);
-                        }
+                        }  
 
-                        if (memo_type_key == "leave_request") {
+                        else if (memo_type_key == "leave_request") {
                             $('#leave_section').removeClass('d-none');
                             $('#leave_section2').removeClass('d-none');
                             $('#leave_start_date').attr('required', true);
@@ -2613,7 +2610,13 @@ odoo.define('portal_request.portal_request', function (require) {
                             $('#amount_section').addClass('d-none');
                             $('#amount_fig').attr("required", false);
                             displayNonLeaveElement();
+                            console.log("THIIIIS IS NOT ADD ITEM LINES")
                             $('#product_form_div').addClass('d-none');
+
+                            // Not a material request - hide location fields
+                            $('#material_request_locations').addClass('d-none');
+                            $('#source_location_id').attr('required', false);
+                            $('#destination_location_id').attr('required', false);
                         }
                     }
                 }).guardedCatch(function (error) {
@@ -2872,9 +2875,11 @@ odoo.define('portal_request.portal_request', function (require) {
                 // ensure that normal request such as server request, leave request and payment request
                 // does not show product item div elements
                 if ($.inArray($("#selectRequestOption").val(), ItemRequest) !== -1) {
+                    console.log("IT IS PART OF ITEM REQUEST")
                     $('#product_form_div').removeClass('d-none');
                 }
                 else {
+                    console.log("IT IS NOT PART OF ITEM REQUEST")
                     $('#product_form_div').addClass('d-none');
                 }
             },
