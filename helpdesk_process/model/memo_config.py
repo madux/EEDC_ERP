@@ -33,21 +33,22 @@ class HelpdeskMemoConfig(models.Model):
         store=True
     )
 
-    @api.depends('memo_type')
+    @api.depends('memo_type', 'name')
     def _compute_task_stats(self):
         for memo in self:
-            resolved_count, pending_count, unattended_count = 0, 0, 0
-            '''this is all memo records that has the configuration of self'''
-            resolutions = self.env['memo.model'].search([('helpdesk_memo_config_id', '=', memo.id)])
-            memo.task_count = len(resolutions.ids)
-            for rec in resolutions:
-                if rec.state in ['Done', 'done']:
-                    resolved_count += 1
-                elif rec.state in ['Sent', 'Approve', 'Approve2']:
-                    pending_count += 1
-                else:
-                    # tickets in refuse and draft / submitted
-                    unattended_count += 1
+            if memo_type:
+                resolved_count, pending_count, unattended_count = 0, 0, 0
+                '''this is all memo records that has the configuration of self'''
+                resolutions = self.env['memo.model'].search([('helpdesk_memo_config_id', '=', memo.id)])
+                memo.task_count = len(resolutions.ids)
+                for rec in resolutions:
+                    if rec.state in ['Done', 'done']:
+                        resolved_count += 1
+                    elif rec.state in ['Sent', 'Approve', 'Approve2']:
+                        pending_count += 1
+                    else:
+                        # tickets in refuse and draft / submitted
+                        unattended_count += 1
                     
             memo.resolved_count = resolved_count
             memo.pending_count = pending_count
