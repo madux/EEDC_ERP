@@ -2293,7 +2293,6 @@ odoo.define('portal_request.portal_request', function (require) {
                             $districtInput.attr('required', false).val('');
                         }
 
-
                         if (memo_type_key === "material_request") {
                             console.log('Material request selectedXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX - Initializing locations');
                             console.log('Config: Inter-district:', isInterDistrictTransfer, 'Cross-company:', allowCrossCompany, 'Request Branch:', request_branch, 'Processing Branch:', processing_branch);
@@ -2607,16 +2606,23 @@ odoo.define('portal_request.portal_request', function (require) {
                             }
                         }
                         else {
-                            $('#amount_section').addClass('d-none');
-                            $('#amount_fig').attr("required", false);
-                            displayNonLeaveElement();
-                            console.log("THIIIIS IS NOT ADD ITEM LINES")
-                            $('#product_form_div').addClass('d-none');
+                            
+                            if ($.inArray(memo_type_key, ItemRequest) !== -1) {
+                                displayNonLeaveElement();
+                                $('#product_form_div').removeClass('d-none');
+                                $('.add_item').removeClass('d-none');
+                                console.log("Oga this is request item")
 
-                            // Not a material request - hide location fields
-                            $('#material_request_locations').addClass('d-none');
-                            $('#source_location_id').attr('required', false);
-                            $('#destination_location_id').attr('required', false);
+                            }else{                            
+                                $('#amount_section').addClass('d-none');
+                                $('#amount_fig').attr("required", false);
+                                console.log("THIIIIS IS NOT ADD ITEM LINES")
+                                $('#product_form_div').addClass('d-none');
+                                // Not a material request - hide location fields
+                                $('#material_request_locations').addClass('d-none');
+                                $('#source_location_id').attr('required', false);
+                                $('#destination_location_id').attr('required', false);
+                            }
                         }
                     }
                 }).guardedCatch(function (error) {
