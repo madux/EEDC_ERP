@@ -2312,7 +2312,52 @@ class PortalRequest(http.Controller):
     #     except Exception as ex:
     #         _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
     #         return json.dumps({'status': False, 'message': str(ex) or "Form Submitted!"})
-    
+    def _get_employee(self):
+        employee_id = request.env['hr.employee'].sudo().search([
+                ('user_id', '=', request.env.uid), 
+                # ('employee_number', '=', post.get('staff_id')
+            ], limit=1)
+        return employee_id
+
+    @http.route('/request/api/save', type='json', auth='user', methods=['POST'])
+    def save_Request(self, request_id=None, lines=None, **kw):
+        employee = self._get_employee()
+        if not request_id:
+            # create request with data TODO
+            request_id = request_id
+
+        rec = request.env['memo.model'].sudo().browse(request_id)
+        if not rec.exists() or not employee:
+            return {'error': 'Only Employees with that owned this record can save or edit it'}
+        if rec.state not in ('draft', 'submit'):
+            return {'error': 'Request not editable at this stage.'}
+
+        RequestLine = request.env['request.line'].sudo()
+        productobj = request.env['product.product'].sudo()
+        for ld in lines:
+            if not ld.get('id'):
+                continue
+            line = RequestLine.browse(ld['id'])
+            if not line.exists():
+                continue
+            pd = int(ld.get('product_id'))
+            product = productobj.browse(pd)
+
+            if not product:
+                return {'error': f'Product with such id "{pd}" does not exist.'}
+            request_vals = { 
+                'product_id': pd
+                'quantity_available': ld.get('productreqQty', 0),
+                'description': ld.get('description', ''), #BeautifulSoup(description, features="lxml").get_text(),
+                'used_qty': ld.get('usedQty'),
+                'amount_total':  ld.get('unitAmount'),
+                'used_amount': ld.get('usedAmount'),
+                'note': ld.get('note'), 
+                'distance_from': ld.get('distanceFrom'),
+                'distance_to': rec.get('distanceTo'),
+            }
+            line.write(vals)
+        return {'success': True, 'message': 'Request line saved.'}
     
     @http.route(['/portal_data_process'], type='http', methods=['POST'], website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):

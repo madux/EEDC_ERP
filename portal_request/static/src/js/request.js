@@ -23,6 +23,15 @@ odoo.define('portal_request.portal_request', function (require) {
         $("#msform")[0].reset();
     }
 
+    const AppData = {
+        user: {name: '', employee_id: null },
+        currentId: null,
+        Requestsappraisal: null,    // current full appraisal data
+        Requestsappraisals: [],
+        lineCounter: 0,
+        managerReturnId: null,
+        };
+
     const NonItemRequest = [
         'server_access',
         'Payment',
@@ -271,7 +280,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 var lastRow_count = getOrAssignRowNumber()
                 console.log(`Building product table ${k} ${elm}`)
                 $(`#tbody_product`).append(
-                    `<tr class="heading prod_row" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
+                    `<tr class="heading prod_row" data-lid="" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
                         <th width="5%">
                             <span>
                                 <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.request_line_id}"/>
@@ -327,7 +336,7 @@ odoo.define('portal_request.portal_request', function (require) {
         let default_source_location = $('#source_location_id').val() || $('#TargetSourceLocation').val() || 0
         let lastRow_count = getOrAssignRowNumber()
         $(`#tbody_product`).append(
-            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
+            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count} data-lid="">
                 <th width="5%">
                     <span>
                         <input type="checkbox" class="productchecked" code=""/>
@@ -1084,6 +1093,28 @@ odoo.define('portal_request.portal_request', function (require) {
         if (a !== undefined) return String(a);
         return String($opt.val());
     }
+
+    function collectRequestLines(){
+        const lines=[];
+        $('#tbody_product tr').each(function(){
+            const $r=$(this); 
+            const lid = $r.data('lid');
+            lines.push({
+                id:parseInt(lid),
+                product_id:$r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').val()) : null,
+                description: $r.find('.description').val().trim(),
+                productreqQty:parseFloat($r.find('.productinput').val())||0,
+                unitAmount: $r.find('.productAmt').val(),
+                subtotal: $r.find('.sub_total_amount').val(),
+                usedQty: $r.find('.sub_total_amount').val(),
+                usedAmount: $r.find('.productSoe').val(),
+                distanceFrom: $r.find('.DistanceFrom').val(),
+                distanceTo: $r.find('.Distanceto').val(),
+                note: $r.find('.Notefor').val().trim(),
+            });
+        });
+        return lines;
+        }
 
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
@@ -2627,104 +2658,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert(`Unknown Error! ${msg}`);
                 });
             },
-
-            // 'blur input[name=existing_order]': function(ev){
-            //     let existing_order = $(ev.target).val();
-            //     var selectRequestOption = $('#selectRequestOption');
-            //     var selectConfigOptionId = $('#selectConfigOptionId');
-            //     if(!selectConfigOptionId.val()){
-            //         alert('You must provide Request option!')
-            //         return false;
-            //     }
-            //     // if(!selectRequestOption.val()){
-            //     //     alert('Request option type not selected!')
-            //     //     return false;
-            //     // }
-            //     // if(existing_order !== '' && $('#staff_id').val() !== "" && $('#selectRequestOption').val() !== ""){  
-            //     if(existing_order !== '' && $('#staff_id').val() !== ""){
-            //         var self = this;
-            //         var staff_num = $('#staff_id').val();
-            //         console.log(`THIS IS MY TEST ${staff_num} -- ${existing_order} --- ${selectRequestOption.val()}`)
-            //         this._rpc({
-            //             route: `/check_order`,
-            //             params: {
-            //                 'staff_num': staff_num,
-            //                 'existing_order': existing_order,
-            //                 'request_type': selectRequestOption.val(),
-            //             },
-            //         }).then(function (data) {
-            //             console.log('retrieved existing_order data => '+ JSON.stringify(data))
-            //             if (!data.status) {
-            //             console.log('retrieved existing_order link => '+ data.link)
-
-            //                 $(ev.target).val('')
-            //                 $("#existing_order").val('')
-            //                 $("#phone_number").val('')
-            //                 $("#email_from").val('')
-            //                 $("#employee_id").val('')
-            //                 $("#subject").val('')
-            //                 $("#description").val('')
-            //                 $("#amount_fig").val('')
-            //                 $("#selectDistrict").val('')
-            //                 $("#product_ids").val('').trigger('change')
-            //                 $("#tbody_product").empty();
-            //                 alert(`Validation Error!${data.message}`)
-            //                 if (data.link){
-            //                     // window.location.href = data.link
-            //                     window.open(data.link, '_blank');
-            //                 }
-            //             }else{
-            //                 $("#tbody_product").empty();
-            //                 var employee_name = data.data.name;
-            //                 var email = data.data.work_email;
-            //                 var phone = data.data.phone;   
-            //                 var subject = data.data.subject; 
-            //                 var description = data.data.description; 
-            //                 // var district_id = data.data.district_id; 
-            //                 var request_date = data.data.request_date; 
-            //                 var amount = data.data.amount; 
-            //                 var state = data.data.state; 
-            //                 var product_ids = data.data.product_ids; 
-            //                 $("#phone_number").val(phone)
-            //                 $("#email_from").val(email)
-            //                 $("#employee_id").val(employee_name)
-            //                 $("#subject").val(subject)
-            //                 // $("#description").val(description)
-            //                 $("#description").attr('required', false)
-            //                 // $("#description").removeClass('required', false)
-            //                 // $("#selectDistrict").val(district_id).trigger('change')
-            //                 $("#request_status").val(state)
-            //                 $("#amount_fig").val(formatCurrency(amount))
-            //                 $('#amount_fig').attr("readonly", false); 
-            //                 $("#request_date").val(request_date).trigger('change')
-            //                 // building product items
-            //                 if(state == "Draft"){
-            //                     let product_val = [];
-            //                     $.each(product_ids, function(k, elm){
-            //                         product_val.push(elm.id)
-            //                     }) 
-            //                     buildProductTable(product_ids, selectRequestOption.val());
-            //                 }
-            //                 if(selectRequestOption.val() == "soe"){
-            //                     makefieldsReadonly(true);
-            //                     buildProductTable(product_ids, "soe", "required", "", "");
-            //                     compute_total_amount()
-            //                 }
-            //                 if(selectRequestOption.val() == "cash_advance"){
-            //                     // make cash advance field required and displayed
-            //                     buildProductTable(product_ids, "cash_advance", "", "", "readonly");
-            //                 }  
-            //             }
-            //         }).guardedCatch(function (error) {
-            //             let msg = error.message.message
-            //             console.log(msg)
-            //             $("#existing_order").val('')
-            //             alert(`Unknown Error! ${msg}`)
-            //         });
-            //     }else{
-            //         alert("[Staff ID, Request option, Existing Ref # ] Must all be provideds")
-            //     }
-            // },
+ 
             'change #existing_order': function (ev) {
                 let existing_order_id = $(ev.target).val();
                 var selectRequestOption = $('#selectRequestOption');
@@ -2914,6 +2848,14 @@ odoo.define('portal_request.portal_request', function (require) {
                 console.log("Resending")
                 let targetElement = $(ev.target).attr('id');
                 setRecordStatus(targetElement, 'Sent');
+            },
+
+            'click #save-btn': function(ev){
+                const lines=collectRequestLines();
+                const $b=$(this).prop('disabled',true).html('<i class="fas fa-spinner fa-spin"></i> Saving…');
+                rpc('/request/api/save',{appraisal_id:App.currentId,lines}).then(r=>{
+                r.error?toast(r.error,'error'):toast(r.message,'success');
+                }).fail(e=>toast(e,'error')).always(()=>$b.prop('disabled',false).html('<i class="fas fa-save"></i> Save Mid Year Lines'));
             },
 
             'click .button_req_submit': function (ev) {
