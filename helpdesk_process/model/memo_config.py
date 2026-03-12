@@ -36,7 +36,7 @@ class HelpdeskMemoConfig(models.Model):
     @api.depends('memo_type', 'name')
     def _compute_task_stats(self):
         for memo in self:
-            if memo_type:
+            if self.memo_type or self.name:
                 resolved_count, pending_count, unattended_count = 0, 0, 0
                 '''this is all memo records that has the configuration of self'''
                 resolutions = self.env['memo.model'].search([('helpdesk_memo_config_id', '=', memo.id)])
