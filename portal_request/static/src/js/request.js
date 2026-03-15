@@ -26,8 +26,8 @@ odoo.define('portal_request.portal_request', function (require) {
     const AppData = {
         user: {name: '', employee_id: null },
         currentId: null,
-        Requestsappraisal: null,    // current full appraisal data
-        Requestsappraisals: [],
+        // Requestsappraisal: null,    // current full appraisal data
+        // Requestsappraisals: [],
         lineCounter: 0,
         managerReturnId: null,
         };
@@ -128,7 +128,11 @@ odoo.define('portal_request.portal_request', function (require) {
             return true;
         }
     }
-
+    function assignRequestId(currentId){
+        AppData.currentId = currentId
+        console.log('Successfully Assigned memo id with ID', currentId)
+        $('#memo_id').val(currentId)
+    }
     function display_material_request_location(is_material_request = false) {
         if (is_material_request) {
             $('#inter-source-location-div').removeClass('d-none');
@@ -887,48 +891,8 @@ odoo.define('portal_request.portal_request', function (require) {
         multiple: false,
         placeholder: 'Search for Vendors',
         allowClear: true,
-    });
+    }); 
 
-    // function searchStockLocation(element, location_type,is_inter_company, classes='', selected_location_id=0){
-    //     console.log(`What am i sending as inter company ${is_inter_company}, selection location ${selected_location_id} -- type of ${typeof(is_inter_company)}`)
-    //     // find the input field
-    //     const elm = element // $(`input[name=source_location_id]`);
-    //     let oldValue = elm.val(); // OGIDI
-    //     let oldId = elm.attr('id'); 
-    //     elm.select2({
-    //         ajax: {
-    //           url: '/get-stock-location',
-    //           dataType: 'json',
-    //           delay: 30,
-    //           data: function (term, page) {
-    //             return {
-    //               q: term, //search term
-    //               page_limit: 10, // page size
-    //               location_type: location_type, 
-    //               is_inter_company: is_inter_company, // true, // is_inter_company, 
-    //               selected_location_id: selected_location_id, 
-    //               selectedOption_id: $('#selectConfigOption').val() ? $('#selectConfigOption').val() : false, 
-    //               page: page, // page number
-    //             };
-    //           },
-    //           results: function (data, page) {
-    //             var more = (page * 30) < data.total;
-    //             return {results: data.results, more: more};
-    //           },
-    //           cache: true
-    //         },
-    //         minimumInputLength: 1,
-    //         multiple: false,
-    //         placeholder: 'Search for Source location',
-    //         allowClear: true,
-    //     }); 
-    //     // if (oldId){
-    //     //     elm.val(oldId)
-    //     //     console.log(`location found CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-    //     //     $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
-    //     // }
-
-    // }
     function searchStockLocation(element, location_type, is_inter_company, classes = '', selected_location_id = 0, district_id = null) {
         console.log(`searchStockLocation called: type=${location_type}, inter_company=${is_inter_company}, district=${district_id}`);
 
@@ -1102,15 +1066,17 @@ odoo.define('portal_request.portal_request', function (require) {
             lines.push({
                 id:parseInt(lid),
                 product_id:$r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').val()) : null,
-                description: $r.find('.description').val().trim(),
-                productreqQty:parseFloat($r.find('.productinput').val())||0,
-                unitAmount: $r.find('.productAmt').val(),
+                description: $r.find('.DescFor').val().trim(),
+                qty:parseFloat($r.find('.productinput').val())||0,
+                amount_total: $r.find('.productAmt').val(),
                 subtotal: $r.find('.sub_total_amount').val(),
-                usedQty: $r.find('.sub_total_amount').val(),
-                usedAmount: $r.find('.productSoe').val(),
+                used_qty: $r.find('.productUsedQty').val(),
+                used_amount: $r.find('.productSoe').val(),
                 distanceFrom: $r.find('.DistanceFrom').val(),
                 distanceTo: $r.find('.Distanceto').val(),
                 note: $r.find('.Notefor').val().trim(),
+                line_checked: $r.find('.productchecked').val(),
+                request_line_id: parseInt(lid),
             });
         });
         return lines;
@@ -1152,6 +1118,157 @@ odoo.define('portal_request.portal_request', function (require) {
         });
     }
 
+    function saveRecord(ev, toSubmit=false){
+        ev.preventDefault();
+        const $btn = $(ev.currentTarget);
+        const lines = collectRequestLines();
+        let action = toSubmit ? '' : 'Saving …'
+        $btn.prop('disabled', true)
+            .html(`<i class="fa fa-spinner fa-spin"></i> ${action}`);
+
+        // const formArray = $('#msform').serializeArray();
+        //     let formData = {};
+        //         formArray.forEach(item => {
+        //             formData[item.name] = item.value;
+        //         });
+        // convert form → object
+        const formData = Object.fromEntries(
+            $('#msform').serializeArray().map(i => [i.name, i.value])
+        );
+
+        formData.DataItems = lines;
+
+        // ---------- validations ----------
+        if (!ValidateDataFields()) {
+            resetBtn($btn);
+            return;
+        }
+
+        if (!validateLineItems(lines)) {
+            console.log('No items added');
+            resetBtn($btn);
+            return;
+        }
+
+        // ---------- extra data ----------
+        formData.inputFollowers = $('#inputFollowers').select2('data');
+        formData.saveAction = 'save-btn';
+
+        const requestId = AppData.currentId || $('#memo_id').val() || null;
+
+        rpcFunction('/request/api/save', {
+            formData,
+            request_id: requestId ? parseInt(requestId) : null,
+            lines,
+            toSubmit: toSubmit,
+        })
+        .then(r => {
+            if (r.error) {
+                toast(r.error, 'error');
+                return;
+            }
+
+            alert('Successfully saved with ID');
+            console.log('Saved request id:', r.request_id);
+
+            assignRequestId(r.request_id);
+            if (toSubmit){
+                // let targetElementid = parseInt(r.request_id);
+                window.location.href = `/portal-success`;
+                // window.location.href = `/my/request/view/${targetElementid}`
+            }
+        })
+        .fail(e => {
+            console.error(e);
+            alert('Error saving request');
+        })
+        .always(() => toSubmit ? window.location.href = `/portal-success` : resetBtn($btn));
+    }
+
+    function resetBtn(btn){
+        btn.prop('disabled', false)
+        .html('<i class="fa fa-save"></i> Save');
+    }
+
+    var ValidateDataFields = function () {
+
+        let missingFields = [];
+
+        // Leave reliever validation
+        if ($('#selectRequestOption').val() === "leave_request" &&
+            !$('#leave_reliever').val()) {
+
+            modal_message.text("Please ensure to add a reliever");
+            alert_modal.modal('show');
+            return false;
+        }
+
+        // required fields
+        $('[required]:visible').each(function () {
+            const field = $(this);
+
+            if (!field.val()) {
+                field.addClass('is-invalid');
+                missingFields.push(field.attr('labelfor'));
+            } else {
+                field.removeClass('is-invalid');
+            }
+        });
+
+        // product line validation
+        const memoType = $('#selectRequestOption').val();
+
+        if ($.inArray(memoType, productRequiredItems) !== -1) {
+            $('#tbody_product tr.prod_row input.productitemrow').each(function () {
+                if ($(this).prop('required') && !$(this).val().trim()) {
+                    missingFields.push($(this).attr('labelfor'));
+                }
+            });
+        }
+
+        // show errors
+        if (missingFields.length) {
+
+            const message =
+                "Validations: Please ensure the following fields are filled:\n\n" +
+                missingFields.map((f, i) => `${i + 1}. ${f}`).join('\n');
+
+            modal_message.text(message);
+            alert_modal.modal('show');
+
+            return false;
+        }
+
+        return true;
+    };
+
+
+    // ── Toast ──────────────────────────────────────────────────
+    function toast(msg, type='info'){
+        const icon = {success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle'}[type] || 'fa-info-circle';
+        const el = $(`<div class="toast toast-${type}"><i class="fas ${icon}"></i><span>${msg}</span>
+            <button class="toast-dismiss">&times;</button></div>`);
+        $('#toast-wrap').append(el);
+        el.find('.toast-dismiss').on('click',()=>el.remove());
+        setTimeout(()=>el.fadeOut(350,()=>el.remove()),4500);
+    }
+
+    // ── RPC ───────────────────────────────────────────────────
+    function rpcFunction(url, params){
+    params = params || {};
+    return $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({jsonrpc:'2.0', method:'call', id:Date.now(), params: params})
+    }).then(function(r){
+        if(r.error){
+        var msg = (r.error.data && r.error.data.message) ? r.error.data.message : (r.error.message || 'Unknown error');
+        return $.Deferred().reject(msg).promise();
+        }
+        return r.result;
+    });
+    }
     publicWidget.registry.PortalRequestWidgets = publicWidget.Widget.extend({
         selector: '#portal-request',
         start: function () {
@@ -2856,14 +2973,124 @@ odoo.define('portal_request.portal_request', function (require) {
                 setRecordStatus(targetElement, 'Sent');
             },
 
-            'click #save-btn': function(ev){
-                const lines=collectRequestLines();
-                const $b=$(this).prop('disabled',true).html('<i class="fas fa-spinner fa-spin"></i> Saving…');
-                rpc('/request/api/save',{appraisal_id:App.currentId,lines}).then(r=>{
-                r.error?toast(r.error,'error'):toast(r.message,'success');
-                }).fail(e=>toast(e,'error')).always(()=>$b.prop('disabled',false).html('<i class="fas fa-save"></i> Save Mid Year Lines'));
+            // 'click #save-btn': function (ev) {
+            //     ev.preventDefault();
+            //     const lines = collectRequestLines();
+            //     const $btn = $(ev.currentTarget)
+            //                 .prop('disabled', true)
+            //                 .html('<i class="fa fa-spinner fa-spin"></i> Saving…');
+            //     const formArray = $('#msform').serializeArray();
+            //     let formData = {};
+            //         formArray.forEach(item => {
+            //             formData[item.name] = item.value;
+            //         });
+
+            //     formData.DataItems = lines;
+
+            //     if (!ValidateDataFields()){
+            //         $btn.prop('disabled', false).html('Save');
+            //         return false 
+            //     // }else if (!validateLineItems(formData.DataItems)) {
+            //     //     // $btn.prop('disabled', false).html('<i class="fa fa-save"> </i> Save');
+            //     //     console.log('No items added')
+            //     //     return false
+            //     }
+            //     // else {
+
+            //         // let formData = {};
+            //         // formArray.forEach(item => {
+            //         //     formData[item.name] = item.value;
+            //         // });
+
+            //         // formData.DataItems = lines;
+                    
+            //         formData.inputFollowers = $('#inputFollowers').select2('data');
+            //         formData.saveAction = 'save-btn';
+            //         rpcFunction('/request/api/save', {
+            //             formData: formData,
+            //             request_id: AppData.currentId || $('#memo_id').val() ? parseInt($('#memo_id').val()) : null,
+            //             lines: lines
+            //         }).then(r => {
+            //             if (r.error) {
+            //                 toast(r.error, 'Error trying to save');
+            //             } else {
+            //                 // toast(r.message, 'success');
+            //                 alert('Successfully saved with ID')
+            //                 console.log('Successfully saved with ID', r.request_id)
+            //                 assignRequestId(r.request_id);
+            //             }
+
+            //         }).fail(e => alert('error', e))
+            //         .always(() => {
+            //             $btn.prop('disabled', false)
+            //                 .html('<i class="fa fa-save"> </i> Save');
+            //         }); 
+            //     // }
+            // },
+
+            'click #save-btn': function (ev) {
+                ev.preventDefault();
+
+                const $btn = $(ev.currentTarget);
+                const lines = collectRequestLines();
+
+                $btn.prop('disabled', true)
+                    .html('<i class="fa fa-spinner fa-spin"></i> Saving…');
+
+                // const formArray = $('#msform').serializeArray();
+                //     let formData = {};
+                //         formArray.forEach(item => {
+                //             formData[item.name] = item.value;
+                //         });
+                // convert form → object
+                const formData = Object.fromEntries(
+                    $('#msform').serializeArray().map(i => [i.name, i.value])
+                );
+
+                formData.DataItems = lines;
+
+                // ---------- validations ----------
+                if (!ValidateDataFields()) {
+                    resetBtn($btn);
+                    return;
+                }
+
+                if (!validateLineItems(lines)) {
+                    console.log('No items added');
+                    resetBtn($btn);
+                    return;
+                }
+
+                // ---------- extra data ----------
+                formData.inputFollowers = $('#inputFollowers').select2('data');
+                formData.saveAction = 'save-btn';
+
+                const requestId = AppData.currentId || $('#memo_id').val() || null;
+
+                rpcFunction('/request/api/save', {
+                    formData,
+                    request_id: requestId ? parseInt(requestId) : null,
+                    lines
+                })
+                .then(r => {
+                    if (r.error) {
+                        toast(r.error, 'error');
+                        return;
+                    }
+
+                    alert('Successfully saved with ID');
+                    console.log('Saved request id:', r.request_id);
+
+                    assignRequestId(r.request_id);
+                })
+                .fail(e => {
+                    console.error(e);
+                    alert('Error saving request');
+                })
+                .always(() => resetBtn($btn));
             },
 
+ 
             'click .button_req_submit': function (ev) {
                 //// main event starts
                 /**
@@ -2932,7 +3159,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                 'code': 'mef00981',
                                 'request_line_id': '',
                                 'distance_from': '',
-                                'distance_to': '',
                                 'distance_to': '',
                             }
                             // input[type='text'], input[type='number']
@@ -3029,54 +3255,62 @@ odoo.define('portal_request.portal_request', function (require) {
                         return false
                     }
                     else {
-                        formData.append('DataItems', JSON.stringify(DataItems))
-                        formData.append('inputFollowers', $('#inputFollowers').select2('data'))
-                        // check if the button is save operation and pass in the args 
-                        formData.append('saveAction', current_btn.attr('save_btn'))
-                        console.log(`Save or submit that was clicked, ${current_btn.attr('save_btn')}`)
+                        if ($('#memo_id').val()){ 
+                            // if record already generated.
+                            console.log('save and reload')
+                            saveRecord(ev, true);
+                        }else{
+                            console.log('JUST SUBMITTED')
+                            
+                            formData.append('DataItems', JSON.stringify(DataItems))
+                            formData.append('inputFollowers', $('#inputFollowers').select2('data'))
+                            // check if the button is save operation and pass in the args 
+                            formData.append('saveAction', current_btn.attr('save_btn'))
+                            console.log(`Save or submit that was clicked, ${current_btn.attr('save_btn')}`)
 
-                        console.log("sssXMLREQUEST Successful====", DataItems);
-                        let $btn = $('.button_req_submit');
-                        let $btnHtml = $btn.html()
-                        $btn.attr('disabled', 'disabled');
-                        $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                        $.blockUI({
-                            'message': '<h2 class="card-name">Please wait ...</h2>'
-                        });
-                        $.ajax({
-                            type: "POST",
-                            enctype: 'multipart/form-data',
-                            url: "/portal_data_process",
-                            data: formData,
-                            processData: false,
-                            contentType: false,
-                            cache: false,
-                            timeout: 800000,
-                        }).then(function (data) {
-                            if (data.status == false) {
-                                alert(data.message)
-                                return false;
-                            } else {
-                                console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                // clearing form content
-                                $("#msform")[0].reset();
-                                $("#tbody_product").empty()
-                                $("#tbody_employee").empty()
-                                window.location.href = `/portal-success`;
+                            console.log("sssXMLREQUEST Successful====", DataItems);
+                            let $btn = $('.button_req_submit');
+                            let $btnHtml = $btn.html()
+                            $btn.attr('disabled', 'disabled');
+                            $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                            $.blockUI({
+                                'message': '<h2 class="card-name">Please wait ...</h2>'
+                            });
+                            $.ajax({
+                                type: "POST",
+                                enctype: 'multipart/form-data',
+                                url: "/portal_data_process",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                cache: false,
+                                timeout: 800000,
+                            }).then(function (data) {
+                                if (data.status == false) {
+                                    alert(data.message)
+                                    return false;
+                                } else {
+                                    console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
+                                    // clearing form content
+                                    $("#msform")[0].reset();
+                                    $("#tbody_product").empty()
+                                    $("#tbody_employee").empty()
+                                    window.location.href = `/portal-success`;
+                                    $btn.attr('disabled', false);
+                                    $btn.html($btnHtml)
+                                    $.unblockUI()
+                                    console.log("XMLREQUEST Successful====", DataItems);
+                                }
+                            }).catch(function (err) {
+                                console.log(err);
                                 $btn.attr('disabled', false);
                                 $btn.html($btnHtml)
                                 $.unblockUI()
-                                console.log("XMLREQUEST Successful====", DataItems);
-                            }
-                        }).catch(function (err) {
-                            console.log(err);
-                            $btn.attr('disabled', false);
-                            $btn.html($btnHtml)
-                            $.unblockUI()
-                            alert(err);
-                        }).then(function () {
-                            console.log(".")
-                        })
+                                alert(err);
+                            }).then(function () {
+                                console.log(".")
+                            })
+                        }
                     }
                 }
             }
