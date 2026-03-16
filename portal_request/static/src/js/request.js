@@ -3,8 +3,6 @@
 // import { utils } from "web.utils";
 // import { ajax } from "web.ajax";
 
-// const PortalRequestWidget = publicWidget.registry.PortalRequest;
-
 odoo.define('portal_request.portal_request', function (require) {
     "use strict";
 
@@ -22,6 +20,13 @@ odoo.define('portal_request.portal_request', function (require) {
     if ($("#msform")[0] !== undefined) {
         $("#msform")[0].reset();
     }
+
+    const AppData = {
+        user: {name: '', employee_id: null },
+        currentId: null,
+        lineCounter: 0,
+        managerReturnId: null,
+        };
 
     const NonItemRequest = [
         'server_access',
@@ -119,7 +124,11 @@ odoo.define('portal_request.portal_request', function (require) {
             return true;
         }
     }
-
+    function assignRequestId(currentId){
+        AppData.currentId = currentId
+        console.log('Successfully Assigned memo id with ID', currentId)
+        $('#memo_id').val(currentId)
+    }
     function display_material_request_location(is_material_request = false) {
         if (is_material_request) {
             $('#inter-source-location-div').removeClass('d-none');
@@ -271,7 +280,7 @@ odoo.define('portal_request.portal_request', function (require) {
                 var lastRow_count = getOrAssignRowNumber()
                 console.log(`Building product table ${k} ${elm}`)
                 $(`#tbody_product`).append(
-                    `<tr class="heading prod_row" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
+                    `<tr class="heading prod_row" data-lid="" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
                         <th width="5%">
                             <span>
                                 <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.request_line_id}"/>
@@ -327,7 +336,7 @@ odoo.define('portal_request.portal_request', function (require) {
         let default_source_location = $('#source_location_id').val() || $('#TargetSourceLocation').val() || 0
         let lastRow_count = getOrAssignRowNumber()
         $(`#tbody_product`).append(
-            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count}>
+            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count} data-lid="">
                 <th width="5%">
                     <span>
                         <input type="checkbox" class="productchecked" code=""/>
@@ -878,48 +887,8 @@ odoo.define('portal_request.portal_request', function (require) {
         multiple: false,
         placeholder: 'Search for Vendors',
         allowClear: true,
-    });
+    }); 
 
-    // function searchStockLocation(element, location_type,is_inter_company, classes='', selected_location_id=0){
-    //     console.log(`What am i sending as inter company ${is_inter_company}, selection location ${selected_location_id} -- type of ${typeof(is_inter_company)}`)
-    //     // find the input field
-    //     const elm = element // $(`input[name=source_location_id]`);
-    //     let oldValue = elm.val(); // OGIDI
-    //     let oldId = elm.attr('id'); 
-    //     elm.select2({
-    //         ajax: {
-    //           url: '/get-stock-location',
-    //           dataType: 'json',
-    //           delay: 30,
-    //           data: function (term, page) {
-    //             return {
-    //               q: term, //search term
-    //               page_limit: 10, // page size
-    //               location_type: location_type, 
-    //               is_inter_company: is_inter_company, // true, // is_inter_company, 
-    //               selected_location_id: selected_location_id, 
-    //               selectedOption_id: $('#selectConfigOption').val() ? $('#selectConfigOption').val() : false, 
-    //               page: page, // page number
-    //             };
-    //           },
-    //           results: function (data, page) {
-    //             var more = (page * 30) < data.total;
-    //             return {results: data.results, more: more};
-    //           },
-    //           cache: true
-    //         },
-    //         minimumInputLength: 1,
-    //         multiple: false,
-    //         placeholder: 'Search for Source location',
-    //         allowClear: true,
-    //     }); 
-    //     // if (oldId){
-    //     //     elm.val(oldId)
-    //     //     console.log(`location found CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-    //     //     $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
-    //     // }
-
-    // }
     function searchStockLocation(element, location_type, is_inter_company, classes = '', selected_location_id = 0, district_id = null) {
         console.log(`searchStockLocation called: type=${location_type}, inter_company=${is_inter_company}, district=${district_id}`);
 
@@ -1085,6 +1054,56 @@ odoo.define('portal_request.portal_request', function (require) {
         return String($opt.val());
     }
 
+    // function collectRequestLines(){
+    //     const lines=[];
+    //     $('#tbody_product tr').each(function(){
+    //         const $r=$(this); 
+    //         const lid = $r.data('lid');
+    //         lines.push({
+    //             id:parseInt(lid),
+    //             product_id: $r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').select2('data')) : null,
+    //             description: $r.find('.DescFor').val().trim(),
+    //             qty:parseFloat($r.find('.productinput').val())||0,
+    //             amount_total: $r.find('.productAmt').val(),
+    //             subtotal: $r.find('.sub_total_amount').val(),
+    //             used_qty: $r.find('.productUsedQty').val(),
+    //             used_amount: $r.find('.productSoe').val(),
+    //             distanceFrom: $r.find('.DistanceFrom').val(),
+    //             distanceTo: $r.find('.Distanceto').val(),
+    //             note: $r.find('.Notefor').val().trim(),
+    //             line_checked: $r.find('.productchecked').val(),
+    //             request_line_id: parseInt(lid),
+    //         });
+    //     });
+    //     return lines;
+    //     }
+
+    function collectRequestLines(){
+        const lines=[];
+        $('#tbody_product tr').each(function(){
+            const $r=$(this); 
+            const lid = $r.data('lid');
+            const productField = $r.find('.productitemrow').select2('data');
+            console.log(productField.id)
+            lines.push({
+                id:parseInt(lid),
+                product_id: $r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').select2('data').id) : null,
+                description: $r.find('.DescFor').val().trim(),
+                qty: parseFloat($r.find('.productinput').val())||0,
+                amount_total: $r.find('.productAmt').val(),
+                subtotal: $r.find('.sub_total_amount').val(),
+                used_qty: $r.find('.productUsedQty').val(),
+                used_amount: $r.find('.productSoe').val(),
+                distanceFrom: $r.find('.DistanceFrom').val(),
+                distanceTo: $r.find('.Distanceto').val(),
+                note: $r.find('.Notefor').val().trim(),
+                line_checked: $r.find('.productchecked').val(),
+                request_line_id: parseInt(lid),
+            });
+        });
+        return lines;
+    }
+
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
             $('#leave_start_date').trigger('blur')
@@ -1121,6 +1140,193 @@ odoo.define('portal_request.portal_request', function (require) {
         });
     }
 
+    function collectAttachments() {
+        const files = $('#other_docs')[0].files;
+        let file_items = [];
+
+        for (let file of files) {
+
+            const base64 = new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    // remove data:mime/type;base64,
+                    const base64Data = e.target.result.split(',')[1];
+                    resolve(base64Data);
+                };
+
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            file_items.push({
+                filename: file.name,
+                mimetype: file.type,
+                datas: base64
+            });
+        }
+
+        return file_items;
+    }
+
+    function saveRecord(ev, toSubmit=false){
+        ev.preventDefault();
+        const $btn = $(ev.currentTarget);
+        const lines = collectRequestLines();
+        const attachments = collectAttachments();
+        console.log("Attachments are ", attachments)
+        let action = toSubmit ? '' : 'Saving …'
+        $btn.prop('disabled', true)
+            .html(`<i class="fa fa-spinner fa-spin"></i> ${action}`);
+
+        // const formArray = $('#msform').serializeArray();
+        //     let formData = {};
+        //         formArray.forEach(item => {
+        //             formData[item.name] = item.value;
+        //         });
+        // convert form → object
+        const formData = Object.fromEntries(
+            $('#msform').serializeArray().map(i => [i.name, i.value])
+        );
+
+        formData.DataItems = lines;
+        formData.attachments = attachments;
+
+
+        // load Attachments 
+        // ---------- validations ----------
+        if (!ValidateDataFields()) {
+            resetBtn($btn);
+            return;
+        }
+
+        if (!validateLineItems(lines)) {
+            console.log('No items added');
+            resetBtn($btn);
+            return;
+        }
+
+        // ---------- extra data ----------
+        formData.inputFollowers = $('#inputFollowers').select2('data');
+        formData.saveAction = 'save-btn';
+
+        const requestId = AppData.currentId || $('#memo_id').val() || null;
+        console.log(formData)
+
+        rpcFunction('/request/api/save', {
+            formData,
+            request_id: requestId ? parseInt(requestId) : null,
+            lines,
+            toSubmit: toSubmit,
+        })
+        .then(r => {
+            if (r.error) {
+                toast(r.error, 'error');
+                return;
+            }
+
+            alert('Successfully saved', r.request_id);
+            console.log('Saved request id:', r.request_id);
+            AttachmentsModule.setMemoId(r.request_id || $('#memo_id').val() || AppData.currentId);
+            AttachmentsModule.getAttachmentsForSave()
+            assignRequestId(r.request_id);
+            if (toSubmit){
+                // let targetElementid = parseInt(r.request_id);
+                window.location.href = `/portal-success`;
+                // window.location.href = `/my/request/view/${targetElementid}`
+            }
+        })
+        .fail(e => {
+            console.error(e);
+            alert('Error saving request');
+        })
+        .always(() => toSubmit ? window.location.href = `/portal-success` : resetBtn($btn));
+    }
+
+    function resetBtn(btn){
+        btn.prop('disabled', false)
+        .html('<i class="fa fa-save"></i> Save');
+    }
+
+    var ValidateDataFields = function () {
+
+        let missingFields = [];
+
+        // Leave reliever validation
+        if ($('#selectRequestOption').val() === "leave_request" &&
+            !$('#leave_reliever').val()) {
+
+            modal_message.text("Please ensure to add a reliever");
+            alert_modal.modal('show');
+            return false;
+        }
+
+        // required fields
+        $('[required]:visible').each(function () {
+            const field = $(this);
+
+            if (!field.val()) {
+                field.addClass('is-invalid');
+                missingFields.push(field.attr('labelfor'));
+            } else {
+                field.removeClass('is-invalid');
+            }
+        });
+
+        // product line validation
+        const memoType = $('#selectRequestOption').val();
+
+        if ($.inArray(memoType, productRequiredItems) !== -1) {
+            $('#tbody_product tr.prod_row input.productitemrow').each(function () {
+                if ($(this).prop('required') && !$(this).val().trim()) {
+                    missingFields.push($(this).attr('labelfor'));
+                }
+            });
+        }
+
+        // show errors
+        if (missingFields.length) {
+
+            const message =
+                "Validations: Please ensure the following fields are filled:\n\n" +
+                missingFields.map((f, i) => `${i + 1}. ${f}`).join('\n');
+
+            modal_message.text(message);
+            alert_modal.modal('show');
+
+            return false;
+        }
+
+        return true;
+    };
+
+
+    // ── Toast ──────────────────────────────────────────────────
+    function toast(msg, type='info'){
+        const icon = {success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle'}[type] || 'fa-info-circle';
+        const el = $(`<div class="toast toast-${type}"><i class="fas ${icon}"></i><span>${msg}</span>
+            <button class="toast-dismiss">&times;</button></div>`);
+        $('#toast-wrap').append(el);
+        el.find('.toast-dismiss').on('click',()=>el.remove());
+        setTimeout(()=>el.fadeOut(350,()=>el.remove()),4500);
+    }
+
+    // ── RPC ───────────────────────────────────────────────────
+    function rpcFunction(url, params){
+    params = params || {};
+    return $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({jsonrpc:'2.0', method:'call', id:Date.now(), params: params})
+    }).then(function(r){
+        if(r.error){
+        var msg = (r.error.data && r.error.data.message) ? r.error.data.message : (r.error.message || 'Unknown error');
+        return $.Deferred().reject(msg).promise();
+        }
+        return r.result;
+    });
+    }
     publicWidget.registry.PortalRequestWidgets = publicWidget.Widget.extend({
         selector: '#portal-request',
         start: function () {
@@ -1450,21 +1656,6 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
 
-            // 'change .destinationlocation-cls': function(ev){
-            //     let sourceLocationId = $('#source_location_id')
-            // 	console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-            // 	if(sourceLocationId.val() && $(ev.target).val()){
-            //         if(sourceLocationId.val() == $(ev.target).val()){
-            //             $(ev.target).val('');
-            //             $(ev.target).addClass("is-invalid");
-            //             alert("Source Location and Destination Location must not be the same");
-            //             return true;
-            //         }
-            //         else{
-            //             $(ev.target).removeClass("is-invalid");
-            //         }
-            //     }
-            // },
             'change .destinationlocation-cls': function (ev) {
                 let sourceLocationId = $('#source_location_id');
                 let destinationLocationId = $(ev.target);
@@ -1491,45 +1682,6 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 }
             },
-            // 'change .isInterDistrict': function(ev){
-            //     $('#destination_location_id').val('').trigger('change');
-            //     $('#source_location_id').val('').trigger('change');
-            //     if ($(ev.target).is(':checked')){
-            //         // make the source location and destination location required
-            //         $('#inter-source-location-div').removeClass('d-none');
-            //         $('#source_location_id').attr('required', true);
-            //         let is_inter_district_transfer = $('#is_inter_district_transfer_config').is(':checked')
-            //         if (!is_inter_district_transfer){
-            //             $('#isInterDistrict').prop('checked', false)
-            //             alert('The selected Request option is not setup for inter district transfer')
-            //         }
-            //         let interCompany = true
-            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-
-            //         // make the destination location required
-            //         $('#inter-destination-location-div').removeClass('d-none');
-            //         $('#destination_location_id').attr('required', true);
-            //     }
-            //     else{
-            //         let interCompany = false
-            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-            //     }
-            //     /** 
-            //      * This will be removed because source and destination 
-            //      * location is requirement for all material request 
-            //     else{ 
-            //         // make the source location not required
-            //         $('#inter-source-location-div').addClass('d-none');
-            //         $('#source_location_id').attr('required', false);
-
-            //         // make the destination location not required
-            //         $('#inter-destination-location-div').addClass('d-none');
-            //         $('#destination_location_id').attr('required', false);
-            //     }
-            //     */
-            // },
 
             'change .otherChangeOption': function (ev) {
                 if ($(ev.target).is(':checked')) {
@@ -2633,104 +2785,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     alert(`Unknown Error! ${msg}`);
                 });
             },
-
-            // 'blur input[name=existing_order]': function(ev){
-            //     let existing_order = $(ev.target).val();
-            //     var selectRequestOption = $('#selectRequestOption');
-            //     var selectConfigOptionId = $('#selectConfigOptionId');
-            //     if(!selectConfigOptionId.val()){
-            //         alert('You must provide Request option!')
-            //         return false;
-            //     }
-            //     // if(!selectRequestOption.val()){
-            //     //     alert('Request option type not selected!')
-            //     //     return false;
-            //     // }
-            //     // if(existing_order !== '' && $('#staff_id').val() !== "" && $('#selectRequestOption').val() !== ""){  
-            //     if(existing_order !== '' && $('#staff_id').val() !== ""){
-            //         var self = this;
-            //         var staff_num = $('#staff_id').val();
-            //         console.log(`THIS IS MY TEST ${staff_num} -- ${existing_order} --- ${selectRequestOption.val()}`)
-            //         this._rpc({
-            //             route: `/check_order`,
-            //             params: {
-            //                 'staff_num': staff_num,
-            //                 'existing_order': existing_order,
-            //                 'request_type': selectRequestOption.val(),
-            //             },
-            //         }).then(function (data) {
-            //             console.log('retrieved existing_order data => '+ JSON.stringify(data))
-            //             if (!data.status) {
-            //             console.log('retrieved existing_order link => '+ data.link)
-
-            //                 $(ev.target).val('')
-            //                 $("#existing_order").val('')
-            //                 $("#phone_number").val('')
-            //                 $("#email_from").val('')
-            //                 $("#employee_id").val('')
-            //                 $("#subject").val('')
-            //                 $("#description").val('')
-            //                 $("#amount_fig").val('')
-            //                 $("#selectDistrict").val('')
-            //                 $("#product_ids").val('').trigger('change')
-            //                 $("#tbody_product").empty();
-            //                 alert(`Validation Error!${data.message}`)
-            //                 if (data.link){
-            //                     // window.location.href = data.link
-            //                     window.open(data.link, '_blank');
-            //                 }
-            //             }else{
-            //                 $("#tbody_product").empty();
-            //                 var employee_name = data.data.name;
-            //                 var email = data.data.work_email;
-            //                 var phone = data.data.phone;   
-            //                 var subject = data.data.subject; 
-            //                 var description = data.data.description; 
-            //                 // var district_id = data.data.district_id; 
-            //                 var request_date = data.data.request_date; 
-            //                 var amount = data.data.amount; 
-            //                 var state = data.data.state; 
-            //                 var product_ids = data.data.product_ids; 
-            //                 $("#phone_number").val(phone)
-            //                 $("#email_from").val(email)
-            //                 $("#employee_id").val(employee_name)
-            //                 $("#subject").val(subject)
-            //                 // $("#description").val(description)
-            //                 $("#description").attr('required', false)
-            //                 // $("#description").removeClass('required', false)
-            //                 // $("#selectDistrict").val(district_id).trigger('change')
-            //                 $("#request_status").val(state)
-            //                 $("#amount_fig").val(formatCurrency(amount))
-            //                 $('#amount_fig').attr("readonly", false); 
-            //                 $("#request_date").val(request_date).trigger('change')
-            //                 // building product items
-            //                 if(state == "Draft"){
-            //                     let product_val = [];
-            //                     $.each(product_ids, function(k, elm){
-            //                         product_val.push(elm.id)
-            //                     }) 
-            //                     buildProductTable(product_ids, selectRequestOption.val());
-            //                 }
-            //                 if(selectRequestOption.val() == "soe"){
-            //                     makefieldsReadonly(true);
-            //                     buildProductTable(product_ids, "soe", "required", "", "");
-            //                     compute_total_amount()
-            //                 }
-            //                 if(selectRequestOption.val() == "cash_advance"){
-            //                     // make cash advance field required and displayed
-            //                     buildProductTable(product_ids, "cash_advance", "", "", "readonly");
-            //                 }  
-            //             }
-            //         }).guardedCatch(function (error) {
-            //             let msg = error.message.message
-            //             console.log(msg)
-            //             $("#existing_order").val('')
-            //             alert(`Unknown Error! ${msg}`)
-            //         });
-            //     }else{
-            //         alert("[Staff ID, Request option, Existing Ref # ] Must all be provideds")
-            //     }
-            // },
+ 
             'change #existing_order': function (ev) {
                 let existing_order_id = $(ev.target).val();
                 var selectRequestOption = $('#selectRequestOption');
@@ -2903,6 +2958,11 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log("Building Employee row with form data=> ", setEmployeedata)
                     buildEmployeeRow(selectRequestOption.val())
                 }
+                
+                // focus the last generated row input
+                setTimeout(function () {
+                    $('table tbody_product tr:last').find('input, select, textarea').first().focus();
+                }, 1);
             },
             'click .search_panel_btn': function (ev) {
                 console.log("the search")
@@ -2922,6 +2982,12 @@ odoo.define('portal_request.portal_request', function (require) {
                 setRecordStatus(targetElement, 'Sent');
             },
 
+            'click #save-btn': function (ev) {
+                saveRecord(ev, false);
+                 
+            },
+
+ 
             'click .button_req_submit': function (ev) {
                 //// main event starts
                 /**
@@ -2990,7 +3056,6 @@ odoo.define('portal_request.portal_request', function (require) {
                                 'code': 'mef00981',
                                 'request_line_id': '',
                                 'distance_from': '',
-                                'distance_to': '',
                                 'distance_to': '',
                             }
                             // input[type='text'], input[type='number']
@@ -3087,54 +3152,70 @@ odoo.define('portal_request.portal_request', function (require) {
                         return false
                     }
                     else {
-                        formData.append('DataItems', JSON.stringify(DataItems))
-                        formData.append('inputFollowers', $('#inputFollowers').select2('data'))
-                        // check if the button is save operation and pass in the args 
-                        formData.append('saveAction', current_btn.attr('save_btn'))
-                        console.log(`Save or submit that was clicked, ${current_btn.attr('save_btn')}`)
+                        if ($('#memo_id').val()){ 
+                            // if record already generated.
+                            console.log('save and reload')
+                            saveRecord(ev, true);
+                        }else{
+                            console.log('JUST SUBMITTED')
+                            
+                            formData.append('DataItems', JSON.stringify(DataItems))
+                            formData.append('inputFollowers', $('#inputFollowers').select2('data'))
+                            // check if the button is save operation and pass in the args 
+                            formData.append('saveAction', current_btn.attr('save_btn'))
+                            console.log(`Save or submit that was clicked, ${current_btn.attr('save_btn')}`)
 
-                        console.log("sssXMLREQUEST Successful====", DataItems);
-                        let $btn = $('.button_req_submit');
-                        let $btnHtml = $btn.html()
-                        $btn.attr('disabled', 'disabled');
-                        $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
-                        $.blockUI({
-                            'message': '<h2 class="card-name">Please wait ...</h2>'
-                        });
-                        $.ajax({
-                            type: "POST",
-                            enctype: 'multipart/form-data',
-                            url: "/portal_data_process",
-                            data: formData,
-                            processData: false,
-                            contentType: false,
-                            cache: false,
-                            timeout: 800000,
-                        }).then(function (data) {
-                            if (data.status == false) {
-                                alert(data.message)
-                                return false;
-                            } else {
-                                console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                // clearing form content
-                                $("#msform")[0].reset();
-                                $("#tbody_product").empty()
-                                $("#tbody_employee").empty()
-                                window.location.href = `/portal-success`;
+                            console.log("sssXMLREQUEST Successful====", DataItems);
+                            let $btn = $('.button_req_submit');
+                            let $btnHtml = $btn.html()
+                            $btn.attr('disabled', 'disabled');
+                            $btn.prepend('<i class="fa fa-spinner fa-spin"/> ');
+                            $.blockUI({
+                                'message': '<h2 class="card-name">Please wait ...</h2>'
+                            });
+                            $.ajax({
+                                type: "POST",
+                                enctype: 'multipart/form-data',
+                                url: "/portal_data_process",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                cache: false,
+                                timeout: 800000,
+                            }).then(function (data) {
+                                if (data.status == false) {
+                                    alert(data.message)
+                                    return false;
+                                } else {
+                                    console.log(`Recieving response from server => TYPEOF => ${typeof(data)} ${JSON.stringify(data)} and ${data} + REQUEST ID: ${data.request_id}`)
+                                    // clearing form content 
+                                    if (typeof data === "string") {
+                                        data = JSON.parse(data);
+                                    }
+                                    else{
+                                        data = data
+                                    }
+                                    AttachmentsModule.setMemoId(data.request_id);
+                                    AttachmentsModule.getAttachmentsForSave()
+                                    $("#msform")[0].reset();
+                                    $("#tbody_product").empty()
+                                    $("#tbody_employee").empty()
+                                    window.location.href = `/portal-success`;
+                                    $btn.attr('disabled', false);
+                                    $btn.html($btnHtml)
+                                    $.unblockUI()
+                                    console.log("XMLREQUEST Successful====", DataItems);
+                                }
+                            }).catch(function (err) {
+                                console.log(err);
                                 $btn.attr('disabled', false);
                                 $btn.html($btnHtml)
                                 $.unblockUI()
-                                console.log("XMLREQUEST Successful====", DataItems);
-                            }
-                        }).catch(function (err) {
-                            console.log(err);
-                            $btn.attr('disabled', false);
-                            $btn.html($btnHtml)
-                            $.unblockUI()
-                            alert(err);
-                        }).then(function () {
-                            console.log(".")
-                        })
+                                alert(err);
+                            }).then(function () {
+                                console.log(".")
+                            })
+                        }
                     }
                 }
             }
@@ -3211,8 +3292,6 @@ odoo.define('portal_request.portal_request', function (require) {
 
 
     function clearAllElement() {
-        // $('#phone_number').val('')
-        // $('#email_from').val('')
         $('#subject').val('')
         $('#description').val('')
         $('#amount_fig').val('');
@@ -3261,17 +3340,7 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#currency_div').addClass('d-none');
         $('#currency_id').val('');
         $('#currency_id').attr("required", false);
-
-
-        // $('#justification_reason').addClass("is-valid");
-        // $('#interdistrict').addClass('d-none');
-        // $('#isInterDistrict').prop('checked', false);
-        // $('#source_location_id').val('');
-        // $('#destination_location_id').val('');
-        // $('#source_location_id').attr("required", false);
-        // $('#destination_location_id').attr("required", false);
-        // $('#inter-destination-location-div').addClass('d-none');
-        // $('#inter-source-location-div').addClass('d-none');
+ 
         // Clear inter-district states - SINGLE SOURCE OF TRUTH
         $('#isInterDistrictProcess').prop('checked', false);
         $('#is_inter_district_transfer_config').prop('checked', false);

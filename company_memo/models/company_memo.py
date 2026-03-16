@@ -1965,7 +1965,8 @@ class Memo_Model(models.Model):
     #             return False, False
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
-        args: from_website: used to decide if the record is 
+        args: from_website: used to decide if the record is
+        current_stage_id =stageObj, returns stage_id.id
         generated from the website or from odoo internal use
         """
         approver_ids = [] 
@@ -2376,6 +2377,7 @@ class Memo_Model(models.Model):
                     subinv.is_locked = True
                 
     def confirm_memo(self, employee, comments, from_website=False, default_stage_id=False): 
+        """default_stage_id: int"""
         type = "loan request" if self.memo_type.memo_key == "loan" else "memo"
         
         is_initial_submission = not self.action_history_ids and self.state == 'submit'
