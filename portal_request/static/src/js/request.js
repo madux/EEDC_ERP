@@ -1084,10 +1084,17 @@ odoo.define('portal_request.portal_request', function (require) {
             const $r=$(this); 
             const lid = $r.data('lid');
             const productField = $r.find('.productitemrow').select2('data');
-            console.log(productField.id)
+            var selectData = $r.find('.productitemrow').select2('data');
+
+
+            console.log('PRODUCT', $r.find('.productitemrow').length)
+            console.log('PRODUCT DAA', $r.find('.productitemrow').select2('data'))
             lines.push({
                 id:parseInt(lid),
-                product_id: $r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').select2('data').id) : null,
+                product_id: $r.find('.productitemrow').length && $r.find('.productitemrow').select2('data') ? parseInt($r.find('.productitemrow').select2('data').id) : null,
+    //             product_id: (selectData && selectData.length)
+    // ? parseInt(selectData.id)
+    // : null,
                 description: $r.find('.DescFor').val().trim(),
                 qty: parseFloat($r.find('.productinput').val())||0,
                 amount_total: $r.find('.productAmt').val(),
