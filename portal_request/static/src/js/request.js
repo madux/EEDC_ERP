@@ -3,8 +3,6 @@
 // import { utils } from "web.utils";
 // import { ajax } from "web.ajax";
 
-// const PortalRequestWidget = publicWidget.registry.PortalRequest;
-
 odoo.define('portal_request.portal_request', function (require) {
     "use strict";
 
@@ -26,8 +24,6 @@ odoo.define('portal_request.portal_request', function (require) {
     const AppData = {
         user: {name: '', employee_id: null },
         currentId: null,
-        // Requestsappraisal: null,    // current full appraisal data
-        // Requestsappraisals: [],
         lineCounter: 0,
         managerReturnId: null,
         };
@@ -1058,16 +1054,42 @@ odoo.define('portal_request.portal_request', function (require) {
         return String($opt.val());
     }
 
+    // function collectRequestLines(){
+    //     const lines=[];
+    //     $('#tbody_product tr').each(function(){
+    //         const $r=$(this); 
+    //         const lid = $r.data('lid');
+    //         lines.push({
+    //             id:parseInt(lid),
+    //             product_id: $r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').select2('data')) : null,
+    //             description: $r.find('.DescFor').val().trim(),
+    //             qty:parseFloat($r.find('.productinput').val())||0,
+    //             amount_total: $r.find('.productAmt').val(),
+    //             subtotal: $r.find('.sub_total_amount').val(),
+    //             used_qty: $r.find('.productUsedQty').val(),
+    //             used_amount: $r.find('.productSoe').val(),
+    //             distanceFrom: $r.find('.DistanceFrom').val(),
+    //             distanceTo: $r.find('.Distanceto').val(),
+    //             note: $r.find('.Notefor').val().trim(),
+    //             line_checked: $r.find('.productchecked').val(),
+    //             request_line_id: parseInt(lid),
+    //         });
+    //     });
+    //     return lines;
+    //     }
+
     function collectRequestLines(){
         const lines=[];
         $('#tbody_product tr').each(function(){
             const $r=$(this); 
             const lid = $r.data('lid');
+            const productField = $r.find('.productitemrow').select2('data');
+            console.log(productField.id)
             lines.push({
                 id:parseInt(lid),
-                product_id:$r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').val()) : null,
+                product_id: $r.find('.productitemrow').length ? parseInt($r.find('.productitemrow').select2('data').id) : null,
                 description: $r.find('.DescFor').val().trim(),
-                qty:parseFloat($r.find('.productinput').val())||0,
+                qty: parseFloat($r.find('.productinput').val())||0,
                 amount_total: $r.find('.productAmt').val(),
                 subtotal: $r.find('.sub_total_amount').val(),
                 used_qty: $r.find('.productUsedQty').val(),
@@ -1080,7 +1102,7 @@ odoo.define('portal_request.portal_request', function (require) {
             });
         });
         return lines;
-        }
+    }
 
     $('#leave_start_date').datepicker('destroy').datepicker({
         onSelect: function (ev) {
@@ -1118,10 +1140,41 @@ odoo.define('portal_request.portal_request', function (require) {
         });
     }
 
+    function collectAttachments() {
+        const files = $('#other_docs')[0].files;
+        let file_items = [];
+
+        for (let file of files) {
+
+            const base64 = new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    // remove data:mime/type;base64,
+                    const base64Data = e.target.result.split(',')[1];
+                    resolve(base64Data);
+                };
+
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            file_items.push({
+                filename: file.name,
+                mimetype: file.type,
+                datas: base64
+            });
+        }
+
+        return file_items;
+    }
+
     function saveRecord(ev, toSubmit=false){
         ev.preventDefault();
         const $btn = $(ev.currentTarget);
         const lines = collectRequestLines();
+        const attachments = collectAttachments();
+        console.log("Attachments are ", attachments)
         let action = toSubmit ? '' : 'Saving …'
         $btn.prop('disabled', true)
             .html(`<i class="fa fa-spinner fa-spin"></i> ${action}`);
@@ -1137,7 +1190,10 @@ odoo.define('portal_request.portal_request', function (require) {
         );
 
         formData.DataItems = lines;
+        formData.attachments = attachments;
 
+
+        // load Attachments 
         // ---------- validations ----------
         if (!ValidateDataFields()) {
             resetBtn($btn);
@@ -1155,6 +1211,7 @@ odoo.define('portal_request.portal_request', function (require) {
         formData.saveAction = 'save-btn';
 
         const requestId = AppData.currentId || $('#memo_id').val() || null;
+        console.log(formData)
 
         rpcFunction('/request/api/save', {
             formData,
@@ -1168,9 +1225,10 @@ odoo.define('portal_request.portal_request', function (require) {
                 return;
             }
 
-            alert('Successfully saved with ID');
+            alert('Successfully saved', r.request_id);
             console.log('Saved request id:', r.request_id);
-
+            AttachmentsModule.setMemoId(r.request_id || $('#memo_id').val() || AppData.currentId);
+            AttachmentsModule.getAttachmentsForSave()
             assignRequestId(r.request_id);
             if (toSubmit){
                 // let targetElementid = parseInt(r.request_id);
@@ -1598,21 +1656,6 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
 
-            // 'change .destinationlocation-cls': function(ev){
-            //     let sourceLocationId = $('#source_location_id')
-            // 	console.log(`SOURCE LOCATION AND LOOCC ${sourceLocationId.val()} == ${$(ev.target).val()}`)
-            // 	if(sourceLocationId.val() && $(ev.target).val()){
-            //         if(sourceLocationId.val() == $(ev.target).val()){
-            //             $(ev.target).val('');
-            //             $(ev.target).addClass("is-invalid");
-            //             alert("Source Location and Destination Location must not be the same");
-            //             return true;
-            //         }
-            //         else{
-            //             $(ev.target).removeClass("is-invalid");
-            //         }
-            //     }
-            // },
             'change .destinationlocation-cls': function (ev) {
                 let sourceLocationId = $('#source_location_id');
                 let destinationLocationId = $(ev.target);
@@ -1639,45 +1682,6 @@ odoo.define('portal_request.portal_request', function (require) {
                     }
                 }
             },
-            // 'change .isInterDistrict': function(ev){
-            //     $('#destination_location_id').val('').trigger('change');
-            //     $('#source_location_id').val('').trigger('change');
-            //     if ($(ev.target).is(':checked')){
-            //         // make the source location and destination location required
-            //         $('#inter-source-location-div').removeClass('d-none');
-            //         $('#source_location_id').attr('required', true);
-            //         let is_inter_district_transfer = $('#is_inter_district_transfer_config').is(':checked')
-            //         if (!is_inter_district_transfer){
-            //             $('#isInterDistrict').prop('checked', false)
-            //             alert('The selected Request option is not setup for inter district transfer')
-            //         }
-            //         let interCompany = true
-            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-
-            //         // make the destination location required
-            //         $('#inter-destination-location-div').removeClass('d-none');
-            //         $('#destination_location_id').attr('required', true);
-            //     }
-            //     else{
-            //         let interCompany = false
-            //         searchStockLocation(source_location_id, 'source', interCompany, '', 0)
-            //         searchStockLocation(destination_location_id, 'destination', interCompany, '', 0)
-            //     }
-            //     /** 
-            //      * This will be removed because source and destination 
-            //      * location is requirement for all material request 
-            //     else{ 
-            //         // make the source location not required
-            //         $('#inter-source-location-div').addClass('d-none');
-            //         $('#source_location_id').attr('required', false);
-
-            //         // make the destination location not required
-            //         $('#inter-destination-location-div').addClass('d-none');
-            //         $('#destination_location_id').attr('required', false);
-            //     }
-            //     */
-            // },
 
             'change .otherChangeOption': function (ev) {
                 if ($(ev.target).is(':checked')) {
@@ -2954,6 +2958,11 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log("Building Employee row with form data=> ", setEmployeedata)
                     buildEmployeeRow(selectRequestOption.val())
                 }
+                
+                // focus the last generated row input
+                setTimeout(function () {
+                    $('table tbody_product tr:last').find('input, select, textarea').first().focus();
+                }, 1);
             },
             'click .search_panel_btn': function (ev) {
                 console.log("the search")
@@ -2973,121 +2982,9 @@ odoo.define('portal_request.portal_request', function (require) {
                 setRecordStatus(targetElement, 'Sent');
             },
 
-            // 'click #save-btn': function (ev) {
-            //     ev.preventDefault();
-            //     const lines = collectRequestLines();
-            //     const $btn = $(ev.currentTarget)
-            //                 .prop('disabled', true)
-            //                 .html('<i class="fa fa-spinner fa-spin"></i> Saving…');
-            //     const formArray = $('#msform').serializeArray();
-            //     let formData = {};
-            //         formArray.forEach(item => {
-            //             formData[item.name] = item.value;
-            //         });
-
-            //     formData.DataItems = lines;
-
-            //     if (!ValidateDataFields()){
-            //         $btn.prop('disabled', false).html('Save');
-            //         return false 
-            //     // }else if (!validateLineItems(formData.DataItems)) {
-            //     //     // $btn.prop('disabled', false).html('<i class="fa fa-save"> </i> Save');
-            //     //     console.log('No items added')
-            //     //     return false
-            //     }
-            //     // else {
-
-            //         // let formData = {};
-            //         // formArray.forEach(item => {
-            //         //     formData[item.name] = item.value;
-            //         // });
-
-            //         // formData.DataItems = lines;
-                    
-            //         formData.inputFollowers = $('#inputFollowers').select2('data');
-            //         formData.saveAction = 'save-btn';
-            //         rpcFunction('/request/api/save', {
-            //             formData: formData,
-            //             request_id: AppData.currentId || $('#memo_id').val() ? parseInt($('#memo_id').val()) : null,
-            //             lines: lines
-            //         }).then(r => {
-            //             if (r.error) {
-            //                 toast(r.error, 'Error trying to save');
-            //             } else {
-            //                 // toast(r.message, 'success');
-            //                 alert('Successfully saved with ID')
-            //                 console.log('Successfully saved with ID', r.request_id)
-            //                 assignRequestId(r.request_id);
-            //             }
-
-            //         }).fail(e => alert('error', e))
-            //         .always(() => {
-            //             $btn.prop('disabled', false)
-            //                 .html('<i class="fa fa-save"> </i> Save');
-            //         }); 
-            //     // }
-            // },
-
             'click #save-btn': function (ev) {
-                ev.preventDefault();
-
-                const $btn = $(ev.currentTarget);
-                const lines = collectRequestLines();
-
-                $btn.prop('disabled', true)
-                    .html('<i class="fa fa-spinner fa-spin"></i> Saving…');
-
-                // const formArray = $('#msform').serializeArray();
-                //     let formData = {};
-                //         formArray.forEach(item => {
-                //             formData[item.name] = item.value;
-                //         });
-                // convert form → object
-                const formData = Object.fromEntries(
-                    $('#msform').serializeArray().map(i => [i.name, i.value])
-                );
-
-                formData.DataItems = lines;
-
-                // ---------- validations ----------
-                if (!ValidateDataFields()) {
-                    resetBtn($btn);
-                    return;
-                }
-
-                if (!validateLineItems(lines)) {
-                    console.log('No items added');
-                    resetBtn($btn);
-                    return;
-                }
-
-                // ---------- extra data ----------
-                formData.inputFollowers = $('#inputFollowers').select2('data');
-                formData.saveAction = 'save-btn';
-
-                const requestId = AppData.currentId || $('#memo_id').val() || null;
-
-                rpcFunction('/request/api/save', {
-                    formData,
-                    request_id: requestId ? parseInt(requestId) : null,
-                    lines
-                })
-                .then(r => {
-                    if (r.error) {
-                        toast(r.error, 'error');
-                        return;
-                    }
-
-                    alert('Successfully saved with ID');
-                    console.log('Saved request id:', r.request_id);
-
-                    assignRequestId(r.request_id);
-                })
-                .fail(e => {
-                    console.error(e);
-                    alert('Error saving request');
-                })
-                .always(() => resetBtn($btn));
+                saveRecord(ev, false);
+                 
             },
 
  
@@ -3290,8 +3187,16 @@ odoo.define('portal_request.portal_request', function (require) {
                                     alert(data.message)
                                     return false;
                                 } else {
-                                    console.log(`Recieving response from server => ${JSON.stringify(data)} and ${data} + `)
-                                    // clearing form content
+                                    console.log(`Recieving response from server => TYPEOF => ${typeof(data)} ${JSON.stringify(data)} and ${data} + REQUEST ID: ${data.request_id}`)
+                                    // clearing form content 
+                                    if (typeof data === "string") {
+                                        data = JSON.parse(data);
+                                    }
+                                    else{
+                                        data = data
+                                    }
+                                    AttachmentsModule.setMemoId(data.request_id);
+                                    AttachmentsModule.getAttachmentsForSave()
                                     $("#msform")[0].reset();
                                     $("#tbody_product").empty()
                                     $("#tbody_employee").empty()
@@ -3387,8 +3292,6 @@ odoo.define('portal_request.portal_request', function (require) {
 
 
     function clearAllElement() {
-        // $('#phone_number').val('')
-        // $('#email_from').val('')
         $('#subject').val('')
         $('#description').val('')
         $('#amount_fig').val('');
@@ -3437,17 +3340,7 @@ odoo.define('portal_request.portal_request', function (require) {
         $('#currency_div').addClass('d-none');
         $('#currency_id').val('');
         $('#currency_id').attr("required", false);
-
-
-        // $('#justification_reason').addClass("is-valid");
-        // $('#interdistrict').addClass('d-none');
-        // $('#isInterDistrict').prop('checked', false);
-        // $('#source_location_id').val('');
-        // $('#destination_location_id').val('');
-        // $('#source_location_id').attr("required", false);
-        // $('#destination_location_id').attr("required", false);
-        // $('#inter-destination-location-div').addClass('d-none');
-        // $('#inter-source-location-div').addClass('d-none');
+ 
         // Clear inter-district states - SINGLE SOURCE OF TRUTH
         $('#isInterDistrictProcess').prop('checked', false);
         $('#is_inter_district_transfer_config').prop('checked', false);

@@ -1820,12 +1820,28 @@ class PortalRequest(http.Controller):
                     '''necessary at least to ensure there is any location of those products'''
                     if total_availability <= 0: 
                         '''if no quantity found in all warehouse location'''
+                        # suggestable_locations = request.env['stock.location'].search([('usage', '=', 'internal')])
+                        # for loc_quant in suggestable_locations:
+                        quants_with_qty = request.env['stock.quant'].sudo().search(
+                            [
+                             ('location_id.usage', '=', 'internal'), 
+                             ('product_id', '=', product.id),
+                             ('quantity', '>=', product_qty)
+                             ]
+                            )
+                        msg_loc = []
+                        for loc_quant in quants_with_qty:
+                            _logger.info(f"wegere  {loc_quant.location_id.name} {product_qty}")
+                            msg_loc.append(f"{loc_quant.location_id.name} - {loc_quant.quantity}")
+                        message_display = '\n'.join(msg_loc)
                         return {
                             "status": False,
                             "location_id": False,
-                            "message": """
+                            "message": f"""
                             System could not found any single quantity available in your 
-                            company locations. Kindly contact your store officer""", 
+                            company locations.However below are the locations that have them available.\n
+                            {message_display}
+                            """, 
                         }
                     if product_qty > total_availability: 
                         return {
@@ -1931,7 +1947,7 @@ class PortalRequest(http.Controller):
         # ---------- Followers ----------
         inputFollowers = []
         if post.get('inputFollowers'):
-            inputFollowers = [int(x) for x in str(post.get('inputFollowers')).split(',') if x]
+            inputFollowers = [int(x.get('id')) for x in post.get('inputFollowers') if x]
 
         # ---------- Employee ----------
         employee = env['hr.employee'].sudo().search([
@@ -2080,11 +2096,22 @@ class PortalRequest(http.Controller):
             memo_id.product_ids = [(5,)]
 
         # ---------- Attachments ----------
-        if 'other_docs' in request.params:
-            for file in request.httprequest.files.getlist('other_docs'):
-                datas = base64.b64encode(file.read())
-                self.generate_attachment(memo_id.code, file.filename, datas, memo_id.id, True)
-
+        # if 'other_docs' in request.params:
+        #     for file in request.httprequest.files.getlist('other_docs'):
+        #         datas = base64.b64encode(file.read())
+        #         self.generate_attachment(memo_id.code, file.filename, datas, memo_id.id, True)
+        attachments = post.get('attachments', [])
+        for file in attachments:
+            datas = file.get('datas')
+            filename = file.get('filename')
+            if datas:
+                self.generate_attachment(
+                    memo_id.code,
+                    filename,
+                    datas.encode() if isinstance(datas, str) else datas,
+                    memo_id.id,
+                    True
+                )
         # ---------- Subscribe Followers ----------
         partners = []
         for emp_id in inputFollowers:
@@ -2372,7 +2399,7 @@ class PortalRequest(http.Controller):
                     )
             request.session['memo_ref'] = memo_id.code
             request.session['memo_record_id'] = memo_id.id
-            return json.dumps({'status': True, 'message': "Form Submitted!"})
+            return json.dumps({'status': True, 'message': "Form Submitted!", "request_id": memo_id.id})
         except Exception as ex:
             _logger.exception("Unexpected Error while sending ERP Request: %s" % ex)
             return json.dumps({'status': False, 'message': "Form Submitted!"})
@@ -2448,7 +2475,8 @@ class PortalRequest(http.Controller):
                 'distance_to': rec.get('distance_to'),
             }
             _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} == valxxx [{request_vals}]")
-            productid = 0 if rec.get('product_id') in ['false', False, 'none', None] or not rec.get('product_id').isdigit() else rec.get('product_id') 
+            product_data = rec.get('product_id')
+            productid = 0 if product_data in ['false', False, 'none', None] or type(product_data) not in [int] else product_data
             product_id = request.env['product.product'].sudo().browse([int(productid)])
             if product_id:
                 request_vals.update({
