@@ -32,6 +32,7 @@
         '/portal_request/static/src/js/search_request.js',
         '/portal_request/static/src/js/request_form.js',
         '/portal_request/static/src/js/employee_dashboard.js',
+        '/portal_request/static/src/js/file_viewer.js',
         '/portal_request/static/src/css/portal_css.css',
         '/portal_request/static/src/css/employee_dashboard.css',
         '/portal_request/static/src/css/apps_page.css',
