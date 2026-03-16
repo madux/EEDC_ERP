@@ -39,7 +39,7 @@ class MemoAttachmentController(http.Controller):
                 }
             
             # Create attachment
-            attachment = request.env['ir.attachment'].create({
+            attachment = request.env['ir.attachment'].sudo().create({
                 'name': name,
                 'datas': data,
                 'res_model': res_model,
@@ -76,7 +76,7 @@ class MemoAttachmentController(http.Controller):
         Delete attachment from Odoo
         """
         try:
-            attachment = request.env['ir.attachment'].browse(attachment_id)
+            attachment = request.env['ir.attachment'].sudo().browse(attachment_id)
             
             if not attachment.exists():
                 return {
@@ -112,7 +112,7 @@ class MemoAttachmentController(http.Controller):
         Get attachment file (for download/view)
         """
         try:
-            attachment = request.env['ir.attachment'].browse(attachment_id)
+            attachment = request.env['ir.attachment'].sudo().browse(attachment_id)
             
             if not attachment.exists():
                 return request.not_found()
@@ -178,7 +178,7 @@ class MemoAttachmentController(http.Controller):
             
             # Update attachment res_id if it was 0
             if attachment_ids:
-                attachments = request.env['ir.attachment'].browse(attachment_ids)
+                attachments = request.env['ir.attachment'].sudo().browse(attachment_ids)
                 attachments.filtered(lambda a: a.res_id == 0).write({
                     'res_id': memo_id
                 })
