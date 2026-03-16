@@ -1180,8 +1180,8 @@ odoo.define('portal_request.portal_request', function (require) {
         ev.preventDefault();
         const $btn = $(ev.currentTarget);
         const lines = collectRequestLines();
-        const attachments = collectAttachments();
-        console.log("Attachments are ", attachments)
+        // const attachments = collectAttachments();
+        // console.log("Attachments are ", attachments)
         let action = toSubmit ? '' : 'Saving …'
         $btn.prop('disabled', true)
             .html(`<i class="fa fa-spinner fa-spin"></i> ${action}`);
@@ -1197,8 +1197,7 @@ odoo.define('portal_request.portal_request', function (require) {
         );
 
         formData.DataItems = lines;
-        formData.attachments = attachments;
-
+        // formData.attachments = attachments;
 
         // load Attachments 
         // ---------- validations ----------
