@@ -7,11 +7,25 @@ from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import format_date
+import ast
+import re
 
+import logging
+
+import json
+_logger = logging.getLogger(__name__)
 
 class HRPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
+    list_of_available_staff = fields.Text(string="Available staff")
+    list_of_available_staff_with_details = fields.Text(string="Available staff details")
+    error_details = fields.Text(string="Found Errors")
+    reactivate_contract = fields.Boolean(
+        string='Reactivate contract', 
+        default=True,
+        help="if checked, system will reactivate contract if employee is active and contract is false")
+     
 
     def reset_payslip_x_dev_to_zero(self):
         """
@@ -22,6 +36,137 @@ class HRPayslipRun(models.Model):
         for run in self:
             for slip in run.slip_ids:
                 slip.contract_id.x_dev = 0.00
+
+    def get_staff_not_existing_in_payroll(self):
+        """
+            System checks list of employee staff ID provided
+            system matches to check if the employees are existing, 
+            if any does not exist - system flags it
+            if any exist and reactivate is set to true, system sets
+            the employee to Active and activate his current contract
+
+            If no contract found, system sends signal and flags as warning
+            if set to open all employee, it opens all affected employeee records else it displayss only errors
+        """
+        employeeObj = self.env['hr.employee'].sudo()
+        if self.list_of_available_staff:
+            '''TEST CASE 1: Passed 
+            1. if data provided is list 
+            2: if data provided is str
+            3. if data provided is nonsense
+            '''
+            self.error_details = ''
+            raw_input = (self.list_of_available_staff or "").strip()
+            try:
+                # Case 1: Python list format
+                if raw_input.startswith('['):
+                    parsed = ast.literal_eval(raw_input)
+                    if not isinstance(parsed, list):
+                        raise ValidationError("Invalid list format.")
+                    list_of_available_staff = [str(x) for x in parsed]
+
+                # Case 2: Excel / messy paste (BEST OPTION)
+                else:
+                    # Extract ONLY numbers (ignores "staff id", spaces, tabs, etc.)
+                    list_of_available_staff = [str(x) for x in re.findall(r'\d+', raw_input)]
+
+                if not list_of_available_staff:
+                    raise ValidationError("No valid staff IDs found.")
+
+            except Exception as e:
+                raise ValidationError(f"Invalid format. Error: {str(e)}")
+
+        else:
+            '''TEST CASE 2: passed
+            Dont provide any data
+            '''
+            raise ValidationError("""Please provide staff ids format below""")
+           
+        employees = list_of_available_staff
+        affected_emp_ids = []
+        not_existing_employee_error = ['The following errors occurred: ']
+        if employees:
+            for emp in employees:
+                emp_id = employeeObj.search([('employee_number', '=', str(emp)), ('active','in', [True, False])],limit=1)
+                if not emp_id:
+                    '''TEST CASE 3: passed
+                    Dont provide real employee staff number, check error details
+                    '''
+                    not_existing_employee_error.append(f"Employee with ID {emp} not existing")
+                    affected_emp_ids.append(emp)
+                    _logger.info(f'bloooom {emp}')
+                else:
+                    contracts = self.env['hr.contract'].search(
+                                    [('employee_id', '=', emp_id.id)],
+                                    order='date_start desc',
+                                    limit=1
+                                ) 
+                    if self.reactivate_contract:
+                        '''TEST CASE 4: passed 
+                            1. deactivate real employee and both contract
+                            2. create employee without contract at all, add the staff number to the list
+                            '''
+                        emp_id.active = True
+
+                        if emp_id.contract_id:
+                            emp_id.contract_id.active = True 
+                        else:
+                            
+                            if not contracts:
+                                affected_emp_ids.append(emp)
+                                not_existing_employee_error.append(f"Employee with ID {emp} {emp_id.name} have no contract")
+                                '''TEST CASE 5: passed
+                                1. Find employee with contract
+                                '''
+                            else:
+                                '''
+                                    Reactivate the contract if employee record is active
+                                ''' 
+                                contracts.active = True
+                    else:
+                        '''TEST CASE 6: passed 
+                        1. Provide real employee staff number
+                        2. Set reactivate contract
+                        3. Dont set reactivate contract: this should only show us
+                        errors without any reactivation
+                        '''
+                        if emp_id.active == False:
+                            not_existing_employee_error.append(f"Employee with ID {emp} {emp_id.name} was deactivated")
+                            affected_emp_ids.append(emp)
+
+                        if not emp_id.contract_id or not contracts:
+                            affected_emp_ids.append(emp)
+                            not_existing_employee_error.append(f"Employee with ID {emp} {emp_id.name} does not have contract")
+                            '''TEST CASE 7: passed
+                            1. Find employee with contract
+                                '''
+
+        msg_error = ',\n'.join(not_existing_employee_error)
+        id_error = ','.join(affected_emp_ids)
+        '''TEST CASE 8: pass  
+        1. Check to ensure employee data is shown
+        2. Check the error details message
+        '''
+        self.error_details = f'Find Below the affected staff IDS \n {id_error}\n' + msg_error
+        return self.open_employee_record(affected_emp_ids)
+
+    def open_employee_record(self, employee_numbers):
+
+        employee_ids = self.env['hr.employee'].sudo().search([('employee_number', 'in', employee_numbers), ('active', 'in', [True, False])])
+        for rec in self:
+            form_view_ref = self.env.ref('hr.view_employee_form', False)
+            tree_view_ref = self.env.ref('hr.view_employee_tree', False)
+            return {
+                'domain': [('id', 'in', employee_ids.ids)],
+                'name': 'Employees',
+                'res_model': 'hr.employee',
+                'type': 'ir.actions.act_window',
+                'views': [(tree_view_ref.id, 'tree'), (form_view_ref.id, 'form')],
+                'target': 'new',
+                'context': {
+                    'active_test': False   # 🔥 THIS IS THE KEY
+                }
+            }
     
     def compute_payslip_total(self):
         """
@@ -70,6 +215,7 @@ class HRPayslip(models.Model):
                                             help="to be used to set which fields is related to it for computation")
     
     
+
 class HRPayslip(models.Model):
     _inherit = "hr.payslip"
     

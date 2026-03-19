@@ -200,7 +200,23 @@
 			<xpath expr="//button[@name='action_paid']" position="after">
 				<button string="Update Report" name="compute_payslip_total" type="object" class="oe_highlight"/>
 				<button string="Reset Development Levy" name="reset_payslip_x_dev_to_zero" type="object"/>
+				<button string="Fetch Missing Employee without Contract" name="get_staff_not_existing_in_payroll" type="object"/>
 			</xpath>
+			<xpath expr="//field[@name='company_id']" position="after">
+				<field string="Reactivate Contract" name="reactivate_contract"/>
+
+			</xpath>
+			<xpath expr="//group[1]" position="after">
+				<notebook>
+					<page name="StaffList" string="Staff List">
+						<field string="Accurate Staff List" name="list_of_available_staff"/>
+					</page>
+					<page name="errorDetail" string="Error message">
+						<field string="Error message" name="error_details"/>
+					</page>
+				</notebook>
+				
+            </xpath>
 		</field>
     </record>
 </odoo>
