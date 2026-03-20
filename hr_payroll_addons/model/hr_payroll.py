@@ -268,12 +268,11 @@ class HRPayslipRun(models.Model):
                     unsuccess_records.append(f'Staff with number {str(row[0])} does not have contract')
                 else:
                     """TEST CASE 4: Pcheck wage updated"""
-
                     employee.contract_id.update({
                         'wage': row[1],
                     })
                     count += 1
-                    success_records.append(row[0])
+                    success_records.append(str(row[0])
             # if len(unsuccess_records) > 0:
         success_msg = ',\n'.join(success_records)
         import_error = ','.join(unsuccess_records)
