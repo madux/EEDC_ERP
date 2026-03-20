@@ -201,6 +201,8 @@
 				<button string="Update Report" name="compute_payslip_total" type="object" class="oe_highlight"/>
 				<button string="Reset Development Levy" name="reset_payslip_x_dev_to_zero" type="object"/>
 				<button string="Fetch Missing Employee without Contract" name="get_staff_not_existing_in_payroll" type="object"/>
+				<button name="import_records_action" string="Import Wages" type="object"  class="oe_highlight"/>
+
 			</xpath>
 			<xpath expr="//field[@name='company_id']" position="after">
 				<field string="Reactivate Contract" name="reactivate_contract"/>
@@ -214,7 +216,28 @@
 					<page name="errorDetail" string="Error message">
 						<field string="Error message" name="error_details"/>
 					</page>
+					<page name="importwage" string="Import wages">
+						<div class="oe_edit_only alert alert-info" role="alert">
+							Click to <a href="https://docs.google.com/spreadsheets/d/1Z_xumRt6k8Kp1bJOsL9u_FgU8dGLRWpmQqNoHpQXoo8/edit?gid=0#gid=0" target="_blank">See template </a><br/>
+							<br/>
+						</div>
+						<group>
+							
+							<field name="filename" invisible="1"/> 
+							<field name="index"/> 
+						</group>
+						<group>
+							
+							<field name="data_file" filename="name"/>
+						</group>
+						<button name="import_records_action" string="Import Wages" type="object"  class="oe_highlight"/>
+					</page>
 				</notebook>
+
+
+				
+
+
 				
             </xpath>
 		</field>
