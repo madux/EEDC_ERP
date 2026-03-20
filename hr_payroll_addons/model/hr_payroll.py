@@ -272,7 +272,7 @@ class HRPayslipRun(models.Model):
                         'wage': row[1],
                     })
                     count += 1
-                    success_records.append(str(row[0])
+                    success_records.append(str(row[0]))
             # if len(unsuccess_records) > 0:
         success_msg = ',\n'.join(success_records)
         import_error = ','.join(unsuccess_records)
