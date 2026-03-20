@@ -1,5 +1,4 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
 from datetime import datetime, date
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
@@ -13,6 +12,15 @@ import re
 import logging
 
 import json
+from tempfile import TemporaryFile
+from odoo.exceptions import UserError, ValidationError, RedirectWarning
+import base64
+import random
+from datetime import date, datetime, timedelta
+import xlrd
+from xlrd import open_workbook
+import base64
+
 _logger = logging.getLogger(__name__)
 
 class HRPayslipRun(models.Model):
@@ -25,7 +33,9 @@ class HRPayslipRun(models.Model):
         string='Reactivate contract', 
         default=True,
         help="if checked, system will reactivate contract if employee is active and contract is false")
-     
+    data_file = fields.Binary(string="Upload File (.xls)")
+    filename = fields.Char("Filename")
+    index = fields.Integer("Sheet Index", default=0)
 
     def reset_payslip_x_dev_to_zero(self):
         """
@@ -203,6 +213,85 @@ class HRPayslipRun(models.Model):
                 if updates:
                     slip.write(updates)
     
+    def import_records_action(self):
+        batch_size = 500
+        if self.data_file:
+            file_datas = base64.decodestring(self.data_file)
+            workbook = xlrd.open_workbook(file_contents=file_datas)
+            sheet_index = int(self.index) if self.index else 0
+            sheet = workbook.sheet_by_index(sheet_index)
+            num_rows = sheet.nrows
+            # start_row = 1  # Skip the header row
+            data = [[sheet.cell_value(r, c) for c in range(sheet.ncols)] for r in range(sheet.nrows)]
+            data.pop(0)
+            file_data = data 
+            data_gen = file_data # load_data_generator(batch_size)
+        else:
+            raise ValidationError('Please select file and type of file')
+        
+        errors = ['The Following messages occurred']
+        employee_obj = self.env['hr.employee']
+        unimport_count, count = 0, 0
+        success_records = []
+        unsuccess_records = []
+        
+        def find_existing_employee(code):
+            employee_id = False 
+            if code:
+                code = str(code).split('.')
+                if len(code) > 1:
+                    code = code[0]
+                else:
+                    code = code
+                code = str(int(code)) if type(code) == float else code 
+                employee = self.env['hr.employee'].sudo().search([
+                    '|', ('employee_number', '=', code), 
+                    ('barcode', '=', code)], limit = 1)
+                if employee:
+                    employee_id = employee.id
+                else:
+                    employee_id = False 
+            return employee_id
+         
+        for row in data_gen:
+            employee_id = find_existing_employee(row[0])
+            if row[0] in ['', False]:
+                """TEST CASE 1: Put empty staff id in excel """
+                unsuccess_records.append(f'No Staff number with ID exists {str(row[0])}')
+            elif not find_existing_employee(row[0]):
+                """TEST CASE 2: Put fake staff id in excel """
+                unsuccess_records.append(f'Employee with {str(row[0])} does not exists')
+            else:
+                employee = self.env['hr.employee'].sudo().browse([employee_id])
+                if not employee.contract_id:
+                    """TEST CASE 3: Put employee without contract in excel """
+                    unsuccess_records.append(f'Staff with number {str(row[0])} does not have contract')
+                else:
+                    """TEST CASE 4: Pcheck wage updated"""
+
+                    employee.contract_id.update({
+                        'wage': row[1],
+                    })
+                    count += 1
+                    success_records.append(row[0])
+            # if len(unsuccess_records) > 0:
+        success_msg = ',\n'.join(success_records)
+        import_error = ','.join(unsuccess_records)
+        error_details = f'{import_error}\n' + success_msg
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'unsuccessful Import',
+                'message': error_details,
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+             
+            
 class HRPayslip(models.Model):
     _inherit = "hr.salary.rule"
     
