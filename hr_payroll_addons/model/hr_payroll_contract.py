@@ -199,11 +199,11 @@ class HrContract(models.Model):
             
         list_of_available_staff = eval(self.list_of_available_staff)
         employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('employee_number', 'not in', list_of_available_staff)])
-        if employees:
-            for rec in employees:
-                rec.update({
-                    'is_external_staff': True, 
-                })
+        # if employees:
+        #     for rec in employees:
+        #         rec.update({
+        #             'is_external_staff': True, 
+        #         })
             
     def create_employee_contract(self):
         if not self.list_of_available_staff_with_details:

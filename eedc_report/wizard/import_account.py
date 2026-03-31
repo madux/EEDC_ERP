@@ -19,6 +19,7 @@ class ImportAccountData(models.TransientModel):
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename") 
     index = fields.Integer("Sheet Index", default=0)
+    branch_id = fields.Many2one("multi.branch","Branch", required=True)
     import_type = fields.Selection(
         selection=[
             ("transaction", "Account transactions"),
@@ -45,7 +46,12 @@ class ImportAccountData(models.TransientModel):
     company_id = fields.Many2one('res.company', string="Company", required=True)
     default_account = fields.Many2one('account.account', string="Default account to be used to balance")
     
+    def validation_branch(self):
+        if self.branch_id.company_id.id != self.company_id.id:
+            raise ValidationError('Selected branch company must be the same with the selected company')
+
     def import_button(self):
+        self.validation_branch()
         '''Used to import accounts debit and credit details from excel
         Excel format: See file in data/account_detail.xlsx
         or use the following header structure of excel
