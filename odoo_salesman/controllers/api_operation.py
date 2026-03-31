@@ -62,6 +62,7 @@ class OperationController(http.Controller):
             return func(self, *args, **kwargs)
         return wrap 
     
+    
     @validate_token
     @http.route(['/api/user/deliveries'], type="http", methods=["GET"], website=True, csrf=False, auth="none")
     def get_user_deliveries(self, **kwargs):
