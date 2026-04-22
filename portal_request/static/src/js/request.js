@@ -1180,17 +1180,10 @@ odoo.define('portal_request.portal_request', function (require) {
         ev.preventDefault();
         const $btn = $(ev.currentTarget);
         const lines = collectRequestLines();
-        // const attachments = collectAttachments();
-        // console.log("Attachments are ", attachments)
         let action = toSubmit ? '' : 'Saving …'
         $btn.prop('disabled', true)
             .html(`<i class="fa fa-spinner fa-spin"></i> ${action}`);
-
-        // const formArray = $('#msform').serializeArray();
-        //     let formData = {};
-        //         formArray.forEach(item => {
-        //             formData[item.name] = item.value;
-        //         });
+ 
         // convert form → object
         const formData = Object.fromEntries(
             $('#msform').serializeArray().map(i => [i.name, i.value])

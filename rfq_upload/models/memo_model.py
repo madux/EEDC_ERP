@@ -3,7 +3,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import base64
 import io
-import pandas as pd
+# import pandas as pd
 import logging
 
 _logger = logging.getLogger(__name__)

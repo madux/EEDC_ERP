@@ -459,7 +459,7 @@ class PortalRequest(http.Controller):
                 except (ValueError, TypeError):
                     district_id = 0
             else:
-                district_id = 0
+                district_id = 0 
                 
             location_type = request.params.get('location_type', 'source')
             
@@ -472,10 +472,11 @@ class PortalRequest(http.Controller):
             
             _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id} testing_loc...")
             
-            domain = [('usage', '=', 'internal')]
-            
+            if location_type == 'source':
+                domain = [('usage', '=', 'internal')]
+            else:
+                domain = [('usage', 'in', ['supplier', 'customer', 'internal'])]
             company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
-            
             if not is_inter_company:
                 domain.append(('company_id', '=', request.env.user.company_id.id))
                 # domain.append(('company_id', '=', company_ids))
@@ -489,7 +490,7 @@ class PortalRequest(http.Controller):
             if selected_location_id and selected_location_id > 0:
                 domain.append(('id', '!=', selected_location_id))
             
-            _logger.info(f"Search domain: {domain}")
+            _logger.info(f"Search domain: location type {location_type} {domain}")
             
             # Perform Search
             locations = request.env['stock.location'].sudo().search(domain, limit=page_limit)
@@ -502,7 +503,7 @@ class PortalRequest(http.Controller):
                 for loc in locations
             ]
             
-            _logger.info(f"Found {len(results)} locations")
+            _logger.info(f"Found kwargs ==> {len(results)} locations")
             
             return request.make_response(
                 json.dumps({
@@ -2132,9 +2133,7 @@ class PortalRequest(http.Controller):
     @http.route('/request/api/save', type='json', auth='user', methods=['POST'])
     def save_Request(self, formData=None, request_id=None, lines=None, toSubmit=None, **kw):
         # toSubmit: indicate users wants to submit to manager
-
         employee = self._get_employee()
-
         # formData is now a Python dict
         memo_vals = formData
 
