@@ -4,7 +4,7 @@ import base64
 import io
 import math
 import logging
-import pandas as pd
+# import pandas as pd
 
 _logger = logging.getLogger(__name__)
 
@@ -33,67 +33,68 @@ class RFQUploadWizard(models.TransientModel):
     
     @api.onchange('rfq_excel_file')
     def _onchange_rfq_excel_file(self):
-        """Get sheet names when an Excel file is uploaded."""
-        self.sheet = False
-        self.sheet_count = 0
-        self.sheet_list = ""
-        self.validation_result = ""
-        self.processing_result = ""
+        raise ValidationError("Please resolve Panda issues")
+    #     """Get sheet names when an Excel file is uploaded."""
+    #     self.sheet = False
+    #     self.sheet_count = 0
+    #     self.sheet_list = ""
+    #     self.validation_result = ""
+    #     self.processing_result = ""
 
-        is_excel = self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith(('.xlsx', '.xls'))
+    #     is_excel = self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith(('.xlsx', '.xls'))
         
-        if self.rfq_excel_file and is_excel:
-            try:
-                decoded_data = base64.b64decode(self.rfq_excel_file)
-                excel_file = pd.ExcelFile(io.BytesIO(decoded_data))
-                sheet_names_list = excel_file.sheet_names
-                self.sheet_count = len(sheet_names_list)
+    #     if self.rfq_excel_file and is_excel:
+    #         try:
+    #             decoded_data = base64.b64decode(self.rfq_excel_file)
+    #             excel_file = pd.ExcelFile(io.BytesIO(decoded_data))
+    #             sheet_names_list = excel_file.sheet_names
+    #             self.sheet_count = len(sheet_names_list)
                 
-                if self.sheet_count > 0:
-                    self.sheet = sheet_names_list[0]
-                    self.sheet_list = "Available sheets: " + ", ".join(f'"{name}"' for name in sheet_names_list)
+    #             if self.sheet_count > 0:
+    #                 self.sheet = sheet_names_list[0]
+    #                 self.sheet_list = "Available sheets: " + ", ".join(f'"{name}"' for name in sheet_names_list)
                     
-            except Exception as e:
-                _logger.error("Error reading Excel sheets: %s", str(e))
-                self.sheet_count = 0
-                self.sheet_list = f"Error reading file: {str(e)}"
+    #         except Exception as e:
+    #             _logger.error("Error reading Excel sheets: %s", str(e))
+    #             self.sheet_count = 0
+    #             self.sheet_list = f"Error reading file: {str(e)}"
     
-    def action_download_template(self):
-        """Download RFQ template with populated data from memo"""
-        self.ensure_one()
-        template_data = self._get_template_data()
-        if not template_data.get('PRODUCT CODE'):
-            raise ValidationError(_("There are no request items in this memo to generate a template for."))
+    # def action_download_template(self):
+    #     """Download RFQ template with populated data from memo"""
+    #     self.ensure_one()
+    #     template_data = self._get_template_data()
+    #     if not template_data.get('PRODUCT CODE'):
+    #         raise ValidationError(_("There are no request items in this memo to generate a template for."))
 
-        try:
-            df = pd.DataFrame(template_data)
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df.to_excel(writer, sheet_name='RFQ_Template', index=False)
-                worksheet = writer.sheets['RFQ_Template']
-                for idx, col in enumerate(df):
-                    max_len = max((df[col].astype(str).map(len).max(), len(str(df[col].name)))) + 2
-                    worksheet.column_dimensions[chr(65 + idx)].width = min(max_len, 50)
+    #     try:
+    #         df = pd.DataFrame(template_data)
+    #         output = io.BytesIO()
+    #         with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    #             df.to_excel(writer, sheet_name='RFQ_Template', index=False)
+    #             worksheet = writer.sheets['RFQ_Template']
+    #             for idx, col in enumerate(df):
+    #                 max_len = max((df[col].astype(str).map(len).max(), len(str(df[col].name)))) + 2
+    #                 worksheet.column_dimensions[chr(65 + idx)].width = min(max_len, 50)
 
-            excel_file = base64.b64encode(output.getvalue())
-            filename = f'RFQ_Template_{self.memo_id.code or "New"}.xlsx'
+    #         excel_file = base64.b64encode(output.getvalue())
+    #         filename = f'RFQ_Template_{self.memo_id.code or "New"}.xlsx'
             
-            attachment = self.env['ir.attachment'].create({
-                'name': filename,
-                'datas': excel_file,
-                'res_model': 'memo.model',
-                'res_id': self.memo_id.id,
-                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            })
+    #         attachment = self.env['ir.attachment'].create({
+    #             'name': filename,
+    #             'datas': excel_file,
+    #             'res_model': 'memo.model',
+    #             'res_id': self.memo_id.id,
+    #             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    #         })
             
-            return {
-                'type': 'ir.actions.act_url',
-                'url': f'/web/content/{attachment.id}?download=true',
-                'target': 'self',
-            }
-        except Exception as e:
-            _logger.error("Error generating RFQ template: %s", str(e))
-            raise ValidationError(_("Failed to generate template: %s") % str(e))
+    #         return {
+    #             'type': 'ir.actions.act_url',
+    #             'url': f'/web/content/{attachment.id}?download=true',
+    #             'target': 'self',
+    #         }
+    #     except Exception as e:
+    #         _logger.error("Error generating RFQ template: %s", str(e))
+    #         raise ValidationError(_("Failed to generate template: %s") % str(e))
     
     def action_validate_file(self):
         """Validate uploaded Excel file"""
@@ -230,44 +231,45 @@ class RFQUploadWizard(models.TransientModel):
         return template_data
     
     def _parse_excel_file(self):
-        """Parse uploaded Excel/CSV file and return RFQ data"""
-        try:
-            file_data = base64.b64decode(self.rfq_excel_file)
+        raise ValidationError("Please resolve Panda issues")
+        # """Parse uploaded Excel/CSV file and return RFQ data"""
+        # try:
+        #     file_data = base64.b64decode(self.rfq_excel_file)
             
-            if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
-                try:
-                    df = pd.read_csv(io.BytesIO(file_data))
-                except Exception as e:
-                    _logger.warning("Pandas CSV parsing failed, using fallback: %s", str(e))
-                    return self._parse_csv_fallback(file_data.decode('utf-8'))
-            else:
-                sheet_name = self.sheet if self.sheet else 0
-                try:
-                    df = pd.read_excel(io.BytesIO(file_data), sheet_name=sheet_name)
-                except ValueError as e:
-                    if "Worksheet" in str(e) and "does not exist" in str(e):
-                        excel_file = pd.ExcelFile(io.BytesIO(file_data))
-                        available_sheets = ", ".join(f'"{name}"' for name in excel_file.sheet_names)
-                        raise ValidationError(
-                            _("Sheet '%s' not found in the Excel file.\n\nAvailable sheets: %s") % 
-                            (sheet_name, available_sheets)
-                        )
-                    else:
-                        raise ValidationError(_("Error reading Excel sheet: %s") % str(e))
+        #     if self.rfq_excel_filename and self.rfq_excel_filename.lower().endswith('.csv'):
+        #         try:
+        #             df = pd.read_csv(io.BytesIO(file_data))
+        #         except Exception as e:
+        #             _logger.warning("Pandas CSV parsing failed, using fallback: %s", str(e))
+        #             return self._parse_csv_fallback(file_data.decode('utf-8'))
+        #     else:
+        #         sheet_name = self.sheet if self.sheet else 0
+        #         try:
+        #             df = pd.read_excel(io.BytesIO(file_data), sheet_name=sheet_name)
+        #         except ValueError as e:
+        #             if "Worksheet" in str(e) and "does not exist" in str(e):
+        #                 excel_file = pd.ExcelFile(io.BytesIO(file_data))
+        #                 available_sheets = ", ".join(f'"{name}"' for name in excel_file.sheet_names)
+        #                 raise ValidationError(
+        #                     _("Sheet '%s' not found in the Excel file.\n\nAvailable sheets: %s") % 
+        #                     (sheet_name, available_sheets)
+        #                 )
+        #             else:
+        #                 raise ValidationError(_("Error reading Excel sheet: %s") % str(e))
             
-            df = df.dropna(how='all')
+        #     df = df.dropna(how='all')
             
-            normalized_data = []
-            for _, row in df.iterrows():
-                normalized_row = self._normalize_row_data(row, df.columns.tolist())
-                normalized_data.append(normalized_row)
+        #     normalized_data = []
+        #     for _, row in df.iterrows():
+        #         normalized_row = self._normalize_row_data(row, df.columns.tolist())
+        #         normalized_data.append(normalized_row)
             
-            return normalized_data
+        #     return normalized_data
                     
-        except ValidationError:
-            raise
-        except Exception as e:
-            raise ValidationError(_("Error reading file: %s. Please ensure the file is a valid Excel or CSV file.") % str(e))
+        # except ValidationError:
+        #     raise
+        # except Exception as e:
+        #     raise ValidationError(_("Error reading file: %s. Please ensure the file is a valid Excel or CSV file.") % str(e))
         
     def _normalize_row_data(self, row, columns):
         """Normalize row data using index fallback when column names not found"""
