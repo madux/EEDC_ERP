@@ -446,7 +446,6 @@ class HrContract(models.Model):
         return records
 
     
-    
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule" 
     

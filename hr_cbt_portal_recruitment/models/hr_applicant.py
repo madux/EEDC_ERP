@@ -58,7 +58,6 @@ class Applicant(models.Model):
     cbt_start_date = fields.Datetime("CBT Start Date")
     cbt_end_date = fields.Datetime("CBT End Date ")
     duration = fields.Integer("Duration")
-
     current_salary = fields.Float("Current Salary ", group_operator="avg", help="Current Salary")
     first_name = fields.Char("First Name")
     middle_name = fields.Char("Middle Name")
@@ -121,7 +120,6 @@ class Applicant(models.Model):
         default=False)
     mode_of_exit_at_eedc = fields.Char(string="How did you leave?")
     why_do_you_leave = fields.Char(string="Why you leave EEDC Company?")
-    
     request_id = fields.Many2one('hr.job.recruitment.request', string="Recruitment Request", compute='_compute_request_id', store=True, index=True)
     is_panelist_added = fields.Boolean(
         "Panelist added?", 
