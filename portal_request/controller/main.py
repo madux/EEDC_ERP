@@ -2156,6 +2156,27 @@ class PortalRequest(http.Controller):
             'request_id': request_id.id,
             'success': True,
         }
+    
+    def validate_line_items(self, memo_type_key, DataItems):
+        errors = []
+
+        if memo_type_key == 'material_request':
+            for rec in DataItems:
+                product_id = rec.get('product_id')
+                description = rec.get('description') or 'Unknown item'
+
+                # Validate empty / invalid product_id
+                if product_id in [False, None, '', 'undefined', 'false', 'none']:
+                    errors.append(f"Product missing for: {description}")
+                    continue
+                # Validate product existence
+                try:
+                    product = request.env['product.product'].browse(int(product_id))
+                    if not product.exists():
+                        errors.append(f"Product with description '{description}' not found")
+                except (ValueError, TypeError):
+                    errors.append(f"Invalid product ID for: {description}")
+        return bool(errors), errors
 
     @http.route(['/portal_data_process'], type='http', methods=['POST'], website=True, auth="user", csrf=False)
     def portal_data_process(self, **post):
@@ -2288,6 +2309,14 @@ class PortalRequest(http.Controller):
             _logger.info(f"""Accreditation ggeenn geen===>  {json.loads(post.get('DataItems'))}""")
             DataItems = []
             DataItems = json.loads(post.get('DataItems'))
+            line_errors, line_error_msg = self.validate_line_items(memo_config.memo_type.memo_key, DataItems)
+
+            if line_errors:
+                return json.dumps({
+                    'status': False,
+                    'message': ', '.join(line_error_msg),
+                    "request_id": False
+                })
             memo_obj = request.env['memo.model']
             if not memo_id:
                 _logger.info("Request id creating")
@@ -2475,13 +2504,15 @@ class PortalRequest(http.Controller):
             }
             _logger.info(f"REQUESTS VALS =====> {rec.get('line_checked')} == valxxx [{request_vals}]")
             product_data = rec.get('product_id')
-            productid = 0 if product_data in ['false', False, 'none', None] or type(product_data) not in [int] else product_data
+            productid = 0 if product_data in ['false', False, 'none', None, ''] or type(product_data) not in [int, str] else product_data
             product_id = request.env['product.product'].sudo().browse([int(productid)])
             if product_id:
                 request_vals.update({
                     'product_id': product_id.id, 
                 })
             request.env['request.line'].sudo().create(request_vals)
+            _logger.info(f"WHAT ARE THE VALUES OF PRODUCT =====>SENT IT {productid} {product_id}")
+
             counter += 1
     
     def generate_employee_transfer_line(self, DataItems, memo_id):
