@@ -3749,6 +3749,8 @@ class Memo_Model(models.Model):
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
                             'account_id': self.get_soe_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.retire_sub_total_amount,
+                            'price_unit': pr.used_amount,
+                            'quantity': pr.used_qty,
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
                                                             'name': 'Cash Advance to Debit',

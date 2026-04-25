@@ -1511,7 +1511,7 @@ class PortalRequest(http.Controller):
         else:
             domain += [('detailed_type', 'in', ['consu', 'product'])]
 
-        products = request.env["product.product"].sudo().search(domain, limit=20)
+        products = request.env["product.product"].sudo().search(domain)#, limit=20)
         
         for item in products:
             qty_available = 0.0
