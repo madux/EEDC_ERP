@@ -2423,7 +2423,8 @@ class PortalRequest(http.Controller):
                 memo_id.confirm_memo(
                     memo_id.direct_employee_id or employee_id.parent_id, 
                     post.get("description", ""),
-                    from_website=True
+                    from_website=True,
+                    default_stage_id = next_stage_id
                     )
             request.session['memo_ref'] = memo_id.code
             request.session['memo_record_id'] = memo_id.id

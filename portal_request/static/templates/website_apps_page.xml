@@ -164,7 +164,7 @@
 						</div>
 						<div class="app-item">
 							<!-- <a t-att-href="'/get-menu-url/%s' % 'payroll' if not request.env.user._is_public() else '/web/login'"> -->
-							<a t-att-href="'/web/login'">
+							<a t-att-href="'/payroll-list'">
 								<div class="app-icon payroll-icon">💼</div>
 								<div class="app-label">Payroll</div>
 							</a>
