@@ -127,7 +127,7 @@ class PortalOtherApps(http.Controller):
                     'structure': payslip.struct_id.name or 'N/A',
                     'date_from': payslip.date_from.strftime('%m/%d/%Y %H:%M') if payslip.date_from else '',
                     'date_to': payslip.date_to.strftime('%m/%d/%Y %H:%M') if payslip.date_to else '',
-                    'normal_wage': payslip.normal_wage if payslip.normal_wage else 'N/A',
+                    'normal_wage': payslip.employee_id.wage if payslip.employee_id.wage else 'N/A',
                     'basic_wage': sum([py.total for py in payslip.line_ids.filtered(lambda ln: ln.category_id.code in ['BASIC', 'basic', 'Basic'])]),
                     'net_wage':sum([py.total for py in payslip.line_ids.filtered(lambda ln: ln.category_id.code in ['NET', 'net', 'Net'])]),
                     'gross_wage': sum([py.total for py in payslip.line_ids.filtered(lambda ln: ln.category_id.code in ['GROSS', 'gross', 'Gross'])]),

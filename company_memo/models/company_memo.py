@@ -2295,7 +2295,10 @@ class Memo_Model(models.Model):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
             manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
-            self.set_staff=manager_id if manager_id else self.sudo().stage_id.approver_ids[0].id  
+            approver_id = manager_id if manager_id else self.sudo().stage_id.approver_ids[0].id
+            self.set_staff=approver_id
+            self.state = 'Sent'
+            self.approver_id = approver_id
         else:
             # updating the next stage
             approver_ids = self.get_next_stage_artifact(self.stage_id)[0] 
