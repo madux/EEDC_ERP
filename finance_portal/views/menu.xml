@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_finance_portal" model="ir.actions.act_url">
+            <field name="name">Finance Portal</field>
+            <field name="url">/finance-portal</field>
+            <field name="target">self</field>
+        </record>
+
+        <menuitem id="menu_finance_portal_root" name="Finance Portal"
+                  parent="account.menu_finance" sequence="101"/>
+
+        <menuitem id="menu_finance_portal_main" name="Payments &amp; Expenses"
+                  parent="menu_finance_portal_root"
+                  action="action_finance_portal" sequence="1"/>
+    </data>
+</odoo>

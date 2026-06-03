@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Finance Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="stylesheet" href="/finance_portal/static/css/finance_portal.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav id="topbar">
+  <div class="tb-brand">
+    <div class="tb-brand-icon">FP</div>
+    <div><div class="tb-brand-name">Finance Portal</div><div class="tb-brand-sub" id="active_company">—</div></div>
+  </div>
+  <div style="margin-left:16px;display:flex;align-items:center;gap:6px">
+    <input type="date" id="g_date_from" style="background:var(--bg-3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;padding:4px 8px;outline:none;font-family:var(--font)"/>
+    <span style="color:var(--muted);font-size:11px">→</span>
+    <input type="date" id="g_date_to" style="background:var(--bg-3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;padding:4px 8px;outline:none;font-family:var(--font)"/>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn primary" id="btn_run"><i class="fa-solid fa-play"></i> Refresh</button>
+    <button class="tb-btn" id="btn_export_excel" title="Export Excel"><i class="fa-solid fa-file-excel" style="color:#1d6f42"></i> Excel</button>
+    <button class="tb-btn" id="btn_export_pdf" title="Export PDF"><i class="fa-solid fa-file-pdf" style="color:#e74c3c"></i> PDF</button>
+    <button class="theme-btn" id="theme-toggle"><i class="fa-solid fa-sun"></i> Light</button>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+
+<!-- LAYOUT -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sb-section-title">Overview</div>
+    <div class="sb-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</div>
+    <div class="sb-divider"></div>
+
+    <div class="sb-section-title">Payments</div>
+    <div class="sb-item" data-page="payments" data-ptype="supplier">
+      <i class="fa-solid fa-truck"></i> Supplier Payments
+    </div>
+    <div class="sb-item" data-page="payments" data-ptype="customer">
+      <i class="fa-solid fa-users"></i> Customer Payments
+    </div>
+    <div class="sb-divider"></div>
+
+    <div class="sb-section-title">Quick Create</div>
+    <div class="sb-item btn-create-pay" data-ptype="supplier" style="cursor:pointer">
+      <i class="fa-solid fa-circle-plus"></i> New Supplier Payment
+    </div>
+    <div class="sb-item btn-create-pay" data-ptype="customer" style="cursor:pointer">
+      <i class="fa-solid fa-circle-plus"></i> New Customer Payment
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- ═══════════════ DASHBOARD ══════════════════ -->
+    <div class="page-section active" id="page-dashboard">
+      <div class="page-head">
+        <div><div class="page-title">Financial Dashboard</div><div class="page-sub">Payments overview · current period</div></div>
+        <div class="page-actions">
+          <button class="tb-btn btn-create-pay primary" data-ptype="supplier"><i class="fa-solid fa-plus"></i> New Supplier Payment</button>
+          <button class="tb-btn btn-create-pay success" data-ptype="customer"><i class="fa-solid fa-plus"></i> New Customer Payment</button>
+        </div>
+      </div>
+
+      <!-- KPI Row 1 -->
+      <div class="kpi-grid">
+        <div class="kpi-card sup">
+          <div class="kpi-icon"><i class="fa-solid fa-truck"></i></div>
+          <div class="kpi-label">Supplier Bills (Confirmed)</div>
+          <div class="kpi-value" id="kpi_sup_total">—</div>
+          <div class="kpi-sub" id="kpi_sup_count">—</div>
+        </div>
+        <div class="kpi-card cust">
+          <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="kpi-label">Customer Invoices (Confirmed)</div>
+          <div class="kpi-value" id="kpi_cust_total">—</div>
+          <div class="kpi-sub" id="kpi_cust_count">—</div>
+        </div>
+        <div class="kpi-card draft">
+          <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+          <div class="kpi-label">Supplier Bills (Draft)</div>
+          <div class="kpi-value" id="kpi_sup_draft_total">—</div>
+          <div class="kpi-sub" id="kpi_sup_draft_count">—</div>
+        </div>
+        <div class="kpi-card draft">
+          <div class="kpi-icon"><i class="fa-solid fa-hourglass"></i></div>
+          <div class="kpi-label">Customer Invoices (Draft)</div>
+          <div class="kpi-value" id="kpi_cust_draft_total">—</div>
+          <div class="kpi-sub" id="kpi_cust_draft_count">—</div>
+        </div>
+      </div>
+
+      <!-- KPI Row 2 -->
+      <div class="kpi-grid">
+        <div class="kpi-card aged">
+          <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="kpi-label">Aged Payables</div>
+          <div class="kpi-value" id="kpi_aged_pay">—</div>
+          <div class="kpi-sub" id="kpi_aged_pay_count">—</div>
+        </div>
+        <div class="kpi-card aged">
+          <div class="kpi-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+          <div class="kpi-label">Aged Receivables</div>
+          <div class="kpi-value" id="kpi_aged_rec">—</div>
+          <div class="kpi-sub" id="kpi_aged_rec_count">—</div>
+        </div>
+        <div class="kpi-card note">
+          <div class="kpi-icon"><i class="fa-solid fa-file-invoice"></i></div>
+          <div class="kpi-label">Credit Notes</div>
+          <div class="kpi-value" id="kpi_credit">—</div>
+          <div class="kpi-sub" id="kpi_credit_count">—</div>
+        </div>
+        <div class="kpi-card tax">
+          <div class="kpi-icon"><i class="fa-solid fa-percent"></i></div>
+          <div class="kpi-label">Total Tax Paid</div>
+          <div class="kpi-value" id="kpi_tax">—</div>
+          <div class="kpi-sub">Posted period</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Monthly Supplier vs Customer</div><div class="chart-sub">Last 6 months</div></div>
+            <span class="chart-badge">Monthly</span>
+          </div>
+          <canvas id="chart_monthly" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Payment Distribution</div><div class="chart-sub">Current period</div></div>
+            <span class="chart-badge">Breakdown</span>
+          </div>
+          <canvas id="chart_donut" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ PAYMENTS LIST ══════════════════ -->
+    <div class="page-section" id="page-payments">
+      <div class="page-head">
+        <div>
+          <div class="page-title" id="pay_list_title">Supplier Payments</div>
+          <div class="page-sub" id="pay_list_sub">Vendor bills &amp; purchase receipts</div>
+        </div>
+        <div class="page-actions">
+          <button class="tb-btn primary" id="btn_create_payment" data-ptype="supplier"><i class="fa-solid fa-plus"></i> Create Payment</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <span class="filter-label">Status</span>
+        <select class="filter-select" id="pay_state_filter">
+          <option value="">All</option>
+          <option value="draft">Draft</option>
+          <option value="posted">Confirmed</option>
+          <option value="cancel">Cancelled</option>
+        </select>
+        <div class="search-wrap" style="margin-left:auto">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="search-input" id="pay_search" placeholder="Search by name, partner…"/>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="list-card-head">
+          <div><div class="list-card-title">Payment Records</div><div class="list-card-sub" id="pay_count">—</div></div>
+        </div>
+        <div class="list-wrap">
+          <table class="fp-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Date</th>
+                <th>Partner</th>
+                <th>Journal</th>
+                <th>Ext. Ref</th>
+                <th class="num">Amount</th>
+                <th class="num">Amount Due</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="pay_tbody">
+              <tr class="skeleton"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <span id="pay_count_bot"></span>
+          <div class="pg-btns" id="pay_pages"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════ DETAIL DRAWER ══════════════════ -->
+<div id="detail-drawer">
+  <div class="drawer-head">
+    <div class="drawer-title" id="drawer-title">Payment Detail</div>
+    <button class="drawer-close" id="btn_drawer_close">✕</button>
+  </div>
+  <div id="drawer-loading" style="text-align:center;padding:40px;display:none">
+    <i class="fa-solid fa-spinner fa-spin" style="font-size:22px;color:var(--amber)"></i>
+    <p style="color:var(--muted);margin-top:10px">Loading…</p>
+  </div>
+  <div id="drawer-content" style="display:none">
+    <div class="drawer-body">
+      <div id="drawer-info"></div>
+      <div class="detail-section">Line Items</div>
+      <div id="drawer-lines"></div>
+      <div class="detail-totals" id="drawer-totals"></div>
+    </div>
+    <div class="drawer-actions">
+      <button class="tb-btn success" id="btn_drawer_confirm" style="display:none">
+        <i class="fa-solid fa-check"></i> Confirm
+      </button>
+      <button class="tb-btn" id="btn_drawer_edit" style="display:none">
+        <i class="fa-solid fa-pen"></i> Edit
+      </button>
+      <button class="tb-btn danger" id="btn_drawer_cancel" style="display:none">
+        <i class="fa-solid fa-rotate-left"></i> Reset to Draft
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CREATE/EDIT MODAL ══════════════════ -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">New Payment</div>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Row 1: type + partner + journal -->
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label">Move Type <span class="req">*</span></label>
+          <select class="form-control" id="f_move_type">
+            <option value="in_invoice">Vendor Bill (in_invoice)</option>
+            <option value="in_receipt">Purchase Receipt (in_receipt)</option>
+            <option value="out_invoice">Customer Invoice (out_invoice)</option>
+            <option value="out_receipt">Sales Receipt (out_receipt)</option>
+            <option value="in_refund">Vendor Credit Note</option>
+            <option value="out_refund">Customer Credit Note</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Partner <span class="req">*</span></label>
+          <div class="ac-wrap">
+            <input type="text" class="form-control" id="f_partner_ac" placeholder="Search partner…" autocomplete="off"/>
+            <input type="hidden" id="f_partner_id"/>
+            <div class="ac-dropdown" id="partner_dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Journal <span class="req">*</span></label>
+          <select class="form-control" id="f_journal_id"></select>
+        </div>
+      </div>
+
+      <!-- Row 2: dates + term + currency -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Invoice Date</label>
+          <input type="date" class="form-control" id="f_invoice_date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" class="form-control" id="f_due_date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Term</label>
+          <select class="form-control" id="f_payment_term_id"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select class="form-control" id="f_currency_id"></select>
+        </div>
+      </div>
+
+      <!-- Row 3: ref + narration -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">External Reference</label>
+          <input type="text" class="form-control" id="f_ref" placeholder="Bill / PO number…"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / Narration</label>
+          <textarea class="form-control" id="f_narration" rows="2" placeholder="Internal note…"></textarea>
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <div class="form-section">Invoice Lines</div>
+      <div class="lines-table-wrap">
+        <table class="lines-table">
+          <thead>
+            <tr>
+              <th style="min-width:180px">Account <span style="color:var(--red)">*</span></th>
+              <th style="min-width:140px">Description</th>
+              <th style="min-width:140px">Tax(es)</th>
+              <th style="min-width:100px">Branch</th>
+              <th style="min-width:60px">Currency</th>
+              <th class="num" style="min-width:60px">Qty</th>
+              <th class="num" style="min-width:90px">Unit Price</th>
+              <th class="num" style="min-width:90px">Subtotal</th>
+              <th class="num" style="min-width:80px">Tax Amt</th>
+              <th class="num" style="min-width:90px">Total</th>
+              <th style="width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="form_lines_body"></tbody>
+        </table>
+      </div>
+      <button class="add-line-btn" id="btn_add_line">
+        <i class="fa-solid fa-plus"></i> Add Line
+      </button>
+
+      <!-- Totals -->
+      <div class="totals-align">
+        <div class="totals-box">
+          <div class="totals-row"><span style="color:var(--muted)">Untaxed Amount</span><span id="total_untaxed">0.00</span></div>
+          <div class="totals-row"><span style="color:var(--muted)">Tax</span><span id="total_tax">0.00</span></div>
+          <div class="totals-row grand"><span>Total</span><span id="total_amount">0.00</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn" id="btn_cancel_payment">Cancel</button>
+      <button class="tb-btn primary" id="btn_save_payment"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="/finance_portal/static/js/finance_portal.js"></script>
+</body>
+</html>
