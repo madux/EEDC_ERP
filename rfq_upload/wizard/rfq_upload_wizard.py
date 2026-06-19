@@ -59,7 +59,8 @@ class RFQUploadWizard(models.TransientModel):
     #             self.sheet_count = 0
     #             self.sheet_list = f"Error reading file: {str(e)}"
     
-    # def action_download_template(self):
+    def action_download_template(self):
+        pass
     #     """Download RFQ template with populated data from memo"""
     #     self.ensure_one()
     #     template_data = self._get_template_data()
