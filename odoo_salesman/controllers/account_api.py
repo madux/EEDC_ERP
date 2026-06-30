@@ -9,6 +9,7 @@ from odoo.exceptions import ValidationError
 import functools
 from datetime import datetime,date,timedelta
 
+_logger = logging.getLogger(__name__)
 
 class AccountMoveAPI(http.Controller):
 
@@ -34,34 +35,44 @@ class AccountMoveAPI(http.Controller):
     @http.route('/api/v2/create-move', type='json', auth='none', methods=['POST'], csrf=False)
     def create_move(self, **kwargs):
         """
-            {
-                "ref": "Cash Collection",
-                "company_id": 1,
-                "journal_id": "SAJ",
-                "date": "2026-03-05",
-                "move_type": "entry",
-                "transactions": [
-                    {
-                    "description": "Revenue",
-                    "amount": 40000,
-                    "account_code": "43000",
-                    "type": "credit"
-                    },
-                    {
-                    "description": "Cash",
-                    "amount": 40000,
-                    "account_code": "10000",
-                    "type": "debit"
+               {
+                    "jsonrpc": 2.0,
+                    "params": {
+                        "ref": "Cash Collection",
+                        "company_id": 1,
+                        "journal_id": "SAJ",
+                        "date": "2026-03-05",
+                        "move_type": "entry",
+                        "transactions": [
+                            {
+                                "description": "Revenue",
+                                "amount": 40000,
+                                "account_code": "43000",
+                                "type": "credit"
+                            },
+                            {
+                                "description": "Cash",
+                                "amount": 40000,
+                                "account_code": "10000",
+                                "type": "debit"
+                            }
+                        ]
                     }
-                ]
-                }
+            }
         """
 
         user, error = self._authenticate()
         if error:
             return error
 
-        data = request.jsonrequest
+        # data = request.jsonrequest
+        _logger.info("DATA SENTTTT")
+        _logger.info(kwargs)
+
+        data = kwargs 
+
+        _logger.info(data)
+        
 
         return self._generate_account_entry(user, data)
 
@@ -163,7 +174,9 @@ class AccountMoveAPI(http.Controller):
         if error:
             return error
 
-        data = request.jsonrequest
+        # data = request.jsonrequest
+        print("KWARGS:", kwargs)
+        data = kwargs
         env = request.env(user=user)
 
         move = env['account.move'].sudo().browse(data.get('move_id'))

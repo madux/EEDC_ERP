@@ -2026,21 +2026,24 @@ class PortalRequest(http.Controller):
             "name": post.get("subject"),
             "email": post.get("email_from"),
             "phone": post.get("phone_number"),
-
+            "leave_type_id": post.get("leave_type_id", ""),
             "amountfig": _to_float(post.get("amount_fig")),
             "date": _to_date(post.get("request_date")),
 
             "leave_start_date": leave_start_date,
             "leave_end_date": leave_end_date,
-
+            "request_end_date": datetime.strptime(post.get("request_end_date",''), "%m/%d/%Y") if post.get("request_end_date") else False,
             "leave_Reliever": _clean_id("leave_reliever"),
             "vendor_id": _clean_id("vendor_id"),
             "currency_id": _clean_id("currency_id") or env.user.company_id.currency_id.id,
 
             "conversion_rate": _to_float(post.get("currency_rate")),
+            
+            "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
 
             "source_location_id": _clean_id("TargetSourceLocation"),
             "dest_location_id": _clean_id("destination_location_id"),
+            "customer_id": int(post.get("vendor_id")) if post.get("vendor_id") not in ['false', False, None, '', 'none', 'None'] else False,
 
             "applicationChange": _is_checked("applicationChange"),
             "enhancement": _is_checked("enhancement"),
@@ -2058,9 +2061,7 @@ class PortalRequest(http.Controller):
             "stage_id": False if not memo_config.stage_ids else memo_config.stage_ids[0].id,
             "company_id": env.user.company_id.id,
             "branch_id": env.user.branch_id.id if env.user.branch_id else False,
-
             "cash_advance_reference": cash_advance_id.id if cash_advance_id else False,
-
             "processing_branch_id": processing_branch_id,
             "processing_company_id": processing_company_id,
         }
