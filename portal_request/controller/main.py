@@ -2025,6 +2025,7 @@ class PortalRequest(http.Controller):
 
             "name": post.get("subject"),
             "email": post.get("email_from"),
+            "payment_reference": post.get("PaymentcashAdvance"),
             "phone": post.get("phone_number"),
             "leave_type_id": post.get("leave_type_id", ""),
             "amountfig": _to_float(post.get("amount_fig")),
@@ -2053,6 +2054,9 @@ class PortalRequest(http.Controller):
             "ids_on_os_and_db": _is_checked("ids_on_os_and_db"),
             "versionUpgrade": _is_checked("versionUpgrade"),
             "hardwareOption": _is_checked("hardwareOption"),
+            "otherChangeOption": True if post.get("otherChangeOption") == "on" else False,
+            "other_system_details": post.get("other_system_details"),
+            "justification_reason": post.get("justification_reason"),
 
             "description": description_body,
             "users_followers": [(6, 0, inputFollowers)],
