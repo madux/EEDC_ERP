@@ -142,6 +142,7 @@
 				<page string="Totals" name="information_total">
 					<group name="info_total1">
 						<group name="Detail">
+							<field name="is_auto_generated"/>
 							<field name="x_compute_PRORATA"/>
 							<field name="x_compute_ARREARS"/>
 							<field name="x_compute_shiftall"/>
@@ -202,7 +203,10 @@
 				<button string="Reset Development Levy" name="reset_payslip_x_dev_to_zero" type="object"/>
 				<button string="Fetch Missing Employee without Contract" name="get_staff_not_existing_in_payroll" type="object"/>
 				<button name="import_records_action" string="Import Wages" type="object"  class="oe_highlight"/>
-
+				<button name="action_create_missing_payslips"
+						string="Create Missing Payslips"
+						type="object"
+						class="btn-secondary btn-danger"/>
 			</xpath>
 			<xpath expr="//field[@name='company_id']" position="after">
 				<field string="Reactivate Contract" name="reactivate_contract"/>
@@ -212,6 +216,9 @@
 				<notebook>
 					<page name="StaffList" string="Staff List">
 						<field string="Accurate Staff List" name="list_of_available_staff"/>
+					</page>
+					<page name="MissingStaffList" string="Staff with Missing Payslip">
+						<field name="staff_with_missing_payslip" placeholder="24339,77665,64466"/>
 					</page>
 					<page name="errorDetail" string="Error message">
 						<field string="Error message" name="error_details"/>
@@ -232,13 +239,7 @@
 						</group>
 						<button name="import_records_action" string="Import Wages" type="object"  class="oe_highlight"/>
 					</page>
-				</notebook>
-
-
-				
-
-
-				
+				</notebook> 
             </xpath>
 		</field>
     </record>
