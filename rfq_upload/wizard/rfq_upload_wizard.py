@@ -60,42 +60,41 @@ class RFQUploadWizard(models.TransientModel):
     #             self.sheet_list = f"Error reading file: {str(e)}"
     
     def action_download_template(self):
-        pass
-    #     """Download RFQ template with populated data from memo"""
-    #     self.ensure_one()
-    #     template_data = self._get_template_data()
-    #     if not template_data.get('PRODUCT CODE'):
-    #         raise ValidationError(_("There are no request items in this memo to generate a template for."))
+        """Download RFQ template with populated data from memo"""
+        self.ensure_one()
+        template_data = self._get_template_data()
+        if not template_data.get('PRODUCT CODE'):
+            raise ValidationError(_("There are no request items in this memo to generate a template for."))
 
-    #     try:
-    #         df = pd.DataFrame(template_data)
-    #         output = io.BytesIO()
-    #         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-    #             df.to_excel(writer, sheet_name='RFQ_Template', index=False)
-    #             worksheet = writer.sheets['RFQ_Template']
-    #             for idx, col in enumerate(df):
-    #                 max_len = max((df[col].astype(str).map(len).max(), len(str(df[col].name)))) + 2
-    #                 worksheet.column_dimensions[chr(65 + idx)].width = min(max_len, 50)
+        try:
+            df = pd.DataFrame(template_data)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, sheet_name='RFQ_Template', index=False)
+                worksheet = writer.sheets['RFQ_Template']
+                for idx, col in enumerate(df):
+                    max_len = max((df[col].astype(str).map(len).max(), len(str(df[col].name)))) + 2
+                    worksheet.column_dimensions[chr(65 + idx)].width = min(max_len, 50)
 
-    #         excel_file = base64.b64encode(output.getvalue())
-    #         filename = f'RFQ_Template_{self.memo_id.code or "New"}.xlsx'
+            excel_file = base64.b64encode(output.getvalue())
+            filename = f'RFQ_Template_{self.memo_id.code or "New"}.xlsx'
             
-    #         attachment = self.env['ir.attachment'].create({
-    #             'name': filename,
-    #             'datas': excel_file,
-    #             'res_model': 'memo.model',
-    #             'res_id': self.memo_id.id,
-    #             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    #         })
+            attachment = self.env['ir.attachment'].create({
+                'name': filename,
+                'datas': excel_file,
+                'res_model': 'memo.model',
+                'res_id': self.memo_id.id,
+                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            })
             
-    #         return {
-    #             'type': 'ir.actions.act_url',
-    #             'url': f'/web/content/{attachment.id}?download=true',
-    #             'target': 'self',
-    #         }
-    #     except Exception as e:
-    #         _logger.error("Error generating RFQ template: %s", str(e))
-    #         raise ValidationError(_("Failed to generate template: %s") % str(e))
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/web/content/{attachment.id}?download=true',
+                'target': 'self',
+            }
+        except Exception as e:
+            _logger.error("Error generating RFQ template: %s", str(e))
+            raise ValidationError(_("Failed to generate template: %s") % str(e))
     
     def action_validate_file(self):
         """Validate uploaded Excel file"""
