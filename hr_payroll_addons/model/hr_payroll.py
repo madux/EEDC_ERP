@@ -28,6 +28,7 @@ class HRPayslipRun(models.Model):
 
     list_of_available_staff = fields.Text(string="Available staff")
     list_of_available_staff_with_details = fields.Text(string="Available staff details")
+    staff_with_missing_payslip = fields.Text(string="List of staff with missing payslip")
     error_details = fields.Text(string="Found Errors")
     reactivate_contract = fields.Boolean(
         string='Reactivate contract', 
@@ -289,7 +290,138 @@ class HRPayslipRun(models.Model):
             }
         }
 
-             
+    
+
+    # ASSUMPTION: hr.payslip has a field linking it back to this payroll
+    # batch/run. Common patterns: 'payslip_run_id' (standard Odoo) or a
+    # custom 'payroll_id'. Adjust the field name below to match yours.
+    # slip_ids = fields.One2many(
+    #     'hr.payslip', 'payroll_id',  # <-- change 'payroll_id' if different
+    #     string="Payslips"
+    # )
+
+    def _parse_employee_numbers(self):
+        """Split the free-text employee_number field into a clean list."""
+        self.ensure_one()
+        if not self.staff_with_missing_payslip:
+            return []
+        raw = self.staff_with_missing_payslip.replace(',', '\n')
+        numbers = [line.strip() for line in raw.splitlines() if line.strip()]
+        return numbers
+
+    def action_create_missing_payslips(self):
+        """
+        For the employee numbers listed on this payroll, find active
+        employees missing a payslip for this run/period and create
+        payslips for them from their active contract. Employees without
+        an active contract raise a ValidationError instead of being
+        silently skipped.
+        """
+        self.ensure_one()
+
+        numbers = self._parse_employee_numbers()
+        if not numbers:
+            raise ValidationError(_("No employee numbers were provided."))
+
+        # ASSUMPTION: hr.employee has a field named 'employee_number'.
+        # If yours uses 'registration_number', 'barcode', etc., change
+        # the field name in this search.
+        employees = self.env['hr.employee'].search([
+            ('employee_number', 'in', numbers),
+            ('active', '=', True),
+        ])
+
+        found_numbers = employees.mapped('employee_number')
+        missing_numbers = [n for n in numbers if n not in found_numbers]
+        if missing_numbers:
+            raise ValidationError(
+                _("The following employee numbers were not found as active "
+                  "employees: %s") % ', '.join(missing_numbers)
+            )
+
+        # --- Check every listed employee has an active/running contract ---
+        # ASSUMPTION: 'running' contracts use state == 'open'. Some setups
+        # use kanban_state or a computed 'active_contract' flag instead —
+        # adjust the domain if yours differs.
+        employees_without_contract = self.env['hr.employee']
+
+        for employee in employees:
+            contract = self.env['hr.contract'].search([
+                ('employee_id', '=', employee.id),
+                ('active', '=', True),
+                # ('state', '=', 'open'),
+            ], limit=1)
+            if not contract:
+                employees_without_contract |= employee
+
+        if employees_without_contract:
+            names = ', '.join(
+                f"{emp.name} ({emp.employee_number})"
+                for emp in employees_without_contract
+            )
+            raise ValidationError(
+                _("The following employees do not have an active contract "
+                  "and cannot be included in this payroll: %s") % names
+            )
+
+        # --- Determine which employees already have a payslip in this run ---
+        existing_employee_ids = self.slip_ids.mapped('employee_id').ids
+        missing_employees = employees.filtered(
+            lambda emp: emp.id not in existing_employee_ids
+        )
+
+        if not missing_employees:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _("Nothing to do"),
+                    'message': _("All listed employees already have a payslip for this period."),
+                    'type': 'info',
+                    'sticky': False,
+                },
+            }
+
+        created_payslips = self.env['hr.payslip']
+
+        for employee in missing_employees:
+            contract = self.env['hr.contract'].search([
+                ('employee_id', '=', employee.id),
+                ('active', '=', True),
+            ], limit=1)
+
+            payslip_vals = {
+                'employee_id': employee.id,
+                'contract_id': contract.id,
+                'name': _('Salary Slip - %s') % employee.name,
+                # ASSUMPTION: your payroll model has date_start / date_end
+                # fields marking the period. Adjust if named differently
+                # (e.g. date_from / date_to).
+                'date_from': self.date_start,
+                'date_to': self.date_end,
+                'struct_id': contract.structure_type_id.default_struct_id.id
+                    if contract.structure_type_id else False,
+                'payslip_run_id': self.id,  # <-- match to the field defined above
+                'is_auto_generated': True,
+            }
+            _logger.info(f'payslip contract {payslip_vals}')
+            payslip = self.env['hr.payslip'].create(payslip_vals)
+            created_payslips |= payslip
+
+        # Compute payslip lines from the contract/structure, matching
+        # what the standard "Compute Sheet" button does.
+        created_payslips.compute_sheet()
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Payslips Created"),
+                'message': _("%d missing payslip(s) were auto-generated.") % len(created_payslips),
+                'type': 'success',
+                'sticky': False,
+            },
+        }         
             
 class HRPayslip(models.Model):
     _inherit = "hr.salary.rule"
@@ -307,6 +439,13 @@ class HRPayslip(models.Model):
 class HRPayslip(models.Model):
     _inherit = "hr.payslip"
     
+    is_auto_generated = fields.Boolean(
+        string="Auto Generated",
+        default=False,
+        help="Set to True when this payslip was created automatically "
+             "by the 'Create Missing Payslips' process, so it can be "
+             "filtered and removed if an issue is found."
+    )
     x_compute_PRORATA = fields.Float(string='PRORATA', default=30, store=True,)
     # x_compute_type = fields.Float(string='Is Contract Dont use', default=False)
     x_compute_type = fields.Boolean(string='Contract', default=False)
