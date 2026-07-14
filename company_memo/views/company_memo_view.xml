@@ -665,6 +665,10 @@
 					<field name="branch_id" invisible="0"/> 
 					<group expand="0" string="Group By">
 						<filter name="name" string="Name" icon="terp-personal" domain="[]" context="{'group by':'name'}" />
+						<filter name="approve" string="My Related Approvals" domain="[('stage_id.approver_ids.user_id', '=', uid), ('state','in', ['Approve', 'Approve2'])]"/>
+						<filter name="myrequest" string="My Request" domain="[('create_uid', '=', uid)]"/>
+						<filter name="approve" string="My Approvals" domain="[('set_staff.user_id', '=', uid), ('state','in', ['Approve', 'Approve2'])]"/>
+						<filter name="approve_group" string="To be Approved" domain="[('stage_id.approver_ids.user_id', '=', uid), ('state','in', ['Approve', 'Approve2'])]" context="{'group by':'set_staff'}"/>
 						<filter name="Approve" string="Approve" icon="terp-personel" domain="[('state','=', 'Approve')]" context="{'group by':'state'}" />
 						<filter name="Sent" string="Sent" icon="terp-personel" domain="[('state','=', 'Sent')]" context="{'group by':'state'}" />
 						<filter name="Done" string="Done" icon="terp-personel" domain="[('state','=', 'Done')]" context="{'group by':'state'}" />

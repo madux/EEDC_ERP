@@ -21,7 +21,7 @@
         'hr_recruitment_survey',
         'website_hr_recruitment',
         'eedc_addons',
-        'hr_recruitment_sign',
+        # 'hr_recruitment_sign',
     ],
 
     'data': [

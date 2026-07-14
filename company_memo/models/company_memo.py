@@ -2295,7 +2295,10 @@ class Memo_Model(models.Model):
         if from_website:
             # if from website args: prevents the update of stages and approvers 
             manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
-            self.set_staff=manager_id if manager_id else self.sudo().stage_id.approver_ids[0].id  
+            approver_id = manager_id if manager_id else self.sudo().stage_id.approver_ids[0].id
+            self.set_staff=approver_id
+            self.state = 'Sent'
+            self.approver_id = approver_id
         else:
             # updating the next stage
             approver_ids = self.get_next_stage_artifact(self.stage_id)[0] 
@@ -2833,35 +2836,29 @@ class Memo_Model(models.Model):
         _logger.info('TESTING 002')
         if not self.get_approvers():
             raise ValidationError('You are not allowed to validate this record')
-        self.generate_external_internal_stock_material_request()
-        # if not self.is_inter_district_transfer:
-        #     stock = self.generate_internal_transfer()  # main / first entry for the requesting company
-        # else:
-        #     stock = self.generate_internal_transfer_for_interdistrict()
-        #     self.generate_external_interdistrict_stock_material_request() # second entry for the requesting company
-        
-            
+        # FIXME this will override request line without products
+        if any(not rec.product_id for rec in self.product_ids):
+            pass 
+        else:
+            self.generate_external_internal_stock_material_request()
         self.update_memo_type_approver()
         if body_msg:
             self.mail_sending_direct(body_msg)
-        # is_config_approver = self.determine_if_user_is_config_approver() or self.get_approvers()
-        # if is_config_approver:
-        # self.stock_picking_id = stock.id
-        # raise ValidationError(f'{stock.name} and piv {self.stock_picking_id.id}')
         """Check if the user is enlisted as the approver for memo type"""
         view_id = self.env.ref('stock.view_picking_form').id
-        ret = {
-            'name': "Stock Request",
-            'view_mode': 'form',
-            'view_id': view_id,
-            'view_type': 'form',
-            'res_model': 'stock.picking',
-            'res_id': self.stock_picking_id.id,
-            'type': 'ir.actions.act_window',
-            'domain': [],
-            'target': 'current'
-            }
-        return ret
+        if self.stock_picking_id:
+            ret = {
+                'name': "Stock Request",
+                'view_mode': 'form',
+                'view_id': view_id,
+                'view_type': 'form',
+                'res_model': 'stock.picking',
+                'res_id': self.stock_picking_id.id,
+                'type': 'ir.actions.act_window',
+                'domain': [],
+                'target': 'current'
+                }
+            return ret
 
     def generate_inter_move_product(self, product, company):
         if product:
@@ -2888,6 +2885,7 @@ class Memo_Model(models.Model):
                 })
                 return new_product.id
         else:
+            # FIX Uncomment the line below after all approvers are completed
             raise ValidationError("No product line found to process")
            
     def generate_external_internal_stock_material_request(self):
@@ -3052,13 +3050,13 @@ class Memo_Model(models.Model):
                     raise ValidationError("Your picking type company must be the same as source & destination location company ")
                  
             else:
-                if self.sudo().picking_type_id.code not in ['internal']:
-                    raise ValidationError("Your picking type must be set as internal transfer ")
-                if self.sudo().source_location_id.usage != 'internal' or dest_location.usage != 'internal':
-                    '''ensure source and destination type is set as internal for internal transfer.'''
-                    raise ValidationError("""
-                        Source and destination must be internal location.
-                        """)
+                if self.sudo().picking_type_id.code not in ['internal', 'outgoing']:
+                    raise ValidationError("Your picking type must be set as internal transfer, customer or supplier location")
+                # if self.sudo().source_location_id.usage != 'internal':
+                #     '''ensure source type is set as internal for internal transfer.'''
+                #     raise ValidationError("""
+                #         Source and destination must be internal location.
+                #         """)
                     
             '''checks if an external move has be created earlier, if found and state is in draft and cancel, delete it and recreate'''
             existing_picking = False
@@ -3099,9 +3097,7 @@ class Memo_Model(models.Model):
                     r.company_id = company_id.id
             else:
                 stock = existing_picking
-            self.stock_picking_id = stock.id
-            
-            
+            self.stock_picking_id = stock.id 
             
     def generate_stock_procurement_request(self, body_msg, body):
         """
@@ -3756,6 +3752,8 @@ class Memo_Model(models.Model):
                             'ref': f'{self.code}: {pr.product_id.name or pr.description}',
                             'account_id': self.get_soe_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.retire_sub_total_amount,
+                            'price_unit': pr.used_amount,
+                            'quantity': pr.used_qty,
                             'code': pr.code,
                     }) for pr in self.product_ids] + [(0, 0, {
                                                             'name': 'Cash Advance to Debit',
