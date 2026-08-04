@@ -1,0 +1,32 @@
+<odoo noupdate="0">
+    <record model="ir.ui.view" id="account_move_sync_superedge_transaction">
+        <field name="name">Account Mov sync superedge transaction--</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_post']" position="after">
+                <button name="get_financial_transaction" type="object" string="Get revenue from Superedge"/>
+            </xpath>  
+        </field>
+    </record>
+    <record id="superedge_base_url" model="ir.config_parameter">
+        <field name="key">superedge.base_url</field>
+        <field name="value">http://110.238.75.216:8580</field>
+    </record>
+    <record id="superedge_username" model="ir.config_parameter">
+        <field name="key">superedge.username</field>
+        <field name="value">admin</field>
+    </record>
+    <record id="superedge_password" model="ir.config_parameter">
+        <field name="key">superedge.password</field>
+        <field name="value">admin</field>
+    </record>
+    <record id="superedge_app_id" model="ir.config_parameter">
+        <field name="key">superedge.app_id</field>
+        <field name="value">cdl</field>
+    </record>
+    <record id="superedge_signature" model="ir.config_parameter">
+        <field name="key">superedge.signature</field>
+        <field name="value">ad9999c416cc3584b649d3ce486e02b4</field>
+    </record> 
+</odoo>
