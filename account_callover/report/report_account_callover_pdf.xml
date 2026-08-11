@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_callover_landscape" model="report.paperformat">
+        <field name="name">Callover Landscape</field>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">18</field>
+        <field name="margin_bottom">18</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
+    <template id="report_account_callover_document">
+    <t t-call="web.html_container">
+      <t t-call="web.external_layout">
+        <div class="page" style="font-size:11px;">
+          <h2 class="text-center">Callover Report - Transactions by Month</h2>
+
+          <t t-foreach="grouped_data.items()" t-as="fy_item">
+            <t t-set="fiscalyear" t-value="fy_item[0]"/>
+            <t t-set="branches" t-value="fy_item[1]"/>
+
+            <h3 style="background-color:#4472C4;color:white;padding:4px;">
+              Fiscal Year: <t t-esc="fiscalyear"/>
+            </h3>
+
+            <t t-foreach="branches.items()" t-as="branch_item">
+              <t t-set="branch" t-value="branch_item[0]"/>
+              <t t-set="accounts" t-value="branch_item[1]"/>
+
+              <h4 style="background-color:#D9E1F2;padding:3px;">
+                MDA: <t t-esc="branch.name or 'N/A'"/>
+              </h4>
+
+              <t t-foreach="accounts.items()" t-as="account_item">
+                <t t-set="account" t-value="account_item[0]"/>
+                <t t-set="recs" t-value="account_item[1]"/>
+
+                <p style="font-weight:bold;font-style:italic;margin-bottom:2px;">
+                  Subhead: <t t-esc="account.display_name or 'N/A'"/>
+                </p>
+
+                <table class="table table-sm table-bordered" style="font-size:9px;">
+                  <thead>
+                    <tr style="background-color:#BDD7EE;">
+                      <th>Currency</th>
+                      <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
+                      <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
+                      <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr t-foreach="recs" t-as="rec">
+                      <td><t t-esc="rec.currency_id.name"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.jan or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.feb or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.mar or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.apr or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.may or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.jun or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.july or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.aug or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.sep or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.oct or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.nov or 0.0)"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(rec.dec or 0.0)"/></td>
+                      <td class="text-right"><b><t t-esc="'{:,.2f}'.format(rec.total or 0.0)"/></b></td>
+                    </tr>
+                    <tr style="background-color:#F2F2F2;font-weight:bold;">
+                      <td>Subhead Total</td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('jan')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('feb')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('mar')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('apr')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('may')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('jun')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('july')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('aug')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('sep')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('oct')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('nov')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('dec')))"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(recs.mapped('total')))"/></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </t>
+            </t>
+          </t>
+
+          <!-- ===== MDA SUMMARY - TOTAL PER MDA (ALL FISCAL YEARS) ===== -->
+          <div style="page-break-inside:avoid; margin-top:20px;">
+            <h3 style="background-color:#1F4E78;color:white;padding:5px;">
+              MDA Summary - Total Transactions per MDA
+            </h3>
+            <table class="table table-sm table-bordered" style="font-size:9px;">
+              <thead>
+                <tr style="background-color:#BDD7EE;">
+                  <th>MDA</th>
+                  <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
+                  <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
+                  <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr t-foreach="mda_summary.items()" t-as="mda_item">
+                  <t t-set="mda_branch" t-value="mda_item[0]"/>
+                  <t t-set="mda_totals" t-value="mda_item[1]"/>
+                  <td><b><t t-esc="mda_branch.name or 'N/A'"/></b></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['jan'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['feb'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['mar'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['apr'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['may'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['jun'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['july'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['aug'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['sep'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['oct'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['nov'])"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(mda_totals['dec'])"/></td>
+                  <td class="text-right"><b><t t-esc="'{:,.2f}'.format(mda_totals['total'])"/></b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ===== GRAND SUMMARY - ALL RECORDS ===== -->
+          <div style="page-break-inside:avoid; margin-top:20px;">
+            <h3 style="background-color:#2E5395;color:white;padding:5px;">
+              Grand Summary - All Records
+            </h3>
+            <table class="table table-sm table-bordered" style="font-size:9px;">
+              <thead>
+                <tr style="background-color:#BDD7EE;">
+                  <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
+                  <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
+                  <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                  <th>Grand Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="font-weight:bold;background-color:#F2F2F2;">
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('jan')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('feb')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('mar')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('apr')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('may')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('jun')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('july')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('aug')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('sep')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('oct')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('nov')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('dec')))"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(docs.mapped('total')))"/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </t>
+    </t>
+  </template>
+
+</odoo>

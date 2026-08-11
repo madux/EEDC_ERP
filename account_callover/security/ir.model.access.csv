@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_callover_user,account.callover.user,model_account_callover,account.group_account_user,1,0,0,0
+access_account_callover_user2,account.callover.user2,model_account_callover,base.group_user,1,0,0,0
+access_account_callover_admin,acacount.callover.admin,model_account_callover,base.group_system,1,1,1,1
+access_account_callover_manager,account.callover.manager,model_account_callover,account.group_account_manager,1,0,0,0
+access_account_callover_readonly,account.callover.readonly,model_account_callover,account.group_account_readonly,1,0,0,0
+access_res_partner_mda_user,res_partner_internal_user,base.model_res_partner,,1,1,1,0
+access_report_account_callover_report_account_user,report_account_callover_report_account_user,account_callover.model_report_account_callover_report_account_callover_document,,1,1,1,1

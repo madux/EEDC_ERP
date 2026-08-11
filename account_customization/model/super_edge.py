@@ -17,6 +17,8 @@ _TOKEN_CACHE = {}
 class AccountMove(models.Model):
     _inherit = "account.move"
 
+    active = fields.Boolean(default=True)
+
     def get_financial_transaction(self):
         moves = self.env["account.move"]
         transactions = moves.superedge_get_all_transactions(

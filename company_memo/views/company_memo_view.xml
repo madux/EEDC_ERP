@@ -91,7 +91,7 @@
 					<!-- MEMO THINGS -->
 								<field name="dummy_memo_config_ids" invisible="1" widget="many2many_tags"/>
 								<field name="memo_setting_id" required="1"
-                                        attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}" 
+                                        attrs="{'readonly':[('state','not in',['submit', 'Refuse']),('edit_mode', '=', False)]}"
                                         options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
                                         />
                                         <!-- domain="[('id', 'in', dummy_memo_config_ids)]" -->
@@ -123,14 +123,13 @@
                                 options="{&quot;no_open&quot;: False, &quot;no_create&quot;: True}"/>
 								
 								<field name="client_id" invisible="1" attrs="{'readonly':[('state','not in',['submit'])]}" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" /> 
-								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" readonly="1"/>
+								<field name="employee_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}" attrs="{'readonly': [('edit_mode', '=', False)]}"/>
 								<!-- attrs="{'readonly':[('state','not in',['submit'])]}"/> -->
 								<field name="phone" readonly="1"/>
 								<field name="email" readonly="1"/>
 								<field name="memo_setting_id" invisible="1" force_save="1" 
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
 								/>
-
 								<field name="direct_employee_id" required="0" invisible="1" string= "Through" attrs="{'readonly':[('state','in',['Done', 'Approve'])]}"/>
 								<field name="set_staff" string = "Request With" readonly="1" invisible="1"/>
 								<field name="demo_staff" invisible="1"/>
@@ -197,7 +196,7 @@
 								<field name="conversion_rate" attrs="{'invisible':[('memo_type_key','not in', ['cash_advance', 'soe', 'procurement', 'procurement_request', 'Payment', 'payment', 'payment_request'])], 'readonly':[('state','in',['Sent', 'Done', 'Approve', 'Approve2'])]}"/>
 								<field name="state" invisible="1" force_save="1" readonly="0"/>
 								<field name="is_request_completed" readonly="1" invisible="1"/>
-								<field name="edit_mode" string="Edit mode" invisible="1"/> 
+								
 							</group>
 						</group>
 						<notebook>
@@ -598,7 +597,7 @@
 							<page name="aos" string="Overview" invisible="0">
 								<group>
 									<group>
-										
+										<field name="edit_mode" string="Edit mode" invisible="0"/>
 										<field name="memo_setting_id" string="Request type" invisible="0" force_save="1" readonly="1"/> 
 										<field name="dummy_memo_types" invisible="0" widget="many2many_tags" force_save="1" readonly="1"/>
 										<field name="dummy_memo_config_ids" invisible="0" widget="many2many_tags" force_save="1" readonly="1"/>

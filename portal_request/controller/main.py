@@ -956,7 +956,7 @@ class PortalRequest(http.Controller):
             domain = [
                 ('employee_id.employee_number', '=', staff_num),
                 ('active', '=', True),
-                ('employee_id.user_id', '=', user.id),
+                ('employee_id.user_id.id', '=', user.id),
                 ('memo_type.memo_key', '=', 'cash_advance'),
                 # ('soe_advance_reference', '=', False),
                 ('is_cash_advance_retired', '=', False),
@@ -1912,7 +1912,7 @@ class PortalRequest(http.Controller):
     
     # inputFollowers = '6083, 36646, 37111'
     def save_memo_record(self, post, memo_id=None):
-        _logger.info("SAVE POST DATA %s", post)
+        _logger.info("SAVED POST DATA %s", post)
 
         env = request.env
         Memo = env['memo.model'].sudo()

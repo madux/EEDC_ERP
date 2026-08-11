@@ -10,6 +10,8 @@ class EhaBranch(models.Model):
 
     name = fields.Char('Name', required=False)
     code = fields.Char('Code', readonly=False, default= lambda self :'XXXXXXXX')
+    regionCode = fields.Char(string="SuperEdge Region Code", readonly=False)
+    districtCode = fields.Char('SuperEdge districtCode', readonly=False, required=True)
     lga_id = fields.Many2one('res.lga', 'LGA')
      
     telephone_no = fields.Char("Telephone No")
@@ -33,8 +35,19 @@ class EhaBranch(models.Model):
         'account.account', string='Depreciation Account ')
     account_depreciation_expense_id = fields.Many2one(
         'account.account', string='Expense Account')
+
+    account_revenue_id = fields.Many2one(
+            'account.account', string='Revenue Account', required=True)
+    receivable_revenue_account_id = fields.Many2one(
+                'account.account', string='Receivable Account', required=True)
+    payable_account_id = fields.Many2one(
+                    'account.account', string='Payable Account', required=True)
     account_asset_id = fields.Many2one(
         'account.account', string='Asset Account')
+    bank_journal_id = fields.Many2one(
+                'account.journal', string='Revenue Bank', required=True)
+    expense_journal_id = fields.Many2one(
+                    'account.journal', string='Expense Bank')
     
     @api.model
     @api.returns('self', lambda value: value.id)

@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_superedge_revenue_api,superedge_revenue_apid,model_superedge_revenue_api,,1,1,1,1
+access_superedge_revenue_data,superedge_revenue_data,model_superedge_revenue_data,,1,1,1,1

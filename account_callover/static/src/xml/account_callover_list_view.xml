@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="account_callover.CustomListRendererCallover" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+
+        <!-- <xpath expr="//div[@t-ref='root']" position="before">
+            <h1 style="color:red;">
+                WORKING TEMPLATE
+            </h1>
+
+        </xpath> -->
+        <xpath expr="//table[@t-ref='table']" position="before">
+            <!-- <div class="custom_tree_header">  -->
+                <div class="flex-grow-1 d-none d-md-block"/>
+                <!-- <div class="custom_tree_header" id="callover"> -->
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:16px; padding-top:24px; padding-right: 10px">
+                        <button class="cn-btn-primary-light" t-on-click="detectDuplicates" type="button">
+                            <i class="fas fa-biohazard"></i>
+                            <span>Detect Duplicate</span>
+                        </button>
+                        <button class="cn-btn-primary-action" id="addMore" type="button">
+                            <i class="fa fa-plus"></i>
+                            <span>More</span>
+                        </button>
+                    </div>
+
+                    <div class="cn-metrics-grid-ribbon">
+                        <div class="cn-metric-card-item" data-metric="total">
+                            <div class="cn-metric-top-row">
+                                <h2 class="cn-metric-value-display">N/A</h2>
+                                <div class="cn-metric-icon-box bg-purple-sub"><i class="fa fa-users"></i></div>
+                            </div>
+                            <span class="cn-metric-label">Total</span>
+                        </div>
+
+                        <div class="cn-metric-card-item" data-metric="shortlisted">
+                            <div class="cn-metric-top-row">
+                                <h2 class="cn-metric-value-display">N/A</h2>
+                                <div class="cn-metric-icon-box bg-blue-sub"><i class="fa fa-list"></i></div>
+                            </div>
+                            <span class="cn-metric-label">Budget Balance</span>
+                        </div>
+                        <div class="cn-metric-card-item" data-metric="shortlisted">
+                            <div class="cn-metric-top-row">
+                                <h2 class="cn-metric-value-display">0%</h2>
+                                <div class="cn-metric-icon-box bg-blue-sub"><i class="fa fa-list"></i></div>
+                            </div>
+                            <span class="cn-metric-label">Budget Utilization</span>
+                        </div>
+
+                    <!-- </div>  -->
+                </div> 
+            <!-- <button class="btn o_cc_btn_light btn-sm m-4" t-on-click="exportCalendar" type="button">
+                <i class="fa fa-upload"/> Export
+            </button>  -->
+            <!-- </div> -->
+        </xpath>
+    </t> 
+</templates>
+
+<!-- <?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve"> 
+    <t t-name="account_callover.CustomListRenderer" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+        <xpath expr="//table[@t-ref='table']" position="before">
+             <div class="" t-if="isReportCalloverView">
+                <div class="" id="callover">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:16px; padding-top:24px; padding-right: 10px">
+                        <button class="cn-btn-primary-light" t-on-click="detectDuplicates" type="button">
+                            <i class="fas fa-biohazard"></i>
+                            <span>Detect Duplicate</span>
+                        </button>
+                        <button class="cn-btn-primary-action" id="addMore" type="button">
+                            <i class="fa fa-plus"></i>
+                            <span>More</span>
+                        </button>
+                    </div>
+
+                    <div class="cn-metrics-grid-ribbon">
+                        <div class="cn-metric-card-item" data-metric="total">
+                            <div class="cn-metric-top-row">
+                                <h2 class="cn-metric-value-display">3,009,450.00</h2>
+                                <div class="cn-metric-icon-box bg-purple-sub"><i class="fa fa-users"></i></div>
+                            </div>
+                            <span class="cn-metric-label">Total</span>
+                        </div>
+
+                        <div class="cn-metric-card-item" data-metric="shortlisted">
+                            <div class="cn-metric-top-row">
+                                <h2 class="cn-metric-value-display">209,900,455,234.00</h2>
+                                <div class="cn-metric-icon-box bg-blue-sub"><i class="fa fa-list"></i></div>
+                            </div>
+                            <span class="cn-metric-label">Budget Balance</span>
+                        </div>
+
+                    </div> 
+                </div> 
+            </div> 
+        </xpath>
+    </t>
+
+</templates> -->
