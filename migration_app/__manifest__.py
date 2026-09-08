@@ -10,7 +10,7 @@
     'category': 'HR',
     'summary': '',
     'description': "",
-    'depends': ['base', 'hr', 'stock', 'ik_multi_branch', 'multi_company', 'eedc_addons'],
+    'depends': ['base', 'hr', 'stock', 'ik_multi_branch','multi_company', 'eedc_addons'],
     "data": [
         'security/ir.model.access.csv',
         'security/security.xml',
