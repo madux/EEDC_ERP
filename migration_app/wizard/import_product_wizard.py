@@ -126,7 +126,7 @@ class ImportProductWizard(models.TransientModel):
                     ('company_id', '=', self.company_id.id), 
                     ], limit = 1)
                 if product:
-                    product_id = product.id
+                    product_id = product
                 else:
                     product_id = False 
             return product_id
