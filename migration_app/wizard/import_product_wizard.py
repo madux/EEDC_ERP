@@ -203,14 +203,17 @@ class ImportProductWizard(models.TransientModel):
                         'name': name,
                         'detailed_type': 'product',
                         'categ_id': self.create_category(categ_name),
-                        'uom_id': self.create_uom(unit_of_measure),
                         'list_price': unit_price,
                         'description': name,
                         'tracking': 'serial',
                         'default_code': stock_code,
                         'qty_available': float(qty) if type(qty) in [str, int, float] else 0,
-                        'company_id': self.company_id.id
+                        'company_id': self.company_id.id,
                     }
+
+                    if not product.uom_id:
+                        vals['uom_id'] = self.create_uom(unit_of_measure)
+
                     product.update(vals)
                     self.update_product_quantity(product, vals.get('qty_available'), self.location_id)
                     create_stock_quant(product, self.location_id, vals.get('qty_available'))
