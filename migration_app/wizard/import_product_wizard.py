@@ -153,14 +153,14 @@ class ImportProductWizard(models.TransientModel):
             if isinstance(value, str):
                 value = value.strip()
 
-                if not value:
+                if not value.isdigit():
                     return 0.0
-
-                try:
+                else:
                     return float(value)
-                except ValueError:
-                    return 0.0
-
+                # try:
+                #     return float(value)
+                # except ValueError:
+                #     return 0.0
             return 0.0
 
         
@@ -213,7 +213,7 @@ class ImportProductWizard(models.TransientModel):
                 return self.confirm_notification(message) 
 
         elif self.import_type == "update":
-            for row in file_data:
+            for count, row in enumerate(file_data, 1):
                 try:
                     stock_code = stock_code = str(row[6]).strip() if row[6] else ''
                     product = find_existing_product(stock_code)
