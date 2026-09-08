@@ -142,47 +142,68 @@ class ImportProductWizard(models.TransientModel):
             if qty <= 0:
                 return
             self.env['stock.quant']._update_available_quantity(product, location, qty)
-        
+
+        def safe_float(value):
+            if value is None:
+                return 0.0
+
+            if isinstance(value, (int, float)):
+                return float(value)
+
+            if isinstance(value, str):
+                value = value.strip()
+
+                if not value:
+                    return 0.0
+
+                try:
+                    return float(value)
+                except ValueError:
+                    return 0.0
+
+            return 0.0
+            
         if self.import_type == "product":
-            for row in file_data:
-                
-                # try:
-                name = str(row[1]).strip() if row[1] else ''
-                unit_of_measure = str(row[2]).strip() if row[2] else ''
-                unit_price = self._clean_numeric_value(row[3])
-                qty = self._clean_numeric_value(row[4])
-                categ_name = categ_name = str(row[5]).strip() if row[5] else ''
-                stock_code = stock_code = str(row[6]).strip() if row[6] else ''
-                if find_existing_product(row[1]):
-                    unsuccess_records.append(f'Product with {str(row[1])} Already exists')
-                else:
-                    if name and stock_code:
-                        _logger.info(f"Processing {row[0]} - {name} and the qty = {qty}")
-                        
-                        vals = {
-                            'name': name,
-                            'detailed_type': 'product',
-                            'categ_id': self.create_category(categ_name),
-                            'uom_id': self.env.ref('uom.product_uom_unit').id,
-                            # 'list_price': unit_price,
-                            'standard_price': unit_price,
-                            'description': name,
-                            'tracking': 'serial',
-                            'default_code': stock_code,
-                            'qty_available': qty,
-                            'property_stock_inventory': self.property_stock_inventory.id,
-                            'company_id': self.company_id.id
-                        }
-                        product = create_product(vals)
-                        _logger.info(f"CREATED ODOO PRODUCT RECORD {self.env['product.product'].browse([product]).name} - {self.env['product.product'].browse([product]).qty_available}")
-                        product_ref = self.env['product.product'].browse([product])
-                        quant = self.update_product_quantity(product_ref,qty, self.location_id)
-                        create_stock_quant(product_ref, self.location_id, vals.get('qty_available'))
-                        success_records.append(vals.get('name'))
+            
+            for count, row in enumerate(file_data, 1):
+                try:
+                    name = str(row[1]).strip() if row[1] else ''
+                    unit_of_measure = str(row[2]).strip() if row[2] else ''
+                    unit_price = self._clean_numeric_value(row[3])
+                    qty = self._clean_numeric_value(row[4])
+                    categ_name = categ_name = str(row[5]).strip() if row[5] else ''
+                    stock_code = stock_code = str(row[6]).strip() if row[6] else ''
+                    if find_existing_product(row[1]):
+                        unsuccess_records.append(f'Product with {str(row[1])} Already exists')
                     else:
-                        unsuccess_records.append(f'Product at {count} does not have any name or code values')
-                    count += 1
-                
+                        if name and stock_code:
+                            _logger.info(f"Processing {row[0]} - {name} and the qty = {qty}")
+                            
+                            vals = {
+                                'name': name,
+                                'detailed_type': 'product',
+                                'categ_id': self.create_category(categ_name),
+                                'uom_id': self.env.ref('uom.product_uom_unit').id,
+                                # 'list_price': unit_price,
+                                'standard_price': unit_price,
+                                'description': name,
+                                'tracking': 'serial',
+                                'default_code': stock_code,
+                                'qty_available': qty,
+                                'property_stock_inventory': self.property_stock_inventory.id,
+                                'company_id': self.company_id.id
+                            }
+                            product = create_product(vals)
+                            _logger.info(f"CREATED ODOO PRODUCT RECORD {self.env['product.product'].browse([product]).name} - {self.env['product.product'].browse([product]).qty_available}")
+                            product_ref = self.env['product.product'].browse([product])
+                            quant = self.update_product_quantity(product_ref,qty, self.location_id)
+                            create_stock_quant(product_ref, self.location_id, vals.get('qty_available'))
+                            success_records.append(vals.get('name'))
+                        else:
+                            unsuccess_records.append(f'Product at {count} does not have any name or code values')
+                        count += 1
+                except Exception as e:
+                    raise ValidationError(f"Issue occured at line {count}, {e}")
             errors.append('Successful Import(s): '+str(count)+' Record(s): See Records Below \n {}'.format(success_records))
             errors.append('Unsuccessful Import(s): '+str(unsuccess_records)+' Record(s)')
             if len(errors) > 1:
@@ -197,7 +218,7 @@ class ImportProductWizard(models.TransientModel):
                     name = row[1]
                     unit_of_measure = row[2]
                     unit_price = row[3]
-                    qty = row[4]
+                    qty = row[4] 
                     categ_name = row[5]
                     vals = {
                         'name': name,
@@ -207,7 +228,7 @@ class ImportProductWizard(models.TransientModel):
                         'description': name,
                         'tracking': 'serial',
                         'default_code': stock_code,
-                        'qty_available': float(qty) if type(qty) in [str, int, float] else 0,
+                        'qty_available': self._clean_numeric_value(qty), #float(qty) if type(qty) in [str, int, float] else 0,
                         'company_id': self.company_id.id,
                     }
 
@@ -227,6 +248,7 @@ class ImportProductWizard(models.TransientModel):
             if len(errors) > 1:
                 message = '\n'.join(errors)
                 return self.confirm_notification(message) 
+        
         
     def check_product_availability(self):
         if not self.product_id:
