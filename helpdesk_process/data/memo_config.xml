@@ -154,7 +154,7 @@
             <field name="sequence">6</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bopc_process"/>
         </record>
-       
+
         <record id="memo_stage_helpdesk_cs_bopc_process_7" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -974,7 +974,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rouumc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rouumc_process_2" model="memo.stage">
             <field name="name">Meter Engineer</field>
             <field name="loaded_from_data">1</field>
@@ -1038,7 +1038,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rr_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rr_process_2" model="memo.stage">
             <field name="name">Billing Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1092,7 +1092,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_piwa_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_piwa_process_2" model="memo.stage">
             <field name="name">Billing Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1146,7 +1146,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_pnrcb_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_pnrcb_process_2" model="memo.stage">
             <field name="name">Billing Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1200,7 +1200,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_fewp_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_fewp_process_2" model="memo.stage">
             <field name="name">IT Support</field>
             <field name="loaded_from_data">1</field>
@@ -1264,7 +1264,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_pr_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_pr_process_2" model="memo.stage">
             <field name="name">Billing Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1318,7 +1318,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rftr_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rftr_process_2" model="memo.stage">
             <field name="name">Meter Engineer</field>
             <field name="loaded_from_data">1</field>
@@ -1386,7 +1386,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_wfc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_wfc_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1440,7 +1440,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_jc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_jc_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1494,7 +1494,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_lv_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_lv_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1548,7 +1548,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_pf_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_pf_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1602,7 +1602,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ns_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ns_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1656,7 +1656,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_hv_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_hv_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1710,7 +1710,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ls_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ls_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1764,7 +1764,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ft_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ft_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1818,7 +1818,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_vt_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_vt_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -1888,7 +1888,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_bm_process_2" model="memo.stage">
             <field name="name">Meter Engineer</field>
             <field name="loaded_from_data">1</field>
@@ -1952,7 +1952,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_bc_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -2006,7 +2006,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_sc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_sc_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -2060,7 +2060,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_fp_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_fp_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -2114,7 +2114,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_fc_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_fc_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -2168,7 +2168,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bt_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_bt_process_2" model="memo.stage">
             <field name="name">Network Manager</field>
             <field name="loaded_from_data">1</field>
@@ -2591,7 +2591,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_brpt_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_brpt_process_2" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2625,7 +2625,7 @@
             <field name="sequence">0</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rvhas_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rvhas_process_2" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2677,7 +2677,7 @@
             <field name="sequence">2</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rdn_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rdn_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2731,7 +2731,7 @@
             <field name="sequence">2</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mar_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_mar_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2767,7 +2767,7 @@
             <field name="sequence">1</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_tclm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_tclm_process_2" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2819,7 +2819,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_tcsm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_tcsm_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2873,7 +2873,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ci_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ci_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2927,7 +2927,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_bm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_bm_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -2981,7 +2981,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ilt_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ilt_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3035,7 +3035,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mr_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_mr_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3089,7 +3089,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_mrt_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_mrt_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3143,7 +3143,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_monv_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_monv_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3197,7 +3197,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_co_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_co_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3251,7 +3251,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_commer_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_commer_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3305,7 +3305,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_lker_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_lker_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3359,7 +3359,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_vrl_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_vrl_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3413,7 +3413,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_lve_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_lve_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3467,7 +3467,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_vpsr_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_vpsr_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3521,7 +3521,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_pis_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_pis_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3575,7 +3575,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_rfp_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_rfp_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3629,7 +3629,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ecom_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ecom_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3683,7 +3683,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_ros_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_ros_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3737,7 +3737,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_fm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_fm_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>
@@ -3791,7 +3791,7 @@
             <field name="sequence">3</field>
             <field name="memo_config_id" ref="helpdesk_process.memo_config_helpdesk_cs_cpm_process"/>
         </record>
-        
+
         <record id="memo_stage_helpdesk_cs_cpm_process_4" model="memo.stage">
             <field name="name">Done</field>
             <field name="loaded_from_data">1</field>

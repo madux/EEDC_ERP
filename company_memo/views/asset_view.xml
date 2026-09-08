@@ -150,7 +150,7 @@
                     <field name="company_id" invisible="True"
                         attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                     <field name="state" invisible="True"/>
-                    <field name="date_of_assignment" optional="hide"/>
+                    <field name="date_of_assignment" optional="hide"/>     
                     <field name="date_of_transfer" optional="hide"/>
                     <field name="qty_received" optional="show"/>
                     <field name="is_asset_from_procurement" optional="show" invisible="True"/>
