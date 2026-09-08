@@ -162,6 +162,8 @@ class ImportProductWizard(models.TransientModel):
                     return 0.0
 
             return 0.0
+
+        
             
         if self.import_type == "product":
             
@@ -212,37 +214,40 @@ class ImportProductWizard(models.TransientModel):
 
         elif self.import_type == "update":
             for row in file_data:
-                stock_code = stock_code = str(row[6]).strip() if row[6] else ''
-                product = find_existing_product(stock_code)
-                if product:
-                    name = row[1]
-                    unit_of_measure = row[2]
-                    unit_price = row[3]
-                    qty = row[4] 
-                    categ_name = row[5]
-                    vals = {
-                        'name': name,
-                        'detailed_type': 'product',
-                        'categ_id': self.create_category(categ_name),
-                        'list_price': unit_price,
-                        'description': name,
-                        'tracking': 'serial',
-                        'default_code': stock_code,
-                        'qty_available': self._clean_numeric_value(qty), #float(qty) if type(qty) in [str, int, float] else 0,
-                        'company_id': self.company_id.id,
-                    }
+                try:
+                    stock_code = stock_code = str(row[6]).strip() if row[6] else ''
+                    product = find_existing_product(stock_code)
+                    if product:
+                        name = row[1]
+                        unit_of_measure = row[2]
+                        unit_price = row[3]
+                        qty = row[4] 
+                        categ_name = row[5]
+                        vals = {
+                            'name': name,
+                            'detailed_type': 'product',
+                            'categ_id': self.create_category(categ_name),
+                            'list_price': unit_price,
+                            'description': name,
+                            'tracking': 'serial',
+                            'default_code': stock_code,
+                            'qty_available': safe_float(qty), #float(qty) if type(qty) in [str, int, float] else 0,
+                            'company_id': self.company_id.id,
+                        }
 
-                    if not product.uom_id:
-                        vals['uom_id'] = self.create_uom(unit_of_measure)
+                        if not product.uom_id:
+                            vals['uom_id'] = self.create_uom(unit_of_measure)
 
-                    product.update(vals)
-                    self.update_product_quantity(product, vals.get('qty_available'), self.location_id)
-                    create_stock_quant(product, self.location_id, vals.get('qty_available'))
-                    # create_stock_quant(product, self.location_id, vals.get('qty_available'))
-                    success_records.append(vals.get('name'))
-                else:
-                    unsuccess_records.append(f'Product at {count} could not be found')
-                    
+                        product.update(vals)
+                        self.update_product_quantity(product, vals.get('qty_available'), self.location_id)
+                        create_stock_quant(product, self.location_id, vals.get('qty_available'))
+                        # create_stock_quant(product, self.location_id, vals.get('qty_available'))
+                        success_records.append(vals.get('name'))
+                    else:
+                        unsuccess_records.append(f'Product at {count} could not be found')
+                except Exception as e:
+                    raise ValidationError(f"Issue occurred at line {count}, {e}")  
+                 
             errors.append('Successful Update(s): ' +str(count))
             errors.append('Unsuccessful Update(s): '+str(unsuccess_records)+' Record(s)')
             if len(errors) > 1:
