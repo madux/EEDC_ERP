@@ -199,12 +199,7 @@ class HrContract(models.Model):
             
         list_of_available_staff = eval(self.list_of_available_staff)
         employees = self.env['hr.employee'].search([('active', 'in', [True, False]), ('employee_number', 'not in', list_of_available_staff)])
-        # if employees:
-        #     for rec in employees:
-        #         rec.update({
-        #             'is_external_staff': True, 
-        #         })
-            
+        
     def create_employee_contract(self):
         if not self.list_of_available_staff_with_details:
             raise ValidationError(
@@ -445,7 +440,59 @@ class HrContract(models.Model):
 
         return records
 
-    
+    def write(self, vals):
+        # Check whether employee active status is being changed
+        active_changed = "active" in vals
+
+        if not active_changed:
+            return super().write(vals)
+
+        new_active = vals.get("active")
+
+        # ---------------------------------------------------------
+        # ARCHIVING EMPLOYEE
+        # ---------------------------------------------------------
+        if new_active is False:
+
+            result = super().write(vals)
+
+            for employee in self:
+
+                contracts = self.env["hr.contract"].search([
+                    ("employee_id", "=", employee.id),
+                    ("active", "=", True),
+                ])
+
+                if contracts:
+                    contracts.write({
+                        "active": False,
+                        "employee_archived_contract": True,
+                    })
+
+            return result
+
+        # ---------------------------------------------------------
+        # UNARCHIVING EMPLOYEE
+        # ---------------------------------------------------------
+        result = super().write(vals)
+
+        if new_active is True:
+
+            for employee in self:
+
+                contracts = self.env["hr.contract"].search([
+                    ("employee_id", "=", employee.id),
+                    ("active", "=", False),
+                    ("employee_archived_contract", "=", True),
+                ])
+
+                if contracts:
+                    contracts.write({
+                        "active": True,
+                        "employee_archived_contract": False,
+                    })
+
+        return result
     
 class HRSalaryRule(models.Model):
     _inherit = "hr.salary.rule" 

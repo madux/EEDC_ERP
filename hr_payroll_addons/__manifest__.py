@@ -11,6 +11,7 @@
         'views/hr_payroll.xml',
         'views/hr_employee.xml',
         'views/hr_contract_wizard.xml',
+        'views/synchronize_employee_contract.xml'
         
     ],
 }

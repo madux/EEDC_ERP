@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <record id="view_employee_contract_check_wizard_form" model="ir.ui.view">
+
+        <field name="name">employee.contract.check.wizard.form</field>
+
+        <field name="model">employee.contract.check.wizard</field>
+
+        <field name="arch" type="xml">
+
+            <form string="Employee Contract Check">
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h2>
+                            Employee Contract Check
+                        </h2>
+                    </div>
+
+                    <group>
+
+                        <group>
+                            <field name="missing_contract_count"
+                                   nolabel="0"
+                                   widget="statinfo"
+                                   string="Active Employees Without Contract"/>
+                        </group>
+
+                        <group>
+                            <field name="deactivated_contract_count"
+                                   nolabel="0"
+                                   widget="statinfo"
+                                   string="Contracts Deactivated"/>
+                        </group>
+
+                    </group>
+
+                    <separator string="Check Result"/>
+
+                    <field name="message"
+                           nolabel="1"
+                           readonly="1"
+                           widget="text"/>
+
+                    <field name="missing_contract_ids">
+                        <tree>
+                            <field name="name"/>
+                            <field name="employee_id"/>
+                        </tree>
+                    </field>
+
+                </sheet>
+
+                <footer>
+                    <button name="deactivate_contract"
+                            string="Deactivate contracts"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button name="action_close"
+                            string="Close"
+                            type="object"
+                            class="btn-primary"/>
+
+                </footer>
+
+            </form>
+
+        </field>
+
+    </record>
+
+    <record id="action_check_employee_contracts" model="ir.actions.server">
+        <field name="name">Check Employee Contracts</field>
+        <field name="model_id" ref="hr.model_hr_employee"/>
+        <field name="binding_model_id" ref="hr.model_hr_employee"/>
+        <field name="binding_type">action</field>
+        <field name="state">code</field>
+
+        <field name="code">wizard = env['employee.contract.check.wizard'].create_check_result()
+action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Employee Contract Check',
+        'res_model': 'employee.contract.check.wizard',
+        'res_id': wizard.id,
+        'view_mode': 'form',
+        'target': 'new',
+    }</field>
+    </record>
+
+    <record id="action_check_hr_payslip_run_contracts" model="ir.actions.server">
+        <field name="name">Check Employee Contracts</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip_run"/>
+        <field name="binding_model_id" ref="hr_payroll.model_hr_payslip_run"/>
+        <field name="binding_type">action</field>
+        <field name="state">code</field>
+
+        <field name="code">wizard = env['employee.contract.check.wizard'].create_check_result()
+action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Employee Contract Check',
+        'res_model': 'employee.contract.check.wizard',
+        'res_id': wizard.id,
+        'view_mode': 'form',
+        'target': 'new',
+    }</field>
+    </record>
+
+    
+
+   
+    <!-- <record id="action_check_employee_contracts" model="ir.actions.server">
+        <field name="name">Check Employee Contracts</field>
+        <field name="model_id" ref="hr.model_hr_employee"/>
+        <field name="binding_model_id" ref="hr.model_hr_employee" />
+        <field name="state">code</field>
+        <field name="code">wizard = env['employee.contract.check.wizard'].create_check_result()
+            action = {
+                'type': 'ir.actions.act_window',
+                'name': 'Employee Contract Check',
+                'res_model': 'employee.contract.check.wizard',
+                'res_id': wizard.id,
+                'view_mode': 'form',
+                'target': 'new',
+            }
+        </field>
+    </record> -->
+</odoo>
+ 
