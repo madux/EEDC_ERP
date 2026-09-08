@@ -1,0 +1,24 @@
+<odoo noupdate="0">
+    <record id="superedge_auth_url" model="ir.config_parameter">
+        <field name="key">super_edge_api.auth_url</field>
+        <field name="value">http://110.238.75.216:8580/amber2/collectmgmt_controller/erp/token</field>
+    </record>
+    <record id="superedge_transaction_url" model="ir.config_parameter">
+        <field name="key">super_edge_api.transaction_url</field>
+        <field name="value">http://110.238.75.216:8580/amber2/collectmgmt_controller/erp/getTransactions</field>
+    </record>
+    <record id="super_edge_api_username" model="ir.config_parameter">
+        <field name="key">super_edge_api.username</field>
+        <field name="value">EEDC</field>
+    </record>
+    <record id="super_edge_api_password" model="ir.config_parameter">
+        <field name="key">super_edge_api.password</field>
+        <field name="value">A1234</field>
+    </record>
+
+    <record id="super_edge_api_grantType" model="ir.config_parameter">
+        <field name="key">super_edge_api.grantType</field>
+        <field name="value">password</field>
+    </record>  
+    
+</odoo>

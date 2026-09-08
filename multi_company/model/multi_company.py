@@ -1077,6 +1077,7 @@ class AccountMove(models.Model):
     _inherit = "account.move"
     _description = "ir.attachment model for multi-company"
 
+    active = fields.Boolean(default=True)
     company_id = fields.Many2one(
         'res.company',
         string="Company",

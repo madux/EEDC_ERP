@@ -5,7 +5,8 @@ from odoo.exceptions import ValidationError, UserError
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    
+    active = fields.Boolean(default=True)
+
     def button_set_draft(self):
         rec_ids = self.env.context.get('active_ids', []) 
         for rec in rec_ids:
@@ -86,6 +87,8 @@ class AccountMove(models.Model):
         
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
+    
+    active = fields.Boolean(default=True)
 
     @api.constrains('account_id', 'display_type')
     def _check_payable_receivable(self):

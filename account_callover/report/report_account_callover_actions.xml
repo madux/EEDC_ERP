@@ -1,0 +1,24 @@
+<!-- report/report_account_callover_actions.xml -->
+<odoo>
+    <record id="action_report_account_callover_pdf" model="ir.actions.report">
+        <field name="name">Callover Report (PDF)</field>
+        <field name="model">account.callover</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_callover.report_account_callover_document</field>
+        <field name="report_file">account_callover.report_account_callover_document</field>
+        <field name="print_report_name">'Callover Report - %s' % (object.fiscalyear or '')</field>
+        <field name="paperformat_id" ref="paperformat_callover_landscape"/>
+        <field name="binding_model_id" ref="model_account_callover"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- <record id="action_report_account_callover_xlsx" model="ir.actions.report">
+        <field name="name">Callover Report (Excel)</field>
+        <field name="model">account.callover</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">account_callover.report_account_callover_xlsx</field>
+        <field name="report_file">account_callover.report_account_callover_xlsx</field>
+        <field name="binding_model_id" ref="model_account_callover"/>
+        <field name="binding_type">report</field>
+    </record> -->
+</odoo>

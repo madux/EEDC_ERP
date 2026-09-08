@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo> 
+
+    <!-- ══════════════════════════════════════════════════
+         TREE / LIST VIEW
+    ══════════════════════════════════════════════════ -->
+    <record id="view_superedge_revenue_api_tree" model="ir.ui.view">
+        <field name="name">superedge.revenue.api.tree</field>
+        <field name="model">superedge.revenue.api</field>
+        <field name="arch" type="xml">
+            <tree
+                string="Revenue Api"
+                decoration-warning="state == 'draft'"
+                decoration-info="state == 'in_progress'"
+                decoration-success="state == 'completed'"
+                decoration-muted="state == 'approved'"
+                multi_edit="1"
+                class="o_qms_list">
+
+                <field name="auth_url" optional="show"/>
+                <field name="transaction_url" string="Date" optional="show"/>
+                <field name="serviceCode" optional="show"/>
+                <field name="data_transactionDate" optional="show"/>
+                <field name="data_regionCode" optional="show"/>
+                <field name="state" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════
+         SEARCH VIEW
+    ══════════════════════════════════════════════════ -->
+    <record id="view_superedge_revenue_api_search" model="ir.ui.view">
+        <field name="name">superedge.revenue.api.search</field>
+        <field name="model">superedge.revenue.api</field>
+        <field name="arch" type="xml">
+            <search string="Search">
+                <field name="auth_url" optional="show"/>
+                <field name="transaction_url" string="Date" optional="show"/>
+                <field name="serviceCode" optional="show"/>
+                <field name="data_transactionDate" optional="show"/>
+                <field name="data_regionCode" optional="show"/>
+                <field name="state" optional="show"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════
+         FORM VIEW  — Modern Card-based UI
+    ══════════════════════════════════════════════════ -->
+    <record id="view_superedge_revenue_api_form" model="ir.ui.view">
+        <field name="name">superedge.revenue.api.form</field>
+        <field name="model">superedge.revenue.api</field>
+        <field name="arch" type="xml">
+            <form string="Lab Test Request" class="o_qms_form">
+                <!-- ══ STATUS BAR ══ -->
+                <header>
+                    <button name="action_fetch_transactions" string="✓ Fetch Revenue"
+                            type="object" class="btn btn-primary"/>
+                    <button name="button_generate_revenue" string="✓ Generate Revenue Entry"
+                            type="object" class="btn btn-primary" confirm="Are you sure you want to generate revenue entries?"/>
+
+                    <button name="archive_unwanted_revenue" string="Archive Generated Entry" help="This will archive all revenue generated, should incase there was an issue"
+                            type="object" class="btn" confirm="Are you sure you want to archive revenue entries?"/>
+
+                    <button name="rerun_action" string="↩ Reset"
+                            type="object" class="btn btn-warning" />
+					<field name="state" widget="statusbar" force_save="1" readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="qms-header-hero">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="qms-hero-ref">
+                                    <field name="grantType" readonly="0" class="d-inline"/>
+                                </div>
+                                <div class="qms-hero-sub">API </div>
+                                <div class="qms-badge-row">
+                                    <field name="state" widget="badge"
+                                           decoration-warning="state == 'draft'"
+                                           decoration-info="state == 'in_progress'"
+                                           decoration-success="state == 'completed'"/>
+                                </div>
+                            </div>
+                            <div class="text-end" style="color:rgba(255,255,255,.7); font-size:12px;">
+                                <div> </div>
+                                <div style="margin-top:4px;"></div>
+                                                   
+                                <div style="margin-top:4px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ KPI STRIP ══ -->
+                     
+
+                    <!-- ══ CARD: IDENTIFICATION ══ -->
+                    <div class="qms-card">
+                        <div class="qms-card-header">
+                            <div class="qms-card-icon">
+                                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <span class="qms-card-title">Request Parameters</span>
+                        </div>
+                        <div class="qms-card-body">
+                            <group>
+                                <group col="4">
+                                    <field name="auth_url" required="1" />
+                                    <field name="transaction_url" required="1" />
+                                    <field name="username" required="1" />
+                                    <field name="password" required="1" />
+                                    <field name="serviceCode" required="1" />
+                                    <field name="transaction_msgID" required="1" />
+
+                                </group>
+                                <div class="qms-divider"/>
+                                <group col="4">
+                                    <field name="transaction_appID" required="1" />
+                                    <field name="transactionSignature" required="1" />
+                                    <field name="data_transactionDate" required="1" />
+                                    <field name="data_regionCode" required="1" />
+                                    <field name="data_districtCode" required="1" />
+                                    <field name="summaryFlag" required="1" />
+                                </group>
+                            </group>
+                        </div>
+                    </div>
+
+                    <!-- ══ CARD: DATES & TIMELINE ══ -->
+                    <div class="qms-card">
+                        <div class="qms-card-header">
+                            <div class="qms-card-icon" style="background:#17A2B8;">
+                                <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <span class="qms-card-title">Dates &amp; Timeline &amp; Location</span>
+                        </div>
+                        <div class="qms-card-body">
+                            <group col="4">
+                                <field name="create_date" readonly="1"/>
+                            </group>
+                            <group col="3">
+                                <field name="create_uid" readonly="1" />
+                            </group>
+                        </div>
+                    </div>
+
+                    <!-- ══ NOTEBOOKS / TABS ══ -->
+                    <notebook>
+
+                        <!-- ─ Tab 1: Lab Results ─ -->
+                        <page string="🧪 RESULT" name="results">
+                            <div class="qms-card" style="margin-bottom:0;">
+                                <div class="qms-card-header">
+                                    <div class="qms-card-icon" style="background:#DC3545;">
+                                        <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    </div>
+                                    <span class="qms-card-title">Results</span>
+                                </div>
+                                <div class="qms-card-body" style="padding:0;">
+                                    <field name="superedge_api_data_ids"
+                                           widget="one2many_list"
+                                           mode="list">
+                                        <tree editable="bottom">
+                                            <field name="superedge_revenue_api_id" optional="hide"/>
+                                            <field name="move_id" optional="show"/>
+                                            <field name="branch_id" optional="show"/>
+                                            <field name="regionCode" optional="show"/>
+                                            <field name="postedStatus" optional="show" force_save="1" readonly="0"/>
+                                            <field name="chargeType" optional="show" force_save="1" readonly="0"/>
+                                            <field name="credit" required="1" optional="show"/>
+                                            <field name="debit" required="1" optional="show"/>
+                                            <field name="transactionDate"/>
+                                            <field name="transactionTime" optional="show"/>
+                                            <field name="chargeType" optional="show"/>
+                                            <field name="currency"/>
+                                            <field name="msgID" optional="hide"/>
+                                        </tree>
+                                    </field>
+                                </div>
+                            </div>
+                            
+                        </page>
+
+                        <page string="📝 RESPONSE DATA" name="response">
+                            <field name="transaction_result" widget="text"/>
+                        </page> 
+                    </notebook>
+                </sheet>
+                <!-- ── Chatter ── -->
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════
+         ACTION
+    ══════════════════════════════════════════════════ -->
+    <record id="action_superedge_revenue_api" model="ir.actions.act_window">
+        <field name="name">REVENUE API</field>
+        <field name="res_model">superedge.revenue.api</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_superedge_revenue_api_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No lab test requests found
+            </p>
+            <p>
+                Create new api request.
+            </p>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════
+         MENU
+    ══════════════════════════════════════════════════ -->
+    <!-- Top-level QMS menu -->
+    <menuitem
+        id="menu_revenue_root"
+        name="SuperEdge Api"
+        sequence="90"
+        action="action_superedge_revenue_api"
+        groups="base.group_system"
+        />
+
+    <menuitem
+        id="account_menu_revenue_root"
+        name="SuperEdge Api"
+        sequence="85"
+        parent="account_accountant.menu_accounting"
+        action="action_superedge_revenue_api"
+        />
+
+        
+        <!-- web_icon="qms_labtest,static/description/qms_icon.png" -->
+
+</odoo>

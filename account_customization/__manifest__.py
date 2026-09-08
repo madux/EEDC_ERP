@@ -10,6 +10,7 @@
         # 'security/ir.model.access.csv',
         'views/account_payment.xml',
         'views/account_move.xml',
+        'views/superedge_config.xml',
     ],
     # 'assets': {'web.assets_backend': [
     #     '/eha_website_sale/static/js/membership_subscription.js',

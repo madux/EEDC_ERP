@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <odoo>
+        <record id="ir_action_server_create_user_employees" model="ir.actions.server">
+			<field name="name">Create user employees</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="binding_model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="groups_id" eval="[(6, 0, [
+			ref('base.group_user'), 
+			])]"/>
+            <field name="code">action=model.create_user_employees()</field>
+        </record> 
+</odoo>

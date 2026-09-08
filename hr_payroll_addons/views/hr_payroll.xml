@@ -204,8 +204,13 @@
 				<button string="Fetch Missing Employee without Contract" name="get_staff_not_existing_in_payroll" type="object"/>
 				<button name="import_records_action" string="Import Wages" type="object"  class="oe_highlight"/>
 				<button name="action_create_missing_payslips"
-						string="Create Missing Payslips"
+						string="Find &amp; create employee Missing on Payslips"
 						type="object"
+						help="For the employee numbers listed on this payroll, find active
+						employees missing a payslip for this run/period and create
+						payslips for them from their active contract. Employees without
+						an active contract raise a ValidationError instead of being
+						silently skipped."
 						class="btn-secondary btn-danger"/>
 			</xpath>
 			<xpath expr="//field[@name='company_id']" position="after">

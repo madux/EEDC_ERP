@@ -5,6 +5,11 @@ from odoo.exceptions import ValidationError, UserError
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
+    """If Missing required account on accountable, --> solution: 
+    1. kindly go and set transfer_account_id (bring out the field in company), set it to liquidity account 
+    2. Ensure there is destination_account_id on account.payment 
+    """
+
     is_saved = fields.Boolean(string='Is Saved')
     allow_bypass = fields.Boolean(string='Allow Bypass', 
                                   default=True,

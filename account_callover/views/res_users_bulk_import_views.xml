@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_res_users_bulk_import_wizard_form" model="ir.ui.view">
+        <field name="name">res.users.bulk.import.wizard.form</field>
+        <field name="model">res.users.bulk.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Bulk User Upload">
+                <div class="alert alert-danger">
+                  <a href="https://docs.google.com/spreadsheets/d/1hFwjHgiOpuhJ0zviWboef8UwvKwSXm-DkjoJzMvD4yI/edit?gid=0#gid=0"
+                    target="_blank">
+                      📖 Click to see import Template. Note: First run the Create Employee User from user action dropdown before importation
+                  </a>
+              </div>
+                <group>
+                    <field name="filename" invisible="1"/>
+                    <field name="file" filename="filename" required="1"/>
+                </group>
+                <group string="Import Log" invisible="not result_log">
+                    <field name="result_log" nolabel="1" widget="text" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_import_users" type="object"
+                            string="Import" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_res_users_bulk_import_wizard" model="ir.actions.act_window">
+        <field name="name">Bulk User Upload</field>
+        <field name="res_model">res.users.bulk.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_res_users_bulk_import"
+              name="Bulk User Upload"
+              parent="base.menu_users"
+              action="action_res_users_bulk_import_wizard"
+              sequence="100"/>
+
+</odoo>

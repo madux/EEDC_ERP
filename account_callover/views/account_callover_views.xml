@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="view_account_callover_tree" model="ir.ui.view">
+        <field name="name">account.callover.tree</field>
+        <field name="model">account.callover</field>
+        <field name="arch" type="xml">
+            <tree string="Account Callover" create="false" edit="false" delete="false"
+                  default_order="account_id" sample="1" js_class="memo_dashboard_listCallover">
+                  <!-- default_order="account_id" sample="1" js_class="account_callover_list"> -->
+                
+                <field name="branch_id" optional="show"/>
+                <field name="account_id"/>
+                <field name="fiscalyear" optional="hide"/>
+                <field name="jan" sum="Jan"/>
+                <field name="feb" sum="Feb"/>
+                <field name="mar" sum="Mar"/>
+                <field name="apr" sum="Apr"/>
+                <field name="may" sum="May"/>
+                <field name="jun" sum="Jun"/>
+                <field name="july" sum="Jul"/>
+                <field name="aug" sum="Aug"/>
+                <field name="sep" sum="Sep"/>
+                <field name="oct" sum="Oct"/>
+                <field name="nov" sum="Nov"/>
+                <field name="dec" sum="Dec"/>
+                <field name="total" sum="Total" class="fw-bold"/>
+                <field name="currency_id" optional="hide"/>
+                <field name="company_id" optional="hide"/>
+                <field name="record_id" optional="hide"/>
+                <button name="view_move_action" string="view" class="oe_highlight" type="object"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_account_callover_search" model="ir.ui.view">
+        <field name="name">account.callover.search</field>
+        <field name="model">account.callover</field>
+        <field name="arch" type="xml">
+            <search string="Account Callover Search">
+                <field name="account_id"/>
+                <field name="branch_id"/>
+                <field name="fiscalyear"/>
+                <field name="company_id"/>
+
+                <filter string="This Year"
+                    name="filter_this_year"
+                    domain="[('fiscalyear', '=', context_today().strftime('%%Y'))]"/>
+                <filter string="Last Year" name="filter_last_year"
+                        domain="[('fiscalyear', '=', context_today().year - 1)]"/>
+                <separator/>
+                <filter string="Branch" name="filter_branch" domain="[]" context="{}"
+                        invisible="1"/>
+
+                <group expand="1" string="Group By">
+                    <filter string="Branch" name="groupby_branch" context="{'group_by': 'branch_id'}"/>
+                    <filter string="Account" name="groupby_account" context="{'group_by': 'account_id'}"/>
+                    <filter string="Fiscal Year" name="groupby_fiscalyear" context="{'group_by': 'fiscalyear'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_account_callover" model="ir.actions.act_window">
+        <field name="name">Account Callover</field>
+        <field name="res_model">account.callover</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="view_account_callover_search"/>
+        <field name="context">{
+            'search_default_groupby_branch': 1,
+            'search_default_groupby_account': 1,
+            'search_default_filter_this_year': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No callover data found.
+            </p>
+            <p>
+                This report is computed dynamically (live SQL) from posted
+                Journal Items that have a Memo set, pivoted by month.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_account_callover_root"
+              name="Callover"
+              parent="account.menu_finance_reports"
+              sequence="50"/>
+
+    <menuitem id="menu_account_callover"
+              name="Account Callover"
+              parent="menu_account_callover_root"
+              action="action_account_callover"
+              sequence="10"/>
+
+</odoo>

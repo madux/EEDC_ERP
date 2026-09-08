@@ -1,43 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1"> 
+    <data noupdate="0"> 
 
         <record model="multi.branch" id="branch001">
             <field name="name">HOLDCO CHQ</field>
             <field name="code">BR0001</field>
+            <field name="regionCode">01</field>
+            <field name="districtCode">0101</field>
             <field name="company_id" ref="base.main_company"/>
         </record>
         <record model="multi.branch" id="branch0002">
             <field name="name">MAINPOWER CHQ</field>
             <field name="code">BR0002</field>
+            <field name="districtCode">0107</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
 
         <record model="multi.branch" id="branch003">
             <field name="name">ABAKILIKI DISTRICT</field>
             <field name="code">BR0003</field>
+            <field name="districtCode">010303</field>
             <field name="company_id" ref="multi_company.company_east_land"/>
         </record>
         <record model="multi.branch" id="branch0004">
             <field name="name">EKWULUOBIA DISTRICT</field>
             <field name="code">BR0004</field>
+            <field name="districtCode">010103</field>
             <field name="company_id" ref="multi_company.company_firstpower"/>
 
         </record>
         <record model="multi.branch" id="branch005">
             <field name="name">OGUI DISTRICT</field>
             <field name="code">BR0005</field>
+            <field name="districtCode">010301</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
         <record model="multi.branch" id="branch0006">
             <field name="name">ABAKPA DISTRICT</field>
             <field name="code">BR0006</field>
+            <field name="districtCode">010304</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
 
         </record>
         <record model="multi.branch" id="branch007">
             <field name="name">AWKUNANAW DISTRICT</field>
             <field name="code">BR0007</field>
+            <field name="districtCode">010305</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
 
         </record>
@@ -45,17 +53,20 @@
         <record model="multi.branch" id="branch0008">
             <field name="name">NSUKKA DISTRICT</field>
             <field name="code">BR0008</field>
+            <field name="districtCode">010302</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
 
         </record>
         <record model="multi.branch" id="branch009">
             <field name="name">UMUAHIA DISTRICT</field>
             <field name="code">BR0009</field>
+            <field name="districtCode">010501</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
         </record>
         <record model="multi.branch" id="branch0010">
             <field name="name">ARIARIA DISTRICT</field>
             <field name="code">BR0010</field>
+            <field name="districtCode">010502</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
         </record>
 
@@ -63,102 +74,123 @@
         <record model="multi.branch" id="branch0011">
             <field name="name">ABA / ISIUKWUATO DISTRICT</field>
             <field name="code">BR0011</field>
+            <field name="districtCode">010503</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
         </record>
         <record model="multi.branch" id="branch0012">
             <field name="name">ORLU DISTRICT</field>
             <field name="code">BR0012</field>
+            <field name="districtCode">010402</field>
             <field name="company_id" ref="multi_company.company_transpower"/>
         </record>
         <record model="multi.branch" id="branch0013">
             <field name="name">NEW OWERRI DISTRICT</field>
             <field name="code">BR0013</field>
+            <field name="districtCode">010403</field>
             <field name="company_id" ref="multi_company.company_transpower"/>
         </record>
         <record model="multi.branch" id="branch0014">
             <field name="name">MBAISE DISTRICT</field>
             <field name="code">BR0014</field>
+            <field name="districtCode">010404XX</field>
             <field name="company_id" ref="multi_company.company_transpower"/>
         </record>
         <record model="multi.branch" id="branch0015">
             <field name="name">OWERRI DISTRICT</field>
             <field name="code">BR0015</field>
+            <field name="districtCode">010404</field>
             <field name="company_id" ref="multi_company.company_transpower"/> 
         </record>
 
         <record model="multi.branch" id="branch0016">
             <field name="name">OGBARU DISTRICT</field>
             <field name="code">BR0016</field>
+            <field name="districtCode">010203</field>
             <field name="company_id" ref="multi_company.company_firstpower"/> 
         </record>
         <record model="multi.branch" id="branch0017">
             <field name="name">ONITSHA DISTRICT</field>
             <field name="code">BR0017</field>
+            <field name="districtCode">010202</field>
             <field name="company_id" ref="multi_company.company_firstpower"/> 
         </record>
+
         <record model="multi.branch" id="branch0018">
             <field name="name">NNEWI DISTRICT</field>
             <field name="code">BR0018</field>
+            <field name="districtCode">010101</field>
+        
             <field name="company_id" ref="multi_company.company_firstpower"/> 
         </record>
 
         <record model="multi.branch" id="branch0019">
             <field name="name">AWKA DISTRICT</field>
             <field name="code">BR0019</field>
+            <field name="districtCode">010102</field>
+
             <field name="company_id" ref="multi_company.company_firstpower"/> 
         </record>
        
         <record model="multi.branch" id="branch0021">
             <field name="name">OGIDI DISTRICT</field>
             <field name="code">BR0021</field>
+            <field name="districtCode">010201</field>
+
             <field name="company_id" ref="multi_company.company_firstpower"/> 
         </record>
 
         <record model="multi.branch" id="branch022">
             <field name="name">9TH / NINTH DISTRICT</field>
             <field name="code">BR0022</field>
+            <field name="districtCode">010202x</field>
             <field name="company_id" ref="multi_company.company_main_power"/>
         </record>
         <record model="multi.branch" id="branch023">
             <field name="name">ABAGANA</field>
             <field name="code">BR0023</field>
+            <field name="districtCode">010202xx</field>
+            
             <field name="company_id" ref="multi_company.company_firstpower"/>
         </record>
         <record model="multi.branch" id="branch024">
             <field name="name">AFIKPO</field>
             <field name="code">BR0024</field>
+            <field name="districtCode">010202xxx</field>
             <field name="company_id" ref="multi_company.company_east_land"/>
         </record>
 
         <record model="multi.branch" id="branch025">
             <field name="name">OBOSI</field>
             <field name="code">BR0025</field>
+            <field name="districtCode">010607</field>
             <field name="company_id" ref="multi_company.company_firstpower"/>
         </record>
 
         <record model="multi.branch" id="branch026">
             <field name="name">TRANSPOWER CHQ</field>
             <field name="code">BR0026</field>
+            <field name="districtCode">0109</field>
             <field name="company_id" ref="multi_company.company_transpower"/>
         </record>
 
         <record model="multi.branch" id="branch027">
-            <field name="name">FIRSPOWER CHQ</field>
+            <field name="name">FIRSTPOWER CHQ</field>
             <field name="code">BR0027</field>
+            <field name="districtCode">0106</field>
             <field name="company_id" ref="multi_company.company_firstpower"/>
         </record>
 
         <record model="multi.branch" id="branch028">
             <field name="name">NEWERA CHQ</field>
             <field name="code">BR0028</field>
+            <field name="districtCode">0110</field>
             <field name="company_id" ref="multi_company.company_new_era"/>
         </record>
         <record model="multi.branch" id="branch029">
             <field name="name">EASTLAND CHQ</field>
             <field name="code">BR0029</field>
+            <field name="districtCode">0108</field>
             <field name="company_id" ref="multi_company.company_east_land"/>
         </record>
-
-        
     </data>
 </odoo>
