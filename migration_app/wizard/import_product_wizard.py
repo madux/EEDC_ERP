@@ -51,27 +51,27 @@ class ImportProductWizard(models.TransientModel):
         if not name:
             return self.env.ref('uom.product_uom_unit').id
 
-        prod_uom = self.env['uom.uom']
-        name = name.strip().upper()
+        Uom = self.env['uom.uom']
+
+        name = name.strip()
 
         category = self.env.ref('uom.product_uom_categ_unit')
 
-        # Search within the same category
-        p_uom = prod_uom.search([
-            ('name', '=', name),
+        uom = Uom.search([
+            ('name', '=ilike', name),
             ('category_id', '=', category.id),
         ], limit=1)
 
-        if not p_uom:
-            p_uom = prod_uom.create({
-                'name': name,
+        if not uom:
+            uom = Uom.create({
+                'name': name.upper(),
                 'category_id': category.id,
                 'uom_type': 'smaller',
                 'factor_inv': 1.0,
                 'rounding': 0.01,
             })
 
-        return p_uom.id
+        return uom.id
         
     def _clean_numeric_value(self, value):
         """Clean and convert various formats to float"""
