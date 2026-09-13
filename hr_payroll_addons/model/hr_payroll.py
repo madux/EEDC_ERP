@@ -37,6 +37,8 @@ class HRPayslipRun(models.Model):
     data_file = fields.Binary(string="Upload File (.xls)")
     filename = fields.Char("Filename")
     index = fields.Integer("Sheet Index", default=0)
+    skip_validation = fields.Boolean(string="Skip validation", default=False, help='will be used to hold wiped employees')
+    remove_employee = fields.Boolean(string="Archive Employee not existing", default=False, help='this will archive employees not in the system')
 
     def reset_payslip_x_dev_to_zero(self):
         """
@@ -321,7 +323,7 @@ class HRPayslipRun(models.Model):
 
         numbers = self._parse_employee_numbers()
         if not numbers:
-            raise ValidationError(_("No employee numbers were provided."))
+            raise ValidationError(_("No employee numbers were provided- Enter staff list on the Staff with missing payslip tab"))
 
         # ASSUMPTION: hr.employee has a field named 'employee_number'.
         # If yours uses 'registration_number', 'barcode', etc., change
@@ -329,15 +331,18 @@ class HRPayslipRun(models.Model):
         employees = self.env['hr.employee'].search([
             ('employee_number', 'in', numbers),
             ('active', '=', True),
+            # ('active', '=', False),
         ])
 
         found_numbers = employees.mapped('employee_number')
         missing_numbers = [n for n in numbers if n not in found_numbers]
         if missing_numbers:
-            raise ValidationError(
-                _("The following employee numbers were not found as active "
-                  "employees: %s") % ', '.join(missing_numbers)
-            )
+            '''Checks provided numbers are not in current employee recordds'''
+            if not self.skip_validation:
+                raise ValidationError(
+                    _("The following employee numbers were not found as active employee"
+                    "Kindly review: %s") % ', '.join(missing_numbers)
+                )
 
         # --- Check every listed employee has an active/running contract ---
         # ASSUMPTION: 'running' contracts use state == 'open'. Some setups
@@ -346,9 +351,16 @@ class HRPayslipRun(models.Model):
         employees_without_contract = self.env['hr.employee']
 
         for employee in employees:
-            contract = self.env['hr.contract'].search([
+            # activate the employee and contract ... 
+            # if employee.active == False:
+            # employee.active = True
+            # employee.contract_id.active = True
+
+            contract = employee.contract_id if employee.contract_id.active == True else self.env['hr.contract'].search([
                 ('employee_id', '=', employee.id),
+                # '|',('active', '=', True),
                 ('active', '=', True),
+                ('state', 'in', ['draft', 'open']),
                 # ('state', '=', 'open'),
             ], limit=1)
             if not contract:
@@ -359,10 +371,39 @@ class HRPayslipRun(models.Model):
                 f"{emp.name} ({emp.employee_number})"
                 for emp in employees_without_contract
             )
-            raise ValidationError(
-                _("The following employees do not have an active contract "
-                  "and cannot be included in this payroll: %s") % names
-            )
+            if self.skip_validation:
+                raise ValidationError(
+                    _("The following employees do not have an active contract "
+                    "and cannot be included in this payroll: %s") % names
+                )
+            # if self.remove_employee:
+            #     emp.remove_tag = True
+            #     emp_contracts = self.env['hr.contract'].search([
+            #                             ('employee_id', '=', emp.id),
+            #                         ])
+            #     for cot in emp_contracts:
+            #         cot.active = False
+            #         cot.remove_tag = True
+
+
+        # take out employees not in employees
+        if self.remove_employee:
+            '''If employees not existing in provided numbers, 
+            decide to deactivate the employee and contract'''
+            employee_not_in_employees = self.env['hr.employee'].search([
+                    ('employee_number', 'not in', numbers),
+                    '|',('active', '=', True),
+                    ('active', '=', False),
+                ])
+            if employee_not_in_employees:
+                for emp in employee_not_in_employees:
+                    emp_contracts = self.env['hr.contract'].search([
+                        ('employee_id', '=', emp.id),
+                    ])
+                    emp.remove_tag = True
+                    for cot in emp_contracts:
+                        cot.active = False
+                        cot.remove_tag = True
 
         # --- Determine which employees already have a payslip in this run ---
         existing_employee_ids = self.slip_ids.mapped('employee_id').ids
@@ -385,11 +426,12 @@ class HRPayslipRun(models.Model):
         created_payslips = self.env['hr.payslip']
 
         for employee in missing_employees:
-            contract = self.env['hr.contract'].search([
+            contract = employee.contract_id or self.env['hr.contract'].search([
                 ('employee_id', '=', employee.id),
-                ('active', '=', True),
+                '|',('active', '=', True),
+                ('active', '=', False),
             ], limit=1)
-
+            contract.active = True 
             payslip_vals = {
                 'employee_id': employee.id,
                 'contract_id': contract.id,

@@ -85,7 +85,11 @@ class HRContractWizard(models.Model):
                 '''
             )
 
-            
+class HrEmployee(models.Model):
+    _inherit = "hr.employee" 
+
+    remove_tag = fields.Boolean(string="Removed tag", help='will be used to hold wiped employees')
+        
 class HrContract(models.Model):
     _inherit = "hr.contract" 
     
@@ -106,6 +110,7 @@ class HrContract(models.Model):
     nhf_loan = fields.Float(string="NHF LOAN")
     overpay = fields.Float(string="Overpay")
     active = fields.Boolean(string="Active")
+    remove_tag = fields.Boolean(string="Removed tag", help='will be used to hold wiped employees')
     converted_entry = fields.Boolean(string="Converted Entry")
     salary_advance = fields.Float(string="Salary Advance")
     list_of_available_staff = fields.Text(string="Available staff")
@@ -466,7 +471,7 @@ class HrContract(models.Model):
                 if contracts:
                     contracts.write({
                         "active": False,
-                        "employee_archived_contract": True,
+                        "remove_tag": True,
                     })
 
             return result
@@ -483,13 +488,13 @@ class HrContract(models.Model):
                 contracts = self.env["hr.contract"].search([
                     ("employee_id", "=", employee.id),
                     ("active", "=", False),
-                    ("employee_archived_contract", "=", True),
+                    # ("remove_tag", "=", True),
                 ])
 
                 if contracts:
                     contracts.write({
                         "active": True,
-                        "employee_archived_contract": False,
+                        # "remove_tag": False,
                     })
 
         return result
