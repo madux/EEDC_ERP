@@ -59,6 +59,11 @@
                             type="object"
                             class="btn-primary"/>
 
+                    <button name="deactivate_employee_and_contract"
+                            string="Deactivate Employees &amp; contracts"
+                            type="object"
+                            class="btn-primary"/>
+
                     <button name="action_close"
                             string="Close"
                             type="object"
