@@ -19,7 +19,13 @@ class Memo_Model(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "name"
     _order = "id desc"
-     
+
+    def name_get(self):
+        result = []
+        for rec in self:
+            name = f"{rec.code}-{rec.name}"
+            result.append((rec.id, name))
+        return result
     
     @api.model
     def create(self, vals):
@@ -198,9 +204,28 @@ class Memo_Model(models.Model):
     employee_id = fields.Many2one('hr.employee', string = 'Employee', default =_default_employee) 
     direct_employee_id = fields.Many2one('hr.employee', string = 'Employee') 
     set_staff = fields.Many2one('hr.employee', string = 'Assigned to')
+
+    def update_set_staff(self):
+        for record in self:
+            if not record.stage_id:
+                continue
+
+            # First: use the first configured approver
+            if record.stage_id.approver_ids:
+                record.set_staff = record.stage_id.approver_ids[0].id
+
+            # If this is the second stage and no approver is configured,
+            # use the employee's manager
+            elif record.memo_setting_id and record.stage_id in record.memo_setting_id.stage_ids:
+                stage_index = list(record.memo_setting_id.stage_ids).index(record.stage_id)
+
+                # Second stage = index 1
+                if stage_index == 1 and record.employee_id and record.employee_id.parent_id:
+                    record.set_staff = record.employee_id.parent_id.id
+
     demo_staff = fields.Integer(string='User',
                                 default=lambda self: self.env['res.users'].sudo().search([
-                                    ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff",)
+                                    ('id', '=', self.env.uid)], limit=1).id, compute="get_user_staff")
         
     user_ids = fields.Many2one('res.users', string = 'Beneficiary', default =_default_user)
     dept_ids = fields.Many2one('hr.department', string ='Department', readonly = True, store =True, compute="employee_department",)
@@ -2838,7 +2863,8 @@ class Memo_Model(models.Model):
             raise ValidationError('You are not allowed to validate this record')
         # FIXME this will override request line without products
         if any(not rec.product_id for rec in self.product_ids):
-            pass 
+            raise ValidationError('System could not find any items in request lines')
+            # pass 
         else:
             self.generate_external_internal_stock_material_request()
         self.update_memo_type_approver()
@@ -2854,6 +2880,22 @@ class Memo_Model(models.Model):
                 'view_type': 'form',
                 'res_model': 'stock.picking',
                 'res_id': self.stock_picking_id.id,
+                'type': 'ir.actions.act_window',
+                'domain': [],
+                'target': 'current'
+                }
+            return ret
+
+    def receive_interdistrict_transfer(self):
+        view_id = self.env.ref('stock.view_picking_form').id
+        if self.external_stock_picking_id:
+            ret = {
+                'name': "Receive Stock",
+                'view_mode': 'form',
+                'view_id': view_id,
+                'view_type': 'form',
+                'res_model': 'stock.picking',
+                'res_id': self.external_stock_picking_id.id,
                 'type': 'ir.actions.act_window',
                 'domain': [],
                 'target': 'current'
@@ -2945,6 +2987,7 @@ class Memo_Model(models.Model):
             if self.external_stock_picking_id and self.external_stock_picking_id.state in ['draft', 'cancel']:
                 self.sudo().external_stock_picking_id.unlink()
                 existing_picking = False
+                self.external_stock_picking_id = False
                 
             existing_picking = self.external_stock_picking_id
             if not existing_picking:
@@ -3651,9 +3694,9 @@ class Memo_Model(models.Model):
                         'quantity_available': rec.quantity_available,
                         'description': rec.description,
                         'request_line_id': rec.id,
-                        'used_qty': rec.used_qty,
+                        'used_qty': rec.quantity_available or rec.used_qty,
                         'amount_total': rec.amount_total,
-                        'used_amount': rec.sub_total_amount,
+                        'used_amount': rec.amount_total,
                         'note': rec.note,
                         'code': rec.code,
                         'to_retire': True if not rec.retired else False,
@@ -3690,23 +3733,91 @@ class Memo_Model(models.Model):
             self.cash_advance_reference.is_cash_advance_retired = True
             for ch in self.cash_advance_reference.mapped('product_ids'):
                 ch.retired = True
+
+    # to_return_item = fields.Boolean(help="Used to determine if to show return used items button")
+
+    def check_unsused_items(self):
+        return_lines = []
+        for line in self.product_ids:
+            quantity_available = line.quantity_available or 0.0
+            used_qty = line.used_qty or 0.0
+            # User has used less than what was issued
+            if used_qty < quantity_available:
+                return_qty = quantity_available - used_qty
+                return_lines.append(
+                    (0, 0, {
+                        'product_id': line.product_id.id,
+                        'quantity_available': quantity_available,
+                        'used_qty': used_qty,
+                        'return_qty': return_qty,
+                    })
+                )
+        if len(return_lines) > 1:
+            self.to_return_item = True 
+        return return_lines
+
+        # ---------------------------------------------------------
+        # NOTHING TO RETURN
+        # ---------------------------------------------------------
+        
+    def action_return_unused_items(self):
+        self.ensure_one()
+        return_lines = self.check_unsused_items()
+        # ---------------------------------------------------------
+        # NOTHING TO RETURN
+        # ---------------------------------------------------------
+        if not return_lines:
+            self.to_return_item = False 
+            raise UserError(
+                _('There are no unused items available for return.')
+            )
+        # ---------------------------------------------------------
+        # CREATE WIZARD
+        # ---------------------------------------------------------
+        wizard = self.env['memo.return.wizard'].create({
+            'memo_id': self.id,
+            'line_ids': return_lines,
+        })
+        # ---------------------------------------------------------
+        # OPEN MODAL
+        # ---------------------------------------------------------
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Return Unused Items'),
+            'res_model': 'memo.return.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
     
     def generate_soe_entries(self):
-        is_config_approver = self.determine_if_user_is_config_approver()
+        '''check for unused items and decides to return to store.
+        if validated, it calls the function generate_soe_entry_function()'''
+        return_lines = self.check_unsused_items()
+        if return_lines:
+            return self.action_return_unused_items()
+        else:
+            memoObj = self.env['memo.model'].browse([self.id])
+            return self.generate_soe_entry_function(memoObj)
+        
+    def generate_soe_entry_function(self, memoObj):
+        SELF = memoObj
+        is_config_approver = SELF.determine_if_user_is_config_approver()
         if is_config_approver:
             """Check if the user is enlisted as the approver for memo type
             if approver is an account officer, system generates move and open the exact record"""
             
-            if not self.sudo().cash_advance_reference:
+            if not SELF.sudo().cash_advance_reference:
                 raise ValidationError("No cash advance reference found for retirement")
             
-            original_advance = self.sudo().cash_advance_reference
+            original_advance = SELF.sudo().cash_advance_reference
             payment_company = original_advance.processing_company_id or \
                             original_advance.company_id
             _logger.info(
                 f"  SOE Processing:\n"
-                f"  SOE Request: {self.code}\n"
-                f"  SOE Company: {self.company_id.name}\n"
+                f"  SOE Request: {SELF.code}\n"
+                f"  SOE Company: {SELF.company_id.name}\n"
                 f"  Original Advance: {original_advance.code}\n"
                 f"  Original Company: {original_advance.company_id.name}\n"
                 f"  Payment Company: {payment_company.name}\n"
@@ -3720,28 +3831,28 @@ class Memo_Model(models.Model):
                 ('type', 'in', ['bank', 'general']),
                 # ('type', '=', 'general'),
             #  ('code', '=', 'INV')
-             ], limit=1)
+                ], limit=1)
             if not journal_id:
                 raise UserError(f"No Bank / Miscellaneous journal configured for company: {payment_company.name} Contact admin to setup before proceeding")
             account_move = self.env['account.move'].sudo()
-            inv = account_move.search([('memo_id', '=', self.id)], limit=1)
+            inv = account_move.search([('memo_id', '=', SELF.id)], limit=1)
             if inv and inv.state == 'cancel':
                 inv.unlink()
                 inv = False
             cashadvance_account_to_credit =original_advance.move_id.line_ids[0].account_id.id if original_advance.move_id.line_ids and original_advance.move_id.line_ids[0].account_id else False
             if not inv:
-                partner_id = self.sudo().vendor_id or self.sudo().client_id or self.sudo().employee_id.user_id.partner_id
+                partner_id = SELF.sudo().vendor_id or SELF.sudo().client_id or SELF.sudo().employee_id.user_id.partner_id
                 inv = account_move.create({ 
-                    'memo_id': self.id,
-                    'ref': self.code,
-                    'origin': self.code,
+                    'memo_id': SELF.id,
+                    'ref': SELF.code,
+                    'origin': SELF.code,
                     'partner_id': partner_id.id,
                     'branch_id': original_advance.processing_branch_id.id or original_advance.branch_id.id,
                     'company_id': payment_company.id,
                     'currency_id': payment_company.currency_id.id,
                     # Do not set default name to account move name, because it
                     # is unique 
-                    'name': f"{self.id}/{self.code}",
+                    'name': f"{SELF.id}/{SELF.code}",
                     # 'move_type': 'out_receipt',
                     'move_type': 'entry',
                     'invoice_date': fields.Date.today(),
@@ -3749,27 +3860,27 @@ class Memo_Model(models.Model):
                     'journal_id': journal_id.id,
                     'line_ids': [(0, 0, {
                             'name': pr.product_id.name if pr.product_id else pr.description,
-                            'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-                            'account_id': self.get_soe_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
+                            'ref': f'{SELF.code}: {pr.product_id.name or pr.description}',
+                            'account_id': SELF.get_soe_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
                             'debit': pr.retire_sub_total_amount,
                             'price_unit': pr.used_amount,
                             'quantity': pr.used_qty,
                             'code': pr.code,
-                    }) for pr in self.product_ids] + [(0, 0, {
+                    }) for pr in SELF.product_ids] + [(0, 0, {
                                                             'name': 'Cash Advance to Debit',
-                                                            'account_id': cashadvance_account_to_credit or self.get_soe_credit_account(journal_id).id, # account of the cash advance reference used, CASH PACM, to be on debit
-                                                            'credit': sum([r.retire_sub_total_amount for r in self.product_ids]),
+                                                            'account_id': cashadvance_account_to_credit or SELF.get_soe_credit_account(journal_id).id, # account of the cash advance reference used, CASH PACM, to be on debit
+                                                            'credit': sum([r.retire_sub_total_amount for r in SELF.product_ids]),
                                                             'debit': 0.00,
                                                             })],
                 })
-                if self.product_ids_with_qty_to_return():
-                    self.to_update_inventory_product = True
-            self.move_id = inv.id
-            return self.open_related_record_view(
+                if SELF.product_ids_with_qty_to_return():
+                    SELF.to_update_inventory_product = True
+            SELF.move_id = inv.id
+            return SELF.open_related_record_view(
                 'account.move', 
-                inv.id if inv.id else self.move_id.id ,
+                inv.id if inv.id else SELF.move_id.id ,
                 view_id,
-                "Journal Entry - {self.code}"
+                f"Journal Entry - {SELF.code}"
             )
             # return self.record_to_open(
             # "account.move", 
@@ -3779,134 +3890,8 @@ class Memo_Model(models.Model):
             # )
         else:
             raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
+
         
-    # def generate_soe_entries(self):
-    #     is_config_approver = self.determine_if_user_is_config_approver()
-    #     if is_config_approver:
-    #         """Check if the user is enlisted as the approver for memo type
-    #         if approver is an account officer, system generates move and open the exact record"""
-    #         view_id = self.env.ref('account.view_move_form').id
-    #         journal_id = self.env['account.journal'].search(
-    #         [('type', '=', 'sale'),
-    #         #  ('code', '=', 'INV')
-    #          ], limit=1)
-    #         account_move = self.env['account.move'].sudo()
-    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-    #         if not inv:
-    #             partner_id = self.employee_id.user_id.partner_id
-    #             inv = account_move.create({ 
-    #                 'memo_id': self.id,
-    #                 'ref': self.code,
-    #                 'origin': self.code,
-    #                 'partner_id': partner_id.id,
-    #                 'company_id': self.env.user.company_id.id,
-    #                 'currency_id': self.env.user.company_id.currency_id.id,
-    #                 # Do not set default name to account move name, because it
-    #                 # is unique 
-    #                 'name': f"{self.id}/{self.code}",
-    #                 'move_type': 'out_receipt',
-    #                 'invoice_date': fields.Date.today(),
-    #                 'date': fields.Date.today(),
-    #                 'journal_id': journal_id.id,
-    #                 'invoice_line_ids': [(0, 0, {
-    #                         'name': pr.product_id.name if pr.product_id else pr.description,
-    #                         'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-    #                         'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-    #                         'price_unit': pr.used_amount,
-    #                         'quantity': pr.used_qty,
-    #                         'discount': 0.0,
-    #                         'code': pr.code,
-    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-    #                         'product_id': pr.product_id.id if pr.product_id else None,
-    #                 }) for pr in self.product_ids],
-    #             })
-    #             if self.product_ids_with_qty_to_return():
-    #                 self.to_update_inventory_product = True
-    #         self.move_id = inv.id
-    #         return self.record_to_open(
-    #         "account.move", 
-    #         view_id,
-    #         inv.id,
-    #         f"Journal Entry - {inv.name}"
-    #         )
-    #     else:
-    #         raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
-    
-    # def generate_soe_entries(self):
-    #     
-    #     # self.follower_messages(body)
-    #     is_config_approver = self.determine_if_user_is_config_approver()
-    #     if is_config_approver:
-    #         self.write({
-    #             'state': 'Approve2'
-    #         })
-            
-    #         """Check if the user is enlisted as the approver for memo type
-    #         if approver is an account officer, system generates move and open the exact record"""
-    #         view_id = self.env.ref('account.view_move_form').id
-    #         journal_id = self.env['account.journal'].search(
-    #         [('type', '=', 'sale'),
-    #          ('code', '=', 'INV')
-    #          ], limit=1)
-    #         # 5000 - 3000
-    #         account_move = self.env['account.move'].sudo()
-    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-    #         if not inv:
-    #             partner_id = self.employee_id.user_id.partner_id
-    #             inv = account_move.create({ 
-    #                 'memo_id': self.id,
-    #                 'ref': self.code,
-    #                 'origin': self.code,
-    #                 'partner_id': partner_id.id,
-    #                 'company_id': self.env.user.company_id.id,
-    #                 'currency_id': self.env.user.company_id.currency_id.id,
-    #                 # Do not set default name to account move name, because it
-    #                 # is unique 
-    #                 'name': f"SOE {self.code}",
-    #                 'move_type': 'out_receipt',
-    #                 'invoice_date': fields.Date.today(),
-    #                 'date': fields.Date.today(),
-    #                 'journal_id': journal_id.id, 
-    #             })
-    #             if self.product_ids_with_qty_to_return():
-    #                 self.to_update_inventory_product = True
-
-    #             for pr in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-    #                 balance_remaining = pr.sub_total_amount - pr.used_amount # e.g 5000 - 3000 = 2000
-    #                 if balance_remaining > 0:
-    #                     inv.invoice_line_ids = [(0, 0, {
-    #                         'name': f"{pr.product_id.name or ''}: {self.code}" or f"{pr.description}",
-    #                         'ref': f'{self.code}: {pr.product_id.name}',
-    #                         'account_id': pr.product_id.property_account_income_id.id or pr.product_id.categ_id.property_account_income_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-    #                         'price_unit': pr.sub_total_amount - pr.used_amount, # pr.used_total: ensure the retiring balance is 0 if it is lesser,
-    #                         'quantity': 1, # pr.used_qty,
-    #                         'discount': 0.0,
-    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-    #                         'product_id': pr.product_id.id if pr.product_id else None,
-    #                     })]# if pr.sub_total_amount - pr.used_amount > 0 else False]
-    #                     pr.update({'retired': True, 'to_retire': False}) # updating the Line as retired
-    #                     _logger.info(f'req line id {pr.request_line_id}')
-    #                     self.update_cash_advance_lines_as_retired(pr.request_line_id) # no longer pr.code
-
-    #         if inv.amount_total > 0:
-    #             return self.record_to_open(
-    #                 "account.move", 
-    #                 view_id,
-    #                 inv.id,
-    #                 f"Journal Entry SOE - {inv.name}"
-    #                 ) 
-    #         else:
-    #             '''Set the retired to true if there is not amount difference to retire'''
-    #             for rec in self.mapped('product_ids').filtered(lambda x: x.to_retire):
-    #                 rec.update({'retired': True, 'to_retire': False}) # updating the Line as retired
-    #                 _logger.info(f'req line id 2 {rec.request_line_id}')
-    #                 self.update_cash_advance_lines_as_retired(rec.request_line_id)
-    #             self.sudo().cash_advance_reference.soe_advance_reference = self.id
-    #             self.is_request_completed = True
-    #             self.sudo().update_final_state_and_approver()
-    #             self.update_status_badge()
-    #         self.set_cash_advance_as_retired()
-         
     def record_to_open(self, model, view_id, res_id=False, name=False):
         obj = self.env[f'{model}'].sudo().search(['|','|', 
                                            ('origin', '=', self.code), 
@@ -4266,6 +4251,7 @@ class Memo_Model(models.Model):
     # Depending on any field change (ORM or Form), the function is triggered.
     def _progress_state(self):
         for order in self:
+            order.update_set_staff()
             if order.state in ["submit", "Refuse"]:
                 order.status_progress = random.randint(0, 5)
             elif order.state == "Sent":

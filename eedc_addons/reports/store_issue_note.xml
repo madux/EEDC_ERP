@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="report_store_issue_note" model="ir.actions.report">
+        <field name="name">Store Issue Note</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eedc_addons.store_issue_note_template</field>
+        <field name="report_file">eedc_addons.store_issue_note_template</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="store_issue_note_template">
+
+        <t t-call="web.html_container">
+
+            <t t-foreach="docs" t-as="o">
+
+                <t t-call="web.external_layout">
+
+                    <div class="page">
+
+                        <div class="text-center">
+                            <h2>STORE ISSUE NOTE</h2>
+
+                            <p>
+                                <strong>SIN No:</strong>
+                                <span t-field="o.name"/>
+                            </p>
+                        </div>
+
+                        <hr/>
+
+                        <table class="table table-sm table-bordered">
+
+                            <tr>
+                                <td width="25%">
+                                    <strong>Company</strong>
+                                </td>
+
+                                <td>
+                                    <span t-field="o.company_id.name"/>
+                                </td>
+
+                                <td width="25%">
+                                    <strong>Issue Date</strong>
+                                </td>
+
+                                <td>
+                                    <span t-field="o.date_done"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <strong>Issuing Store</strong>
+                                </td>
+
+                                <td>
+                                    <span t-field="o.location_id.complete_name"/>
+                                </td>
+
+                                <td>
+                                    <strong>Destination</strong>
+                                </td>
+
+                                <td>
+                                    <span t-field="o.location_dest_id.complete_name"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <strong>Reference</strong>
+                                </td>
+
+                                <td colspan="3">
+                                    <span t-field="o.origin"/>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <br/>
+
+                        <h4>Items Issued</h4>
+
+                        <table class="table table-sm table-bordered">
+
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th>Product</th>
+                                    <th>Product Code</th>
+                                    <th class="text-right">Quantity</th>
+                                    <th>UoM</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <t t-set="counter" t-value="0"/>
+
+                                <t t-foreach="o.move_ids_without_package" t-as="move">
+
+                                    <t t-set="counter" t-value="counter + 1"/>
+
+                                    <tr>
+                                        <td>
+                                            <span t-esc="counter"/>
+                                        </td>
+
+                                        <td>
+                                            <span t-field="move.product_id.display_name"/>
+                                        </td>
+
+                                        <td>
+                                            <span t-field="move.product_id.default_code"/>
+                                        </td>
+
+                                        <td class="text-right">
+                                            <span t-field="move.quantity_done"/>
+                                        </td>
+
+                                        <td>
+                                            <span t-field="move.product_uom.name"/>
+                                        </td>
+                                    </tr>
+
+                                </t>
+
+                            </tbody>
+
+                        </table>
+
+                        <br/>
+
+                        <table class="table table-sm table-bordered">
+
+                            <tr>
+                                <td style="height: 70px;">
+                                    <strong>Purpose / Remarks</strong>
+
+                                    <br/>
+
+                                    <span t-field="o.note"/>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <br/>
+                        <br/>
+
+                        <table class="table table-borderless">
+
+                            <tr>
+
+                                <td class="text-center">
+                                    __________________________
+                                    <br/>
+                                    <strong>Store Keeper</strong>
+                                </td>
+
+                                <td class="text-center">
+                                    __________________________
+                                    <br/>
+                                    <strong>Issued To</strong>
+                                </td>
+
+                                <td class="text-center">
+                                    __________________________
+                                    <br/>
+                                    <strong>Authorized By</strong>
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </t>
+
+            </t>
+
+        </t>
+
+    </template>
+
+</odoo>

@@ -37,6 +37,7 @@
         'views/document_kanban_view.xml',
         'data/document_mgt_system_data.xml',
         'wizard/return_memo_wizard_view.xml',
+        'wizard/new_memo_return_wizard_views.xml',
         'reports/report_memo.xml',
         'views/assets.xml',
         'security/ir.model.access.csv',

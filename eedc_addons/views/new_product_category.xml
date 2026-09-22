@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <menuitem
+            id="menu_finance_products"
+            name="Products"
+            parent="account.menu_finance_entries"
+            sequence="45"/>
+
+        <menuitem
+            id="menu_finance_product_product"
+            name="Products / Items"
+            parent="menu_finance_products"
+            action="stock.stock_product_normal_action"
+            sequence="10"/>
+
+        <menuitem
+            id="menu_finance_product_categories"
+            name="Product Categories"
+            parent="menu_finance_products"
+            action="product.product_category_action_form"
+            sequence="10"/>
+
+        <record id="view_product_category_form_move_products" model="ir.ui.view">
+            <field name="name">product.category.form.move.products</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//sheet" position="inside">
+
+                    <group string="Realign Products">
+                        <field name="move_to_category_id"
+                            domain="[('id', '!=', id)]"/>
+
+                        <button name="action_move_products"
+                                type="object"
+                                string="Move All Products"
+                                class="btn-primary"
+                                icon="fa-exchange"
+                                />
+                    </group>
+
+                </xpath>
+
+            </field>
+        </record>
+         <record id="view_product_category_list_move_products" model="ir.ui.view">
+            <field name="name">product.category.form.move.products</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_list_view"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='display_name']" position="after">
+                    <field name="product_count"/> 
+                </xpath>
+
+            </field>
+        </record>
+
+
+        
+    </data>
+</odoo>
