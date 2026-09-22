@@ -24,6 +24,20 @@
             <field name="arch" type="xml">
 
                 <xpath expr="//button[@name='action_cancel']" position="after">
+                     <button name="action_print_store_receive_note"
+                            type="object"
+                            string="Print SRN"
+                            class="btn-primary"
+                            icon="fa-download"
+                            help="Store receive note"
+                            attrs="{'invisible': [('picking_type_code', '!=', 'incoming')]}"/>
+
+                    <button name="action_print_store_issue_note"
+                            type="object"
+                            string="Print Store Issue Note"
+                            class="btn-primary"
+                            icon="fa-upload"
+                            attrs="{'invisible': [('picking_type_code', '!=', 'outgoing')]}"/>
                     <button name="reset_to_draft" string="Set to draft" type="object" attrs="{'invisible': [('state', 'not in', ['cancel'])]}" data-hotkey="v"/>
                 </xpath>
                 <xpath expr="//button[@name='do_print_picking']" position="attributes">

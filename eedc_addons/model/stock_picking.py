@@ -24,6 +24,10 @@ class StockPicking(models.Model):
     
     
     override_stock_lot = fields.Boolean("Dis-Allow Lot/Serial", default=True)
+    store_note_reason = fields.Text(
+        string='Reason',
+        default ="This is basically to identify the store trnsfer processes"
+    )
     
     # removed this implemenation since each product might come from 
     # different source location
@@ -37,18 +41,19 @@ class StockPicking(models.Model):
             "location_dest_id": self.location_dest_id.id
             })
             
-    # @api.onchange('location_id', 'location_dest_id')
-    # def _onchange_locations(self):
-    #     (self.move_ids | self.move_ids_without_package).update({
-    #         "location_id": self.location_id,
-    #         "location_dest_id": self.location_dest_id
-    #     })
-    #     if any(line.reserved_qty or line.qty_done for line in self.move_ids.move_line_ids):
-    #         return {'warning': {
-    #                 'title': 'Locations to update',
-    #                 'message': _("You might want to update the locations of this transfer's operations")
-    #             }
-    #         }
+    def action_print_store_receive_note(self):
+        self.ensure_one()
+
+        return self.env.ref(
+            'eedc_addons.report_store_receive_note'
+        ).report_action(self)
+
+    def action_print_store_issue_note(self):
+        self.ensure_one()
+
+        return self.env.ref(
+            'eedc_addons.report_store_issue_note'
+        ).report_action(self)
     
     def reset_to_draft(self):
         for rec in self:

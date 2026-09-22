@@ -19,3 +19,4 @@ from . import ir_attachment
 from . import hr_holidays
 from . import res_company
 from . import sale_order
+from . import new_cashadvance_stock_return

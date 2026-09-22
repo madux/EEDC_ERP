@@ -18,6 +18,13 @@ class RequestLine(models.Model):
     #     else:
     #         products = products
     #     return [('id', 'in', [1,4])]
+
+    def _get_product_domain(self):
+        products = [0]
+        company_products = self.env['product.product'].search([
+            ('company_id', '=', self.env.user.company_id.id)
+            ])
+        return [('id', 'in', company_products.ids)]
     
     
     memo_id = fields.Many2one(
@@ -36,8 +43,9 @@ class RequestLine(models.Model):
     product_id = fields.Many2one(
         "product.product", 
         string="Product ID",
-        # domain=lambda self: self._get_product_domain()
+        domain=lambda self: self._get_product_domain()
         )
+        
 
     tax_ids = fields.Many2many(
         "account.tax", 
@@ -58,7 +66,7 @@ class RequestLine(models.Model):
     sub_total_amount = fields.Float(string="Subtotal", compute="compute_sub_total")
     retire_sub_total_amount = fields.Float(string="SubTotal", compute="compute_retire_sub_total")
     difference_in_amount = fields.Float(string="Amount Difference", compute="compute_retire_sub_total")
-    used_qty = fields.Float(string="Qty Used", default=1)
+    used_qty = fields.Float(string="Qty Used", default=0)
     used_amount = fields.Float(string="Amount Used (per unit)")
     note = fields.Char(string="Note")
     code = fields.Char(string="code")
@@ -127,13 +135,16 @@ class RequestLine(models.Model):
     @api.depends("used_qty", "used_amount")
     def compute_retire_sub_total(self):
         for x in self:
-            if (x.used_qty and x.used_amount):
-                retired_amount_computed =  x.used_qty * x.used_amount
-                x.retire_sub_total_amount = retired_amount_computed
-                x.difference_in_amount = x.sub_total_amount - retired_amount_computed
-            else:
-                x.retire_sub_total_amount = 0.00
-                x.difference_in_amount = 0.00
+            retired_amount_computed = x.used_amount
+            x.retire_sub_total_amount = retired_amount_computed
+            x.difference_in_amount = x.sub_total_amount - retired_amount_computed
+            # if (x.used_qty and x.used_amount):
+                # retired_amount_computed =  x.used_qty * x.used_amount
+                # x.retire_sub_total_amount = retired_amount_computed
+                # x.difference_in_amount = x.sub_total_amount - retired_amount_computed
+            # else:
+                # x.retire_sub_total_amount = 0.00
+                # x.difference_in_amount = 0.00
     
     @api.onchange('product_id')
     def onchange_product(self):
