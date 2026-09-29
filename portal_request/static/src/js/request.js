@@ -1727,7 +1727,8 @@ odoo.define('portal_request.portal_request', function (require) {
                             alert_modal.modal('show');
                             modal_message.text(data.message)
                         } else {
-                            let location_id = data.location_id
+                            // we dont need to request users from making requests at this time
+                            let location_id = data.location_id ? data.location_id : parseInt($("#source_location_id").val()) 
                             console.log(`location line qty found is ${location_id}`)
                             qty_elm.attr('required', false);
                             qty_elm.removeClass("is-invalid");

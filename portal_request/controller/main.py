@@ -1475,11 +1475,15 @@ class PortalRequest(http.Controller):
             loc = request.env['stock.location'].sudo().browse(int(source_locationId))
             if loc.company_id:
                 target_company_id = loc.company_id.id
+                _logger.info(f'target_company_id 1 {target_company_id}')
+
         
         elif processing_branch_id and str(processing_branch_id).isdigit():
             branch = request.env['multi.branch'].sudo().browse(int(processing_branch_id))
             if branch.company_id:
                 target_company_id = branch.company_id.id
+                _logger.info(f'target_company_id 2 {target_company_id}')
+
 
         elif memo_config_id and str(memo_config_id).isdigit():
             config = request.env['memo.config'].sudo().browse(int(memo_config_id))
@@ -1487,12 +1491,14 @@ class PortalRequest(http.Controller):
                 target_company_id = config.processing_company_id.id
             elif config.processing_branch_id and config.processing_branch_id.company_id:
                 target_company_id = config.processing_branch_id.company_id.id
+            _logger.info(f'target_company_id 3 {target_company_id}')
+            
         # ---------------------------------------
 
         # Use target_company_id in the domain
         domain = [
             ('id', 'not in', productItems_List),
-            ('company_id', '=', target_company_id), 
+            ('company_id', 'in', [target_company_id, False, '', None]), 
             ('active', '=', True), 
             '|','|', 
             ('name', 'ilike', query),
@@ -1819,43 +1825,49 @@ class PortalRequest(http.Controller):
                                 _logger.info(f"What is quant quantity {lc_quant.quantity}")
                     
                     '''necessary at least to ensure there is any location of those products'''
-                    if total_availability <= 0: 
-                        '''if no quantity found in all warehouse location'''
-                        # suggestable_locations = request.env['stock.location'].search([('usage', '=', 'internal')])
-                        # for loc_quant in suggestable_locations:
-                        quants_with_qty = request.env['stock.quant'].sudo().search(
-                            [
-                             ('location_id.usage', '=', 'internal'), 
-                             ('product_id', '=', product.id),
-                             ('quantity', '>=', product_qty)
-                             ]
-                            )
-                        msg_loc = []
-                        for loc_quant in quants_with_qty:
-                            _logger.info(f"wegere  {loc_quant.location_id.name} {product_qty}")
-                            msg_loc.append(f"{loc_quant.location_id.name} - {loc_quant.quantity}")
-                        message_display = '\n'.join(msg_loc)
-                        return {
-                            "status": False,
-                            "location_id": False,
-                            "message": f"""
-                            System could not found any single quantity available in your 
-                            company locations.However below are the locations that have them available.\n
-                            {message_display}
-                            """, 
-                        }
-                    if product_qty > total_availability: 
-                        return {
-                            "status": False,
-                            "location_id": False,
-                            "message": f"""
-                            Selected product: ({product_qty}) 
-                            quantity is higher than the Available Quantity. 
-                            Available quantity is {total_availability}""", 
-                        }
-                    else:
-                        _logger.info(f"Location outcome is {location}")
-                        return {
+                    # if total_availability <= 0: 
+                    #     '''if no quantity found in all warehouse location'''
+                    #     # suggestable_locations = request.env['stock.location'].search([('usage', '=', 'internal')])
+                    #     # for loc_quant in suggestable_locations:
+                    #     quants_with_qty = request.env['stock.quant'].sudo().search(
+                    #         [
+                    #          ('location_id.usage', '=', 'internal'), 
+                    #          ('product_id', '=', product.id),
+                    #          ('quantity', '>=', product_qty)
+                    #          ]
+                    #         )
+                    #     msg_loc = []
+                    #     for loc_quant in quants_with_qty:
+                    #         _logger.info(f"wegere  {loc_quant.location_id.name} {product_qty}")
+                    #         msg_loc.append(f"{loc_quant.location_id.name} - {loc_quant.quantity}")
+                    #     message_display = '\n'.join(msg_loc)
+                    #     MSG = 'However below are the locations that have them available; \n' + message_display if len(message_display) > 0 else ''
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"""
+                    #         System could not found any single quantity available in your 
+                    #         company locations.\n
+                    #         {MSG} 
+                    #         """, 
+                    #     }
+                    # if product_qty > total_availability: 
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"""
+                    #         Selected product: ({product_qty}) 
+                    #         quantity is higher than the Available Quantity. 
+                    #         Available quantity is {total_availability}""", 
+                    #     }
+                    # else:
+                    #     _logger.info(f"Location outcome is {location}")
+                    #     return {
+                    #         "status": True,
+                    #         "message": "",
+                    #         "location_id": location and location.id
+                    #     }
+                    return {
                             "status": True,
                             "message": "",
                             "location_id": location and location.id
