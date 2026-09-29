@@ -20,7 +20,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_http_session"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -38,7 +38,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_employee_transfer"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -56,7 +56,7 @@
                 <field name="model_id" ref="company_memo.model_memo_fleet_maintenance"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -74,7 +74,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_injection_substation"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -92,7 +92,7 @@
                 <field name="model_id" ref="hr_pms.model_kba_descriptions"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -110,7 +110,7 @@
                 <field name="model_id" ref="company_memo.model_memo_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record> -->
 
 
@@ -128,7 +128,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_academic"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -146,7 +146,7 @@
                 <field name="model_id" ref="hr_pms.model_potential_assessment_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -164,7 +164,7 @@
                 <field name="model_id" ref="eedc_addons.model_multi_branch"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -182,7 +182,7 @@
                 <field name="model_id" ref="documents.model_documents_folder"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -200,7 +200,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_score_sheet_export"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -218,7 +218,7 @@
                 <field name="model_id" ref="hr_pms.model_lc_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -236,7 +236,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_applicant_documentation"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -254,7 +254,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_employee_transfer_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -316,7 +316,7 @@
                 <field name="model_id" ref="eedc_addons.model_res_lga"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -334,7 +334,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_rank"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -352,7 +352,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_log_line_view"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -370,7 +370,7 @@
                 <field name="model_id" ref="hr_pms.model_employees_import"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -388,7 +388,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_http_request"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -406,7 +406,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_instruction"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -424,7 +424,7 @@
                 <field name="model_id" ref="company_memo.model_memo_back"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -442,7 +442,7 @@
                 <field name="model_id" ref="hr_pms.model_current_assessment_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
             <record id="user_see_current_assessment_section_line_company_related_record_24" model="ir.rule">
                 <field name="name">current.assessment.section.line: Normal users see company related</field>
@@ -456,7 +456,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_job_descriptions"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
             <record id="user_see_job_descriptions_company_related_record_25" model="ir.rule">
                 <field name="name">job.descriptions: Normal users see company related</field>
@@ -472,7 +472,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_appraisee"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -490,7 +490,7 @@
                 <field name="model_id" ref="helpdesk.model_helpdesk_sla"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -508,7 +508,7 @@
                 <field name="model_id" ref="sign.model_sign_request"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -526,7 +526,7 @@
                 <field name="model_id" ref="company_memo.model_request_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -544,7 +544,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_question_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -562,7 +562,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_log"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -580,7 +580,7 @@
                 <field name="model_id" ref="hr_recruitment.model_hr_recruitment_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -598,7 +598,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_unit"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -616,7 +616,7 @@
                 <field name="model_id" ref="company_memo.model_memo_stage_invoice_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -634,7 +634,7 @@
                 <field name="model_id" ref="hr.model_hr_job"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -652,7 +652,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_skill_proficiency_scale"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -670,7 +670,7 @@
                 <field name="model_id" ref="hr_pms.model_assessment_description"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -688,7 +688,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_failed_transformer_movement"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -706,7 +706,7 @@
                 <field name="model_id" ref="company_memo.model_memo_stage_document_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -724,7 +724,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_certification"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -742,7 +742,7 @@
                 <field name="model_id" ref="hr_pms.model_training_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -760,7 +760,7 @@
                 <field name="model_id" ref="hr_pms.model_fc_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -778,7 +778,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_department"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -796,7 +796,7 @@
                 <field name="model_id" ref="company_memo.model_doc_mgt_config"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -814,7 +814,7 @@
                 <field name="model_id" ref="hr_holidays.model_hr_leave"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -832,7 +832,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_level_category"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -850,7 +850,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_rule"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -868,7 +868,7 @@
                 <field name="model_id" ref="company_memo.model_memo_category"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -886,7 +886,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_answer_line_option"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -904,7 +904,7 @@
                 <field name="model_id" ref="hr_payroll_addons.model_hr_contract_wizard"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -922,7 +922,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_category"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -940,7 +940,7 @@
                 <field name="model_id" ref="hr_pms.model_kra_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -958,7 +958,7 @@
                 <field name="model_id" ref="company_memo.model_memo_sub_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -976,7 +976,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_district"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -994,7 +994,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_failed_transformer_issue"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1012,7 +1012,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_year"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1030,7 +1030,7 @@
                 <field name="model_id" ref="survey.model_survey_user_input"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1048,7 +1048,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_department_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1066,7 +1066,7 @@
                 <field name="model_id" ref="company_memo.model_memo_config"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1084,7 +1084,7 @@
                 <field name="model_id" ref="base.model_ir_attachment"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1102,7 +1102,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_department_section"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1120,7 +1120,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_transformer_district"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1138,7 +1138,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_issue_stage"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1156,7 +1156,7 @@
                 <field name="model_id" ref="company_memo.model_memo_fleet"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1174,7 +1174,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_transformer"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1192,7 +1192,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_cbt_template_config"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1210,7 +1210,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_section"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1228,7 +1228,7 @@
                 <field name="model_id" ref="survey.model_survey_survey"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1246,7 +1246,7 @@
                 <field name="model_id" ref="hr_pms.model_pms_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1264,7 +1264,7 @@
                 <field name="model_id" ref="eedc_addons.model_hr_experience"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1282,7 +1282,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_hr_job_recruitment_request"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1300,7 +1300,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_level"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1318,7 +1318,7 @@
                 <field name="model_id" ref="hr_recruitment.model_hr_applicant"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1336,7 +1336,7 @@
                 <field name="model_id" ref="helpdesk_process.model_complaint_resolution"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1354,7 +1354,7 @@
                 <field name="model_id" ref="company_memo.model_memo_type"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1372,7 +1372,7 @@
                 <field name="model_id" ref="hr_pms.model_goal_setting_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1390,7 +1390,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_documentation_type"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1408,7 +1408,7 @@
                 <field name="model_id" ref="company_memo.model_document_request_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1426,7 +1426,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_work_unit"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1444,7 +1444,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_region"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1462,7 +1462,7 @@
                 <field name="model_id" ref="failed_transformer_repair.model_dsm_checklist"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1480,7 +1480,7 @@
                 <field name="model_id" ref="auditlog.model_auditlog_log_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1498,7 +1498,7 @@
                 <field name="model_id" ref="hr_cbt_portal_recruitment.model_description_sections"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1516,7 +1516,7 @@
                 <field name="model_id" ref="hr_pms.model_hr_grade"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1534,7 +1534,7 @@
                 <field name="model_id" ref="hr_pms.model_hyr_kra_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 
@@ -1552,7 +1552,7 @@
                 <field name="model_id" ref="hr_pms.model_qualitycheck_section_line"/>
                 <field name="global" eval="True"/>
                 <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                <field name="domain_force">['|', '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id)]</field>
+                <field name="domain_force">['|', '|',  '|', ('company_id', '=', False), ('company_id', '=', company_id), ('create_uid', '=', user.id), ('company_id', 'in', company_ids)]</field>
             </record>
 
 

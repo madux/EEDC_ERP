@@ -7,16 +7,52 @@ class StockPicking(models.Model):
     _inherit = "stock.location"
     _order = "id desc"
     
-    wh_code = fields.Char(string="code", size=5) 
+    wh_code = fields.Char(string="code", size=10)
+
     
-    # @api.constrains('wh_code')
-    # def _check_wh_code(self):
-    #     for record in self:
-    #         whl = self.env['stock.location'].search([
-    #             ('wh_code', '=', self.wh_code)
-    #             ], limit=2)
-    #         if whl and len([r.id for r in whl]) > 1: 
-    #             raise UserError(f"{record.wh_code} is already exiting the system, kindly change")
+    @api.constrains('wh_code')
+    def _check_wh_code(self):
+        for record in self:
+            whl = self.env['stock.location'].search([
+                ('wh_code', '=', self.wh_code)
+                ], limit=2)
+            if whl and len([r.id for r in whl]) > 1: 
+                raise UserError(f"{record.wh_code} is already exiting the system, kindly change")
+
+    warehouse_id = fields.Many2one(
+        'stock.warehouse',
+        string='Warehouse',
+        default=lambda self: self._default_warehouse(),
+    )
+
+    @api.constrains('company_id')
+    def _check_company_id(self):
+        if self.company_id.id != self.branch_id.company_id.id:
+            raise ValidationError("Company and branch company are not the same")
+
+    # @api.constrains('warehouse_id')
+    # def _check_warehouse_id(self):
+    #     if self.warehouse_id.company_id.id != self.branch_id.company_id.id:
+    #         raise ValidationError(f"Warehouse company {self.warehouse_id.company_id.id} and branch company {self.branch_id.company_id.id} are not the same")
+
+    @api.model
+    def _default_warehouse(self):
+        return self.env['stock.warehouse'].search([
+            ('company_id', '=', self.env.company.id)
+        ], limit=1)
+
+    @api.onchange('company_id')
+    def _onchange_company_id(self):
+        warehouse = self.env['stock.warehouse'].search([
+            ('company_id', '=', self.company_id.id)
+        ], limit=1)
+        # self.warehouse_id = warehouse.id
+        self.company_id = warehouse.company_id.id
+
+    @api.onchange('warehouse_id')
+    def _onchange_warehouse_id(self):
+        if self.warehouse_id:
+            self.company_id = self.warehouse_id.company_id.id
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"

@@ -226,25 +226,48 @@ class StockWarehouse(models.Model):
 
 
 class StockLocation(models.Model):
-    _inherit = 'stock.location'
+    _inherit = "stock.location"
     
     branch_id = fields.Many2one(
         'multi.branch', string='Branch', 
         default=lambda self: self.env.user.branch_id.id)
 
+    @api.onchange('branch_id')
+    def _onchange_branch_id(self):
+        warehouse = self.env['stock.warehouse'].search([
+            ('company_id', '=', self.branch_id.company_id.id or self.company_id.id)
+        ], limit=1)
+        self.warehouse_id = warehouse.id
+
     @api.constrains('branch_id')
     def _check_branch(self):
+        warehouse_obj = self.env['stock.warehouse']
+
         for location in self:
-            warehouse_obj = self.env['stock.warehouse']
-            warehouse_id = warehouse_obj.search(
-                ['|', '|', ('wh_input_stock_loc_id', '=', location.id),
-                 ('lot_stock_id', '=', location.id),
-                 ('wh_output_stock_loc_id', '=', location.id)])
-            for warehouse in warehouse_id:
-                if location.branch_id != warehouse.branch_id:
-                    raise UserError(_('Configuration error\nYou  must select same branch on a location as asssigned on a warehouse configuration.'))
+            if not location.branch_id:
+                continue
 
+            warehouses = warehouse_obj.search([
+                '|', '|',
+                ('wh_input_stock_loc_id', '=', location.id),
+                ('lot_stock_id', '=', location.id),
+                ('wh_output_stock_loc_id', '=', location.id),
+            ])
 
+            for warehouse in warehouses:
+                if warehouse.branch_id != location.branch_id:
+                    raise ValidationError(_(
+                        "Configuration Error\n\n"
+                        "Location '%(location)s' belongs to branch '%(location_branch)s' "
+                        "but warehouse '%(warehouse)s' belongs to branch '%(warehouse_branch)s'. "
+                        "Both branches must match."
+                    ) % {
+                        'location': location.display_name,
+                        'location_branch': location.branch_id.display_name,
+                        'warehouse': warehouse.display_name,
+                        'warehouse_branch': warehouse.branch_id.display_name,
+                    })
+                
 class StockRoute(models.Model):
     _inherit = 'stock.route'
     branch_id = fields.Many2one('multi.branch', string='Branch',)

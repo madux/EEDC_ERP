@@ -160,6 +160,7 @@ class Memo_Model(models.Model):
     #     ("recruitment_request", "Recruitment Request"),
     #     ], string="Request Type", required=True)
     memo_material_request_status = fields.Boolean('')
+    memo_cash_advance_procurement_status = fields.Boolean('')
     memo_procurement_request_status = fields.Boolean('')
     memo_awaiting_procurement_request_status = fields.Boolean('')
     memo_soe_status = fields.Boolean('')
@@ -515,12 +516,33 @@ class Memo_Model(models.Model):
     )
     loan_reference = fields.Integer(string="Loan Ref")
     active = fields.Boolean('Active', default=True)
+    is_procurement_cash_advance = fields.Boolean('Procurement cash advance', default=False,
+                                                 compute="compute_procurement_cashadvance",
+                                                 help="""System determines if this is for procurement, then a button where
+                                                 finance will click to move the item procured appears""")
+
+    @api.depends('product_ids.product_id')
+    def compute_procurement_cashadvance(self):
+        prc = self.procurement_cashadvance()
+        if prc:
+            self.is_procurement_cash_advance = True 
+        else:
+            self.is_procurement_cash_advance = False
+
+
+    def procurement_cashadvance(self):
+        if self.product_ids:
+            line_with_product = self.mapped('product_ids').filtered(lambda pr: pr.product_id.id != False)
+            return True if line_with_product else False 
+        else:
+            return False
 
     product_ids = fields.One2many(
         'request.line', 
         'memo_id', 
         string ='Request Line',
     )
+     
     document_request_ids = fields.One2many(
         'document.request.line', 
         'memo_document_request_id', 
@@ -1740,11 +1762,11 @@ class Memo_Model(models.Model):
         if self.memo_type.memo_key == "soe":
             soe_lines = self.mapped('product_ids')#.filtered(
             #     lambda s: s.to_retire == True)
-            for r in soe_lines:
-                if r.used_qty < 1 or r.used_amount < 1:
-                        raise ValidationError(
-                            'Each Request line item must have used qty and used amount greater than 0'
-                    )
+            # for r in soe_lines:
+            #     if r.used_qty < 1 or r.used_amount < 1:
+            #             raise ValidationError(
+            #                 'Each Request line item must have used qty and used amount greater than 0'
+            #         )
             # soe_line_not_cleared = self.mapped('product_ids').filtered(
             #     lambda s: s.to_retire == True)
             # for r in soe_line_not_cleared: 
@@ -2309,7 +2331,11 @@ class Memo_Model(models.Model):
         elif self.memo_type_key in ['soe']:
             self.memo_soe_status = True #'Retired'
         else:
-            self.memo_bagde_status = True #'Completed'
+            if self.is_procurement_cash_advance and self.memo_cash_advance_procurement_status == True:
+                self.memo_bagde_undone= False
+                self.memo_bagde_status = False
+            else:
+                self.memo_bagde_status = True #'Completed'
 
     def enable_edit_mode(self):
         self.edit_mode = True 
@@ -2999,7 +3025,7 @@ class Memo_Model(models.Model):
                     'location_dest_id': destination_loc_id.id,
                     'branch_id': destination_loc_id.branch_id.id,
                     'origin': f"INTER-CO/{self.code}",
-                    # 'memo_id': self.id,
+                    # 'memo_id': self.id
                     'company_id': company_id.id,
                     # 'partner_id': self.employee_id.user_id.partner_id.id,
                     'is_inter_district_transfer': True,
@@ -3008,7 +3034,8 @@ class Memo_Model(models.Model):
                                     'picking_type_id': stock_picking_type_out.id,
                                     'location_id': vendor_source_loc_id.id or stock_picking_type_out.default_location_src_id.id,
                                     'location_dest_id': dest_location.id,
-                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_id': 
+                                    self.generate_inter_move_product(mm.sudo().product_id, company_id),
                                     'product_uom_qty': mm.quantity_available,
                                     'quantity_done': mm.quantity_available,
                                     'date_deadline': self.date_deadline,
@@ -3576,7 +3603,17 @@ class Memo_Model(models.Model):
                 rec.invoice_status = 'Not Posted'
                 
     def generate_move_entries(self): 
-        '''thi will generate cash advance move'''
+        '''thi will generate cash advance move''' 
+        if self.memo_type_key == 'cash_advance':
+            if self.stock_picking_id:
+                if self.stock_picking_id.state in ['done', 'cancel']:
+                    self.memo_cash_advance_procurement_status = False
+                else:
+                    self.memo_cash_advance_procurement_status = True
+
+            else:
+                self.memo_cash_advance_procurement_status = True
+
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
             """Check if the user is enlisted as the approver for request type
@@ -3742,16 +3779,24 @@ class Memo_Model(models.Model):
             quantity_available = line.quantity_available or 0.0
             used_qty = line.used_qty or 0.0
             # User has used less than what was issued
-            if used_qty < quantity_available:
-                return_qty = quantity_available - used_qty
-                return_lines.append(
-                    (0, 0, {
-                        'product_id': line.product_id.id,
-                        'quantity_available': quantity_available,
-                        'used_qty': used_qty,
-                        'return_qty': return_qty,
-                    })
-                )
+            # if used_qty < quantity_available:
+            #     return_qty = quantity_available - used_qty
+            #     return_lines.append(
+            #         (0, 0, {
+            #             'product_id': line.product_id.id,
+            #             'quantity_available': quantity_available,
+            #             'used_qty': quantity_available,
+            #             'return_qty': quantity_available,
+            #         })
+            #     )
+            return_lines.append(
+                (0, 0, {
+                    'product_id': line.product_id.id,
+                    'quantity_available': quantity_available,
+                    'used_qty': quantity_available,
+                    'return_qty': quantity_available,
+                })
+            )
         if len(return_lines) > 1:
             self.to_return_item = True 
         return return_lines
@@ -3762,26 +3807,26 @@ class Memo_Model(models.Model):
         
     def action_return_unused_items(self):
         self.ensure_one()
-        return_lines = self.check_unsused_items()
+        memo_reference = self.cash_advance_reference if self.memo_type_key == 'soe' else self
+        return_lines = memo_reference.check_unsused_items()
         # ---------------------------------------------------------
         # NOTHING TO RETURN
         # ---------------------------------------------------------
-        if not return_lines:
-            self.to_return_item = False 
-            raise UserError(
-                _('There are no unused items available for return.')
-            )
+        # if not return_lines:
+        #     self.to_return_item = False 
+        #     raise UserError(
+        #         _('There are no unused items available for return.')
+        #     )
         # ---------------------------------------------------------
         # CREATE WIZARD
         # ---------------------------------------------------------
         wizard = self.env['memo.return.wizard'].create({
-            'memo_id': self.id,
+            'memo_id': memo_reference.id,
             'line_ids': return_lines,
         })
         # ---------------------------------------------------------
         # OPEN MODAL
         # ---------------------------------------------------------
-
         return {
             'type': 'ir.actions.act_window',
             'name': _('Return Unused Items'),
@@ -3794,12 +3839,18 @@ class Memo_Model(models.Model):
     def generate_soe_entries(self):
         '''check for unused items and decides to return to store.
         if validated, it calls the function generate_soe_entry_function()'''
-        return_lines = self.check_unsused_items()
-        if return_lines:
-            return self.action_return_unused_items()
-        else:
-            memoObj = self.env['memo.model'].browse([self.id])
-            return self.generate_soe_entry_function(memoObj)
+        # return_lines = self.check_unsused_items()
+        # if return_lines:
+        #     return self.action_return_unused_items()
+        # else:
+        self.cash_advance_reference.compute_procurement_cashadvance()
+        procurement_cashadvance = self.cash_advance_reference.procurement_cashadvance()
+        if procurement_cashadvance and self.cash_advance_reference.memo_cash_advance_procurement_status == True: 
+            """Store needs to receive this items first before retiring"""
+            raise ValidationError(f"""The items procured using this cash advance {self.cash_advance_reference.code} has never been returned to store. 
+            Contact store officer for {self.cash_advance_reference.branch_id.name} to receive the items first before posting this SOE""")
+        memoObj = self.env['memo.model'].browse([self.id])
+        return self.generate_soe_entry_function(memoObj)
         
     def generate_soe_entry_function(self, memoObj):
         SELF = memoObj

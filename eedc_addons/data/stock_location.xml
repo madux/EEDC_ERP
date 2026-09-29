@@ -21,6 +21,13 @@
             <field name="branch_id" ref="multi_company.branch003"/>
 
         </record>
+        <record model="stock.location" id="store003">
+            <field name="name">ABAKILIKI STORE</field>
+            <field name="wh_code">EA0004</field>
+            <field name="company_id" ref="multi_company.company_east_land"/>
+            <field name="branch_id" ref="multi_company.branch003"/>
+
+        </record>
         <record model="stock.location" id="store0004">
             <field name="name">EKWULUOBIA STORE</field>
             <field name="wh_code">0004</field>

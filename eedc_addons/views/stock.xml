@@ -1,17 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
+
+        <record id="product_product_form_inherit_default_code_required" model="ir.ui.view">
+            <field name="name">product.product.form.default.code.required</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='default_code']" position="attributes">
+                    <attribute name="required">1</attribute>
+                    <attribute name="string">Stock Code</attribute>
+                </xpath>
+
+            </field>
+        </record>
         <record id="view_location_eec_addon_form" model="ir.ui.view">
             <field name="name">stock.location.form.eedc_addons</field>
             <field name="model">stock.location</field>
             <field name="inherit_id" ref="stock.view_location_form" />
             <field name="arch" type="xml">
-                
                 <field name="usage" position="after">
-                    <field
-                        name="wh_code" readonly="0" required="1"
-                    />
+                    <field name="wh_code" readonly="0" required="1"/>
                 </field>  
+                <xpath expr="//field[@name='company_id']" position="attributes">
+                    <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
+                    <attribute name="required">1</attribute>
+                </xpath>
             </field>
         </record>
 
@@ -53,6 +68,16 @@
                 <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_id']" position="attributes">
                     <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
                 </xpath> 
+                <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_uom_qty']" position="attributes">
+                    <attribute name="string">Qty Demanded</attribute>
+                </xpath>
+                <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='quantity_done']" position="attributes">
+                    <attribute name="string">Qty Received</attribute>
+                </xpath>
+                <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_uom']" position="attributes">
+                    <attribute name="string">Unit</attribute>
+                </xpath>
+                
                 <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_id']" position="attributes">
                     <attribute name="context">{'no_create': True, 'no_open': True}</attribute>
                 </xpath> 

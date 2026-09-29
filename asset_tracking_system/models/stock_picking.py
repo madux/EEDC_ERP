@@ -63,15 +63,16 @@ class StockPicking(models.Model):
                 _logger.info(f"FOUND MEMOO Generate this assets {memo_id}")
             if memo_id:
                 if memo_id.po_ids:
-                    assets = memo_id.generate_asset(po_ids=memo_id.po_ids, generate_all=False, store_number=self.name, memo_id = memo_id.id)
-                    _logger.info(f"Generate this assets xxxxxx {[rec for rec in assets]}")
+                    pass 
+                    # assets = memo_id.generate_asset(po_ids=memo_id.po_ids, generate_all=False, store_number=self.name, memo_id = memo_id.id)
+                    # _logger.info(f"Generate this assets xxxxxx {[rec for rec in assets]}")
             # else:
             #     raise ValidationError("bimm")
         else:
             po_id = self.purchase_id and self.purchase_id[0]
             if po_id:
                 # raise ValidationError("pfir")
-                self.generate_asset(po_ids= po_id, generate_all=False, store_number=self.name, memo_id = False)
+                pass # self.generate_asset(po_ids= po_id, generate_all=False, store_number=self.name, memo_id = False)
             # else:
             #     raise ValidationError("There is no PO to generate asset for")
      
