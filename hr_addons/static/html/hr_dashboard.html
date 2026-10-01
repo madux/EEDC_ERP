@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR Management Dashboard</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    #sidebar {
+      width: 260px;
+      background-color: #0f172a;
+      border-right: 1px solid #dee2e6;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+     /* .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #0f172a;
+      color: #94a3b8;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }*/
+    #sidebar .nav-link {
+      color: #94a3b8;
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    #sidebar .nav-link:hover, #sidebar .nav-link.active {
+      color: #ffffff;
+      background: #1e293b;
+    }
+    #main-content {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .nav-pills .nav-link {
+      color: #495057;
+      font-weight: 500;
+      border-radius: 0.375rem;
+      padding: 0.6rem 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .nav-pills .nav-link.active {
+      background-color: #0d6efd;
+      color: #ffffff;
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(2px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Loading Spinner -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div id="wrapper">
+    <!-- Sidebar Navigation -->
+    <div id="sidebar" class="p-3">
+      <div class="d-flex align-items-center mb-4 px-2">
+        <i class="bi bi-building-gear fs-3 text-primary me-2"></i>
+        <h5 class="fw-bold mb-0 text-light">HR Portal</h5>
+      </div>
+      <ul class="nav nav-pills flex-column" id="dashboard-sidebar">
+        <li class="nav-item">
+          <a href="/attendance-reporting" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-page="employees" class="nav-link active"><i class="bi bi-people me-2"></i> Employees</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-page="attendance" class="nav-link"><i class="bi bi-calendar-check me-2"></i> Attendance Logs</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-page="leaves" class="nav-link"><i class="bi bi-calendar2-range me-2"></i> Leave Requests</a>
+        </li>
+        <li class="nav-item">
+          <a href="/attendance-reporting" class="nav-link"><i class="bi bi-bar-chart me-2"></i> Reports & Analytics</a>
+        </li>
+        <li class="nav-item">
+          <a href="/web" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Dynamic Content Container -->
+    <div id="main-content" class="p-4">
+      
+      <!-- Top Action Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 id="page-title" class="fw-bold mb-0 text-dark">Employees</h4>
+        
+        <div class="d-flex gap-2 align-items-center">
+          <!-- Multi-Select Export Button -->
+          <button id="btn-export-selected" class="btn btn-outline-secondary btn-sm" onclick="exportSelectedRecords()">
+            <i class="bi bi-download me-1"></i> Export Selected (<span id="selected-count">0</span>)
+          </button>
+
+          <!-- View Mode Switcher -->
+          <div class="btn-group btn-group-sm" role="group" id="view-mode-toggle">
+            <button type="button" class="btn btn-outline-primary active" data-view="list" onclick="switchView('list')"><i class="bi bi-list-ul me-1"></i> List</button>
+            <button type="button" class="btn btn-outline-primary" data-view="card" onclick="switchView('card')"><i class="bi bi-grid-3x3-gap me-1"></i> Cards (4/Row)</button>
+            <button type="button" class="btn btn-outline-primary" data-view="kanban" onclick="switchView('kanban')"><i class="bi bi-kanban me-1"></i> Kanban</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body p-3">
+          <div class="row g-2 align-items-center">
+            <!-- Search Input (Name / Code) -->
+            <div class="col-md-4">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="filter-search" class="form-control border-start-0" placeholder="Search by name or code..." onkeyup="debouncedFetch()">
+              </div>
+            </div>
+            <!-- Dynamic Filters Container -->
+            <div class="col-md-8 d-flex gap-2 justify-content-end" id="custom-filter-selects">
+              <!-- Filter dropdowns injected dynamically via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic View Container (List / Cards / Kanban) -->
+      <div id="view-render-area">
+        <!-- Rendered records inject here -->
+      </div>
+
+      <!-- Footer Pagination Bar -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <span class="text-muted small" id="pagination-info">Showing 0 of 0 records</span>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="pagination-container">
+            <!-- Pagination buttons inject here -->
+          </ul>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Form View Record Detail Modal -->
+  <div class="modal fade" id="recordDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold" id="modal-title">Record Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modal-body-content">
+          <!-- Form fields inject dynamically -->
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JavaScript Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- JavaScript SPA Logic -->
+  <script>
+    let currentState = {
+      currentPageName: 'employees',
+      viewMode: 'list',
+      page: 1,
+      limit: 40,
+      search: '',
+      filters: {},
+      records: [],
+      selectedIds: new Set(),
+      modelMap: {
+        'employees': { endpoint: '/api/dashboard/employees', model: 'hr.employee' },
+        'attendance': { endpoint: '/api/dashboard/attendance', model: 'hr.attendance' },
+        'leaves': { endpoint: '/api/dashboard/leaves', model: 'hr.leave' },
+        'dashboard': { endpoint: '/attendance-reporting', model: 'hr.leave' },
+        'reporting': { endpoint: '/attendance-reporting', model: 'hr.leave' },
+        'setting': { endpoint: '/web', model: 'hr.leave' }
+      }
+    };
+
+    let searchDebounceTimer;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initSidebar();
+      loadPage('employees');
+    });
+
+    function showLoader() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+    function hideLoader() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+    // Sidebar Handler
+    function initSidebar() {
+      document.querySelectorAll('#dashboard-sidebar .nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.querySelectorAll('#dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          
+          const pageName = link.getAttribute('data-page');
+          const href = link.getAttribute('href');
+          if (!(pageName)){
+              window.location.href = href
+          }else{
+            loadPage(pageName);
+          }
+          
+        });
+      });
+    }
+
+    // Page Switcher
+    async function loadPage(pageName) {
+      console.log('what is my pagename', pageName)
+
+      currentState.currentPageName = pageName;
+      currentState.page = 1;
+      currentState.search = '';
+      currentState.filters = {};
+      currentState.selectedIds.clear();
+      updateSelectedCount();
+
+      document.getElementById('page-title').innerText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+      document.getElementById('filter-search').value = '';
+
+      if (!currentState.modelMap[pageName]) {
+        document.getElementById('custom-filter-selects').innerHTML = '';
+        document.getElementById('view-render-area').innerHTML = `
+          <div class="card p-4 text-center border-0 shadow-sm">
+            <i class="bi bi-cone-striped fs-1 text-warning mb-2"></i>
+            <h5>${pageName.toUpperCase()} Module</h5>
+            <p class="text-muted">This section is ready for development.</p>
+          </div>`;
+        document.getElementById('pagination-container').innerHTML = '';
+        document.getElementById('pagination-info').innerText = '';
+        return;
+      }
+
+      await fetchRecords();
+    }
+
+    // API Fetcher
+    async function fetchRecords() {
+      showLoader();
+      const pageConfig = currentState.modelMap[currentState.currentPageName];
+
+      try {
+        const response = await fetch(pageConfig.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            params: {
+              page: currentState.page,
+              limit: currentState.limit,
+              search: currentState.search,
+              filters: currentState.filters
+            }
+          })
+        });
+
+        const res = await response.json();
+        if (res.result) {
+          currentState.records = res.result.records || [];
+          renderFilters(res.result.filter_options || {});
+          renderView();
+          renderPagination(res.result.page || 1, res.result.pages || 1, res.result.total_count || 0);
+        }
+      } catch (err) {
+        console.error("Failed to load records:", err);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // Render Filters Dynamically
+    function renderFilters(options) {
+      const container = document.getElementById('custom-filter-selects');
+      container.innerHTML = '';
+
+      if (currentState.currentPageName === 'employees') {
+        let deptOpts = `<option value="">All Departments</option>` + (options.departments || []).map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        container.innerHTML += `<select class="form-select form-select-sm" style="max-width: 200px;" onchange="applyFilter('department_id', this.value)">${deptOpts}</select>`;
+      } else if (currentState.currentPageName === 'leaves') {
+        let typeOpts = `<option value="">All Leave Types</option>` + (options.leave_types || []).map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+        container.innerHTML += `<select class="form-select form-select-sm" style="max-width: 200px;" onchange="applyFilter('leave_type_id', this.value)">${typeOpts}</select>`;
+        container.innerHTML += `
+          <select class="form-select form-select-sm" style="max-width: 200px;" onchange="applyFilter('current_only', this.value)">
+            <option value="">All Leaves</option>
+            <option value="1">Current Active Leaves Today</option>
+          </select>`;
+      }
+    }
+
+    function applyFilter(key, val) {
+      currentState.filters[key] = val;
+      currentState.page = 1;
+      fetchRecords();
+    }
+
+    function debouncedFetch() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        currentState.search = document.getElementById('filter-search').value;
+        currentState.page = 1;
+        fetchRecords();
+      }, 300);
+    }
+
+    // View Switcher (List / Card / Kanban)
+    function renderView() {
+      const renderArea = document.getElementById('view-render-area');
+      renderArea.innerHTML = '';
+
+      if (currentState.records.length === 0) {
+        renderArea.innerHTML = `<div class="card p-5 text-center border-0 text-muted shadow-sm">No records found matching your filters.</div>`;
+        return;
+      }
+
+      if (currentState.viewMode === 'list') {
+        renderListView(renderArea);
+      } else if (currentState.viewMode === 'card') {
+        renderCardView(renderArea);
+      } else if (currentState.viewMode === 'kanban') {
+        renderKanbanView(renderArea);
+      }
+    }
+
+    // 1. LIST VIEW
+    function renderListView(container) {
+      let tableHtml = `
+        <div class="table-responsive bg-white rounded shadow-sm">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th width="40"><input type="checkbox" class="form-check-input" onchange="toggleSelectAll(this)"></th>
+                <th>Name / Info</th>
+                <th>Department</th>
+                <th>Code / Type</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      
+      currentState.records.forEach(r => {
+        const isChecked = currentState.selectedIds.has(r.id) ? 'checked' : '';
+        tableHtml += `
+          <tr>
+            <td><input type="checkbox" class="form-check-input record-checkbox" value="${r.id}" ${isChecked} onchange="toggleRecordSelect(${r.id}, this.checked)"></td>
+            <td>
+              <div class="d-flex align-items-center">
+                <img src="${r.avatar_url || '/web/static/img/placeholder.png'}" class="rounded-circle me-2" width="36" height="36">
+                <div>
+                  <div class="fw-bold">${r.name || r.employee_name}</div>
+                  <small class="text-muted">${r.work_email || r.date || ''}</small>
+                </div>
+              </div>
+            </td>
+            <td>${r.department || 'N/A'}</td>
+            <td><span class="badge bg-light text-dark border">${r.employee_code || r.leave_type || 'N/A'}</span></td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary" onclick="openRecordModal(${r.id})">View Form</button>
+            </td>
+          </tr>`;
+      });
+
+      tableHtml += `</tbody></table></div>`;
+      container.innerHTML = tableHtml;
+    }
+
+    // 2. CARD VIEW (4 Cards Per Row -> col-md-3)
+    function renderCardView(container) {
+      let gridHtml = `<div class="row g-3">`;
+      currentState.records.forEach(r => {
+        gridHtml += `
+          <div class="col-12 col-sm-6 col-md-3">
+            <div class="card h-100 shadow-sm border-0 text-center p-3">
+              <img src="${r.avatar_url}" class="rounded-circle mx-auto mb-2" width="64" height="64">
+              <h6 class="fw-bold mb-1">${r.name || r.employee_name}</h6>
+              <small class="text-muted mb-2">${r.job_title || r.department || ''}</small>
+              <span class="badge bg-light text-dark border mx-auto mb-3">${r.employee_code || r.leave_type || ''}</span>
+              <button class="btn btn-sm btn-primary w-100 mt-auto" onclick="openRecordModal(${r.id})">Open Record</button>
+            </div>
+          </div>`;
+      });
+      gridHtml += `</div>`;
+      container.innerHTML = gridHtml;
+    }
+
+    // 3. KANBAN VIEW
+    function renderKanbanView(container) {
+      let kanbanHtml = `<div class="row g-3">`;
+      currentState.records.forEach(r => {
+        kanbanHtml += `
+          <div class="col-md-4">
+            <div class="card border-start border-4 border-primary shadow-sm p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="fw-bold mb-0">${r.name || r.employee_name}</h6>
+                  <small class="text-muted">${r.department || 'N/A'}</small>
+                </div>
+                <span class="badge bg-info text-dark">${r.status || r.state || 'Active'}</span>
+              </div>
+              <hr class="my-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">${r.employee_code || r.date || ''}</small>
+                <button class="btn btn-sm btn-link text-decoration-none" onclick="openRecordModal(${r.id})">Details →</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      kanbanHtml += `</div>`;
+      container.innerHTML = kanbanHtml;
+    }
+
+    // Selection & CSV Export
+    function toggleRecordSelect(id, checked) {
+      if (checked) currentState.selectedIds.add(id);
+      else currentState.selectedIds.delete(id);
+      updateSelectedCount();
+    }
+
+    function toggleSelectAll(master) {
+      document.querySelectorAll('.record-checkbox').forEach(cb => {
+        cb.checked = master.checked;
+        toggleRecordSelect(parseInt(cb.value), master.checked);
+      });
+    }
+
+    function updateSelectedCount() {
+      document.getElementById('selected-count').innerText = currentState.selectedIds.size;
+    }
+
+    function exportSelectedRecords() {
+      if (currentState.selectedIds.size === 0) {
+        alert("Please select at least one record to export.");
+        return;
+      }
+      const exportData = currentState.records.filter(r => currentState.selectedIds.has(r.id));
+      const csvContent = "data:text/csv;charset=utf-8," + [
+        Object.keys(exportData[0]).join(","),
+        ...exportData.map(row => Object.values(row).map(v => `"${v}"`).join(","))
+      ].join("\n");
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${currentState.currentPageName}_export.csv`);
+      document.body.appendChild(link);
+      link.click();
+    }
+
+    // Record Details Modal View
+    async function openRecordModal(recordId) {
+      showLoader();
+      const pageConfig = currentState.modelMap[currentState.currentPageName];
+      
+      try {
+        const response = await fetch('/api/dashboard/record/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ params: { model: pageConfig.model, record_id: recordId } })
+        });
+
+        const res = await response.json();
+        if (res.result) {
+          const data = res.result;
+          let formFields = `<div class="row g-3">`;
+          for (const [key, value] of Object.entries(data)) {
+            if (key === 'avatar_url') continue;
+            formFields += `
+              <div class="col-md-6">
+                <label class="form-label text-capitalize fw-bold small text-muted">${key.replace('_', ' ')}</label>
+                <input type="text" class="form-control form-control-sm bg-light" value="${value}" readonly>
+              </div>`;
+          }
+          formFields += `</div>`;
+          
+          document.getElementById('modal-body-content').innerHTML = formFields;
+          const myModal = new bootstrap.Modal(document.getElementById('recordDetailModal'));
+          myModal.show();
+        }
+      } catch (err) {
+        console.error("Error opening modal:", err);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // Pagination controls
+    function renderPagination(currentPage, totalPages, totalCount) {
+      document.getElementById('pagination-info').innerText = `Showing page ${currentPage} of ${totalPages} (${totalCount} total records)`;
+      const container = document.getElementById('pagination-container');
+      container.innerHTML = '';
+
+      if (totalPages <= 1) return;
+
+      for (let i = 1; i <= totalPages; i++) {
+        container.innerHTML += `
+          <li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>
+          </li>`;
+      }
+    }
+
+    function goToPage(p) {
+      currentState.page = p;
+      fetchRecords();
+    }
+
+    function switchView(mode) {
+      currentState.viewMode = mode;
+      document.querySelectorAll('#view-mode-toggle button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-view="${mode}"]`).classList.add('active');
+      renderView();
+    }
+  </script>
+</body>
+</html>

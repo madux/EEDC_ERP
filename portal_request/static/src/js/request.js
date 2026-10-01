@@ -273,162 +273,649 @@ odoo.define('portal_request.portal_request', function (require) {
         }
     }
 
-    function buildProductTable(data, memo_type, require = '', hidden = 'd-none', readon = '') {
-        $(`#tbody_product`).empty()
-        $.each(data, function (k, elm) {
-            if (elm) {
-                var lastRow_count = getOrAssignRowNumber()
-                console.log(`Building product table ${k} ${elm}`)
-                $(`#tbody_product`).append(
-                    `<tr class="heading prod_row" data-lid="" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
-                        <th width="5%">
-                            <span>
-                                <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.request_line_id}"/>
-                            </span>
-                        </th>
-                        <th width="20%">
-                            <span id=${elm.id}>
-                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrow d-none" name="product_item_id" value=${elm.id} labelfor="Product Name - ${elm.name}"/>
-                                <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrowx" name="product_item_idx" value=${elm.name} labelfor="Product Name - ${elm.name}"/>
-                            </span>
-                        </th>
-                        <th width="10%">
-                            <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" disabled="true" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
-                        </th>
-                        <th width="5%">
-                            <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" location_id="${elm.location_id}" labelfor="Request Quantity"/> 
-                        </th>
-                        <th width="10%">
-                            <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" disabled="true" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '' : 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Unit Amount"/> 
-                        </th>
+    // function buildProductTable(data, memo_type, require = '', hidden = 'd-none', readon = '') {
+    //     $(`#tbody_product`).empty()
+    //     $.each(data, function (k, elm) {
+    //         if (elm) {
+    //             var lastRow_count = getOrAssignRowNumber()
+    //             console.log(`Building product table ${k} ${elm}`)
+    //             $(`#tbody_product`).append(
+    //                 `<tr class="heading prod_row" data-lid="" id="${elm.id}" name="prod_row" row_count=${lastRow_count}>
+    //                     <td class="col-check text-center">
+    //                         <span>
+    //                             <input type="checkbox" readonly="readonly" class="productchecked" checked="" id="${elm.id}" name="${elm.qty}" code="${elm.request_line_id}"/>
+    //                         </span>
+    //                     </td>
+    //                     <td class="col-product">
+    //                         <span id=${elm.id}>
+    //                             <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrow d-none" name="product_item_id" value=${elm.id} labelfor="Product Name - ${elm.name}"/>
+    //                             <input id="${elm.id}" special_id="${lastRow_count}" readonly="readonly" disabled="true" class="form-control productitemrowx" name="product_item_idx" value=${elm.name} labelfor="Product Name - ${elm.name}"/>
+    //                         </span>
+    //                     </td>
+    //                     <td class="col-description">
+    //                         <input type="textarea" placeholder="Start typing" name="description" readonly="readonly" disabled="true" id="desc-${lastRow_count}" desc_elm="" value="${elm.description}" class="DescFor form-control" labelfor="Note"/> 
+    //                     </td>
+    //                     <td class="col-qty">
+    //                         <input type="number" pattern="[0-9\s]" min="1" productinput="productreqQty" name="${elm.qty}" id="${elm.id}" value="${elm.qty}" readonly="readonly" disabled="true" required="required" class="productinput form-control" location_id="${elm.location_id}" labelfor="Request Quantity"/> 
+    //                     </td>
+    //                     <td class="col-price">
+    //                         <input type="number" name="amount_total" id="${elm.id}" value="${elm.amount_total}" readonly="readonly" disabled="true" amount_total="${elm.amount_total}" required="${memo_type == 'soe' ? '' : 'required'}" class="productAmt form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Unit Amount"/> 
+    //                     </td>
                         
-                        <th width="10%">
-                            <input type="text" name="sub_total_line" id="sub_total_line" value="${elm.sub_total_amount}" sub_total="${elm.sub_total_amount}" required="${require}" readonly="readonly" disabled="true" class="productSubTotal form-control ${hidden}" labelfor="unit_sub_total"/> 
-                        </th>
+    //                     <td class="col-subtotal">
+    //                         <input type="text" name="sub_total_line" id="sub_total_line" value="${elm.sub_total_amount}" sub_total="${elm.sub_total_amount}" required="${require}" readonly="readonly" disabled="true" class="productSubTotal form-control ${hidden}" labelfor="unit_sub_total"/> 
+    //                     </td>
 
-                        <th width="10%">
-                            <input type="text" name="usedqty" id="${elm.id - lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" class="productUsedQty form-control ${hidden}" labelfor="Used Quantity"/> 
-                        </th>
-                        <th width="10%">
-                            <input type="text" name="usedAmount" id="${elm.used_amount - lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required' : ''}" class="productUsedAmt form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor=" Used Amount"/> 
-                        </th>
-                        <th width="10%" id="retirement_sub_total_th">
-                            <input type="number" value="${elm.sub_total_amount}" name="retireSubTotal" id="${elm.sub_total_amount - lastRow_count}" main_name = "retireSubTotal" class="retireSubTotal${lastRow_count} form-control ${memo_type == 'soe' ? '' : 'd-none'}}" labelfor="Retire Subtotal" readonly="true" disabled="true"/> 
-                        </th>
-                        <th width="45%">
-                            <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note" placeholder="type more reason..."/> 
-                        </th>
-                        <th width="5%">
-                            <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field fa fa-trash-o p-3 ${memo_type == 'soe' ? 'd-none' : ''}"></a>
-                        </th>
-                    </tr>`
+    //                     <td width="10%">
+    //                         <input type="text" name="usedqty" id="${elm.id - lastRow_count}" value="${elm.used_qty}" usedqty="${elm.used_qty}" required="${require}" class="productUsedQty form-control ${hidden}" labelfor="Used Quantity"/> 
+    //                     </td>
+    //                     <td width="10%">
+    //                         <input type="text" name="usedAmount" id="${elm.used_amount - lastRow_count}" value="${elm.used_amount}" usedAmount="${elm.used_qty}" required="${memo_type == 'soe' ? 'required' : ''}" class="productUsedAmt form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor=" Used Amount"/> 
+    //                     </td>
+    //                     <td width="10%" id="retirement_sub_total_th">
+    //                         <input type="number" value="${elm.sub_total_amount}" name="retireSubTotal" id="${elm.sub_total_amount - lastRow_count}" main_name = "retireSubTotal" class="retireSubTotal${lastRow_count} form-control ${memo_type == 'soe' ? '' : 'd-none'}}" labelfor="Retire Subtotal" readonly="true" disabled="true"/> 
+    //                     </td>
+    //                     <td width="45%">
+    //                         <input type="textarea" name="note_area" id="${lastRow_count}" note_elm="" class="Notefor form-control ${hidden}" labelfor="Note" placeholder="type more reason..."/> 
+    //                     </td>
+    //                     <td width="5%">
+    //                         <a id="${lastRow_count}" remove_id="${lastRow_count}" name="${elm.id}" href="#" class="remove_field fa fa-trash-o p-3 ${memo_type == 'soe' ? 'd-none' : ''}"></a>
+    //                     </td>
+    //                 </tr>`
 
-                )
-                setProductdata.push(elm.id)
-            } else {
-                console.log('-')
+    //             )
+    //             setProductdata.push(elm.id)
+    //         } else {
+    //             console.log('-')
+    //         }
+    //     });
+    // }
+
+    function buildProductTable(data, memo_type, require = '', hidden = 'd-none', readon = '') {
+
+        $('#tbody_product').empty();
+
+        $.each(data, function (k, elm) {
+
+            if (!elm) {
+                return;
             }
+
+            var rowNo = getOrAssignRowNumber();
+
+            $('#tbody_product').append(`
+                <tr class="prod_row"
+                    data-lid=""
+                    id="row_${rowNo}"
+                    name="prod_row"
+                    row_count="${rowNo}">
+
+                    <!-- =====================================
+                        CHECKBOX
+                        ===================================== -->
+                    <td class="col-check text-center">
+
+                        <input type="checkbox"
+                            readonly="readonly"
+                            class="productchecked"
+                            checked="checked"
+                            id="check_${rowNo}"
+                            name="${elm.qty}"
+                            code="${elm.request_line_id || ''}"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        PRODUCT
+                        ===================================== -->
+                    <td class="col-product">
+
+                        <!-- Hidden Product ID -->
+                        <input type="hidden"
+                            class="productitemrow"
+                            name="product_item_id"
+                            value="${elm.id}"/>
+
+                        <!-- Visible Product Name -->
+                        <input type="text"
+                            readonly="readonly"
+                            disabled="disabled"
+                            id="product_${rowNo}"
+                            special_id="${rowNo}"
+                            class="form-control productitemrowx"
+                            value="${elm.name || ''}"
+                            data-product-id="${elm.id}"
+                            labelfor="Product Name"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        DESCRIPTION
+                        ===================================== -->
+                    <td class="col-description">
+
+                        <div class="input-container">
+
+                            <textarea
+                                readonly="readonly"
+                                disabled="disabled"
+                                id="desc_${rowNo}"
+                                desc_elm=""
+                                class="form-control scroll-textarea DescFor"
+                                labelfor="Description">${elm.description || ''}</textarea>
+
+                            <button type="button"
+                                    class="expand-btn"
+                                    data-row="${rowNo}">
+                                ↕
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                    <!-- =====================================
+                        REQUEST QTY
+                        ===================================== -->
+                    <td class="col-qty">
+
+                        <input type="number"
+                            min="1"
+                            productinput="productreqQty"
+                            name="${elm.qty}"
+                            id="qty_${rowNo}"
+                            value="${elm.qty || 0}"
+                            readonly="readonly"
+                            disabled="disabled"
+                            class="productinput form-control"
+                            location_id="${elm.location_id || ''}"
+                            labelfor="Request Quantity"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        UNIT PRICE
+                        ===================================== -->
+                    <td class="col-price">
+
+                        <input type="number"
+                            name="amount_total"
+                            id="amount_${rowNo}"
+                            value="${elm.amount_total || 0}"
+                            readonly="readonly"
+                            disabled="disabled"
+                            amount_total="${elm.amount_total || 0}"
+                            class="productAmt form-control ${memo_type === 'soe' ? '' : 'd-none'}"
+                            labelfor="Unit Amount"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        SUB TOTAL
+                        ===================================== -->
+                    <td class="col-subtotal">
+
+                        <input type="text"
+                            name="sub_total_line"
+                            id="subtotal_${rowNo}"
+                            value="${elm.sub_total_amount || 0}"
+                            sub_total="${elm.sub_total_amount || 0}"
+                            readonly="readonly"
+                            disabled="disabled"
+                            class="productSubTotal form-control ${hidden}"
+                            labelfor="Subtotal"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        SOE USED QTY
+                        ===================================== -->
+                    <td class="col-used-qty">
+
+                        <input type="text"
+                            name="usedqty"
+                            id="usedqty_${rowNo}"
+                            value="${elm.used_qty || 0}"
+                            usedqty="${elm.used_qty || 0}"
+                            class="productUsedQty form-control ${hidden}"
+                            labelfor="Used Quantity"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        SOE USED AMOUNT
+                        ===================================== -->
+                    <td class="col-used-price">
+
+                        <input type="text"
+                            name="usedAmount"
+                            id="usedamount_${rowNo}"
+                            value="${elm.used_amount || 0}"
+                            usedAmount="${elm.used_amount || 0}"
+                            class="productUsedAmt form-control ${memo_type === 'soe' ? '' : 'd-none'}"
+                            labelfor="Used Amount"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        RETIRE SUBTOTAL
+                        ===================================== -->
+                    <td class="col-retire">
+
+                        <input type="number"
+                            name="retireSubTotal"
+                            id="retiresubtotal_${rowNo}"
+                            value="${elm.retire_sub_total_amount || elm.sub_total_amount || 0}"
+                            main_name="retireSubTotal"
+                            readonly="readonly"
+                            disabled="disabled"
+                            class="form-control retireSubTotal${rowNo} ${memo_type === 'soe' ? '' : 'd-none'}"
+                            labelfor="Retire Subtotal"/>
+
+                    </td>
+
+                    <!-- =====================================
+                        NOTE
+                        ===================================== -->
+                    <td class="col-description">
+
+                        <textarea
+                            name="note_area"
+                            id="note_${rowNo}"
+                            note_elm=""
+                            class="form-control Notefor ${hidden}"
+                            placeholder="Type more reason..."
+                            labelfor="Note"></textarea>
+
+                    </td>
+
+                    <!-- =====================================
+                        DELETE
+                        ===================================== -->
+                    <td class="col-extra text-center">
+
+                        <a id="delete_${rowNo}"
+                        remove_id="${rowNo}"
+                        name="${elm.id}"
+                        href="#"
+                        class="remove_field fa fa-trash-o p-2 ${memo_type === 'soe' ? 'd-none' : ''}">
+                        </a>
+
+                    </td>
+
+                </tr>
+            `);
+
+            setProductdata.push(elm.id);
         });
     }
+        function buildProductRow(memo_type) {
 
-    function buildProductRow(memo_type) {
-        // for new request: building each line of item 
-        let default_source_location = $('#source_location_id').val() || $('#TargetSourceLocation').val() || 0
-        let lastRow_count = getOrAssignRowNumber()
-        $(`#tbody_product`).append(
-            `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count} data-lid="">
-                <th width="5%">
-                    <span>
-                        <input type="checkbox" class="productchecked" code=""/>
-                    </span>
-                </th>
-                <th width="25%">
-                    <span>
-                        <input special_id="${lastRow_count}" row_identity="identity_${lastRow_count}" class="form-control productitemrow" name="product_item_id" required="${setRequiredFields(memo_type, productRequiredItems)}" labelfor="Product Name"/>
-                    </span>
-                </th>
-                <th width="20%">
-                    <textarea placeholder="Start typing" name="description" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required' : ''}" class="DescFor form-control" labelfor="Description"/> 
-                </th>
-                <th width="10%" id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''}">
-                    <input type="number" pattern="[0-9\s]" productinput="productreqQty" row_identity="identity_${lastRow_count}" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''} QTY${lastRow_count}" location_id="${default_source_location}" required="${$.inArray(memo_type, productRequiredItems) == 1 ? 'required' : ''}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
-                </th>
-                <th width="15%" id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''}">
-                    <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" row_identity="identity_${lastRow_count}" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '' : 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
-                </th>
-                <th width="15%" id="sub_total_amount_th" class="sub_total_amount ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''}">
-                    <input type="number" value="0" name="sub_total_amount" id="sub_amount_totalx-${lastRow_count}-id" row_identity="identity_${lastRow_count}" main_name = "sub_total_amount" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '' : 'required'}" class="sub_total_amount form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''} SUBTOTAL${lastRow_count}" labelfor="Subtotal" readonly="true" disabled="true"/> 
-                </th>
-                <th width="5%" id="used_qty_for_soe_th" class="${memo_type == 'soe' ? '' : 'd-none'}"> 
-                    <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" row_identity="identity_${lastRow_count}" required="${memo_type == 'soe' ? 'required' : ''}" readonly="${memo_type == 'soe' ? '' : 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Used Quantity"/> 
-                </th>
-                <th width="10%" id="used_amount_for_soe_th" class="${memo_type == 'soe' ? '' : 'd-none'}">
-                    <input type="number" name="UsedAmount" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" row_identity="identity_${lastRow_count}" required="${memo_type == 'soe' ? 'required' : ''}" readonly="${memo_type == 'soe' ? '' : 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Used Amount"/> 
-                </th>
-                
-                <th width="10%" id="note_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''}">
-                    <textarea rows="2" name="note_area" id="${lastRow_count}" row_identity="identity_${lastRow_count}" note_elm="" class="Notefor form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''}" labelfor="Note"/> 
-                </th>
-                 
-                <th width="10%" id="distance_from_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}">
-                    <textarea placeholder="Start typing" name="distance_from" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required' : ''}" class="DistanceFrom form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}" labelfor="Distance From"/> 
-                </th>
-                <th width="10%" id="distance_to_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}">
-                    <textarea placeholder="Start typing" name="distance_to" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required' : ''}" class="Distanceto form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}" labelfor="Distance To"/> 
-                </th>
+        let default_source_location =
+            $('#source_location_id').val() ||
+            $('#TargetSourceLocation').val() ||
+            0;
 
-                <th width="5%">
-                    <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field fa fa-trash-o p-3"></a>
-                </th>
-            </tr>`
-        )
-        TriggerProductField(lastRow_count)
+        let rowNo = getOrAssignRowNumber();
+
+        const isVehicle = memo_type === 'vehicle_request';
+        const isSOE = memo_type === 'soe';
+        const isMaterial = memo_type === 'material_request';
+
+        $('#tbody_product').append(`
+            <tr class="prod_row"
+                name="prod_row"
+                row_count="${rowNo}"
+                data-lid="">
+
+                <!-- CHECK -->
+                <td class="col-check text-center">
+                    <input type="checkbox"
+                        class="productchecked"
+                        code=""/>
+                </td>
+
+                <!-- PRODUCT -->
+                <td class="col-product">
+                    <input special_id="${rowNo}"
+                        row_identity="identity_${rowNo}"
+                        class="form-control productitemrow"
+                        name="product_item_id"
+                        required="${setRequiredFields(memo_type, productRequiredItems)}"
+                        labelfor="Product Name"/>
+                </td>
+
+                <!-- DESCRIPTION -->
+                <td class="col-description">
+
+                    <div class="input-container">
+
+                        <textarea
+                            rows="2"
+                            id="desc_${rowNo}"
+                            row_identity="identity_${rowNo}"
+                            desc_elm=""
+                            name="description"
+                            class="DescFor form-control scroll-textarea"
+                            labelfor="Description"
+                            ${memo_type === 'cash_advance' ? 'required' : ''}></textarea>
+
+                        <button type="button"
+                                class="expand-btn"
+                                data-row="${rowNo}">
+                            ↕
+                        </button>
+
+                    </div>
+
+                </td>
+
+                <!-- REQUEST QTY -->
+                <td class="col-qty ${isVehicle ? 'd-none' : ''}">
+
+                    <input type="number"
+                        min="1"
+                        productinput="productreqQty"
+                        row_identity="identity_${rowNo}"
+                        class="productinput form-control QTY${rowNo}"
+                        location_id="${default_source_location}"
+                        row_count="${rowNo}"
+                        labelfor="Requested Quantity"/>
+
+                </td>
+
+                <!-- UNIT PRICE -->
+                <td class="col-price ${(isSOE || isMaterial || isVehicle) ? 'd-none' : ''}">
+
+                    <input type="number"
+                        value="1"
+                        name="amount_total"
+                        id="amount_total_${rowNo}"
+                        row_identity="identity_${rowNo}"
+                        class="productAmt form-control AmounTotal${rowNo}"
+                        labelfor="Unit Price"/>
+
+                </td>
+
+                <!-- SUBTOTAL -->
+                <td class="col-subtotal ${(isSOE || isMaterial || isVehicle) ? 'd-none' : ''}">
+
+                    <input type="number"
+                        value="0"
+                        name="sub_total_amount"
+                        id="subtotal_${rowNo}"
+                        row_identity="identity_${rowNo}"
+                        readonly
+                        disabled
+                        class="form-control SUBTOTAL${rowNo}"
+                        labelfor="Subtotal"/>
+
+                </td>
+
+                <!-- SOE USED QTY -->
+                <td class="col-used-qty ${isSOE ? '' : 'd-none'}">
+
+                    <input type="number"
+                        name="usedQty_${rowNo}"
+                        id="usedQty_${rowNo}"
+                        row_identity="identity_${rowNo}"
+                        class="productUsedQty form-control"
+                        labelfor="Used Quantity"/>
+
+                </td>
+
+                <!-- SOE USED AMOUNT -->
+                <td class="col-used-price ${isSOE ? '' : 'd-none'}">
+
+                    <input type="number"
+                        name="UsedAmount"
+                        id="UsedAmount_${rowNo}"
+                        row_identity="identity_${rowNo}"
+                        class="productSoe form-control"
+                        labelfor="Used Amount"/>
+
+                </td>
+
+                <!-- NOTE -->
+                <td class="col-description ${isVehicle ? 'd-none' : ''}">
+
+                    <textarea rows="2"
+                            id="note_${rowNo}"
+                            row_identity="identity_${rowNo}"
+                            note_elm=""
+                            name="note_area"
+                            class="Notefor form-control"
+                            labelfor="Note"></textarea>
+
+                </td>
+
+                <!-- VEHICLE FROM -->
+                <td class="col-used-qty ${isVehicle ? '' : 'd-none'}">
+
+                    <textarea rows="2"
+                            id="distance_from_${rowNo}"
+                            row_identity="identity_${rowNo}"
+                            class="DistanceFrom form-control"
+                            ${isVehicle ? 'required' : ''}
+                            labelfor="Distance From"></textarea>
+
+                </td>
+
+                <!-- VEHICLE TO -->
+                <td class="col-used-qty ${isVehicle ? '' : 'd-none'}">
+
+                    <textarea rows="2"
+                            id="distance_to_${rowNo}"
+                            row_identity="identity_${rowNo}"
+                            class="Distanceto form-control"
+                            ${isVehicle ? 'required' : ''}
+                            labelfor="Distance To"></textarea>
+
+                </td>
+
+                <!-- DELETE -->
+                <td class="col-extra text-center">
+
+                    <a id="delete_${rowNo}"
+                    remove_id="${rowNo}"
+                    href="#"
+                    class="remove_field fa fa-trash-o p-2">
+                    </a>
+
+                </td>
+
+            </tr>
+        `);
+
+        TriggerProductField(rowNo);
+
         $('textarea').autoResize();
-        scrollTable(); // used to scroll to the next level when add a line
+
+        scrollTable();
     }
 
     function buildEmployeeRow(memo_type) {
-        // used to build employee lines for promotion and transfers
-        let lastRow_count = getOrAssignRowNumber(memo_type)
-        // console.log("what is memo type ==", memo_type)
-        // console.log(`lastrowcount ${lastRow_count}`)
-        $(`#tbody_employee`).append(
-            `<tr class="heading employee_row" name="employee_row" row_count=${lastRow_count}>
-                <th width="5%">
-                    <span>
-                        <input type="checkbox" class="employeechecked" code=""/>
-                    </span>
-                </th>
-                <th width="35%">
-                    <span>
-                        <input employee_line_id="" employee_special_id="${lastRow_count}" class="form-control employeeitemrow" name="employee_item_id" required="required" labelfor="Employee Name"/>
-                    </span>
-                </th>
-                <th width="20%">
-                    <span>
-                        <input department_line_id="" department_special_id="${lastRow_count}" class="form-control" name="department_item_id" required="required" labelfor="Department Name"/>
-                    </span>
-                </th>
 
-                <th width="20%">
-                    <span>
-                        <input role_line_id="" role_special_id="${lastRow_count}" class="form-control" name="role_item_id" required="required" labelfor="Role"/>
-                    </span>
-                </th>
-                <th width="20%">
-                    <span>
-                        <input district_line_id="" district_special_id="${lastRow_count}" class="form-control districtitemrow" name="district_item_id" required="required" labelfor="District"/>
-                    </span>
-                </th>  
-                <th width="5%">
-                    <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field fa fa-trash-o p-3"></a>
-                </th>
-            </tr>`
-        )
-        TriggerEmployeeData(lastRow_count)
-        // $('textarea').autoResize();
-        scrollTable(); // used to scroll to the next level when add a line
+        let rowNo = getOrAssignRowNumber(memo_type);
+
+        $('#tbody_employee').append(`
+            <tr class="employee_row"
+                name="employee_row"
+                row_count="${rowNo}">
+
+                <!-- CHECK -->
+                <td class="col-check text-center">
+
+                    <input type="checkbox"
+                        class="employeechecked"
+                        code=""/>
+
+                </td>
+
+                <!-- EMPLOYEE -->
+                <td class="col-product">
+
+                    <input employee_line_id=""
+                        employee_special_id="${rowNo}"
+                        class="form-control employeeitemrow"
+                        name="employee_item_id"
+                        required="required"
+                        labelfor="Employee Name"/>
+
+                </td>
+
+                <!-- DEPARTMENT -->
+                <td class="col-description">
+
+                    <input department_line_id=""
+                        department_special_id="${rowNo}"
+                        class="form-control"
+                        name="department_item_id"
+                        required="required"
+                        labelfor="Department"/>
+
+                </td>
+
+                <!-- ROLE -->
+                <td class="col-price">
+
+                    <input role_line_id=""
+                        role_special_id="${rowNo}"
+                        class="form-control"
+                        name="role_item_id"
+                        required="required"
+                        labelfor="Role"/>
+
+                </td>
+
+                <!-- DISTRICT -->
+                <td class="col-subtotal">
+
+                    <input district_line_id=""
+                        district_special_id="${rowNo}"
+                        class="form-control districtitemrow"
+                        name="district_item_id"
+                        required="required"
+                        labelfor="District"/>
+
+                </td>
+
+                <!-- DELETE -->
+                <td class="col-extra text-center">
+
+                    <a href="#"
+                    employee_remove_id="${rowNo}"
+                    class="employee_remove_field fa fa-trash-o p-2">
+                    </a>
+
+                </td>
+
+            </tr>
+        `);
+
+        TriggerEmployeeData(rowNo);
+
+        scrollTable();
     }
+
+    // function buildProductRow(memo_type) {
+    //     // for new request: building each line of item 
+    //     let default_source_location = $('#source_location_id').val() || $('#TargetSourceLocation').val() || 0
+    //     let lastRow_count = getOrAssignRowNumber()
+    //     $(`#tbody_product`).append(
+    //         `<tr class="heading prod_row" name="prod_row" row_count=${lastRow_count} data-lid="">
+    //            <td class="col-check text-center">
+    //                 <span>
+    //                     <input type="checkbox" class="productchecked" code=""/>
+    //                 </span>
+    //             </td>
+    //             <td class="col-product">
+    //                 <span>
+    //                     <input special_id="${lastRow_count}" row_identity="identity_${lastRow_count}" class="form-control productitemrow" name="product_item_id" required="${setRequiredFields(memo_type, productRequiredItems)}" labelfor="Product Name"/>
+    //                 </span>
+    //             </td>
+    //             <td class="col-description">
+    //                 <textarea placeholder="Start typing" name="description" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'cash_advance' ? 'required' : ''}" class="DescFor form-control" labelfor="Description"/> 
+    //             </td>
+    //             <td id="req_qty_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none col-qty' : 'col-qty'}">
+    //                 <input type="number" pattern="[0-9\s]" productinput="productreqQty" row_identity="identity_${lastRow_count}" class="productinput form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''} QTY${lastRow_count}" location_id="${default_source_location}" required="${$.inArray(memo_type, productRequiredItems) == 1 ? 'required' : ''}" labelfor="Requested Quantity" min="1" row_count="${lastRow_count}"/>
+    //             </td>
+    //             <td id="unit_price_label_th" class="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none col-price' : 'col-price'}">
+    //                 <input type="number" value="1" name="amount_total" id="amount_totalx-${lastRow_count}-id" row_identity="identity_${lastRow_count}" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '' : 'required'}" class="productAmt form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''} AmounTotal${lastRow_count}" labelfor="Unit Price" row_count="${lastRow_count}"/> 
+    //             </td>
+    //             <td id="sub_total_amount_th" class="sub_total_amount ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none col-subtotal' : 'col-subtotal'}">
+    //                 <input type="number" value="0" name="sub_total_amount" id="sub_amount_totalx-${lastRow_count}-id" row_identity="identity_${lastRow_count}" main_name = "sub_total_amount" required="${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? '' : 'required'}" class="sub_total_amount form-control ${$.inArray(memo_type, ['soe', 'material_request', 'vehicle_request']) !== -1 ? 'd-none' : ''} SUBTOTAL${lastRow_count}" labelfor="Subtotal" readonly="true" disabled="true"/> 
+    //             </td>
+    //             <td id="used_qty_for_soe_th" class="${memo_type == 'soe' ? 'col-used-qty' : 'd-none col-used-qty'}"> 
+    //                 <input type="text" name="usedQty-${lastRow_count}" id="usedQty-${lastRow_count}-id" row_identity="identity_${lastRow_count}" required="${memo_type == 'soe' ? 'required' : ''}" readonly="${memo_type == 'soe' ? '' : 'readonly'}" class="productUsedQty form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Used Quantity"/> 
+    //             </td>
+    //             <td id="used_amount_for_soe_th" class="${memo_type == 'soe' ? 'col-used-price' : 'd-none col-used-price'}">
+    //                 <input type="number" name="UsedAmount" id="amounttUsed-${lastRow_count}" used_amount="UsedAmount-${lastRow_count}" row_identity="identity_${lastRow_count}" required="${memo_type == 'soe' ? 'required' : ''}" readonly="${memo_type == 'soe' ? '' : 'readonly'}" class="productSoe form-control ${memo_type == 'soe' ? '' : 'd-none'}" labelfor="Used Amount"/> 
+    //             </td>
+                
+    //             <td id="note_label_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none col-subtotal' : 'col-subtotal'}">
+    //                 <textarea rows="2" name="note_area" id="${lastRow_count}" row_identity="identity_${lastRow_count}" note_elm="" class="Notefor form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'd-none' : ''}" labelfor="Note"/> 
+    //             </td>
+                 
+    //             <td id="distance_from_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'col-used-qty' : 'd-none col-used-qty'}">
+    //                 <textarea placeholder="Start typing" name="distance_from" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required' : ''}" class="DistanceFrom form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}" labelfor="Distance From"/> 
+    //             </td>
+    //             <td id="distance_to_th" class="${$.inArray(memo_type, ['vehicle_request']) !== -1 ? 'col-used-qty' : 'd-none col-used-qty'}">
+    //                 <textarea placeholder="Start typing" name="distance_to" id="${lastRow_count}" row_identity="identity_${lastRow_count}" desc_elm="" required="${memo_type == 'vehicle_request' ? 'required' : ''}" class="Distanceto form-control ${$.inArray(memo_type, ['vehicle_request']) !== -1 ? '' : 'd-none'}" labelfor="Distance To"/> 
+    //             </td>
+
+    //             <td">
+    //                 <a id="${lastRow_count}" remove_id="${lastRow_count}" href="#" class="remove_field fa fa-trash-o p-3"></a>
+    //             </td>
+    //         </tr>`
+    //     )
+    //     TriggerProductField(lastRow_count)
+    //     $('textarea').autoResize();
+    //     scrollTable(); // used to scroll to the next level when add a line
+    // }
+
+    // function buildEmployeeRow(memo_type) {
+    //     // used to build employee lines for promotion and transfers
+    //     let lastRow_count = getOrAssignRowNumber(memo_type)
+    //     // console.log("what is memo type ==", memo_type)
+    //     // console.log(`lastrowcount ${lastRow_count}`)
+    //     $(`#tbody_employee`).append(
+    //         `<tr class="heading employee_row" name="employee_row" row_count=${lastRow_count}>
+    //             <th width="5%">
+    //                 <span>
+    //                     <input type="checkbox" class="employeechecked" code=""/>
+    //                 </span>
+    //             </th>
+    //             <th width="35%">
+    //                 <span>
+    //                     <input employee_line_id="" employee_special_id="${lastRow_count}" class="form-control employeeitemrow" name="employee_item_id" required="required" labelfor="Employee Name"/>
+    //                 </span>
+    //             </th>
+    //             <th width="20%">
+    //                 <span>
+    //                     <input department_line_id="" department_special_id="${lastRow_count}" class="form-control" name="department_item_id" required="required" labelfor="Department Name"/>
+    //                 </span>
+    //             </th>
+
+    //             <th width="20%">
+    //                 <span>
+    //                     <input role_line_id="" role_special_id="${lastRow_count}" class="form-control" name="role_item_id" required="required" labelfor="Role"/>
+    //                 </span>
+    //             </th>
+    //             <th width="20%">
+    //                 <span>
+    //                     <input district_line_id="" district_special_id="${lastRow_count}" class="form-control districtitemrow" name="district_item_id" required="required" labelfor="District"/>
+    //                 </span>
+    //             </th>  
+    //             <th width="5%">
+    //                 <a href="#" id="" employee_remove_id="${lastRow_count}" class="employee_remove_field fa fa-trash-o p-3"></a>
+    //             </th>
+    //         </tr>`
+    //     )
+    //     TriggerEmployeeData(lastRow_count)
+    //     // $('textarea').autoResize();
+    //     scrollTable(); // used to scroll to the next level when add a line
+    // }
 
     localStorage.setItem('SelectedProductItems', "[]")
 
@@ -1409,84 +1896,392 @@ odoo.define('portal_request.portal_request', function (require) {
                     console.log('No preselection needed');
                 }
                 console.log('=== END PRESELECTION DEBUG ===');
-
+                
                 self.configOptionsCache = {};
-
                 (function buildConfigCache() {
-                    $('#selectConfigOption option').each(function () {
-                        var $opt = $(this);
-                        var val = $opt.val();
-                        if (val === '') return;
 
-                        var memo_type_id = String($opt.attr('memo_key_id') || '');
-                        var rawInter = $opt.attr('inter_district');
-                        var isInterProcess = isTrueValue(rawInter);
+                $('#selectConfigOption option').each(function () {
 
-                        // Get branch_id - try multiple approaches
-                        var branchId = $opt.attr('branch_id') || $opt.data('branch_id');
-                        if (branchId) {
-                            branchId = String(branchId);
-                        }
+                    var $opt = $(this);
+                    var val = $opt.val();
 
-                        console.log('Building cache for:', $opt.text(), {
+                    // Ignore placeholder
+                    if (val === '') {
+                        return;
+                    }
+
+                    var memo_type_id = String(
+                        $opt.attr('memo_key_id') || ''
+                    );
+
+                    if (!memo_type_id) {
+                        console.warn(
+                            'Config option has no memo_key_id:',
+                            $opt.text()
+                        );
+                        return;
+                    }
+
+                    /*
+                    * Determine whether this configuration
+                    * is inter-district.
+                    */
+                    var rawInter = $opt.attr('inter_district');
+                    var isInterProcess = isTrueValue(rawInter);
+
+                    /*
+                    * Company belonging to this config.
+                    */
+                    var companyId = String(
+                        $opt.attr('company_id') || ''
+                    );
+
+                    /*
+                    * Branch/district - retained in case
+                    * you need it later.
+                    */
+                    var branchId =
+                        $opt.attr('branch_id') ||
+                        $opt.data('branch_id');
+
+                    if (branchId) {
+                        branchId = String(branchId);
+                    }
+
+                    console.log(
+                        'Building config cache:',
+                        $opt.text(),
+                        {
                             memo_type_id: memo_type_id,
+                            company_id: companyId,
                             branch_id: branchId,
-                            inter: isInterProcess
-                        });
+                            inter_district: isInterProcess
+                        }
+                    );
 
-                        // Initialize cache structure
-                        if (!self.configOptionsCache[memo_type_id]) {
-                            self.configOptionsCache[memo_type_id] = {
-                                byBranch: {},
+                    /*
+                    * Initialize cache for this request type.
+                    */
+                    if (!self.configOptionsCache[memo_type_id]) {
+
+                        self.configOptionsCache[memo_type_id] = {
+
+                            byBranch: {},
+
+                            byCompany: {},
+
+                            inter: [],
+
+                            noninter: [],
+
+                            all: []
+                        };
+                    }
+
+                    var cache =
+                        self.configOptionsCache[memo_type_id];
+
+                    /*
+                    * Clone the option so that we don't
+                    * manipulate the original option.
+                    */
+                    var cloneOpt = $opt.clone();
+
+                    /*
+                    * Keep company_id available on the cloned
+                    * option for later selection.
+                    */
+                    cloneOpt.attr(
+                        'data-company-id',
+                        companyId
+                    );
+
+                    /*
+                    * Also preserve the original company_id
+                    * attribute.
+                    */
+                    if (companyId) {
+                        cloneOpt.attr(
+                            'company_id',
+                            companyId
+                        );
+                    }
+
+                    /*
+                    * =========================================
+                    * ALL CONFIGURATIONS
+                    * =========================================
+                    */
+                    cache.all.push(
+                        cloneOpt.clone()
+                    );
+
+                    /*
+                    * =========================================
+                    * INTER / NON-INTER CONFIGURATIONS
+                    * =========================================
+                    *
+                    * THIS IS IMPORTANT.
+                    *
+                    * populateConfigOptionsForType()
+                    * depends on these arrays.
+                    */
+                    if (isInterProcess) {
+
+                        cache.inter.push(
+                            cloneOpt.clone()
+                        );
+
+                    } else {
+
+                        cache.noninter.push(
+                            cloneOpt.clone()
+                        );
+                    }
+
+                    /*
+                    * =========================================
+                    * BY COMPANY
+                    * =========================================
+                    */
+                    if (companyId) {
+
+                        if (!cache.byCompany[companyId]) {
+
+                            cache.byCompany[companyId] = {
+
                                 inter: [],
+
                                 noninter: [],
+
                                 all: []
                             };
                         }
 
-                        var cloneOpt = $opt.clone();
+                        cache.byCompany[companyId].all.push(
+                            cloneOpt.clone()
+                        );
 
-                        // Store in 'all' array
-                        self.configOptionsCache[memo_type_id].all.push(cloneOpt.clone());
-
-                        // Store by inter/non-inter
                         if (isInterProcess) {
-                            self.configOptionsCache[memo_type_id].inter.push(cloneOpt.clone());
+
+                            cache.byCompany[companyId].inter.push(
+                                cloneOpt.clone()
+                            );
+
                         } else {
-                            self.configOptionsCache[memo_type_id].noninter.push(cloneOpt.clone());
+
+                            cache.byCompany[companyId].noninter.push(
+                                cloneOpt.clone()
+                            );
+                        }
+                    }
+
+                    /*
+                    * =========================================
+                    * BY BRANCH / DISTRICT
+                    * =========================================
+                    *
+                    * Keep this only if you still need it
+                    * elsewhere in your code.
+                    */
+                    if (branchId) {
+
+                        if (!cache.byBranch[branchId]) {
+
+                            cache.byBranch[branchId] = {
+
+                                inter: [],
+
+                                noninter: [],
+
+                                all: []
+                            };
                         }
 
-                        // Store by branch
-                        if (branchId) {
-                            if (!self.configOptionsCache[memo_type_id].byBranch[branchId]) {
-                                self.configOptionsCache[memo_type_id].byBranch[branchId] = {
-                                    inter: [],
-                                    noninter: [],
-                                    all: []
-                                };
-                            }
+                        cache.byBranch[branchId].all.push(
+                            cloneOpt.clone()
+                        );
 
-                            self.configOptionsCache[memo_type_id].byBranch[branchId].all.push(cloneOpt.clone());
+                        if (isInterProcess) {
 
-                            if (isInterProcess) {
-                                self.configOptionsCache[memo_type_id].byBranch[branchId].inter.push(cloneOpt.clone());
-                            } else {
-                                self.configOptionsCache[memo_type_id].byBranch[branchId].noninter.push(cloneOpt.clone());
-                            }
+                            cache.byBranch[branchId].inter.push(
+                                cloneOpt.clone()
+                            );
+
+                        } else {
+
+                            cache.byBranch[branchId].noninter.push(
+                                cloneOpt.clone()
+                            );
                         }
-                    });
+                    }
 
-                    console.log('=== FINAL CACHE STRUCTURE ===');
-                    Object.keys(self.configOptionsCache).forEach(function (typeId) {
-                        var cache = self.configOptionsCache[typeId];
-                        console.log('Type', typeId, ':', {
-                            total: cache.all.length,
-                            branches: Object.keys(cache.byBranch),
-                            inter: cache.inter.length,
-                            noninter: cache.noninter.length
-                        });
-                    });
-                })();
+                });
+
+                /*
+                * =========================================
+                * DEBUG CACHE
+                * =========================================
+                */
+                console.log(
+                    '========== FINAL CONFIG CACHE =========='
+                );
+
+                Object.keys(self.configOptionsCache).forEach(
+                    function (typeId) {
+
+                        var cache =
+                            self.configOptionsCache[typeId];
+
+                        console.log(
+                            'Type:',
+                            typeId,
+                            {
+                                total: cache.all.length,
+
+                                inter: cache.inter.length,
+
+                                noninter: cache.noninter.length,
+
+                                companies:
+                                    Object.keys(
+                                        cache.byCompany
+                                    ),
+
+                                branches:
+                                    Object.keys(
+                                        cache.byBranch
+                                    )
+                            }
+                        );
+                    }
+                );
+
+            })();
+                // (function buildConfigCache() {
+                //     $('#selectConfigOption option').each(function () {
+                //         var $opt = $(this);
+                //         var val = $opt.val();
+                //         if (val === '') return;
+                         
+                //         var memo_type_id = String($opt.attr('memo_key_id') || '');
+                //         var rawInter = $opt.attr('inter_district');
+                //         var isInterProcess = isTrueValue(rawInter);
+
+                //         // Get branch_id - try multiple approaches
+                //         var branchId = $opt.attr('branch_id') || $opt.data('branch_id');
+                //         if (branchId) {
+                //             branchId = String(branchId);
+                //         }
+
+                //         console.log('Building cache for:', $opt.text(), {
+                //             memo_type_id: memo_type_id,
+                //             branch_id: branchId,
+                //             inter: isInterProcess
+                //         });
+
+                //         // Initialize cache structure
+                //         if (!self.configOptionsCache[memo_type_id]) {
+                //             self.configOptionsCache[memo_type_id] = {
+                //                 byBranch: {},
+                //                 byCompany: {},
+                //                 inter: [],
+                //                 noninter: [],
+                //                 all: []
+                //             };
+                //         }
+
+                //         var cloneOpt = $opt.clone();
+                //         var companyId = String($opt.attr('company_id') || '');
+
+                //         cloneOpt.attr('data-company-id', companyId);
+                //         // Store in 'all' array
+                //         self.configOptionsCache[memo_type_id].all.push(cloneOpt.clone());
+                //         if (companyId) { 
+                //             if (!self.configOptionsCache[memo_type_id].byCompany[companyId]) {
+
+                //                 self.configOptionsCache[memo_type_id].byCompany[companyId] = {
+                //                     inter: [],
+                //                     noninter: [],
+                //                     all: []
+                //                 };
+                //             }
+
+                //             self.configOptionsCache[memo_type_id]
+                //                 .byCompany[companyId]
+                //                 .all.push(cloneOpt.clone());
+
+                //             if (isInterProcess) {
+                //                 self.configOptionsCache[memo_type_id]
+                //                     .byCompany[companyId]
+                //                     .inter.push(cloneOpt.clone());
+                //             } else {
+                //                 self.configOptionsCache[memo_type_id]
+                //                     .byCompany[companyId]
+                //                     .noninter.push(cloneOpt.clone());
+                //             }
+                //         }
+
+                //         console.log('ConfigOptions ======$$$$$$$$$$$$$$$$=====?:', self.configOptionsCache)
+
+
+                //         // Store by inter/non-inter
+                //         // if (isInterProcess) {
+                //         //     self.configOptionsCache[memo_type_id].inter.push(cloneOpt.clone());
+                //         // } else {
+                //         //     self.configOptionsCache[memo_type_id].noninter.push(cloneOpt.clone());
+                //         // }
+
+                //         // // Store by branch
+                //         // if (branchId) {
+                //         //     if (!self.configOptionsCache[memo_type_id].byBranch[branchId]) {
+                //         //         self.configOptionsCache[memo_type_id].byBranch[branchId] = {
+                //         //             inter: [],
+                //         //             noninter: [],
+                //         //             all: []
+                //         //         };
+                //         //     }
+
+                //         //     self.configOptionsCache[memo_type_id].byBranch[branchId].all.push(cloneOpt.clone());
+
+                //         //     if (isInterProcess) {
+                //         //         self.configOptionsCache[memo_type_id].byBranch[branchId].inter.push(cloneOpt.clone());
+                //         //     } else {
+                //         //         self.configOptionsCache[memo_type_id].byBranch[branchId].noninter.push(cloneOpt.clone());
+                //         //     }
+                //         // }
+                //     });
+
+                //     console.log('=== FINAL CACHE STRUCTURE ===');
+                //     Object.keys(self.configOptionsCache).forEach(function (typeId) {
+                //         var cache = self.configOptionsCache[typeId];
+                //         console.log('Type', typeId, ':', {
+                //             total: cache.all.length,
+                //             branches: Object.keys(cache.byBranch),
+                //             companies: Object.keys(cache.byCompany),
+                //             inter: cache.inter.length,
+                //             noninter: cache.noninter.length
+                //         });
+                //     });
+                // })();
+
+                // caching all already populated processing districts
+                self.branchCache = {};
+
+                $('#selectRequestDistrict option').each(function () {
+                    var companyId = $(this).attr('company_id');
+                    if (!companyId) {
+                        return;
+                    }
+
+                    if (!self.branchCache[companyId]) {
+                        self.branchCache[companyId] = [];
+                    }
+
+                    self.branchCache[companyId].push(
+                        $(this).clone()
+                    );
+                });
 
                 var initType = $('#selectedRequestTypeId').val() || $('#selectRequestType').val();
                 var initDistrict = $('#selectRequestDistrict').val();
@@ -1499,7 +2294,8 @@ odoo.define('portal_request.portal_request', function (require) {
 
                 if (initType) {
                     // Apply district filter on initial load
-                    var info = self.populateConfigOptionsForType(initType, initInterProcess, initDistrict);
+                    // var info = self.populateConfigOptionsForType(initType, initInterProcess, initDistrict);
+                    var info = self.populateConfigOptionsForType(initType, initInterProcess, null);
 
                     console.log('Initial population result:', info);
 
@@ -2102,7 +2898,8 @@ odoo.define('portal_request.portal_request', function (require) {
                 var memo_key = selected_option.attr('memo_key');
                 var selected_district = $('#selectRequestDistrict').val();
 
-                console.log('Request Type changed:', selected_type_id, memo_key, 'District:', selected_district);
+                console.log('Request Type changed:', selected_type_id, memo_key, 'District:', null);
+                // console.log('Request Type changed:', selected_type_id, memo_key, 'District:', selected_district);
 
                 $('#selectedRequestTypeId').val(selected_type_id);
 
@@ -2116,7 +2913,8 @@ odoo.define('portal_request.portal_request', function (require) {
 
                 clearAllElement();
 
-                var info = self.populateConfigOptionsForType(selected_type_id, false, selected_district);
+                var info = self.populateConfigOptionsForType(selected_type_id, false, null);
+                // var info = self.populateConfigOptionsForType(selected_type_id, false, selected_district);
 
                 if (!info || info.matching === 0) {
                     $('#selectConfigOption').prop('disabled', true);
@@ -2156,7 +2954,8 @@ odoo.define('portal_request.portal_request', function (require) {
                     var info = self.populateConfigOptionsForType(
                         selected_type_id,
                         isInterProcess ? true : false,
-                        selected_district
+                        null
+                        // selected_district
                     );
 
                     console.log('Repopulated with', info.visible, 'options for district', selected_district);
@@ -2321,13 +3120,58 @@ odoo.define('portal_request.portal_request', function (require) {
                 }
             },
 
-            'change .isInterDistrictProcess': function (ev) {
-                var self = this;
-                var isChecked = $(ev.target).is(':checked');
-                var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
-                var selected_district = $('#selectRequestDistrict').val();
+            // 'change .isInterDistrictProcess': function (ev) {
+            //     var self = this;
+            //     var isChecked = $(ev.target).is(':checked');
+            //     var selected_type_id = String($('#selectedRequestTypeId').val() || $('#selectRequestType').val());
+            //     var selected_district = $('#selectRequestDistrict').val();
 
-                console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id, 'District:', selected_district);
+            //     console.log('Inter-district PROCESS checkbox changed:', isChecked, 'Type:', selected_type_id, 'District:', selected_district);
+
+            //     // Clear current selections
+            //     $('#selectConfigOption').val('');
+            //     $('#selectedRequestOptionId').val('');
+            //     $('#selectConfigOptionId').val('');
+            //     $('#selectRequestOption').val('');
+
+            //     // Clear location fields
+            //     $('#destination_location_id').val('').trigger('change');
+            //     $('#source_location_id').val('').trigger('change');
+
+            //     // Re-populate config options based on inter-district flag and district
+            //     if (selected_type_id) {
+            //         // var info = self.populateConfigOptionsForType(selected_type_id, isChecked, selected_district);
+            //         // isChecked is if interdistrict is checked, rebuild the exist selectOptions and
+            //         // show only the ones that has inter_district on the attribute as true
+            //         var info = self.populateConfigOptionsForType(selected_type_id, isChecked, null);
+            //         console.log('populateConfigOptionsForType returned:', info);
+
+            //         if (info.matching > 0 && info.visible === 0) {
+            //             var msg = isChecked ?
+            //                 'No inter-district process configurations found for this request type in this district.' :
+            //                 'No regular (non-inter-district) configurations found for this request type in this district.';
+            //             console.warn(msg);
+            //             alert(msg);
+            //         }
+            //     }
+            // },
+            'change .isInterDistrictProcess': function (ev) {
+
+                var self = this;
+
+                var isChecked = $(ev.target).is(':checked');
+
+                var selected_type_id = String(
+                    $('#selectedRequestTypeId').val() ||
+                    $('#selectRequestType').val()
+                );
+
+                console.log(
+                    'Inter-district PROCESS checkbox changed:',
+                    isChecked,
+                    'Type:',
+                    selected_type_id
+                );
 
                 // Clear current selections
                 $('#selectConfigOption').val('');
@@ -2335,24 +3179,35 @@ odoo.define('portal_request.portal_request', function (require) {
                 $('#selectConfigOptionId').val('');
                 $('#selectRequestOption').val('');
 
-                // Clear location fields
+                // Clear locations
                 $('#destination_location_id').val('').trigger('change');
                 $('#source_location_id').val('').trigger('change');
 
-                // Re-populate config options based on inter-district flag and district
                 if (selected_type_id) {
-                    var info = self.populateConfigOptionsForType(selected_type_id, isChecked, selected_district);
-                    console.log('populateConfigOptionsForType returned:', info);
+
+                    var info = self.populateConfigOptionsForType(
+                        selected_type_id,
+                        isChecked,
+                        null
+                    );
+
+                    console.log(
+                        'populateConfigOptionsForType returned:',
+                        info
+                    );
 
                     if (info.matching > 0 && info.visible === 0) {
-                        var msg = isChecked ?
-                            'No inter-district process configurations found for this request type in this district.' :
-                            'No regular (non-inter-district) configurations found for this request type in this district.';
+
+                        var msg = isChecked
+                            ? 'No inter-district configurations found for this request type.'
+                            : 'No regular configurations found for this request type.';
+
                         console.warn(msg);
                         alert(msg);
                     }
                 }
             },
+            
 
             'change select[name=selectConfigOption]': function (ev) {
                 let selectedTarget = $(ev.target);
@@ -2366,6 +3221,17 @@ odoo.define('portal_request.portal_request', function (require) {
                 let sro = $('#selectConfigOption option:selected')[0];
                 $('#existing_ref_label').text("Existing Ref #");
                 $('#div_existing_order').addClass('d-none');
+
+                // onchange of options, the district process district should should only the districts in that company
+                var companyId = $('#selectConfigOption option:selected').attr('company_id');
+                // console.log(
+                //     'Selected Config:',
+                //     configId,
+                //     'Company:',
+                //     companyId
+                // );
+
+                this.populateProcessingDistricts(companyId);
 
                 // clearAllElement();
                 // Clear only necessary fields
@@ -3221,45 +4087,83 @@ odoo.define('portal_request.portal_request', function (require) {
             }
         },
 
+        populateProcessingDistricts: function (companyId) {
+
+            var self = this;
+
+            var $district = $('#selectRequestDistrict');
+
+            var placeholder = $district.find('option[value=""]').clone();
+
+            $district.empty().append(placeholder);
+
+            var branches = self.branchCache[companyId] || [];
+
+            branches.forEach(function ($opt) {
+                $district.append($opt.clone());
+            });
+
+            $district.prop(
+                'disabled',
+                branches.length === 0
+            );
+
+            console.log(
+                'Loaded',
+                branches.length,
+                'districts for company',
+                companyId
+            );
+        },
+
         populateConfigOptionsForType: function (typeId, interProcessFilter, districtId) {
+            //typeId -> type of request type e.g Material request, interProcessFilter --> 
+            // if the person checks is inter district field, districtId is null
             typeId = String(typeId || '');
-            districtId = districtId ? String(districtId) : null;
 
             var $select = $('#selectConfigOption');
             var $placeholder = $select.find('option[value=""]').clone();
+
             $select.empty().append($placeholder);
 
             var cache = this.configOptionsCache[typeId];
+
             if (!cache) {
                 $select.prop('disabled', true);
-                console.log('No cache for typeId:', typeId);
-                return { matching: 0, visible: 0, hasInter: false, hasNonInter: false };
-            }
 
+                console.log('No cache for typeId:', typeId);
+
+                return {
+                    matching: 0,
+                    visible: 0,
+                    hasInter: false,
+                    hasNonInter: false
+                };
+            }
+            console.log('Loading configs with cache ', cache);
+            
             var toAdd = [];
 
-            // Filter by district FIRST, then by inter/non-inter
-            if (districtId && cache.byBranch[districtId]) {
-                console.log('Using district filter:', districtId);
-                if (interProcessFilter === null) {
-                    toAdd = cache.byBranch[districtId].all;
-                } else if (interProcessFilter === true) {
-                    toAdd = cache.byBranch[districtId].inter;
-                } else {
-                    toAdd = cache.byBranch[districtId].noninter;
-                }
+            if (interProcessFilter === true) {
+
+                console.log('Loading INTER-DISTRICT configs');
+
+                toAdd = cache.inter || [];
+
+            } else if (interProcessFilter === false) {
+
+                console.log('Loading NON-INTER-DISTRICT configs');
+
+                toAdd = cache.noninter || [];
+
             } else {
-                console.log('No district filter, using all options');
-                if (interProcessFilter === null) {
-                    toAdd = cache.all;
-                } else if (interProcessFilter === true) {
-                    toAdd = cache.inter;
-                } else {
-                    toAdd = cache.noninter;
-                }
+
+                console.log('Loading ALL configs');
+
+                toAdd = cache.all || [];
             }
 
-            console.log('Adding', toAdd.length, 'options to dropdown');
+            console.log('Adding', toAdd.length, 'options');
 
             toAdd.forEach(function ($opt) {
                 $select.append($opt.clone());
@@ -3267,25 +4171,82 @@ odoo.define('portal_request.portal_request', function (require) {
 
             $select.prop('disabled', toAdd.length === 0);
 
-            // Calculate hasInter/hasNonInter based on what's available for this district
-            var hasInter = false;
-            var hasNonInter = false;
-
-            if (districtId && cache.byBranch[districtId]) {
-                hasInter = cache.byBranch[districtId].inter.length > 0;
-                hasNonInter = cache.byBranch[districtId].noninter.length > 0;
-            } else {
-                hasInter = cache.inter.length > 0;
-                hasNonInter = cache.noninter.length > 0;
-            }
-
             return {
                 matching: cache.all.length,
                 visible: toAdd.length,
-                hasInter: hasInter,
-                hasNonInter: hasNonInter
+                hasInter: cache.inter.length > 0,
+                hasNonInter: cache.noninter.length > 0
             };
         },
+
+        // populateConfigOptionsForType: function (typeId, interProcessFilter, districtId) {
+        //     //typeId -> type of request type e.g Material request, interProcessFilter --> 
+        //     // if the person checks is inter district field, districtId is null
+
+        //     typeId = String(typeId || '');
+        //     districtId = districtId ? String(districtId) : null;
+
+        //     var $select = $('#selectConfigOption');
+        //     var $placeholder = $select.find('option[value=""]').clone();
+        //     $select.empty().append($placeholder);
+
+        //     var cache = this.configOptionsCache[typeId];
+        //     if (!cache) {
+        //         $select.prop('disabled', true);
+        //         console.log('No cache for typeId:', typeId);
+        //         return { matching: 0, visible: 0, hasInter: false, hasNonInter: false };
+        //     }
+
+        //     var toAdd = [];
+
+        //     // Filter by district FIRST, then by inter/non-inter
+        //     if (districtId && cache.byBranch[districtId]) {
+        //         console.log('Using district filter:', districtId);
+        //         if (interProcessFilter === null) {
+        //             toAdd = cache.byBranch[districtId].all;
+        //         } else if (interProcessFilter === true) {
+        //             toAdd = cache.byBranch[districtId].inter;
+        //         } else {
+        //             toAdd = cache.byBranch[districtId].noninter;
+        //         }
+        //     } else {
+        //         console.log('No district filter, using all options');
+        //         if (interProcessFilter === null) {
+        //             toAdd = cache.all;
+        //         } else if (interProcessFilter === true) {
+        //             toAdd = cache.inter;
+        //         } else {
+        //             toAdd = cache.noninter;
+        //         }
+        //     }
+
+        //     console.log('Adding', toAdd.length, 'options to dropdown');
+
+        //     toAdd.forEach(function ($opt) {
+        //         $select.append($opt.clone());
+        //     });
+
+        //     $select.prop('disabled', toAdd.length === 0);
+
+        //     // Calculate hasInter/hasNonInter based on what's available for this district
+        //     var hasInter = false;
+        //     var hasNonInter = false;
+
+        //     if (districtId && cache.byBranch[districtId]) {
+        //         hasInter = cache.byBranch[districtId].inter.length > 0;
+        //         hasNonInter = cache.byBranch[districtId].noninter.length > 0;
+        //     } else {
+        //         hasInter = cache.inter.length > 0;
+        //         hasNonInter = cache.noninter.length > 0;
+        //     }
+
+        //     return {
+        //         matching: cache.all.length,
+        //         visible: toAdd.length,
+        //         hasInter: hasInter,
+        //         hasNonInter: hasNonInter
+        //     };
+        // },
 
     });
 

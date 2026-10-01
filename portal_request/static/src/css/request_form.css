@@ -84,3 +84,218 @@
 #button_save_submit {
         display: none !important;
 }
+
+
+#product_table_div {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+/* Main table */
+#product_table {
+    width: 100% !important;
+    min-width: 1100px;
+    table-layout: fixed;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+    background: #fff;
+}
+
+/* Header */
+#product_table thead th {
+    background: #f5f6f8;
+    color: #343a40;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px 8px;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Body cells */
+#product_table tbody td {
+    padding: 6px 7px;
+    vertical-align: middle;
+    border: 1px solid #e1e5e9;
+    background: #fff;
+}
+
+/* Row */
+#product_table tbody tr.prod_row {
+    height: 52px;
+}
+
+#product_table tbody tr.prod_row:hover td {
+    background: #f8f9fa;
+}
+
+/* Inputs */
+#product_table .form-control {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 6px 8px;
+    font-size: 13px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Quantity / amount columns */
+#product_table .productinput {
+    text-align: right;
+}
+
+/* Product field */
+#product_table .productitemrow {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+#product_table .input-container {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-width: 0;
+}
+
+#product_table .scroll-textarea {
+    width: 100%;
+    min-width: 0;
+    height: 50px;
+    min-height: 50px;
+    max-height: 80px;
+    resize: vertical;
+    overflow-y: auto;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.4;
+    padding-right: 30px;
+}
+
+/* Expand button */
+#product_table .expand-btn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #6c757d;
+    color: #fff;
+    font-size: 13px;
+    line-height: 22px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+#product_table .expand-btn:hover {
+    background: #495057;
+}
+
+/* Checkbox */
+#product_table .productchecked {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+/* =========================================================
+   TOTAL ROW
+   ========================================================= */
+
+#total_amount_form td {
+    background: #f8f9fa !important;
+    border-top: 2px solid #adb5bd !important;
+    padding: 12px 8px;
+    vertical-align: middle;
+}
+
+#total_amount_form span {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+#all_total_amount,
+#retire_total_amount_elm {
+    text-align: right;
+    display: block;
+}
+
+/* Prevent Bootstrap responsive wrapper from creating
+   weird vertical scrolling */
+.tableclass.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+
+/* Product name */
+#product_table .col-product input {
+    color: #343a40;
+    font-weight: 500;
+    text-align: left;
+}
+
+/* Product name should never display the ID */
+#product_table .col-product .productitemrow {
+    text-align: left;
+}
+
+/* Retired indicator */
+#product_table .retired-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #198754;
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* Total row */
+#product_table .total-row td {
+    background: #f8f9fa;
+    vertical-align: middle;
+}
+
+#product_table .total-label {
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#product_table .total-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Make disabled-looking fields still readable */
+#product_table input:disabled,
+#product_table textarea:disabled {
+    opacity: 1;
+    color: #343a40;
+    background-color: #fff;
+}

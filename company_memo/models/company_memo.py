@@ -1147,7 +1147,7 @@ class Memo_Model(models.Model):
 
         for r in memo_configs:
             # Case 1: normal relationship — same branch/company
-            is_related = (r.branch_id.id in branch_ids and r.company_id.id in company_ids) # or r.company_id.id in company_ids)
+            #is_related = (r.branch_id.id in branch_ids and r.company_id.id in company_ids) # or r.company_id.id in company_ids)
 
             # Case 2: inter-district or request but unrelated branch
             # is_inter_district_case = (
@@ -1157,7 +1157,7 @@ class Memo_Model(models.Model):
 
             # # Keep if either is true; otherwise remove
             # if not (is_related or is_inter_district_case):
-            if r.branch_id.id in branch_ids and r.company_id.id in company_ids:
+            if r.branch_id.id in branch_ids and r.company_id.id in company_ids or r.inter_district and r.allow_cross_company_requests:
                 pass
             else:
                 memo_configs -= r

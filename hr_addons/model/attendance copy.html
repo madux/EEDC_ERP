@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Management Dashboard</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --bg-light: #f8fafc;
+      --card-border: #e2e8f0;
+    }
+    body {
+      background-color: var(--bg-light);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+    /* Sidebar Layout */
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #0f172a;
+      color: #94a3b8;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+    .sidebar .nav-link {
+      color: #94a3b8;
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      color: #ffffff;
+      background: #1e293b;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      min-height: 100vh;
+    }
+    /* UI Components */
+    .card {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    /* Badges */
+    .badge-present { background-color: #dcfce7; color: #166534; }
+    .badge-late { background-color: #fef9c3; color: #854d0e; }
+    .badge-absent { background-color: #fee2e2; color: #991b1b; }
+    .badge-leave { background-color: #e0f2fe; color: #075985; }
+
+    @media (max-width: 991.98px) {
+      .sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
+      .sidebar.show { margin-left: 0; }
+      .main-wrapper { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar p-3" id="sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="p-2 bg-primary rounded-3 text-white">
+        <i class="bi bi-clock-history fs-5"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold text-white mb-0">AttendPulse</h6>
+        <small class="text-muted">Management UI</small>
+      </div>
+    </div>
+    <ul class="nav nav-pills flex-column">
+      <li class="nav-item"><a href="#" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-people me-2"></i> Employees</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-calendar-check me-2"></i> Attendance Logs</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-calendar2-range me-2"></i> Leave Requests</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-bar-chart me-2"></i> Reports & Analytics</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary d-lg-none" id="sidebarToggle">
+          <i class="bi bi-list"></i>
+        </button>
+        <div>
+          <h4 class="fw-bold mb-0">Attendance Dashboard</h4>
+          <span class="text-muted small" id="currentDate">Wednesday, September 30, 2026</span>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i> Export Data</button>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
+          <i class="bi bi-plus-lg me-1"></i> Quick Mark
+        </button>
+      </div>
+    </header>
+
+    <!-- Stat KPI Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-medium">Total Personnel</span>
+              <h3 class="fw-bold mb-0 mt-1">128</h3>
+            </div>
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-people fs-4"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-medium">Present Today</span>
+              <h3 class="fw-bold text-success mb-0 mt-1">112 <small class="fs-6 text-muted">(87.5%)</small></h3>
+            </div>
+            <div class="p-3 bg-success bg-opacity-10 text-success rounded-3"><i class="bi bi-check-lg fs-4"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-medium">Late Arrivals</span>
+              <h3 class="fw-bold text-warning mb-0 mt-1">10</h3>
+            </div>
+            <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3"><i class="bi bi-alarm fs-4"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-medium">On Leave / Absent</span>
+              <h3 class="fw-bold text-danger mb-0 mt-1">6</h3>
+            </div>
+            <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3"><i class="bi bi-x-circle fs-4"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Charts Section -->
+    <div class="row g-4 mb-4">
+      <div class="col-12 col-lg-8">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Weekly Attendance Trend</h6>
+            <select class="form-select form-select-sm w-auto">
+              <option>This Week</option>
+              <option>Last Week</option>
+            </select>
+          </div>
+          <canvas id="weeklyChart" height="110"></canvas>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="card p-3">
+          <h6 class="fw-bold mb-3">Status Breakdown</h6>
+          <canvas id="statusDoughnutChart" height="190"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Table Section -->
+    <div class="card">
+      <div class="card-header bg-transparent py-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-md-4">
+            <h6 class="fw-bold mb-0">Daily Logs</h6>
+          </div>
+          <div class="col-12 col-md-8">
+            <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+              <input type="text" id="searchInput" class="form-control form-control-sm w-auto" placeholder="Search staff...">
+              <select id="departmentFilter" class="form-select form-select-sm w-auto">
+                <option value="">All Departments</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Design">Design</option>
+                <option value="HR">HR</option>
+                <option value="Operations">Operations</option>
+              </select>
+              <select id="statusFilter" class="form-select form-select-sm w-auto">
+                <option value="">All Statuses</option>
+                <option value="Present">Present</option>
+                <option value="Late">Late</option>
+                <option value="Absent">Absent</option>
+                <option value="On Leave">On Leave</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="attendanceTable">
+          <thead class="table-light">
+            <tr>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Check In</th>
+              <th>Check Out</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://i.pravatar.cc/100?img=33" class="avatar" alt="User">
+                  <div>
+                    <div class="fw-semibold">David Kim</div>
+                    <small class="text-muted">EMP-1042</small>
+                  </div>
+                </div>
+              </td>
+              <td>Engineering</td>
+              <td>08:52 AM</td>
+              <td>05:00 PM</td>
+              <td><span class="badge badge-present px-2 py-1">Present</span></td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-light"><i class="bi bi-three-dots-vertical"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://i.pravatar.cc/100?img=47" class="avatar" alt="User">
+                  <div>
+                    <div class="fw-semibold">Elena Rostova</div>
+                    <small class="text-muted">EMP-1088</small>
+                  </div>
+                </div>
+              </td>
+              <td>Design</td>
+              <td>09:25 AM</td>
+              <td>-- : --</td>
+              <td><span class="badge badge-late px-2 py-1">Late</span></td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-light"><i class="bi bi-three-dots-vertical"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://i.pravatar.cc/100?img=12" class="avatar" alt="User">
+                  <div>
+                    <div class="fw-semibold">Marcus Vance</div>
+                    <small class="text-muted">EMP-1015</small>
+                  </div>
+                </div>
+              </td>
+              <td>Operations</td>
+              <td>-- : --</td>
+              <td>-- : --</td>
+              <td><span class="badge badge-absent px-2 py-1">Absent</span></td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-light"><i class="bi bi-three-dots-vertical"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://i.pravatar.cc/100?img=25" class="avatar" alt="User">
+                  <div>
+                    <div class="fw-semibold">Sarah Jenkins</div>
+                    <small class="text-muted">EMP-1092</small>
+                  </div>
+                </div>
+              </td>
+              <td>HR</td>
+              <td>-- : --</td>
+              <td>-- : --</td>
+              <td><span class="badge badge-leave px-2 py-1">On Leave</span></td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-light"><i class="bi bi-three-dots-vertical"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Quick Mark Attendance Modal -->
+  <div class="modal fade" id="markAttendanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Manual Attendance Entry</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="attendanceForm">
+            <div class="mb-3">
+              <label class="form-label">Employee</label>
+              <select class="form-select" required>
+                <option value="">Select Personnel</option>
+                <option>David Kim (EMP-1042)</option>
+                <option>Elena Rostova (EMP-1088)</option>
+                <option>Marcus Vance (EMP-1015)</option>
+              </select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Check In Time</label>
+                <input type="time" class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Status</label>
+                <select class="form-select">
+                  <option value="Present">Present</option>
+                  <option value="Late">Late</option>
+                  <option value="Absent">Absent</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveAttendanceBtn">Save Record</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // Sidebar Toggle
+    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('show');
+    });
+
+    // Weekly Line Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'Attendance Rate (%)',
+          data: [94, 91, 87.5, 95, 89],
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13, 110, 253, 0.08)',
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 70, max: 100 }
+        }
+      }
+    });
+
+    // Status Doughnut Chart
+    const statusCtx = document.getElementById('statusDoughnutChart').getContext('2d');
+    new Chart(statusCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Present', 'Late', 'Absent', 'On Leave'],
+        datasets: [{
+          data: [112, 10, 4, 2],
+          backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#0284c7'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+
+    // Client-side Table Filter Logic
+    const searchInput = document.getElementById('searchInput');
+    const deptFilter = document.getElementById('departmentFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const rows = document.querySelectorAll('#attendanceTable tbody tr');
+
+    function filterTable() {
+      const search = searchInput.value.toLowerCase();
+      const dept = deptFilter.value.toLowerCase();
+      const status = statusFilter.value.toLowerCase();
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const matchesSearch = text.includes(search);
+        const matchesDept = !dept || text.includes(dept);
+        const matchesStatus = !status || text.includes(status);
+
+        if (matchesSearch && matchesDept && matchesStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    deptFilter.addEventListener('change', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+  </script>
+</body>
+</html>

@@ -181,7 +181,7 @@
 
 								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_quick_create&quot;: True}"
 								 attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
-                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: False, &quot; no_quick_create&quot;: True}" 
+                                <field name="dest_location_id" string="Destination Location" help="Only shows when you are inventory administrator" options="{&quot;no_open&quot;: False, &quot; no_quick_create&quot;: True}" 
 								attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True), ('state','not in',['Done'])]}"/> 
                                 <field name="picking_type_id" string="Operation Type" force_save="1" 
 								domain="[('code', 'in', ['internal', 'outgoing'])]" 
