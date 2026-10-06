@@ -85,9 +85,9 @@
                     width: 26mm;
                     height: 29mm;
                     object-fit: cover;
-                    border-radius: 8px;
-                    border: 2px solid #0A192F; /* Navy Blue Border */
-                    box-shadow: 0 4px 6px -1px rgba(10, 25, 47, 0.1);
+                    border-radius: 6px;
+                    border: 1px solid #37393d; /* Navy Blue Border */
+                    box-shadow: 0 4px 6px -1px rgba(81, 83, 85, 0.1);
                 }
 
                 /* Modern Details Layout */
@@ -174,9 +174,10 @@
                 <!-- Top Center Logo & Subheading -->
                 <div class="company-header">
                     <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" class="company-logo" alt="Company Logo"/>
+                    <br/>
                     <div class="company-name">
                         <t t-esc="o.company_id.name or 'COMPANY NAME'"/>
-                    </div>
+                    </div><br/>
                     <div class="badge-subtitle">Official Identity Card</div>
                 </div>
 

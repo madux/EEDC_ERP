@@ -1411,7 +1411,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
         $elm.select2({
             ajax: {
-                url: '/get-stock-location',
+                url: `/get-stock-location/${location_type}`,
                 type: 'POST',
                 dataType: 'json',
                 delay: 250,
@@ -3037,7 +3037,7 @@ odoo.define('portal_request.portal_request', function (require) {
                     );
 
                     $.ajax({
-                        url: '/get-stock-location',
+                        url: `/get-stock-location/source`,
                         type: 'POST',
                         dataType: 'json',
                         data: {
@@ -3070,7 +3070,7 @@ odoo.define('portal_request.portal_request', function (require) {
                                 var excludeSourceId = isInterDistrictTransfer ? firstLocation.id : 0;
 
                                 $.ajax({
-                                    url: '/get-stock-location',
+                                    url: '/get-stock-location/destination',
                                     type: 'POST',
                                     dataType: 'json',
                                     data: {
@@ -3363,7 +3363,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
                                 // Auto-load first location for SOURCE
                                 $.ajax({
-                                    url: '/get-stock-location',
+                                    url: '/get-stock-location/source',
                                     type: 'POST',
                                     dataType: 'json',
                                     data: {
@@ -3397,7 +3397,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
                                             // Now auto-load DESTINATION (excluding source)
                                             $.ajax({
-                                                url: '/get-stock-location',
+                                                url: '/get-stock-location/destination',
                                                 type: 'POST',
                                                 dataType: 'json',
                                                 data: {
@@ -3463,7 +3463,7 @@ odoo.define('portal_request.portal_request', function (require) {
 
                                 // Auto-load ONLY source location
                                 $.ajax({
-                                    url: '/get-stock-location',
+                                    url: '/get-stock-location/source',
                                     type: 'POST',
                                     dataType: 'json',
                                     data: {

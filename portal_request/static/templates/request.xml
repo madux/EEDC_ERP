@@ -750,11 +750,10 @@
                                         <div class="form-row d-none" id="product_form_div">
                                             <h2 class="fs-title">Request Items</h2>
                                             <div class="tableclass table-responsive" id="product_table_div">
-                                                <!-- <table width="100%" border="1" bordercolor="#999999"
+                                                <table width="100%" border="1" bordercolor="#999999"
                                                 bgcolor="#F7F7EF" border-collapse="collapse" align="center"
                                                 id="attachment_table" class="table table-bordered"
-                                                style="height: 250px !important; width: 1400px !important; overflow: scroll !important;display: block;"> -->
-                                                 <table class="tableclass table-responsive">
+                                                style="height: 250px !important; width: 1400px !important; overflow: scroll !important;display: block;">
                                                     <thead>
                                                         <tr class="heading">
                                                             <!-- 1 -->

@@ -1,7 +1,9 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
-
+class productProduct(models.Model):
+    _inherit = "product.product"
+    _check_company_auto = False
 
 class productTemplate(models.Model):
     _inherit = "product.template"

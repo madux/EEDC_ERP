@@ -369,6 +369,8 @@ class PortalRequest(http.Controller):
             q = request.params.get('q', '').strip()
             page_limit = int(request.params.get('page_limit', 10))
             page = int(request.params.get('page', 1))
+            memo_id = request.params.get('memo_id')
+            
 
             is_inter_company_raw = request.params.get('is_inter_company')
             is_inter_company = str(is_inter_company_raw).lower() in (
@@ -390,10 +392,16 @@ class PortalRequest(http.Controller):
             except (ValueError, TypeError):
                 selected_location_id = 0
 
-            _logger.info(
-                f"Searching Stock: type={location_type}, q={q}, "
-                f"inter={is_inter_company}, district={district_id}"
-            )
+            
+            if memo_id:
+                memo = request.env['memo.model'].sudo().browse([int(memo_id)])
+
+                if memo.is_inter_district_transfer:
+                    is_inter_company = True 
+                    district_id = memo.memo_setting_id.branch_id.id
+                else:
+                    district_id = memo.branch_id.id
+
             if location_type == 'source':
                 domain = [('usage', '=', 'internal')]
                 if district_id and district_id > 0:
@@ -407,30 +415,11 @@ class PortalRequest(http.Controller):
                     domain = [('usage', 'in', ['internal']), ('branch_id', '=', user_district)]
                 else:
                     domain = [('usage', 'in', ['supplier', 'customer', 'internal']), ('branch_id', '=', user_district)]  
-
-            # if location_type == 'source':
-            #     domain = [('usage', '=', 'internal')]
-            #     if district_id:
-            #         domain.append(('branch_id', '=', district_id))
-
-            # elif location_type == 'destination':
-            #     if is_inter_company:
-            #         domain = [
-            #             ('usage', '=', 'internal'),
-            #             ('branch_id', '=', request.env.user.branch_id.id)
-            #         ]
-            #     else:
-            #         domain = [
-            #             ('usage', 'in', ['supplier', 'customer', 'internal']),
-            #             ('branch_id', '=', district_id)
-            #         ]
-            # else:
-            #     return request.make_response(
-            #         json.dumps({
-            #             "error": f"Invalid location_type: {location_type}"
-            #         }),
-            #         headers=[('Content-Type', 'application/json')]
-            #     )
+            _logger.info(
+                            f"Searching Stock: type={location_type}, q={q}, "
+                            f"inter={is_inter_company}, district={district_id}"
+                        )
+             
 
             if not is_inter_company:
                 domain.append(
@@ -1538,7 +1527,7 @@ class PortalRequest(http.Controller):
         # Use target_company_id in the domain
         domain = [
             ('id', 'not in', productItems_List),
-            ('company_id', 'in', [target_company_id, False, '', None]), 
+            ('company_id', 'in', [target_company_id, request.env.user.company_id.id, False, '', None]), 
             ('active', '=', True), 
             '|','|', 
             ('name', 'ilike', query),
@@ -2092,7 +2081,7 @@ class PortalRequest(http.Controller):
 
             "conversion_rate": _to_float(post.get("currency_rate")),
             
-            "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+            "is_inter_district_transfer": True if post.get("isInterDistrictProcess") == "on" else False,
 
             "source_location_id": _clean_id("TargetSourceLocation"),
             "dest_location_id": _clean_id("destination_location_id"),
@@ -2338,7 +2327,7 @@ class PortalRequest(http.Controller):
                 "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False, None, '', 'none', 'None', 0, '0'] else False,
                 'dest_location_id': int(post.get("destination_location_id")) if post.get("destination_location_id") not in ['false', False,  None, '', 'none', 'None',0, '0'] else False,
                 
-                "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+                "is_inter_district_transfer": True if post.get("isInterDistrictProcess") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
                 "enhancement": True if post.get("enhancement") == "on" else False,
                 "datapatch": True if post.get("datapatch") == "on" else False,
@@ -3863,6 +3852,8 @@ class PortalRequest(http.Controller):
                 'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
                 'payment_reference': post.get('payment_reference'),
             }
+            _logger.info(f"SAVED ITEEMMS ==>=== {vals}")
+
             
             if inputFollowers:
                 vals['users_followers'] = [(6, 0, inputFollowers)]

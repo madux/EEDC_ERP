@@ -457,7 +457,9 @@ odoo.define('portal_request.portal_request_form', function (require) {
         // let oldId = elm.attr('id'); 
         let initialText = $input.attr('data-init-text') || '';
         let initialId = $input.attr('id') || '';
+        let memo_id = $(".record_id").attr('id');
         console.log("Here are the values of old ", initialText, initialId)
+
         $input.select2({
             ajax: {
               url: `/get-stock-location/${source}`,
@@ -467,7 +469,10 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 return {
                   q: term, //search term
                   page_limit: 10, // page size
-                  location_type: source, 
+                  location_type: source,
+                //   is_inter_company: is_inter_company,
+                //   selected_location_id: selected_location_id || 0,
+                  memo_id: memo_id,  
                   page: page, // page number
                 };
               },
@@ -764,39 +769,39 @@ odoo.define('portal_request.portal_request_form', function (require) {
     //     allowClear: true,
     // });
 
-    function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
-        // find the input field
-        const elm = $(`input[name=destination_location_id]`);
-        let oldValue = elm.val(); // OGIDI
-        let oldId = elm.attr('id'); 
-        elm.select2({
-            ajax: {
-              url: '/get-stock-location',
-              dataType: 'json',
-              delay: 30,
-              data: function (term, page) {
-                return {
-                  q: term, //search term
-                  page_limit: 10, // page size
-                  location_type: source, 
-                  page: page, // page number
-                };
-              },
-              results: function (data, page) {
-                var more = (page * 30) < data.total;
-                return {results: data.results, more: more};
-              },
-              cache: true
-            },
-            minimumInputLength: 2,
-            multiple: false,
-            placeholder: 'Search for location',
-            allowClear: true,
-        }); 
-        elm.val(oldId).trigger('change')
-        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-        $(`.select2-container.destinationlocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
-    }
+    // function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
+    //     // find the input field
+    //     const elm = $(`input[name=destination_location_id]`);
+    //     let oldValue = elm.val(); // OGIDI
+    //     let oldId = elm.attr('id'); 
+    //     elm.select2({
+    //         ajax: {
+    //           url: '/get-stock-location',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               page_limit: 10, // page size
+    //               location_type: source, 
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 2,
+    //         multiple: false,
+    //         placeholder: 'Search for location',
+    //         allowClear: true,
+    //     }); 
+    //     elm.val(oldId).trigger('change')
+    //     console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+    //     $(`.select2-container.destinationlocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    // }
 
     let storeOldFieldsValue = function(){
         let storeFieldItem = {};
@@ -1526,17 +1531,17 @@ odoo.define('portal_request.portal_request_form', function (require) {
 
                 formData.append(
                     'source_location_id',
-                    $('input[name="source_location_id"]').attr('id') || ''
+                    $('input[name="source_location_id"]').attr('data-rec-id') || ''
                 );
 
                 formData.append(
                     'dest_location_id',
-                    $('input[name="destination_location_id"]').attr('id') || ''
+                    $('input[name="destination_location_id"]').attr('data-rec-id') || ''
                 );
 
                 formData.append(
                     'vendor_id',
-                    $('input[name="vendor_id_form"]').attr('id') || ''
+                    $('input[name="vendor_id_form"]').attr('data-rec-id') || ''
                 );
 
                 /*
