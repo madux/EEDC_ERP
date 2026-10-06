@@ -200,7 +200,7 @@
                     <div class="info-grid">
                         <div class="info-row">
                             <span class="info-label">ID NO:</span>
-                            <span><t t-esc="o.barcode or o.id"/></span>
+                            <span><t t-esc="o.employee_number or o.id"/></span>
                         </div>
                         <div class="info-row text-truncate">
                             <span class="info-label">DEPT:</span>
@@ -235,7 +235,7 @@
 
                         <!-- Centered QR Code -->
                         <div class="qr-container">
-                            <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', o.barcode or o.id, 120, 120)" 
+                            <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', o.employee_number or o.barcode, 120, 120)" 
                                  style="width: 24mm; height: 24mm; display: block;" 
                                  alt="Employee QR Code"/>
                         </div>
