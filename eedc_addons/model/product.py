@@ -1,7 +1,61 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.osv import expression
+import re
 
+
+class productTemplate(models.Model):
+    _inherit = "product.template"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+
+        for vals in vals_list:
+
+            # Don't overwrite manually entered codes.
+            if vals.get('default_code'):
+                continue
+
+            category_id = vals.get('categ_id')
+
+            if not category_id:
+                continue
+
+            category = self.env['product.category'].browse(
+                category_id
+            ).exists()
+
+            if not category:
+                continue
+
+            # Generate category prefix if missing.
+            if not category.product_prefix:
+                category.product_prefix = (
+                    category._generate_prefix(
+                        category.name
+                    )
+                )
+
+            # Create global sequence if missing.
+            if not category.product_sequence_id:
+                category._create_product_sequence()
+
+            sequence = category.product_sequence_id
+
+            # Generate next number from the GLOBAL sequence.
+            sequence_number = sequence.next_by_id()
+
+            if not sequence_number:
+                continue
+
+            vals['default_code'] = (
+                f'{category.product_prefix}-'
+                f'{sequence_number}'
+            )
+
+        return super().create(vals_list)
+
+    
 
 class productProduct(models.Model):
     _inherit = "product.product"
@@ -68,5 +122,59 @@ class productProduct(models.Model):
         if branch_location_ids:
             location_ids = location_ids | set(branch_location_ids.ids)
         return self._get_domain_locations_new(location_ids)
-    
-    
+
+    _sql_constraints = [
+        (
+            'default_code_unique',
+            'unique(default_code)',
+            'The Internal Reference must be unique across all companies.'
+        ),
+    ]
+
+    @api.model_create_multi
+    def create(self, vals_list):
+
+        for vals in vals_list:
+
+            # Don't overwrite manually entered codes.
+            if vals.get('default_code'):
+                continue
+
+            category_id = vals.get('categ_id')
+
+            if not category_id:
+                continue
+
+            category = self.env['product.category'].browse(
+                category_id
+            ).exists()
+
+            if not category:
+                continue
+
+            # Generate category prefix if missing.
+            if not category.product_prefix:
+                category.product_prefix = (
+                    category._generate_prefix(
+                        category.name
+                    )
+                )
+
+            # Create global sequence if missing.
+            if not category.product_sequence_id:
+                category._create_product_sequence()
+
+            sequence = category.product_sequence_id
+
+            # Generate next number from the GLOBAL sequence.
+            sequence_number = sequence.next_by_id()
+
+            if not sequence_number:
+                continue
+
+            vals['default_code'] = (
+                f'{category.product_prefix}-'
+                f'{sequence_number}'
+            )
+
+        return super().create(vals_list)

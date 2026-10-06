@@ -356,102 +356,27 @@ class PortalRequest(http.Controller):
                     },
                     "message": "Employee with staff ID provided does not exist. Contact Admin", 
                 }
-                
-    # @http.route(['/get-stock-location'], type='http', website=True, auth="user", csrf=False)
-    # def get_stock_location(self, **post):
-    #     user = request.env.user
-    #     location_type = post.get('location_type')
-    #     is_inter_company = post.get('is_inter_company')
-    #     selected_location_id = post.get('selected_source')
-    #     selectedOption_id = post.get('selectedOption_id')
-        
-    #     location_data_ids =None
-        
-    #     processing_branch_id = post.get('processing_branch_id') 
-        
-    #     query = request.params.get('q', '') 
-    #     is_inter_company2 = request.params.get('is_inter_company') 
-    #     branch_ids = [user.branch_id.id] + user.branch_ids.ids
-    #     company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
-    #     stockObj = request.env['stock.location'].sudo()
-    #     _logger.info(f"Search locations : params Selected location : {selected_location_id}, ==> is intercompany : {is_inter_company} SELECTED OPTION {selectedOption_id} - location type:  {location_type}, QUERY ==> {query}")
-        
-    #     is_inter_company = False if is_inter_company in [False, 'false', 'False', '0', 'Off'] else True 
-        
-    #     domain = [('usage', '=', 'internal')]
-        
-    #     if not is_inter_company:
-            
-    #         if location_type == "source":
-    #             domain += [
-    #                 # ('usage', '=', 'internal'),
-    #                 ('branch_id.id', 'in', branch_ids),
-    #                 ('company_id.id', 'in', company_ids),
-    #                 # ('name', 'ilike', query)
-    #                 ]
-    #             if selected_location_id:
-    #                 domain.append(('id', '!=', selected_location_id))
-    #             location_data_ids = stockObj.search(domain)
-                
-    #         else:
-    #             domain=[
-    #                 ('usage', '=', 'internal'),
-    #                 ('branch_id.id', 'in', branch_ids),
-    #                 ('company_id.id', 'in', company_ids),
-    #                 ('name', 'ilike', query)
-    #                 ]
-    #             if selected_location_id:
-    #                 domain.append(('id', '!=', selected_location_id))
-    #             location_data_ids = stockObj.search(domain)
-    #     else:
-    #         if location_type == "source":
-    #             '''returns all locations if it is not interdistrict or intercompany'''
-    #             if selectedOption_id:
-    #                 option = request.env['memo.config'].sudo().browse([int(selectedOption_id)])
-    #                 all_branches = [option.processing_branch_id.id]
-    #             else:
-    #                 all_branches = request.env['multi.branch'].sudo().search([])
-    #                 all_branches = all_branches.ids
-                
-    #             domain = [
-    #                     ('usage', '=', 'internal'),
-    #                     ('branch_id', 'in', all_branches),
-    #                     ('name', 'ilike', query)
-    #                 ]
-    #             if selected_location_id:
-    #                 domain.append(('id', '!=', selected_location_id))
-    #             location_data_ids = stockObj.search(domain)
-                
-    #         else:
-    #             domain=[
-    #                 ('usage', '=', 'internal'),
-    #                 ('branch_id.id', 'in', branch_ids),
-    #                 ('company_id.id', 'in', [request.env.user.company_id.id] + request.env.user.company_ids.ids),
-    #                 ('name', 'ilike', query)
-    #                 ]
-    #             if selected_location_id:
-    #                 domain.append(('id', '!=', selected_location_id))
-    #             location_data_ids = stockObj.search(domain)
-                 
-    #     return json.dumps({
-    #         "results": [{"id": item.id, "text": f'{item.name}'} for item in location_data_ids],
-    #         "pagination": {
-    #             "more": True,
-    #         }
-    #     })
-    
-    @http.route('/get-stock-location', type='http', auth='user', csrf=False, methods=['POST'])
-    def get_stock_location(self, **kwargs):
+
+    @http.route(
+        ['/get-stock-location/<string:location_type>'],
+        type='http',
+        auth='user',
+        csrf=False,
+        methods=['GET', 'POST']
+    )
+    def get_stock_location(self, location_type='source', **kwargs):
         try:
             q = request.params.get('q', '').strip()
             page_limit = int(request.params.get('page_limit', 10))
             page = int(request.params.get('page', 1))
+            memo_id = request.params.get('memo_id')
             
-            # Handle boolean string conversion
+
             is_inter_company_raw = request.params.get('is_inter_company')
-            is_inter_company = str(is_inter_company_raw).lower() in ('true', '1', 'yes', 'on')
-            
-            # Get district_id
+            is_inter_company = str(is_inter_company_raw).lower() in (
+                'true', '1', 'yes', 'on'
+            )
+
             district_id = request.params.get('district_id')
             if district_id and district_id not in ['null', 'undefined', 'false', '', 0, '0']:
                 try:
@@ -459,60 +384,77 @@ class PortalRequest(http.Controller):
                 except (ValueError, TypeError):
                     district_id = 0
             else:
-                district_id = 0 
-                
-            location_type = request.params.get('location_type', 'source')
-            
-            # Get selected_location_id to exclude
+                district_id = 0
+
             selected_location_id_raw = request.params.get('selected_location_id', 0)
             try:
                 selected_location_id = int(selected_location_id_raw) if selected_location_id_raw else 0
             except (ValueError, TypeError):
                 selected_location_id = 0
+
             
-            _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id} testing_loc...")
-            
+            if memo_id:
+                memo = request.env['memo.model'].sudo().browse([int(memo_id)])
+
+                if memo.is_inter_district_transfer:
+                    is_inter_company = True 
+                    district_id = memo.memo_setting_id.branch_id.id
+                else:
+                    district_id = memo.branch_id.id
+
             if location_type == 'source':
                 domain = [('usage', '=', 'internal')]
+                if district_id and district_id > 0:
+                    domain.append(('branch_id', '=', district_id))
             else:
                 domain = [('usage', 'in', ['supplier', 'customer', 'internal'])]
-            company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+                user_district = request.env.user.branch_id.id
+                if is_inter_company:
+
+                    # if inter company, you only move to internal location of the company you are coming from
+                    domain = [('usage', 'in', ['internal']), ('branch_id', '=', user_district)]
+                else:
+                    domain = [('usage', 'in', ['supplier', 'customer', 'internal']), ('branch_id', '=', user_district)]  
+            _logger.info(
+                            f"Searching Stock: type={location_type}, q={q}, "
+                            f"inter={is_inter_company}, district={district_id}"
+                        )
+             
+
             if not is_inter_company:
-                domain.append(('company_id', '=', request.env.user.company_id.id))
-                # domain.append(('company_id', '=', company_ids))
-            
-            if district_id and district_id > 0:
-                domain.append(('branch_id', '=', district_id))
-            
+                domain.append(
+                    ('company_id', '=', request.env.user.company_id.id)
+                )
+
             if q:
                 domain.append(('name', 'ilike', q))
-                
-            if selected_location_id and selected_location_id > 0:
+
+            if selected_location_id:
                 domain.append(('id', '!=', selected_location_id))
-            
-            _logger.info(f"Search domain: location type {location_type} {domain}")
-            
-            # Perform Search
-            locations = request.env['stock.location'].sudo().search(domain, limit=page_limit)
-            
+
+            locations = request.env['stock.location'].sudo().search(
+                domain,
+                limit=page_limit
+            )
+            _logger.info(f"{location_type}: THESE ARE THE LOCATIONS FOUND {[r.id for r in locations]} = Domain found are =={domain} => search params {q}")
+
             results = [
                 {
                     "id": loc.id,
-                    "text": f"{loc.name} ({loc.branch_id.name})" if loc.branch_id else loc.name
+                    "text": f"{loc.name} ({loc.branch_id.name})"
+                    if loc.branch_id else loc.name
                 }
                 for loc in locations
             ]
-            
-            _logger.info(f"Found kwargs ==> {len(results)} locations")
-            
+
             return request.make_response(
                 json.dumps({
                     "results": results,
-                    "total": len(results),
+                    "total": len(results)
                 }),
                 headers=[('Content-Type', 'application/json')]
             )
-            
+
         except Exception as e:
             _logger.exception("Error in get_stock_location")
             return request.make_response(
@@ -523,6 +465,93 @@ class PortalRequest(http.Controller):
                 }),
                 headers=[('Content-Type', 'application/json')]
             )
+        
+                
+    # @http.route('/get-stock-location', type='http', auth='user', csrf=False, methods=['POST'])
+    # def get_stock_location(self, **kwargs):
+    #     try:
+    #         q = request.params.get('q', '').strip()
+    #         page_limit = int(request.params.get('page_limit', 10))
+    #         page = int(request.params.get('page', 1))
+            
+    #         # Handle boolean string conversion
+    #         is_inter_company_raw = request.params.get('is_inter_company')
+    #         is_inter_company = str(is_inter_company_raw).lower() in ('true', '1', 'yes', 'on')
+            
+    #         # Get district_id
+    #         district_id = request.params.get('district_id')
+    #         if district_id and district_id not in ['null', 'undefined', 'false', '', 0, '0']:
+    #             try:
+    #                 district_id = int(district_id)
+    #             except (ValueError, TypeError):
+    #                 district_id = 0
+    #         else:
+    #             district_id = 0 
+
+    #         location_type = request.params.get('location_type', 'source')
+            
+    #         # Get selected_location_id to exclude
+    #         selected_location_id_raw = request.params.get('selected_location_id', 0)
+    #         try:
+    #             selected_location_id = int(selected_location_id_raw) if selected_location_id_raw else 0
+    #         except (ValueError, TypeError):
+    #             selected_location_id = 0
+    #         _logger.info(f"Searching Stock: q={q}, inter={is_inter_company}, district={district_id}, exclude={selected_location_id} testing_loc...")
+            
+    #         if location_type == 'source':
+    #             domain = [('usage', '=', 'internal')]
+    #             if district_id and district_id > 0:
+    #                 domain.append(('branch_id', '=', district_id))
+    #         else:
+    #             domain = [('usage', 'in', ['supplier', 'customer', 'internal'])]
+    #             if is_inter_company:
+    #                 # if inter company, you only move to internal location of the company you are coming from
+    #                 domain = [('usage', 'in', ['internal']), ('branch_id', '=', request.env.user.branch_id.id)]
+    #             else:
+    #                 domain = [('usage', 'in', ['supplier', 'customer', 'internal']), ('branch_id', '=', district_id)]            
+    #         company_ids = [request.env.user.company_id.id] + request.env.user.company_ids.ids
+    #         if not is_inter_company:
+    #             domain.append(('company_id', '=', request.env.user.company_id.id))
+            
+    #         if q:
+    #             domain.append(('name', 'ilike', q))
+                
+    #         if selected_location_id and selected_location_id > 0:
+    #             domain.append(('id', '!=', selected_location_id))
+            
+    #         _logger.info(f"Search domain: location type {location_type} {domain}")
+            
+    #         # Perform Search
+    #         locations = request.env['stock.location'].sudo().search(domain, limit=page_limit)
+            
+    #         results = [
+    #             {
+    #                 "id": loc.id,
+    #                 "text": f"{loc.name} ({loc.branch_id.name})" if loc.branch_id else loc.name
+    #             }
+    #             for loc in locations
+    #         ]
+            
+    #         _logger.info(f"Found kwargs ==> {len(results)} locations")
+            
+    #         return request.make_response(
+    #             json.dumps({
+    #                 "results": results,
+    #                 "total": len(results),
+    #             }),
+    #             headers=[('Content-Type', 'application/json')]
+    #         )
+            
+    #     except Exception as e:
+    #         _logger.exception("Error in get_stock_location")
+    #         return request.make_response(
+    #             json.dumps({
+    #                 "error": str(e),
+    #                 "results": [],
+    #                 "total": 0
+    #             }),
+    #             headers=[('Content-Type', 'application/json')]
+    #         )
             
     @http.route(['/relieve/reliever'], type='json', website=True, auth="user", csrf=False)
     def reset_relieve_reliever(self, **post):
@@ -1475,11 +1504,15 @@ class PortalRequest(http.Controller):
             loc = request.env['stock.location'].sudo().browse(int(source_locationId))
             if loc.company_id:
                 target_company_id = loc.company_id.id
+                _logger.info(f'target_company_id 1 {target_company_id}')
+
         
         elif processing_branch_id and str(processing_branch_id).isdigit():
             branch = request.env['multi.branch'].sudo().browse(int(processing_branch_id))
             if branch.company_id:
                 target_company_id = branch.company_id.id
+                _logger.info(f'target_company_id 2 {target_company_id}')
+
 
         elif memo_config_id and str(memo_config_id).isdigit():
             config = request.env['memo.config'].sudo().browse(int(memo_config_id))
@@ -1487,12 +1520,14 @@ class PortalRequest(http.Controller):
                 target_company_id = config.processing_company_id.id
             elif config.processing_branch_id and config.processing_branch_id.company_id:
                 target_company_id = config.processing_branch_id.company_id.id
+            _logger.info(f'target_company_id 3 {target_company_id}')
+            
         # ---------------------------------------
 
         # Use target_company_id in the domain
         domain = [
             ('id', 'not in', productItems_List),
-            ('company_id', '=', target_company_id), 
+            ('company_id', 'in', [target_company_id, request.env.user.company_id.id, False, '', None]), 
             ('active', '=', True), 
             '|','|', 
             ('name', 'ilike', query),
@@ -1819,43 +1854,49 @@ class PortalRequest(http.Controller):
                                 _logger.info(f"What is quant quantity {lc_quant.quantity}")
                     
                     '''necessary at least to ensure there is any location of those products'''
-                    if total_availability <= 0: 
-                        '''if no quantity found in all warehouse location'''
-                        # suggestable_locations = request.env['stock.location'].search([('usage', '=', 'internal')])
-                        # for loc_quant in suggestable_locations:
-                        quants_with_qty = request.env['stock.quant'].sudo().search(
-                            [
-                             ('location_id.usage', '=', 'internal'), 
-                             ('product_id', '=', product.id),
-                             ('quantity', '>=', product_qty)
-                             ]
-                            )
-                        msg_loc = []
-                        for loc_quant in quants_with_qty:
-                            _logger.info(f"wegere  {loc_quant.location_id.name} {product_qty}")
-                            msg_loc.append(f"{loc_quant.location_id.name} - {loc_quant.quantity}")
-                        message_display = '\n'.join(msg_loc)
-                        return {
-                            "status": False,
-                            "location_id": False,
-                            "message": f"""
-                            System could not found any single quantity available in your 
-                            company locations.However below are the locations that have them available.\n
-                            {message_display}
-                            """, 
-                        }
-                    if product_qty > total_availability: 
-                        return {
-                            "status": False,
-                            "location_id": False,
-                            "message": f"""
-                            Selected product: ({product_qty}) 
-                            quantity is higher than the Available Quantity. 
-                            Available quantity is {total_availability}""", 
-                        }
-                    else:
-                        _logger.info(f"Location outcome is {location}")
-                        return {
+                    # if total_availability <= 0: 
+                    #     '''if no quantity found in all warehouse location'''
+                    #     # suggestable_locations = request.env['stock.location'].search([('usage', '=', 'internal')])
+                    #     # for loc_quant in suggestable_locations:
+                    #     quants_with_qty = request.env['stock.quant'].sudo().search(
+                    #         [
+                    #          ('location_id.usage', '=', 'internal'), 
+                    #          ('product_id', '=', product.id),
+                    #          ('quantity', '>=', product_qty)
+                    #          ]
+                    #         )
+                    #     msg_loc = []
+                    #     for loc_quant in quants_with_qty:
+                    #         _logger.info(f"wegere  {loc_quant.location_id.name} {product_qty}")
+                    #         msg_loc.append(f"{loc_quant.location_id.name} - {loc_quant.quantity}")
+                    #     message_display = '\n'.join(msg_loc)
+                    #     MSG = 'However below are the locations that have them available; \n' + message_display if len(message_display) > 0 else ''
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"""
+                    #         System could not found any single quantity available in your 
+                    #         company locations.\n
+                    #         {MSG} 
+                    #         """, 
+                    #     }
+                    # if product_qty > total_availability: 
+                    #     return {
+                    #         "status": False,
+                    #         "location_id": False,
+                    #         "message": f"""
+                    #         Selected product: ({product_qty}) 
+                    #         quantity is higher than the Available Quantity. 
+                    #         Available quantity is {total_availability}""", 
+                    #     }
+                    # else:
+                    #     _logger.info(f"Location outcome is {location}")
+                    #     return {
+                    #         "status": True,
+                    #         "message": "",
+                    #         "location_id": location and location.id
+                    #     }
+                    return {
                             "status": True,
                             "message": "",
                             "location_id": location and location.id
@@ -2040,7 +2081,7 @@ class PortalRequest(http.Controller):
 
             "conversion_rate": _to_float(post.get("currency_rate")),
             
-            "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+            "is_inter_district_transfer": True if post.get("isInterDistrictProcess") == "on" else False,
 
             "source_location_id": _clean_id("TargetSourceLocation"),
             "dest_location_id": _clean_id("destination_location_id"),
@@ -2286,7 +2327,7 @@ class PortalRequest(http.Controller):
                 "source_location_id": post.get("TargetSourceLocation") if post.get("TargetSourceLocation") not in ['false', False, None, '', 'none', 'None', 0, '0'] else False,
                 'dest_location_id': int(post.get("destination_location_id")) if post.get("destination_location_id") not in ['false', False,  None, '', 'none', 'None',0, '0'] else False,
                 
-                "is_inter_district_transfer": True if post.get("isInterDistrict") == "on" else False,
+                "is_inter_district_transfer": True if post.get("isInterDistrictProcess") == "on" else False,
                 "applicationChange": True if post.get("applicationChange") == "on" else False,
                 "enhancement": True if post.get("enhancement") == "on" else False,
                 "datapatch": True if post.get("datapatch") == "on" else False,
@@ -3811,6 +3852,8 @@ class PortalRequest(http.Controller):
                 'vendor_id': int(post.get('vendor_id')) if post.get('vendor_id') else False,
                 'payment_reference': post.get('payment_reference'),
             }
+            _logger.info(f"SAVED ITEEMMS ==>=== {vals}")
+
             
             if inputFollowers:
                 vals['users_followers'] = [(6, 0, inputFollowers)]
@@ -3823,6 +3866,7 @@ class PortalRequest(http.Controller):
             request_record.write(vals)
 
             data_items_raw = post.get('Dataitem')
+            _logger.info(f"DATTTTTA ITEEMMS ==> {data_items_raw} === {vals}")
             if data_items_raw:
                 try:
                     DataItems = json.loads(data_items_raw)

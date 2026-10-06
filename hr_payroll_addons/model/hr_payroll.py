@@ -270,7 +270,7 @@ class HRPayslipRun(models.Model):
                     """TEST CASE 3: Put employee without contract in excel """
                     unsuccess_records.append(f'Staff with number {str(row[0])} does not have contract')
                 else:
-                    """TEST CASE 4: Pcheck wage updated"""
+                    """TEST CASE 4: Pcheck wage updatedvb"""
                     employee.contract_id.update({
                         'wage': row[1],
                     })

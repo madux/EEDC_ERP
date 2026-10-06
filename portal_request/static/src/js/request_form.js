@@ -155,82 +155,286 @@ odoo.define('portal_request.portal_request_form', function (require) {
             alert(`Unknown Error! ${msg}`)
         });
     }
+ 
+    function trigger_many2one($input, api) {
+        if (!$input || !$input.length) {
+            return;
+        }
 
-    // function TriggerProductField(lastRow_count){
-    //     // PRODUCTSEARCH
-    //     let oldValue = $(`input[special_id='${lastRow_count}']`).val()
-    //     $(`input[special_id='${lastRow_count}']`).select2({
-    //         ajax: {
-    //           url: '/portal-request-product',
-    //           dataType: 'json',
-    //           delay: 30,
-    //           data: function (term, page) {
-    //             return {
-    //               q: term, //search term
-    //               productItems: JSON.stringify(setProductdata), 
-    //               request_type: $('#selectRequestOption').val(),
-    //               source_locationId: $('#source_location_id').attr('id'),
-    //               page_limit: 10, // page size
-    //               page: page, // page number
-    //             };
-    //           },
-    //           results: function (data, page) {
-    //             var more = (page * 30) < data.total;
-    //             // console.log(data);
-    //             // localStorage.setItem('productStorage', JSON.stringify(data.results))
-    //             return {results: data.results, more: more};
-    //           },
-    //           cache: true
-    //         },
-    //         minimumInputLength: 2,
-    //         multiple: false,
-    //         placeholder: 'Search for a Products',
-    //         allowClear: true,
-    //       });
-    //       $(`div#s2id_${lastRow_count} > a.select2-choice > span.select2-chosen`).text(oldValue)
-    // }
-    function TriggerProductField(lastRow_count){
-        let $input = $(`input[special_id='${lastRow_count}']`);
-        
-        let initialText = $input.attr('data-init-text'); 
-        let initialId = $input.val();
+        /*
+        * Avoid initializing the same field twice.
+        */
+        if ($input.data('select2')) {
+            $input.select2('destroy');
+        }
+
+        let initialId =
+            $input.attr('data-rec-id') ||
+            $input.attr('data-value') ||
+            $input.attr('data-id') ||
+            '';
+
+        let initialText =
+            $input.attr('data-init-text') ||
+            $input.attr('value') ||
+            '';
+
+        /*
+        * Field name / technical field name
+        */
+        let fieldName = $input.attr('field_name') || $input.attr('name') || '';
+
+        /*
+        * Optional API parameters attached to the input.
+        */
+        let extraParams = {};
+
+        let apiParams = $input.attr('data-api-params');
+
+        if (apiParams) {
+            try {
+                extraParams = JSON.parse(apiParams);
+            } catch (e) {
+                console.warn(
+                    'Invalid data-api-params for field:',
+                    fieldName,
+                    apiParams
+                );
+            }
+        }
 
         $input.select2({
+
             ajax: {
-              url: '/portal-request-product',
-              dataType: 'json',
-              delay: 30,
-              data: function (term, page) {
-                return {
-                  q: term, 
-                  productItems: JSON.stringify(setProductdata), 
-                  request_type: $('#selectRequestOption').val(),
-                  source_locationId: $('#source_location_id').val(), // or .attr('id') depending on your flow
-                  page_limit: 10, 
-                  page: page,
-                };
-              },
-              results: function (data, page) {
-                var more = (page * 30) < data.total;
-                return {results: data.results, more: more};
-              },
-              cache: true
+
+                url: api,
+
+                dataType: 'json',
+
+                delay: 30,
+
+                data: function(term, page) {
+
+                    return $.extend({
+
+                        q: term,
+
+                        page: page,
+
+                        page_limit: 10,
+
+                        field_name: fieldName
+
+                    }, extraParams);
+                },
+
+                results: function(data, page) {
+
+                    var more =
+                        data.total &&
+                        (page * 10) < data.total;
+
+                    return {
+                        results: data.results || [],
+                        more: more
+                    };
+                },
+
+                cache: true
             },
-            minimumInputLength: 0, // Changed to 0 so they can click to see options immediately
+
+            minimumInputLength: 0,
+
             multiple: false,
-            placeholder: 'Search for a Products',
+
+            placeholder:
+                $input.attr('placeholder') ||
+                'Search...',
+
             allowClear: true,
-            
+
             initSelection: function(element, callback) {
-                if(initialId && initialText) {
-                    callback({id: initialId, text: initialText});
+
+                if (initialId && initialText) {
+
+                    callback({
+                        id: initialId,
+                        text: initialText
+                    });
                 }
             }
         });
 
-        if(initialId && initialText) {
-            $input.select2("data", { id: initialId, text: initialText });
+        /*
+        * Set existing value.
+        */
+        if (initialId && initialText) {
+
+            $input.select2('data', {
+                id: initialId,
+                text: initialText
+            });
         }
+
+        /*
+        * When user selects a record.
+        */
+        $input.off('change.generic_many2one');
+
+        $input.on(
+            'change.generic_many2one',
+            function() {
+
+                let data = $input.select2('data');
+
+                /*
+                * Select2 v3 can return an array in some situations.
+                */
+                if ($.isArray(data)) {
+                    data = data.length ? data[0] : null;
+                }
+
+                if (!data) {
+                    $input.attr('data-rec-id', '');
+                    $input.attr('data-init-text', '');
+                    return;
+                }
+
+                /*
+                * Actual Odoo record ID.
+                */
+                $input.attr(
+                    'data-rec-id',
+                    data.id || ''
+                );
+
+                /*
+                * Display name.
+                */
+                $input.attr(
+                    'data-init-text', data.text || ''
+                );
+
+                /*
+                * Keep visible value as the name.
+                */
+                $input.val(data.text || '');
+
+                /*
+                * Optional event for your application.
+                */
+                $input.trigger('many2one:selected', [data]);
+            }
+        );
+    }
+    function trigger_dynamic_many2one_fields() {
+
+        $('[data-fieldtype="many2one"]').each(function() {
+
+            let $input = $(this);
+
+            let api = $input.attr('data-api');
+
+            if (!api) {
+                console.warn(
+                    'Many2one field has no data-api:',
+                    $input
+                );
+
+                return;
+            }
+
+            trigger_many2one($input, api);
+        });
+    }
+
+    function TriggerProductField(lastRow_count) {
+
+        let $input = $(`input[special_id='${lastRow_count}']`);
+
+        if (!$input.length) {
+            console.warn('Product input not found for row:', lastRow_count);
+            return;
+        }
+
+        let initialText = $input.attr('data-init-text') || '';
+        let initialId = $input.attr('data-product-id') || '';
+
+        $input.select2({
+            ajax: {
+                url: '/portal-request-product',
+                dataType: 'json',
+                delay: 30,
+
+                data: function(term, page) {
+                    return {
+                        q: term,
+                        productItems: JSON.stringify(setProductdata),
+                        request_type: $('#selectRequestOption').val(),
+                        source_locationId: $('#source_location_id').val(),
+                        page_limit: 10,
+                        page: page
+                    };
+                },
+
+                results: function(data, page) {
+                    var more = (page * 30) < data.total;
+
+                    return {
+                        results: data.results,
+                        more: more
+                    };
+                },
+
+                cache: true
+            },
+
+            minimumInputLength: 0,
+            multiple: false,
+            placeholder: 'Search for a Product',
+            allowClear: true,
+
+            initSelection: function(element, callback) {
+
+                if (initialId && initialText) {
+                    callback({
+                        id: initialId,
+                        text: initialText
+                    });
+                }
+            }
+        });
+
+        /*
+        * Set the current product in Select2.
+        */
+        if (initialId && initialText) {
+
+            $input.select2('data', {
+                id: initialId,
+                text: initialText
+            });
+        }
+
+        /*
+        * When user selects another product,
+        * update the actual product ID and name.
+        */
+        $input.on('change', function() {
+
+            let data = $input.select2('data');
+
+            if (data) {
+
+                $input.attr('data-product-id', data.id);
+                $input.attr('data-init-text', data.text);
+
+                /*
+                * Keep the visible value as the product name.
+                */
+                $input.val(data.text);
+            }
+        });
     }
 
     let trigger_product_line = function(){
@@ -241,28 +445,40 @@ odoo.define('portal_request.portal_request_form', function (require) {
             TriggerProductField(row_count);
         })
     }
-    // trigger_product_line();
 
     function searchStockLocation(element, source, classes=''){
         // find the input field
-        const elm = $(`input[name=source_location_id]`);
-        let oldValue = elm.val(); // OGIDI
-        let oldId = elm.attr('id'); 
-        elm.select2({
+        const $input = $(`input[name=${element}]`);
+        if (!$input.length) {
+            console.warn('Product input not found for row:', elm);
+            return;
+        }
+        // let oldValue = elm.val(); // OGIDI
+        // let oldId = elm.attr('id'); 
+        let initialText = $input.attr('data-init-text') || '';
+        let initialId = $input.attr('id') || '';
+        let memo_id = $(".record_id").attr('id');
+        console.log("Here are the values of old ", initialText, initialId)
+
+        $input.select2({
             ajax: {
-              url: '/get-stock-location',
+              url: `/get-stock-location/${source}`,
               dataType: 'json',
               delay: 30,
               data: function (term, page) {
                 return {
                   q: term, //search term
                   page_limit: 10, // page size
-                  location_type: source, 
+                  location_type: source,
+                //   is_inter_company: is_inter_company,
+                //   selected_location_id: selected_location_id || 0,
+                  memo_id: memo_id,  
                   page: page, // page number
                 };
               },
               results: function (data, page) {
                 var more = (page * 30) < data.total;
+                console.log(`LOCATION DATA RESULTS ===> ${data.results} ${source}`)
                 return {results: data.results, more: more};
               },
               cache: true
@@ -271,11 +487,49 @@ odoo.define('portal_request.portal_request_form', function (require) {
             multiple: false,
             placeholder: 'Search for location',
             allowClear: true,
-        }); 
+            initSelection: function(element, callback) {
 
-        elm.val(oldId)
-        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-        $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+                if (initialId && initialText) {
+                    callback({
+                        id: initialId,
+                        text: initialText
+                    });
+                }
+            }
+        }); 
+        console.log(`source CONTAINER ===> ${$input.val()} ID== ${$input.attr('id')}, ${$input.attr('data-init-text')}`)
+        if (initialId && initialText) {
+            console.log(`source CONTAINER222222 ===> ${$input.val()} ID== ${$input.attr('id')}, ${$input.attr('data-init-text')}`)
+
+            $input.select2('data', {
+                id: initialId,
+                text: initialText
+            });
+        }
+
+        /*
+        * When user selects another product,
+        * update the actual product ID and name.
+        */
+        $input.on('change', function() {
+
+            let data = $input.select2('data');
+
+            if (data) {
+
+                $input.attr('data-id', data.id); //data-rec-id
+                $input.attr('data-init-text', data.text);
+
+                /*
+                * Keep the visible value as the product name.
+                */
+                $input.val(data.text);
+            }
+        });
+
+        // $input.val(initialId)
+        // console.log(`CONTAINER ===> ${$input.val()} ID== ${$input.attr('id')}`)
+        // $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
     }
 
     function triggerVendor(){
@@ -312,64 +566,242 @@ odoo.define('portal_request.portal_request_form', function (require) {
         console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
         $(`.select2-container.vendor-cls a.select2-choice span.select2-chosen`).text(oldValue)
     }
+    // trigger_product_line();
 
-    $('#inputFollowers').select2({
-        ajax: {
-            url: '/portal-request-employee-reliever',
-            dataType: 'json',
-            delay: 250,
-            data: function (term, page) {
-                return {
-                    q: term, //search term
-                    page_limit: 10, // page size
-                    page: page, // page number
-                };
-            },
-            results: function (data, page) {
-            var more = (page * 30) < data.total;
-            return {results: data.results, more: more};
-            },
-            cache: true
-        },
-        minimumInputLength: 3,
-        multiple: true,
-        placeholder: 'Search for followers',
-        allowClear: true,
-    });
+    // function searchStockLocation(element, source, classes=''){
+    //     // find the input field
+    //     const elm = $(`input[name=source_location_id]`);
+    //     let oldValue = elm.val(); // OGIDI
+    //     let oldId = elm.attr('id'); 
+    //     elm.select2({
+    //         ajax: {
+    //           url: `/get-stock-location/${source}`,
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               page_limit: 10, // page size
+    //               location_type: source, 
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 2,
+    //         multiple: false,
+    //         placeholder: 'Search for location',
+    //         allowClear: true,
+    //     }); 
 
-    function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
-        // find the input field
-        const elm = $(`input[name=destination_location_id]`);
-        let oldValue = elm.val(); // OGIDI
-        let oldId = elm.attr('id'); 
-        elm.select2({
+    //     elm.val(oldId)
+    //     console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+    //     $(`.select2-container.Sourcelocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    // }
+
+    // function triggerVendor(){
+    //     // find the input field
+    //     const elm = $(`input[name=vendor_id_form]`);
+    //     let oldValue = elm.val(); 
+    //     let oldId = elm.attr('id'); 
+    //     elm.select2({
+    //         ajax: {
+    //           url: '/portal-request-get-vendors',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               page_limit: 10, // page size
+    //             //   location_type: source, 
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 2,
+    //         multiple: false,
+    //         placeholder: 'Search for Vendor',
+    //         allowClear: true,
+    //     }); 
+
+    //     elm.val(oldId)
+    //     console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+    //     $(`.select2-container.vendor-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    // }
+
+    function triggerFollowersField() {
+        let $input = $('#inputFollowers');
+        if (!$input.length) {
+            return;
+        }
+        let existingFollowers = [];
+        let followersJson =
+            $input.attr('data-followers') || '[]';
+        try {
+            existingFollowers = JSON.parse(followersJson);
+        } catch (e) {
+            console.error(
+                'Invalid followers JSON:',
+                followersJson
+            );
+        }
+        /*
+        * Destroy previous Select2 instance.
+        */
+        if ($input.data('select2')) {
+            $input.select2('destroy');
+        }
+
+        $input.select2({
             ajax: {
-              url: '/get-stock-location',
-              dataType: 'json',
-              delay: 30,
-              data: function (term, page) {
-                return {
-                  q: term, //search term
-                  page_limit: 10, // page size
-                  location_type: source, 
-                  page: page, // page number
-                };
-              },
-              results: function (data, page) {
-                var more = (page * 30) < data.total;
-                return {results: data.results, more: more};
-              },
-              cache: true
+                url: '/portal-request-employee-reliever',
+                dataType: 'json',
+                delay: 250,
+                data: function (term, page) {
+                    return {
+                        q: term,
+                        page_limit: 10,
+                        page: page
+                    };
+                },
+                results: function (data, page) {
+                    return {
+                        results: data.results || [],
+                        more: (page * 10) < data.total
+                    };
+                },
+                cache: true
             },
-            minimumInputLength: 2,
-            multiple: false,
-            placeholder: 'Search for location',
+
+            minimumInputLength: 0,
+            multiple: true,
+            placeholder: 'Search for followers',
             allowClear: true,
-        }); 
-        elm.val(oldId).trigger('change')
-        console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
-        $(`.select2-container.destinationlocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+            initSelection: function (
+                element,
+                callback
+            ) {
+
+                callback(existingFollowers);
+            }
+        });
+
+
+        /*
+        * Restore existing followers.
+        */
+        if (existingFollowers.length) {
+
+            $input.select2(
+                'data',
+                existingFollowers
+            );
+        }
+
+
+        /*
+        * Track changes.
+        */
+        $input.off('change.followers');
+
+        $input.on(
+            'change.followers',
+            function () {
+
+                let followers =
+                    $input.select2('data') || [];
+
+                if (!$.isArray(followers)) {
+                    followers = [followers];
+                }
+
+                let followerIds =
+                    followers.map(function (item) {
+                        return item.id;
+                    });
+
+                console.log(
+                    'Selected follower IDs:',
+                    followerIds
+                );
+
+                /*
+                * This is what you can send to Odoo.
+                */
+                $input.attr(
+                    'data-selected-ids',
+                    followerIds.join(',')
+                );
+            }
+        );
     }
+
+    // $('#inputFollowers').select2({
+    //     ajax: {
+    //         url: '/portal-request-employee-reliever',
+    //         dataType: 'json',
+    //         delay: 250,
+    //         data: function (term, page) {
+    //             return {
+    //                 q: term, //search term
+    //                 page_limit: 10, // page size
+    //                 page: page, // page number
+    //             };
+    //         },
+    //         results: function (data, page) {
+    //         var more = (page * 30) < data.total;
+    //         return {results: data.results, more: more};
+    //         },
+    //         cache: true
+    //     },
+    //     minimumInputLength: 3,
+    //     multiple: true,
+    //     placeholder: 'Search for followers',
+    //     allowClear: true,
+    // });
+
+    // function searchStockLocation2(element="destination_location_id", source="destination", classes=''){
+    //     // find the input field
+    //     const elm = $(`input[name=destination_location_id]`);
+    //     let oldValue = elm.val(); // OGIDI
+    //     let oldId = elm.attr('id'); 
+    //     elm.select2({
+    //         ajax: {
+    //           url: '/get-stock-location',
+    //           dataType: 'json',
+    //           delay: 30,
+    //           data: function (term, page) {
+    //             return {
+    //               q: term, //search term
+    //               page_limit: 10, // page size
+    //               location_type: source, 
+    //               page: page, // page number
+    //             };
+    //           },
+    //           results: function (data, page) {
+    //             var more = (page * 30) < data.total;
+    //             return {results: data.results, more: more};
+    //           },
+    //           cache: true
+    //         },
+    //         minimumInputLength: 2,
+    //         multiple: false,
+    //         placeholder: 'Search for location',
+    //         allowClear: true,
+    //     }); 
+    //     elm.val(oldId).trigger('change')
+    //     console.log(`CONTAINER ===> ${elm.val()} ID== ${elm.attr('id')}`)
+    //     $(`.select2-container.destinationlocation-cls a.select2-choice span.select2-chosen`).text(oldValue)
+    // }
 
     let storeOldFieldsValue = function(){
         let storeFieldItem = {};
@@ -613,6 +1045,146 @@ odoo.define('portal_request.portal_request_form', function (require) {
             $(this).prop('disabled', true) 
         })
     }
+
+//     function saveProductitem() {
+
+//     let products = [];
+
+//     $('#tbody_product > tr.prod_row').each(function() {
+
+//         let $row = $(this);
+
+//         let rowCount = $row.attr('row_count');
+
+//         let $product = $row.find('.productitemrow').first();
+
+//         /*
+//          * REAL PRODUCT ID
+//          *
+//          * This is what should be sent to Odoo.
+//          */
+//         let productId = $product.attr('data-product-id') || '';
+
+//         /*
+//          * DISPLAY NAME
+//          */
+//         let productName =
+//             $product.attr('data-init-text') ||
+//             $product.val() ||
+//             '';
+
+//         /*
+//          * QUANTITY
+//          */
+//         let quantity =
+//             $row.find('.QTY' + rowCount).val() ||
+//             $row.find('[productinput="productreqQty"]').val() ||
+//             0;
+
+//         /*
+//          * UNIT PRICE
+//          */
+//         let unitPrice =
+//             $row.find('.AmounTotal' + rowCount).val() ||
+//             $row.find('.productAmt').val() ||
+//             0;
+
+//         /*
+//          * SUBTOTAL
+//          */
+//         let subtotal =
+//             $row.find('.SUBTOTAL' + rowCount).val() ||
+//             $row.find('.productSubTotal').val() ||
+//             0;
+
+//         /*
+//          * DESCRIPTION
+//          */
+//         let description =
+//             $row.find('.DescFor').val() || '';
+
+//         /*
+//          * NOTE
+//          */
+//         let note =
+//             $row.find('.Notefor').val() || '';
+
+//         /*
+//          * SOURCE LOCATION
+//          */
+//         let locationId =
+//             $row.find('[location_id]').attr('location_id') ||
+//             '';
+
+//         /*
+//          * SOE
+//          */
+//         let usedQty =
+//             $row.find('.productUsedQty').val() || 0;
+
+//         let usedAmount =
+//             $row.find('.productSoe').val() || 0;
+
+//         /*
+//          * VEHICLE REQUEST
+//          */
+//         let distanceFrom =
+//             $row.find('.DistanceFrom').val() || '';
+
+//         let distanceTo =
+//             $row.find('.Distanceto').val() || '';
+
+//         /*
+//          * Do not add completely empty rows.
+//          */
+//         if (!productId && !productName) {
+//             return;
+//         }
+
+//         products.push({
+
+//             /*
+//              * IMPORTANT:
+//              * This is the value your Odoo backend should use.
+//              */
+//             product_id: productId,
+
+//             /*
+//              * Useful for debugging/display.
+//              */
+//             product_name: productName,
+
+//             /*
+//              * Existing row information.
+//              */
+//             row_count: rowCount,
+
+//             quantity: quantity,
+
+//             unit_price: unitPrice,
+
+//             subtotal: subtotal,
+
+//             description: description,
+
+//             note: note,
+
+//             location_id: locationId,
+
+//             used_qty: usedQty,
+
+//             used_amount: usedAmount,
+
+//             distance_from: distanceFrom,
+
+//             distance_to: distanceTo
+//         });
+//     });
+
+//     console.log('PRODUCT DATA BEING SAVED:', products);
+
+//     return products;
+// }
     let saveProductitem = function(){
         let DataItems = []
         $(`#tbody_product > tr.prod_row`).each(function(){
@@ -628,7 +1200,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 'note': '',
                 'line_checked': false,
                 'code': 'mef00981',
-                'request_line_id': $(this).attr('id'),
+                'request_line_id': $(this).attr('request-line-id'),
                 'distance_from': '',
                 'distance_to': '',
             }
@@ -637,7 +1209,16 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 function(){
                     if($(this).attr('name') == "product_item_id"){
                         console.log('HERE NA MY FIELD VALUE ', $(this).val())
-                        list_item['product_id'] = $(this).val()
+                        // let $product = $row.find('.productitemrow').first();
+
+                        /*
+                        * REAL PRODUCT ID
+                        *
+                        * This is what should be sent to Odoo.
+                        */
+                        let productId = $(this).attr('data-product-id') || '';
+
+                        list_item['product_id'] = productId
                     }
                     if($(this).attr('name') == "product_item_description"){
                         console.log($(this).val())
@@ -666,6 +1247,7 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 let [st, end] = triggerEndDate();
                 console.log(`what is TRIGGERENDDATE ${st} -- ${end}`)
                 trigger_date_function($('#leave_end_datex'), st, end)
+                // trigger_dynamic_many2one_fields();
                
             });
 
@@ -720,19 +1302,15 @@ odoo.define('portal_request.portal_request_form', function (require) {
                 discard.removeClass('d-none');
                 makeWritableFieldsEditable();
                 trigger_product_line();
+                
+                // searchStockLocation2('destination_location_id', 'destination', 'destinationlocation-cls');
+                trigger_dynamic_many2one_fields();
                 searchStockLocation('source_location_id', 'source', 'Sourcelocation-cls');
-                searchStockLocation2('destination_location_id', 'destination', 'destinationlocation-cls');
+                searchStockLocation('destination_location_id', 'destination', 'destinationlocation-cls');
                 triggerVendor();
 
             },
-            // 'focus select[name="source_location_id"]': function(ev){
-            //     console.log(`WE HAVE SOURCE LOCATION == ${$(ev.target).val()}`)
-            //     searchStockLocation('source_location_id', 'source');
-            // },
-
-            // 'focus select[name="destination_location_id"]': function(ev){
-            //     searchStockLocation('destination_location_id', 'destination');
-            // },
+          
 
 
             // 'click #save': function(ev){
@@ -792,81 +1370,368 @@ odoo.define('portal_request.portal_request_form', function (require) {
             //         alert(`Unknown Error! ${msg}`)
             //     });
             // },
-            'click #save': function(ev){
+            // 'click #save': function(ev){
+            //     let cef = checkEditableRequiredFields();
+            //     if (cef){
+            //         alert(cef);
+            //         return false;
+            //     }
+                
+            //     // 1. Prepare FormData
+            //     var formData = new FormData();
+                
+            //     // 2. Append Files
+            //     var fileInput = $('#other_docs_edit')[0];
+            //     if (fileInput && fileInput.files.length > 0) {
+            //         $.each(fileInput.files, function(i, file) {
+            //             formData.append('other_docs', file);
+            //         });
+            //     }
+
+            //     // 3. Append Standard Fields
+            //     formData.append('memo_id', $(".record_id").attr('id'));
+            //     formData.append('leave_type_id', $("#leave_type_id").val() || '');
+            //     formData.append('leave_start_date', $("#leave_start_datex").val() || '');
+            //     formData.append('leave_end_date', $("#leave_end_datex").val() || '');
+            //     formData.append('leave_Reliever', $("#leave_reliever_ids").val() || '');
+            //     formData.append('description', $("#description").val());
+            //     formData.append('source_location_id', $("input[name=source_location_id]").val() || '');
+            //     formData.append('dest_location_id', $("input[name=destination_location_id]").val() || '');
+            //     formData.append('vendor_id', $("input[name=vendor_id_form]").val() || '');
+            //     formData.append('payment_reference', $("#payment_reference_form").val() || '');
+                
+            //     // Handle Input Followers (Select2 Data is an array)
+            //     let followersData = $('#inputFollowers').select2('data');
+            //     formData.append('inputFollowers', JSON.stringify(followersData)); // Send as JSON string
+                
+            //     // Handle Data Items (Product Lines)
+            //     formData.append('Dataitem', JSON.stringify(saveProductitem()));
+
+            //     // 4. UI Blocking
+            //     let $btn = $(ev.target);
+            //     $btn.attr('disabled', true).prepend('<i class="fa fa-spinner fa-spin"/> ');
+            //     $.blockUI({ 'message': '<h2 class="card-name">Saving...</h2>' });
+
+            //     // 5. Send via AJAX (Not RPC)
+            //     $.ajax({
+            //         url: '/save/data', // We need a new route that accepts files
+            //         type: 'POST',
+            //         data: formData,
+            //         processData: false, // Important!
+            //         contentType: false, // Important!
+            //         cache: false,
+            //         success: function(data) {
+            //             $.unblockUI();
+            //             $btn.attr('disabled', false).find('i').remove();
+                        
+            //             // Parse JSON response if needed (depends on controller return)
+            //             let result = typeof data === 'string' ? JSON.parse(data) : data;
+
+            //             if(result.status){
+            //                 console.log('Saved successfully');
+            //                 resetModificationProps();
+            //                 $("#is_edit_mode").prop('checked', false);
+            //                 makeAllFieldsReadonly();
+            //                 $('#edit_document_div').addClass('d-none');
+            //                 $('#other_docs_edit').val('');
+            //                 window.location.reload(); // Reload to show new attachments
+            //             } else {
+            //                 alert(result.message);
+            //             }
+            //         },
+            //         error: function(xhr) {
+            //             $.unblockUI();
+            //             $btn.attr('disabled', false).find('i').remove();
+            //             alert("Error saving data: " + xhr.statusText);
+            //         }
+            //     });
+            // },
+
+            'click #save': function(ev) {
+
                 let cef = checkEditableRequiredFields();
-                if (cef){
+
+                if (cef) {
                     alert(cef);
                     return false;
                 }
-                
-                // 1. Prepare FormData
-                var formData = new FormData();
-                
-                // 2. Append Files
-                var fileInput = $('#other_docs_edit')[0];
+
+                /*
+                * Prevent double clicking.
+                */
+                let $btn = $(ev.currentTarget);
+
+                if ($btn.prop('disabled')) {
+                    return false;
+                }
+
+                /*
+                * ============================================
+                * PREPARE FORMDATA
+                * ============================================
+                */
+                let formData = new FormData();
+
+
+                /*
+                * ============================================
+                * FILES
+                * ============================================
+                */
+                let fileInput = $('#other_docs_edit')[0];
+
                 if (fileInput && fileInput.files.length > 0) {
+
                     $.each(fileInput.files, function(i, file) {
                         formData.append('other_docs', file);
                     });
                 }
 
-                // 3. Append Standard Fields
-                formData.append('memo_id', $(".record_id").attr('id'));
-                formData.append('leave_type_id', $("#leave_type_id").val() || '');
-                formData.append('leave_start_date', $("#leave_start_datex").val() || '');
-                formData.append('leave_end_date', $("#leave_end_datex").val() || '');
-                formData.append('leave_Reliever', $("#leave_reliever_ids").val() || '');
-                formData.append('description', $("#description").val());
-                formData.append('source_location_id', $("input[name=source_location_id]").val() || '');
-                formData.append('dest_location_id', $("input[name=destination_location_id]").val() || '');
-                formData.append('vendor_id', $("input[name=vendor_id_form]").val() || '');
-                formData.append('payment_reference', $("#payment_reference_form").val() || '');
-                
-                // Handle Input Followers (Select2 Data is an array)
-                let followersData = $('#inputFollowers').select2('data');
-                formData.append('inputFollowers', JSON.stringify(followersData)); // Send as JSON string
-                
-                // Handle Data Items (Product Lines)
-                formData.append('Dataitem', JSON.stringify(saveProductitem()));
 
-                // 4. UI Blocking
-                let $btn = $(ev.target);
-                $btn.attr('disabled', true).prepend('<i class="fa fa-spinner fa-spin"/> ');
-                $.blockUI({ 'message': '<h2 class="card-name">Saving...</h2>' });
+                /*
+                * ============================================
+                * BASIC FORM FIELDS
+                * ============================================
+                */
 
-                // 5. Send via AJAX (Not RPC)
+                formData.append(
+                    'memo_id',
+                    $('.record_id').attr('id') || ''
+                );
+
+                formData.append(
+                    'leave_type_id',
+                    $('#leave_type_id').val() || ''
+                );
+
+                formData.append(
+                    'leave_start_date',
+                    $('#leave_start_datex').val() || ''
+                );
+
+                formData.append(
+                    'leave_end_date',
+                    $('#leave_end_datex').val() || ''
+                );
+
+                formData.append(
+                    'leave_Reliever',
+                    $('#leave_reliever_ids').val() || ''
+                );
+
+                formData.append(
+                    'description',
+                    $('#description').val() || ''
+                ); 
+
+                formData.append(
+                    'payment_reference',
+                    $('#payment_reference_form').val() || ''
+                );
+
+                formData.append(
+                    'source_location_id',
+                    $('input[name="source_location_id"]').attr('data-rec-id') || ''
+                );
+
+                formData.append(
+                    'dest_location_id',
+                    $('input[name="destination_location_id"]').attr('data-rec-id') || ''
+                );
+
+                formData.append(
+                    'vendor_id',
+                    $('input[name="vendor_id_form"]').attr('data-rec-id') || ''
+                );
+
+                /*
+                * ============================================
+                * FOLLOWERS
+                * ============================================
+                */
+
+                let followersData = [];
+
+                if ($('#inputFollowers').length) {
+
+                    followersData =
+                        $('#inputFollowers').select2('data') || [];
+                }
+
+                formData.append(
+                    'inputFollowers',
+                    JSON.stringify(followersData)
+                );
+
+
+                /*
+                * ============================================
+                * PRODUCT LINES
+                * ============================================
+                */
+
+                let productData = saveProductitem();
+
+                console.log(
+                    'FINAL PRODUCT DATA:',
+                    productData
+                );
+
+                formData.append(
+                    'Dataitem',
+                    JSON.stringify(productData)
+                );
+
+
+                /*
+                * ============================================
+                * DEBUG PRODUCT IDS
+                * ============================================
+                */
+
+                productData.forEach(function(item, index) {
+
+                    console.log(
+                        'Product line:',
+                        index,
+                        'ID:',
+                        item.product_id,
+                        'Name:',
+                        item.product_name
+                    );
+
+                });
+
+
+                /*
+                * ============================================
+                * BLOCK UI
+                * ============================================
+                */
+
+                $btn
+                    .attr('disabled', true)
+                    .prepend('<i class="fa fa-spinner fa-spin"></i> ');
+
+                $.blockUI({
+                    message: '<h2 class="card-name">Saving...</h2>'
+                });
+
+
+                /*
+                * ============================================
+                * AJAX SAVE
+                * ============================================
+                */
+
                 $.ajax({
-                    url: '/save/data', // We need a new route that accepts files
-                    type: 'POST',
-                    data: formData,
-                    processData: false, // Important!
-                    contentType: false, // Important!
-                    cache: false,
-                    success: function(data) {
-                        $.unblockUI();
-                        $btn.attr('disabled', false).find('i').remove();
-                        
-                        // Parse JSON response if needed (depends on controller return)
-                        let result = typeof data === 'string' ? JSON.parse(data) : data;
 
-                        if(result.status){
-                            console.log('Saved successfully');
+                    url: '/save/data',
+
+                    type: 'POST',
+
+                    data: formData,
+
+                    processData: false,
+
+                    contentType: false,
+
+                    cache: false,
+
+                    success: function(data) {
+
+                        $.unblockUI();
+
+                        $btn
+                            .attr('disabled', false)
+                            .find('i')
+                            .remove();
+
+
+                        /*
+                        * Parse response.
+                        */
+                        let result = data;
+
+                        if (typeof data === 'string') {
+
+                            try {
+
+                                result = JSON.parse(data);
+
+                            } catch (e) {
+
+                                console.error(
+                                    'Invalid JSON response:',
+                                    data
+                                );
+
+                                alert('Invalid response received from server.');
+
+                                return;
+                            }
+                        }
+
+
+                        /*
+                        * Successful save.
+                        */
+                        if (result.status) {
+
+                            console.log(
+                                'Saved successfully'
+                            );
+
                             resetModificationProps();
-                            $("#is_edit_mode").prop('checked', false);
+
+                            $('#is_edit_mode')
+                                .prop('checked', false);
+
                             makeAllFieldsReadonly();
-                            $('#edit_document_div').addClass('d-none');
-                            $('#other_docs_edit').val('');
-                            window.location.reload(); // Reload to show new attachments
+
+                            $('#edit_document_div')
+                                .addClass('d-none');
+
+                            $('#other_docs_edit')
+                                .val('');
+
+                            /*
+                            * Reload the page so the newly
+                            * saved values and attachments appear.
+                            */
+                            window.location.reload();
+
                         } else {
-                            alert(result.message);
+
+                            alert(
+                                result.message ||
+                                'Unable to save the request.'
+                            );
                         }
                     },
+
                     error: function(xhr) {
+
                         $.unblockUI();
-                        $btn.attr('disabled', false).find('i').remove();
-                        alert("Error saving data: " + xhr.statusText);
+
+                        $btn
+                            .attr('disabled', false)
+                            .find('i')
+                            .remove();
+
+                        console.error(
+                            'Save error:',
+                            xhr.responseText
+                        );
+
+                        alert(
+                            'Error saving data: ' +
+                            (xhr.statusText || 'Unknown error')
+                        );
                     }
                 });
+
+                return false;
             },
 
             'click #discardbtn': function(ev){

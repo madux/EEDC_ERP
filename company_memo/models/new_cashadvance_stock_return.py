@@ -33,6 +33,10 @@ class MemoReturnWizard(models.TransientModel):
         default="Reasons",
         required=True,
     )
+    credit_note = fields.Binary(
+            string='Attach Credit Note',
+            required=True,
+        )
 
     line_ids = fields.One2many(
         'memo.return.wizard.line',
@@ -45,6 +49,12 @@ class MemoReturnWizard(models.TransientModel):
         string='Stock Transfer',
         readonly=True,
     )
+    branch_id = fields.Many2one(
+            'multi.branch',
+            related="memo_id.branch_id",
+            string='Stock Transfer',
+            readonly=True, store=True
+        )
 
     @api.onchange('move_to_store')
     def _onchange_move_to_store(self):
@@ -103,6 +113,7 @@ class MemoReturnWizard(models.TransientModel):
                 _(f'No receipt transfer operation type was found for {self.memo_id.company_id.name}')
             )
 
+        
         # ---------------------------------------------------------
         # CREATE PICKING
         # ---------------------------------------------------------
@@ -176,7 +187,11 @@ class MemoReturnWizard(models.TransientModel):
         # you can link it here.
         #
         self.memo_id.stock_picking_id = picking.id
-        return self.memo_id.generate_soe_entry_function(self.memo_id)
+        self.memo_id.memo_cash_advance_procurement_status = False 
+        self.memo_id.update_status_badge()
+
+        # self.sudo().picking_id.action_print_store_receive_note()
+        # return self.memo_id.generate_soe_entry_function(self.memo_id)
         # return {
         #     'type': 'ir.actions.act_window',
         #     'res_model': 'stock.picking',
@@ -184,6 +199,31 @@ class MemoReturnWizard(models.TransientModel):
         #     'view_mode': 'form',
         #     'target': 'current',
         # }
+        return {
+                'type': 'ir.actions.act_window',
+                'res_model': self._name,
+                'res_id': self.id,
+                'view_mode': 'form',
+                'target': 'new',
+            }
+    
+    def view_store_picking(self):
+        if not self.picking_id:
+            raise UserError("No transfer has been generated")
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'stock.picking',
+            'res_id': self.picking_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_print_store_receive_note(self):
+        self.ensure_one()
+        if self.picking_id:
+            return self.sudo().picking_id.action_print_store_receive_note()
+        else:
+            raise UserError("No transfer has been generated")
 
 
 class MemoReturnWizardLine(models.TransientModel):
@@ -215,5 +255,5 @@ class MemoReturnWizardLine(models.TransientModel):
 
     return_qty = fields.Float(
         string='Return Quantity',
-        readonly=True,
+        readonly=False,
     )

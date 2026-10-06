@@ -21,6 +21,49 @@
             action="product.product_category_action_form"
             sequence="10"/>
 
+        <record id="action_stock_valuation_entries" model="ir.actions.act_window">
+            <field name="name">Stock Valuation Entries</field>
+            <field name="res_model">account.move</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('journal_id.name', 'ilike', 'stock')]</field>
+            <field name="context">{'search_default_posted': 1}</field>
+        </record>
+            <!-- <field name="domain">[('line_ids.stock_valuation_layer_ids', '!=', False)]</field> -->
+
+        <menuitem
+        id="menu_stock_valuation_entries_finance"
+        name="Stock Valuation Entries"
+        parent="menu_finance_products"
+        action="action_stock_valuation_entries"
+        sequence="50"/>
+
+         <menuitem
+        id="menu_stock_valuation_entries_finance"
+        name="Stock Valuation Entries"
+        parent="account.menu_finance_entries_accounting_miscellaneous"
+        action="action_stock_valuation_entries"
+        sequence="150"/>
+
+         <menuitem
+        id="menu_current_stock_value_entries_finance"
+        name="Current Product / Stock Value"
+        parent="account.menu_finance_entries_accounting_miscellaneous"
+        action="stock_account.stock_valuation_layer_action"
+        groups="eedc_addons.user_group_see_products,base.group_system,ik_multi_branch.account_major_user"
+        sequence="200"/>
+
+        
+
+        <menuitem
+            id="menu_stock_valuation_entries_finance"
+            name="Stock Valuation Entries"
+            parent="stock.menu_warehouse_report"
+            action="action_stock_valuation_entries"
+            groups="eedc_addons.user_group_see_products,base.group_system,ik_multi_branch.account_major_user"
+            sequence="150"/>
+
+        
+
         <record id="view_product_category_form_move_products" model="ir.ui.view">
             <field name="name">product.category.form.move.products</field>
             <field name="model">product.category</field>
@@ -41,21 +84,37 @@
                                 />
                     </group>
 
+                </xpath> 
+
+            </field>
+        </record>
+
+        <record id="view_product_category_form_move_stocks" model="ir.ui.view">
+            <field name="name">product.category.form.move.stock</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="stock.product_category_form_view_inherit"/>
+            <field name="arch" type="xml">  
+                 <xpath expr="//field[@name='route_ids']" position="after">
+                    <field name="product_prefix" string="Product Prefix" readonly="1"/> 
+                    <field name="product_sequence_id" string="Product Sequence" readonly="1"/> 
                 </xpath>
 
             </field>
         </record>
-         <record id="view_product_category_list_move_products" model="ir.ui.view">
-            <field name="name">product.category.form.move.products</field>
+        <record id="view_product_category_list_move_products" model="ir.ui.view">
+            <field name="name">product.category.list.move.products</field>
             <field name="model">product.category</field>
             <field name="inherit_id" ref="product.product_category_list_view"/>
             <field name="arch" type="xml"> 
                 <xpath expr="//field[@name='display_name']" position="after">
+                    <field name="product_prefix" string="Product Prefix"/> 
                     <field name="product_count"/> 
                 </xpath>
 
             </field>
         </record>
+
+
 
 
         

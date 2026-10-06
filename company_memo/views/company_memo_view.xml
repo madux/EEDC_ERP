@@ -21,6 +21,7 @@
 					<button name="generate_soe_entries" string="Retire Expense" type="object" class="oe_highlight" confirm="Are you sure you want to Retire?" attrs="{'invisible':['|','|', ('state','not in',['Approve2', 'Approve','Done']), ('memo_type_key','not in',['soe']),('user_is_approver','=', False)]}"/>
                     <button name="view_generate_stock_material_request" string="Confirm Delivery" type="object" class="oe_highlight" confirm="Are you sure you want to generate transfer?" attrs="{'invisible':['|',('memo_type_key','not in',['material_request']), ('state','!=', 'Done')]}"/>
 					<button name="receive_interdistrict_transfer" attrs="{'invisible': [('external_stock_picking_id','=', False)]}" string="Receive Items" type="object" class="oe_highlight"/>
+					<button name="action_return_unused_items" attrs="{'invisible': ['|','|', '|',('memo_cash_advance_procurement_status', '!=', True), ('memo_type_key','not in',['soe', 'cash_advance']), ('is_procurement_cash_advance','=', False), ('state','not in',['Done'])]}" string="Receive Items to Store" type="object" class="oe_highlight btn-danger"/>
 					<button name="update_inventory_product_quantity" string="Update Inventory Items" type="object" class="oe_highlight" confirm="Are you sure you want to Retire inventory items?" attrs="{'invisible':['|',('to_update_inventory_product','!=', True), ('memo_type_key','not in',['soe'])]}"/>
 					<button name="generate_loan_entries" string="Generate Loan Entry" type="object" class="oe_highlight" confirm="Are you sure you want to generate a loan entry?" groups="base.group_system,company_memo.mainmemo_account,account.group_account_manager" attrs="{'invisible':['|',('state','not in',['Done']),('memo_type_key','not in',['loan'])]}"/>
 					<button name="view_related_record" class="btn-primary oe_highlight" attrs="{'invisible': [('state', 'in', ['Sent', 'submit', 'Refuse'])]}" type="object" string="View Related Record"/>
@@ -64,6 +65,7 @@
                         <widget name="web_ribbon" title="Retired" bg_color="bg-danger" attrs="{'invisible': [('memo_soe_status', '=', False)]}"/>
                         <widget name="web_ribbon" title="Completed" bg_color="bg-danger" attrs="{'invisible': [('memo_bagde_status', '=', False)]}"/>
                         <widget name="web_ribbon" title="In progress" bg_color="bg-danger" attrs="{'invisible': [('memo_bagde_undone', '=', False)]}"/>
+                        <widget name="web_ribbon" title="Items Not yet Received" bg_color="bg-danger" attrs="{'invisible': [('memo_cash_advance_procurement_status', '=', False)]}"/>
 
 						<div class="oe_title">
 						<label for="name"/>
@@ -92,7 +94,7 @@
 					<!-- MEMO THINGS -->
 								<field name="dummy_memo_config_ids" invisible="1" widget="many2many_tags"/>
 								<field name="memo_setting_id" required="1"
-                                        attrs="{'readonly':[('state','not in',['submit', 'Refuse'])]}"
+                                        attrs="{'readonly':[('state','not in',['submit', 'Refuse']), ('edit_mode','=',False)]}"
                                         options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
                                         />
                                         <!-- domain="[('id', 'in', dummy_memo_config_ids)]" -->
@@ -105,13 +107,7 @@
 								attrs="{'readonly':[('state','not in',['submit', 'Refuse'])], 'invisible': [('internal_memo_option', 'not in', ['selected'])], 'required': [('user_is_approver', '=', True),('internal_memo_option', '=', 'selected'), ('memo_type_key', 'in', ['Internal', 'internal'])]}" 
 								options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/> 
 								<!-- MEMO THINGS -->
-								<field name="memo_material_request_status" invisible="1"/>
-								<field name="memo_procurement_request_status" invisible="1"/>
-								<field name="memo_awaiting_procurement_request_status" invisible="1"/>
-								<field name="edit_mode" invisible="1"/>
-								<field name="memo_soe_status" invisible="1"/>
-								<field name="memo_bagde_status" invisible="1"/>
-								<field name="memo_bagde_undone" invisible="1"/>
+								
 								<field name="user_owned_cash_advance_ids" invisible="1" widget="many2many_tags"/>
 								<field name="cash_advance_reference" domain="[('memo_type_key', '=', 'cash_advance'),('id', 'in', user_owned_cash_advance_ids), ('state', '=', 'Done')]" help="Only displays posted cash advance, the ones you created and memo type is cash advance" attrs="{'readonly':[('state','=', 'Done')], 
 								'invisible':[('memo_type_key','!=', 'soe')],'required':[('memo_type_key','=','soe')],
@@ -185,7 +181,7 @@
 
 								<field name="source_location_id" string="Source Location" options="{&quot;no_open&quot;: True, &quot;no_quick_create&quot;: True}"
 								 attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True),('state','not in',['Done'])]}"/> 
-                                <field name="dest_location_id" string="Destination Location" options="{&quot;no_open&quot;: False, &quot; no_quick_create&quot;: True}" 
+                                <field name="dest_location_id" string="Destination Location" help="Only shows when you are inventory administrator" options="{&quot;no_open&quot;: False, &quot; no_quick_create&quot;: True}" 
 								attrs="{'invisible':['|', ('memo_type_key','not in', ['material_request']), ('user_is_approver','!=',True), ('state','not in',['Done'])]}"/> 
                                 <field name="picking_type_id" string="Operation Type" force_save="1" 
 								domain="[('code', 'in', ['internal', 'outgoing'])]" 
@@ -619,6 +615,21 @@
 										<field name="move_id" invisible="0" force_save="1" readonly="1"/>
 										<field name="processing_company_id" invisible="0" force_save="1" readonly="0"/>
 										<field name="processing_branch_id" invisible="0" force_save="1" readonly="0"/>
+									</group>
+
+									<group>
+										<field name="is_procurement_cash_advance" invisible="0" readonly="1" force_save="1"/>
+										<field name="memo_material_request_status" invisible="0"/>
+										<field name="memo_procurement_request_status" invisible="0"/>
+										<field name="memo_awaiting_procurement_request_status" invisible="0"/>
+										<field name="memo_soe_status" invisible="0"/>
+										<field name="memo_bagde_status" invisible="0"/>
+										<field name="memo_bagde_undone" invisible="0"/>
+										<field name="memo_cash_advance_procurement_status" invisible="0" readonly="0" force_save="1"/>
+										
+									</group>
+									<group>
+										
 									</group>
 								</group>
 							</page>

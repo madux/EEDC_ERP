@@ -6,15 +6,27 @@
         <field name="model">memo.return.wizard</field>
         <field name="arch" type="xml">
             <form string="Return Unused Items">
+                <header>
+                    <button name="action_print_store_receive_note"
+                            type="object"
+                            string="Print SRA"
+                            class="btn-primary"
+                            icon="fa-download"
+                            help="Store Receive Note"/>
+                </header>
                 <sheet>
                     <group>
-                        <field name="memo_id"/>
+                        <field name="memo_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                         <field name="move_to_store"/>
-                        <field name="company_id" readonly="1"/>
+                        <field name="company_id" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                        <field name="picking_id" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                        <field name="branch_id" string="District" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+
+                        <field name="credit_note" readonly="0" invisible="1"/>
 
 
-                        <field name="destination_location_id"
-                               attrs="{'invisible': [('move_to_store', '=', False)],'required': [('move_to_store', '=', True)]}"
+                        <field name="destination_location_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"
+                              domain="[('branch_id', '=', branch_id)]" attrs="{'invisible': [('move_to_store', '=', False)],'required': [('move_to_store', '=', True)]}"
                                />
 
                         <field name="reason"
@@ -28,15 +40,16 @@
 
                         <tree create="false"
                               delete="false"
-                              edit="false">
+                              edit="true"
+                              editable="bottom">
 
-                            <field name="product_id"/>
+                            <field name="product_id" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
 
-                            <field name="quantity_available"/>
+                            <field name="quantity_available" readonly="1"/>
 
-                            <field name="used_qty"/>
+                            <field name="used_qty" readonly="1"/>
 
-                            <field name="return_qty"/>
+                            <field name="return_qty" readonly="0"/>
 
                         </tree>
 
@@ -49,7 +62,14 @@
                     <button name="action_confirm"
                             type="object"
                             string="Confirm Return"
-                            class="btn-primary"/>
+                            class="btn-primary"
+                            attrs="{'invisible': [('picking_id', '!=', False)]}"/>
+
+                    <button name="view_store_picking"
+                            type="object"
+                            string="View Move"
+                            class="btn-primary"
+                            attrs="{'invisible': [('picking_id', '!=', True)]}"/>
 
                     <button string="Cancel"
                             special="cancel"

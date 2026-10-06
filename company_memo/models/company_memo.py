@@ -160,6 +160,7 @@ class Memo_Model(models.Model):
     #     ("recruitment_request", "Recruitment Request"),
     #     ], string="Request Type", required=True)
     memo_material_request_status = fields.Boolean('')
+    memo_cash_advance_procurement_status = fields.Boolean('')
     memo_procurement_request_status = fields.Boolean('')
     memo_awaiting_procurement_request_status = fields.Boolean('')
     memo_soe_status = fields.Boolean('')
@@ -515,12 +516,33 @@ class Memo_Model(models.Model):
     )
     loan_reference = fields.Integer(string="Loan Ref")
     active = fields.Boolean('Active', default=True)
+    is_procurement_cash_advance = fields.Boolean('Procurement cash advance', default=False,
+                                                 compute="compute_procurement_cashadvance",
+                                                 help="""System determines if this is for procurement, then a button where
+                                                 finance will click to move the item procured appears""")
+
+    @api.depends('product_ids.product_id')
+    def compute_procurement_cashadvance(self):
+        prc = self.procurement_cashadvance()
+        if prc:
+            self.is_procurement_cash_advance = True 
+        else:
+            self.is_procurement_cash_advance = False
+
+
+    def procurement_cashadvance(self):
+        if self.product_ids:
+            line_with_product = self.mapped('product_ids').filtered(lambda pr: pr.product_id.id != False)
+            return True if line_with_product else False 
+        else:
+            return False
 
     product_ids = fields.One2many(
         'request.line', 
         'memo_id', 
         string ='Request Line',
     )
+     
     document_request_ids = fields.One2many(
         'document.request.line', 
         'memo_document_request_id', 
@@ -941,51 +963,10 @@ class Memo_Model(models.Model):
                 if not ln.omit_record:
                     if ln.quantity_available < 1:
                         raise UserError(f"{ln.product_id.name} must have product unit greater than 0")
-                
-        # if self.memo_type_key in ['soe']:
-        #     for ln in self.product_ids:
-        #         if ln.used_qty < 1 or ln.used_amount < 1:
-        #             raise UserError(f"{ln.product_id.name} used Quantity and used amount must be greater than 0")
-        
+             
         invoice_list = ['Payment']
         if self.memo_type_key in invoice_list and not self.product_ids:
             raise ValidationError("Please enter invoice lines")
-
-    # def procurement_confirmation(self):
-    #     if self.stage_id.require_po_confirmation:
-    #         if not self.po_ids:
-    #             raise UserError("Please enter purchase order lines")
-    #         else:
-    #             po_without_lines = self.mapped('po_ids').filtered(
-    #                 lambda tot: tot.amount_total < 1
-    #             )
-    #             if po_without_lines:
-    #                 raise ValidationError("Please kindly ensure that all purchase order lines are added with price amount")
-
-    #         po_without_confirmation = self.mapped('po_ids').filtered(
-    #                 lambda st: st.state in ['draft', 'sent']
-    #             )
-    #         if po_without_confirmation:
-    #             raise ValidationError(
-    #                 """All POs must be confirmed at this stage. To avoid errors, 
-    #                 Please kindly go through each PO to confirm them""")
-    #     if self.stage_id.require_bill_payment: 
-    #         '''Checks if the PO is expecting a picking count and there is no pickings '''
-    #         without_picking_reciept = self.mapped('po_ids').filtered(
-    #                 lambda st: st.incoming_picking_count > 0 and not st.picking_ids
-    #             )
-    #         if without_picking_reciept:
-    #             raise ValidationError('Please ensure all PO(s) has been recieved before Vendor Bill is generated')
-    #         for po in self.mapped('po_ids'):
-    #             if po.mapped('picking_ids').filtered(
-    #                 lambda st: st.state != "done"
-    #             ):
-    #                 raise ValidationError("Please ensure all PO picking / receipts are marked done before vendor bill is generated")
-    #         po_without_invoice_payment = self.mapped('po_ids').filtered(
-    #                 lambda st: st.invoice_status not in ['invoiced']
-    #             )
-    #         if po_without_invoice_payment:
-    #             raise ValidationError("Please kindly create and pay the bills for each PO lines")
 
     def procurement_confirmation(self):
         if self.stage_id.require_po_confirmation:
@@ -1035,13 +1016,7 @@ class Memo_Model(models.Model):
 
     def sale_confirmation(self):
         if self.stage_id.require_so_confirmation:
-            # selected = self.mapped('so_ids').filtered(
-            #         lambda st: st.selected
-            #     )
-            # if not selected:
-            #     raise UserError(
-            #         """Please select at least on Sale order to confirm""")
-                
+             
             if not self.so_ids:
                 raise UserError("Please enter sale order lines")
             else:
@@ -1058,19 +1033,7 @@ class Memo_Model(models.Model):
                 raise UserError(
                     """All Selected POs must be confirmed at this stage. To avoid errors, 
                     Please kindly go through each SO to confirm them""")
-        # if self.stage_id.require_waybill_detail: 
-        #     '''Checks if the PO is expecting a picking count and there is no pickings '''
-        #     without_picking_reciept = self.mapped('po_ids').filtered(
-        #             lambda st: st.selected and st.incoming_picking_count > 0 and not st.picking_ids
-        #         )
-        #     if without_picking_reciept:
-        #         raise UserError('Please ensure all PO(s) has been recieved before Vendor Bill is generated')
-        #     for po in self.mapped('po_ids').filtered(
-        #             lambda st: st.selected):
-        #         if po.mapped('picking_ids').filtered(
-        #             lambda st: st.state not in ["cancel", "done"]):
-        #             raise UserError(
-        #                 """Please ensure all PO picking / receipts are marked done before vendor bill is generated \n 1) Please go under purchase order tab \n 2) Click view button \n. 3) Click on the Receive button. \n 4) On the new page click Validate. (If stock pickings are shown, ensure to either cancel or validate the records.)""")
+
         if self.stage_id.require_bill_payment: 
             so_without_invoice_payment = self.mapped('so_ids').filtered(
                     lambda st: st.selected and st.invoice_status not in ['invoiced']
@@ -1086,24 +1049,6 @@ class Memo_Model(models.Model):
         domain = ['|', ('name', operator, name), ('code', operator, name)]
         return self.search(domain + args, limit=limit).name_get()
     
-    # @api.model
-    # def default_get(self, fields_list):
-    #     defaults = super(Memo_Model, self).default_get(fields_list)
-    #     if 'to_create_document' in self._context:
-    #         val = self._context.get('to_create_document')
-    #         if val == True:
-    #             memo_document_key = self.env['memo.type'].search([('is_document', '=', True)], limit=1)
-    #         defaults['memo_type'] = memo_document_key.id
-            
-    #     if 'is_doc_mgt_request' in self._context:
-    #         val = self._context.get('is_doc_mgt_request')
-    #         if val == True:
-    #             doc_mgt_config = self.env['doc.mgt.config'].search([], limit=1)
-    #             if doc_mgt_config and doc_mgt_config.memo_type_id:
-    #                 memo_type_id = doc_mgt_config.memo_type_id.id
-    #                 defaults['memo_type'] = memo_type_id
-    #     return defaults
-     
     def get_user_company_in_memo_companies(self, user_company_ids, memo_company_ids):
         _logger.info(f"User companies and memo companies {user_company_ids}, {memo_company_ids}")
         # return True
@@ -1125,7 +1070,7 @@ class Memo_Model(models.Model):
 
         for r in memo_configs:
             # Case 1: normal relationship — same branch/company
-            is_related = (r.branch_id.id in branch_ids and r.company_id.id in company_ids) # or r.company_id.id in company_ids)
+            #is_related = (r.branch_id.id in branch_ids and r.company_id.id in company_ids) # or r.company_id.id in company_ids)
 
             # Case 2: inter-district or request but unrelated branch
             # is_inter_district_case = (
@@ -1135,53 +1080,19 @@ class Memo_Model(models.Model):
 
             # # Keep if either is true; otherwise remove
             # if not (is_related or is_inter_district_case):
-            if r.branch_id.id in branch_ids and r.company_id.id in company_ids:
+            if r.branch_id.id in branch_ids and r.company_id.id in company_ids or r.inter_district and r.allow_cross_company_requests:
                 pass
             else:
                 memo_configs -= r
         _logger.info(f" found configs---{memo_configs}")
         return memo_configs
-            
-    # def get_user_configs(self):
-    #     # employee = self.env['hr.employee'].sudo().with_context(force_company=False).search(
-    #     #     [('user_id', '=', self.env.uid)], limit=1)
-    #     user = self.env.user
-    #     employee = self.env['hr.employee'].sudo().search(
-    #         [('user_id', '=', self.env.uid)], limit=1)
-    #     memo_configs = self.env['memo.config'].sudo().search([
-    #         ('active', '=', True),
-    #         ('publish_to_public', '=', True),
-    #         # ('department_id', '=', employee.department_id.id),
-    #         ('branch_id', '=', employee.user_id.branch_id.id),
-    #         ('company_id', '=', employee.user_id.company_id.id),
-    #         ])
-    #     _logger.info(f'THis is configs == > {memo_configs}')
-    #     memo_setting_with_initiators_not_user = [] # [r.id for r in memo_configs if r.stage_ids and r.stage_ids[0].approver_ids and employee.id not in r.stage_ids[0].approver_ids.ids]
-    #     for r in memo_configs:
-    #         if r.stage_ids:
-    #             initiation_stage = r.stage_ids[0]
-    #             if initiation_stage.approver_ids and employee.id not in initiation_stage.approver_ids.ids:
-    #                 memo_configs = memo_configs - r
-    #     return memo_configs
-    
+             
     @api.model
     def default_get(self, fields):
         res = super(Memo_Model, self).default_get(fields)
         to_create_document = self.env.context.get('to_create_document')
         memo_document_key = self.env.ref('company_memo.mtype_doc_management_request')
-        memo_document_key = memo_document_key.id if to_create_document else False
-        
-        #### 
-        # memo_configs = self.env['memo.config'].search([
-        #     ('active', '=', True),
-        #     ])
-        # user = self.env.user
-        # user_branch_id = user.branch_id
-        # top_user = self.env.is_admin() or self.env.user.has_group('ik_multi_branch.account_major_user')
-        # default_user_branch_id = res.get('branch_id')
-        # user_company = self.env.user.company_id.id
-        # _logger.info(f"i am seeing configs ==> {configs} {[r.id for r in configs]}")
-        # configs = [rec.memo_type.id for rec in memo_configs if user_branch_id.id in rec.branch_ids.ids and user_company in rec.allowed_for_company_ids.ids] 
+        memo_document_key = memo_document_key.id if to_create_document else False 
         configs = self.get_user_configs()
         res.update({
             'memo_type': memo_document_key,
@@ -1203,25 +1114,8 @@ class Memo_Model(models.Model):
     @api.onchange('memo_setting_id')
     def onchange_memo_setting_id(self):
         if self.memo_setting_id:
-            ms = self.memo_setting_id.sudo()
-            # raise UserError(f" poor Configuration:{ms.id} {ms} No  {ms.stage_ids}")
-            
-            has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
-    #                 memo_setting_stage = ms.stage_ids[0]
-    #                 self.has_invoice = has_invoice
-    #                 self.has_po = has_po
-    #                 self.has_so = has_so
-    #                 self.has_transformer = has_transformer
-    #                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
-    #                 self.memo_setting_id = ms.id
-    #                 self.memo_type_key = self.memo_type.memo_key  
-    #                 picking_id = self.get_default_picking_id()
-    #                 self.picking_type_id = picking_id
-    #                 self.requested_department_id = self.employee_id.department_id.id
-    #                 self.users_followers = [
-    #                     (4, self.sudo().employee_id.administrative_supervisor_id.id),
-    #                     ] 
-    
+            ms = self.memo_setting_id.sudo() 
+            has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms) 
             if ms and ms.stage_ids:
                 has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
                 memo_setting_stage = ms.stage_ids[0]
@@ -1266,45 +1160,7 @@ class Memo_Model(models.Model):
                 raise UserError("Configuration: No stages configured for the selected request")
         else:
             self.stage_id = False
-    
-    # @api.onchange('memo_setting_id')
-    # def onchange_memo_setting_id(self):
-    #     if self.memo_setting_id:
-    #         try:
-    #             ms = self.memo_setting_id
-    #             if ms.stage_ids:
-    #                 memo_setting_stage = ms.stage_ids[0]
-    #                 self.stage_id = memo_setting_stage.id
-    #                 self.memo_type_key = ms.memo_type.memo_key
-    #                 self.memo_type = ms.memo_type
-    #                 self.has_sub_stage = bool(memo_setting_stage.sub_stage_ids)
-
-    #                 # Add followers (memory only)
-    #                 if self.employee_id.administrative_supervisor_id:
-    #                     self.users_followers = [
-    #                         (4, self.employee_id.administrative_supervisor_id.id)
-    #                     ]
-
-    #                 # Generate artifacts but DO NOT write
-    #                 invoices, documents = self.generate_required_artifacts(memo_setting_stage, self, 'context_data_if_needed')
-
-    #                 self.invoice_ids = [(4, iv) for iv in invoices]
-    #                 self.attachment_ids = [(4, dc) for dc in documents]
-
-    #                 # Generate sub-stage artifacts (if this doesn't write)
-    #                 self.generate_sub_stage_artifacts(memo_setting_stage)
-    #             else:
-    #                 self.memo_type = False
-    #                 self.stage_id = False
-    #                 self.memo_setting_id = False
-    #                 self.memo_type_key = False
-    #                 self.has_sub_stage = False
-    #                 raise UserError("Configuration: No stages configured for the selected request")
-    #         except Exception as e:
-    #             raise ValidationError(e)
-    #     else:
-    #         self.stage_id = False
-        
+     
     @api.depends('stage_id.memo_config_id')
     def _compute_stage_ids(self):
         _logger.info('testing to default stages')
@@ -1313,7 +1169,7 @@ class Memo_Model(models.Model):
                 record.computed_stage_ids = record.stage_id.memo_config_id.mapped('stage_ids').filtered(
                     lambda publish: publish.publish_on_dashboard
                 ).ids
-                # record.computed_stage_ids = [(6, 0, [1,3,4])]
+                
             else:
                 record.computed_stage_ids = False
                 
@@ -1368,8 +1224,7 @@ class Memo_Model(models.Model):
     def _get_related_stage(self):
         if self.memo_type:
             domain = [
-                ('memo_type', '=', self.memo_type.id), 
-                # ('department_id', '=', self.employee_id.department_id.id)
+                ('memo_type', '=', self.memo_type.id),  
                 ]
         else:
             domain=[('id', '=', 0)]
@@ -1380,7 +1235,6 @@ class Memo_Model(models.Model):
         for rec in self:
             if rec.product_ids:
                 amount = sum([re.retire_sub_total_amount for re in rec.mapped('product_ids')])
-                # raise ValidationError(amount)
                 rec.request_total_soe_amount = amount
     
     @api.depends('product_ids.sub_total_amount')
@@ -1388,7 +1242,6 @@ class Memo_Model(models.Model):
         for rec in self:
             if rec.product_ids:
                 amount = sum([re.sub_total_amount for re in rec.mapped('product_ids')])
-                # raise ValidationError(amount)
                 rec.request_total_amount = amount
                 
     @api.onchange('invoice_ids')
@@ -1469,54 +1322,6 @@ class Memo_Model(models.Model):
             ], limit=1)
         return op_type.id if op_type else False 
          
-    # @api.onchange('memo_type')
-    # def get_default_stage_id(self):
-    #     """ Gives default stage_id """
-    #     if self.memo_type and not self.memo_type.is_document:
-    #         Employee = self.env['hr.employee'].sudo().with_context(force_company=False)
-    #         employee = Employee.search([('user_id', '=', self.env.uid)], limit=1)
-    #         self.employee_id = employee.id
-    #         if not employee.department_id:
-    #             raise ValidationError("Contact Admin !!! Employee does not have a department assigned")
-    #         if not self.res_users:
-    #             department_id = employee.department_id
-    #             ms = self.env['memo.config'].sudo().search([
-    #                 ('memo_type', '=', self.memo_type.id),
-    #                 # ('department_id', '=', department_id.id)
-    #                ('branch_id', '=', employee.user_id.branch_id.id),
-    #                 ('company_id', '=', employee.user_id.company_id.id),
-    #                 ], limit=1)
-    #             if ms:
-    #                 has_invoice, has_po, has_so, has_transformer = self.check_po_config(ms)
-    #                 memo_setting_stage = ms.stage_ids[0]
-    #                 self.has_invoice = has_invoice
-    #                 self.has_po = has_po
-    #                 self.has_so = has_so
-    #                 self.has_transformer = has_transformer
-    #                 self.stage_id = memo_setting_stage.id if memo_setting_stage else False
-    #                 self.memo_setting_id = ms.id
-    #                 self.memo_type_key = self.memo_type.memo_key  
-    #                 picking_id = self.get_default_picking_id()
-    #                 self.picking_type_id = picking_id
-    #                 self.requested_department_id = self.employee_id.department_id.id
-    #                 self.users_followers = [
-    #                     (4, self.sudo().employee_id.administrative_supervisor_id.id),
-    #                     ] 
-    #             else:
-    #                 self.memo_type = False
-    #                 self.stage_id = False
-    #                 self.memo_setting_id = False
-    #                 self.memo_type_key = False
-    #                 self.requested_department_id = False
-    #                 msg = f"No stage configured for your districts and selected company {self.env.user.company_id.name}. Please contact administrator"
-    #                 return {'warning': {
-    #                             'title': "Validation",
-    #                             'message':msg,
-    #                         }
-    #                 }
-    #     else:
-    #         self.stage_id = False
-
     @api.depends('approver_id')
     def compute_user_is_approver(self):
         for rec in self:
@@ -1738,21 +1543,7 @@ class Memo_Model(models.Model):
         
     def validate_soe_line(self):
         if self.memo_type.memo_key == "soe":
-            soe_lines = self.mapped('product_ids')#.filtered(
-            #     lambda s: s.to_retire == True)
-            for r in soe_lines:
-                if r.used_qty < 1 or r.used_amount < 1:
-                        raise ValidationError(
-                            'Each Request line item must have used qty and used amount greater than 0'
-                    )
-            # soe_line_not_cleared = self.mapped('product_ids').filtered(
-            #     lambda s: s.to_retire == True)
-            # for r in soe_line_not_cleared: 
-            #     if r.used_qty < 0 or r.used_amount < 1:
-            #         # if soe_line_not_cleared:
-            #         raise ValidationError(
-            #             'Each Request line item must have used qty and used amount greater than 0'
-            #         )
+            soe_lines = self.mapped('product_ids')
             
     def build_po_line(self, order_id):
         '''args: order_id: the po_id already created'''
@@ -1855,8 +1646,7 @@ class Memo_Model(models.Model):
                 'product_uom_qty': rq.quantity_available,
                 'product_qty': rq.quantity_available,
                 'price_unit': rq.amount_total,
-                # 'tax_ids': [(6, 0, self.taxes_id.ids)] if not self.product_id.categ_id.sum_up_total or self.added_tax_ids else False,
-                # 'added_tax_ids': [(6, 0, rq.product_id.categ_id.added_tax_ids.ids)],
+                
             }
             po_line = self.env['purchase.order.line'].create(orderlineval)
         self.update({'po_ids': [(4, order_id.id)]})
@@ -1906,16 +1696,10 @@ class Memo_Model(models.Model):
             if not self.mapped('product_ids').filtered(lambda s: not s.omit_record):
                 raise ValidationError("Please add request line without omitted box checked") 
         
-        
-        
-        # elif self.memo_type.memo_key == "soe":
-        #     if self.mapped('product_ids').filtered(lambda x: x.used_qty < 1 and x.used_amount > 1)
-        #     raise ValidationError("Please add request line") 
         view_id = self.env.ref('company_memo.memo_model_forward_wizard')
         condition_stages = [self.stage_id.yes_conditional_stage_id.id, self.stage_id.no_conditional_stage_id.id] or []
         approver_ids = self.sudo().stage_id.approver_ids
         approver_ids = manager_id if manager_id else approver_ids and approver_ids[0].id if approver_ids else False
-        # raise ValidationError(self.env['hr.employee'].browse(approver_ids).name)
         return {
                 'name': 'Forward Memo',
                 'view_type': 'form',
@@ -1937,8 +1721,6 @@ class Memo_Model(models.Model):
     def get_initial_stage(self, config_id):
         memo_settings = self.env['memo.config'].sudo().search([
             ('id', '=', config_id),
-            # ('memo_type', '=', memo_type),
-            # ('department_id', '=', department_id)
             ], limit=1) or self.memo_setting_id if not self.to_create_document else self.document_memo_config_id # if self.document_memo_config_id else self.helpdesk_memo_config_id
 
         if memo_settings and memo_settings.stage_ids:
@@ -1947,47 +1729,6 @@ class Memo_Model(models.Model):
             initial_stage_id= self.env.ref('company_memo.memo_initial_stage')
         return initial_stage_id
 
-    # def get_next_stage_artifact(self, current_stage_id, from_website=False):
-    #     """
-    #     args: from_website: used to decide if the record is 
-    #     generated from the website or from odoo internal use
-    #     """
-    #     approver_ids = [] 
-    #     document_memo_config_id = self.document_memo_config_id #hasattr(self.env['memo.model'], 'document_memo_config_id')
-    #     helpdesk_memo_config_id = hasattr(self.env['memo.model'], 'helpdesk_memo_config_id')
-    #     memo_settings = self.document_memo_config_id if self.document_memo_config_id and self.to_create_document \
-    #         else self.helpdesk_memo_config_id if helpdesk_memo_config_id \
-    #             else self.memo_setting_id 
-    #     memo_setting_stages = memo_settings.mapped('stage_ids').filtered(
-    #         lambda skp: skp.id != self.stage_to_skip.id
-    #     )
-    #     _logger.info(f'Found stages are ==> {self.memo_setting_id} --  {memo_settings} and {memo_setting_stages.ids}')
-    #     if memo_settings and current_stage_id:
-    #         mstages = memo_settings.stage_ids # [3,6,8,9]
-    #         manager_can_approve = False
-    #         last_stage = mstages[-1] if mstages else False # 'e.g 9'
-    #         if last_stage and last_stage.id != current_stage_id.id:
-    #             current_stage_index = memo_setting_stages.ids.index(current_stage_id.id)
-    #             # if current_stage_index in [0, 1]: # Check here very well
-    #             if current_stage_index == 0:
-    #                 manager_can_approve = True
-    #             next_stage_id = memo_setting_stages.ids[current_stage_index + 1] # to get the next stage
-    #         else:
-    #             next_stage_id = self.stage_id.id
-    #         next_stage_record = self.env['memo.stage'].sudo().browse([next_stage_id])
-    #         if next_stage_record:
-    #             approver_ids = next_stage_record.approver_ids.ids
-    #             if manager_can_approve:
-    #                 manager_id = self.sudo().employee_id.parent_id.id or self.sudo().employee_id.administrative_supervisor_id.id
-    #                 approver_ids.append(manager_id) 
-    #         return approver_ids, next_stage_record.id
-    #     else:
-    #         if not from_website:
-    #             raise ValidationError(
-    #                 "Please ensure to configure the Memo type for the employee department"
-    #                 )
-    #         else:
-    #             return False, False
     def get_next_stage_artifact(self, current_stage_id, from_website=False):
         """
         args: from_website: used to decide if the record is
@@ -2238,10 +1979,6 @@ class Memo_Model(models.Model):
                     self.env['documents.document'].create(vals)
             if rec.document_documents_ids:
                 for doc in rec.document_documents_ids:
-                    
-                    # rec.request_to_document_folder.sudo().write({
-                    #     'document_ids': [(6, 0, [doc.id])] 
-                    # })
                     doc.copy({
                         'department_id': self.sudo().employee_id.department_id.id,
                         'partner_id': self.sudo().employee_id.user_id.partner_id.id, 
@@ -2257,9 +1994,7 @@ class Memo_Model(models.Model):
         stage_document_line = stage_id.mapped('required_document_line')
         invoices, documents= [], []
         _logger.info('TRY1')
-        if stage_invoice_line:
-            # if not self.client_id:
-            #     raise ValidationError("This stage has a default invoice line setup.\n Client / Partner must be selected before invoice validation")
+        if stage_invoice_line: 
             for stage_inv in stage_invoice_line:
                 already_existing_stage_invoice_line = obj.mapped('invoice_ids').filtered(
                     lambda exist: exist.stage_invoice_name == stage_inv.name and exist.state not in ['posted'])
@@ -2309,7 +2044,11 @@ class Memo_Model(models.Model):
         elif self.memo_type_key in ['soe']:
             self.memo_soe_status = True #'Retired'
         else:
-            self.memo_bagde_status = True #'Completed'
+            if self.is_procurement_cash_advance and self.memo_cash_advance_procurement_status == True:
+                self.memo_bagde_undone= False
+                self.memo_bagde_status = False
+            else:
+                self.memo_bagde_status = True #'Completed'
 
     def enable_edit_mode(self):
         self.edit_mode = True 
@@ -2580,7 +2319,6 @@ class Memo_Model(models.Model):
     def generate_memo_artifacts(self, body_msg, body):
         _logger.info('TESTING 003')
         if self.memo_type.memo_key == "material_request":
-            _logger.info('TESTING 004')
             return self.generate_stock_material_request(body_msg, body)
         elif self.memo_type.memo_key == "procurement_request":
             return self.generate_stock_procurement_request(body_msg, body)
@@ -2686,8 +2424,7 @@ class Memo_Model(models.Model):
         if not self.is_inter_district_transfer:
             if not self.sudo().picking_type_id.company_id.id == self.company_id.id:
                 raise ValidationError(f'Operation type does not relate to {self.company_id.name} where this request is sourcing from')
-        # if not self.is_inter_district_transfer:
-        
+         
         destination_id = False 
         if not self.is_inter_district_transfer:
             if not self.sudo().source_location_id.company_id.id == self.company_id.id:
@@ -2801,10 +2538,7 @@ class Memo_Model(models.Model):
         stock_picking_type_out = self.sudo().picking_type_id # self.env.ref('stock.picking_type_out')
         stock_picking = self.env['stock.picking'].sudo()
         existing_picking = stock_picking.search([('origin', '=', self.code)], limit=1)
-        
-        # warehouse_location_id = self.env['stock.warehouse'].sudo().search([
-        #     ('company_id', '=', self.company_id.id) 
-        # ], limit=1)
+         
         if existing_picking and existing_picking.state in ['draft', 'cancel']:
             for r in existing_picking:
                 existing_picking.unlink()
@@ -2848,7 +2582,7 @@ class Memo_Model(models.Model):
     def get_approvers(self):
         ms = self.sudo().memo_setting_id.mapped('stage_ids').filtered(
             lambda s: s.is_approved_stage
-        )
+        ) 
         if ms and ms.approver_ids:
             if self.env.user.id in [r.user_id.id for r in ms.sudo().approver_ids]:
                 return True 
@@ -2856,35 +2590,41 @@ class Memo_Model(models.Model):
     
     def view_generate_stock_material_request(self):
         return self.generate_stock_material_request()
+
+    def stock_confirmation_preview(self, body_msg=""):
+        view_id = self.env.ref('company_memo.view_memo_approval_wizard_form').id
+        ret = {
+            'name': "Stock Issuance",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'memo.approval.wizard',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_memo_id': self.id,
+                'default_operation_type_id': self.sudo().picking_type_id.id,
+                'default_source_location_id': self.sudo().source_location_id.id,
+                'default_destination_location_id': self.sudo().dest_location_id.id,
+                'default_is_inter_district_transfer': self.is_inter_district_transfer,
+                'default_body_msg': body_msg,
+            }
+        }
+        return ret
     
     def generate_stock_material_request(self, body_msg="", body=""):
-        _logger.info('TESTING 002')
         if not self.get_approvers():
             raise ValidationError('You are not allowed to validate this record')
         # FIXME this will override request line without products
         if any(not rec.product_id for rec in self.product_ids):
             raise ValidationError('System could not find any items in request lines')
-            # pass 
         else:
-            self.generate_external_internal_stock_material_request()
-        self.update_memo_type_approver()
-        if body_msg:
-            self.mail_sending_direct(body_msg)
-        """Check if the user is enlisted as the approver for memo type"""
-        view_id = self.env.ref('stock.view_picking_form').id
-        if self.stock_picking_id:
-            ret = {
-                'name': "Stock Request",
-                'view_mode': 'form',
-                'view_id': view_id,
-                'view_type': 'form',
-                'res_model': 'stock.picking',
-                'res_id': self.stock_picking_id.id,
-                'type': 'ir.actions.act_window',
-                'domain': [],
-                'target': 'current'
-                }
-            return ret
+            # self.generate_external_internal_stock_material_request()
+            if self.stock_picking_id:
+               return self.open_stock_picking() 
+            else:
+                # raise ValidationError('Syst24354657')
+                return self.stock_confirmation_preview(body_msg)
 
     def receive_interdistrict_transfer(self):
         view_id = self.env.ref('stock.view_picking_form').id
@@ -2929,8 +2669,33 @@ class Memo_Model(models.Model):
         else:
             # FIX Uncomment the line below after all approvers are completed
             raise ValidationError("No product line found to process")
+
+    def checkout_operation_validation(self):
+        dest_location = self.sudo().dest_location_id
+
+        if not self.is_inter_district_transfer:
+            if self.sudo().source_location_id.branch_id.id != dest_location.branch_id.id:
+                '''this condition means that it probably is an inter district transfer'''
+                
+                if self.sudo().picking_type_id.code not in ['outgoing']:
+                    
+                        raise ValidationError("Your picking type must be set as delivery orders ")
+                if self.sudo().source_location_id.company_id.id != dest_location.company_id.id:
+                    '''ensure the source is the same as destination location'''
+                    raise ValidationError("""
+                        Source and destination location company must be the same: This looks like an inter-district transfer
+                        """)
+            
+                if (self.sudo().picking_type_id.company_id.id not in [self.sudo().source_location_id.company_id.id, dest_location.company_id.id]):
+                    '''Ensure the picking type company is the same as source and destination company'''
+                    raise ValidationError("Your picking type company must be the same as source & destination location company ")
+                
+            else:
+                if self.sudo().picking_type_id.code not in ['internal', 'outgoing']:
+                    raise ValidationError("Your picking type must be set as internal transfer, customer or supplier /Delivery location")
            
-    def generate_external_internal_stock_material_request(self):
+    def generate_external_internal_stock_material_request(self, body_msg=""):
+    
         user = self.env.user
         dest_location = self.sudo().dest_location_id
         if not dest_location:
@@ -2939,56 +2704,38 @@ class Memo_Model(models.Model):
         '''check if this is inter company transfer'''
         source_loc_id = False
         destination_loc_id = False 
-        stock_picking = self.env['stock.picking'].sudo()
-        if self.sudo().source_location_id.company_id.id != dest_location.company_id.id: # not in [self.company_id.id, self.source_location_id.company_id.id] and self.source_location_id.branch_id.id :
-            '''this condition means that it is inter company transfer'''
-            if self.sudo().picking_type_id.company_id.id != self.sudo().source_location_id.company_id.id:
-                raise ValidationError("Your picking type company must be the same as source location company ")
-            
-            if self.sudo().picking_type_id.code not in ['outgoing']:
-                '''ensure the picking type company is not the same as destination company'''
-                raise ValidationError("Your picking type must be set as delivery orders ")
-            
-            if self.sudo().picking_type_id.company_id.id == dest_location.company_id.id:
-                '''ensure the picking type company is not the same as destination company'''
-                raise ValidationError("Your picking type company must not be the same as destination location company ")
-            
-            if self.sudo().source_location_id.id == dest_location.id:
-                '''ensure the source is not the same as destination location'''
-                raise ValidationError("Source location and destination location cannot be the same")
-            
-            '''Get external source location for inter company'''
-            vendor_source_loc_id = self.env['stock.location'].search([('usage','=', 'supplier'), ('company_id','=', dest_location.company_id.id)], limit=1)
-            if not vendor_source_loc_id:
-                raise ValidationError(f"To create external move for inter company transfer, ensure {dest_location.company_id.name} has location set as vendor location")
-            
-            source_loc_id = vendor_source_loc_id # location of the issuing company e.g ekwulobia
-            
-            '''Get external destination location for inter company'''
-            destination_loc_id = dest_location  # location of the recieving company e.g mainpower distribution
-            
-            '''Got stock picking for the external company move'''
-            stock_picking_type_in = self.env['stock.picking.type'].sudo().search(
-            [('code', '=', 'incoming'), ('company_id', '=', dest_location.company_id.id)], limit=1)
-            
-            stock_picking_type_out = self.env['stock.picking.type'].sudo().search(
-            [('code', '=', 'outgoing'), ('company_id', '=', dest_location.company_id.id)], limit=1)
-            
+        stock_picking = self.env['stock.picking'].sudo() 
+        '''Get external destination location for inter company'''
+        destination_loc_id = dest_location  # location of the recieving company e.g mainpower distribution
+
+        
+        '''Got stock picking for the external company move'''
+        stock_picking_type_in = self.env['stock.picking.type'].sudo().search(
+        [('code', '=', 'incoming'), ('company_id', '=', dest_location.company_id.id)], limit=1)
+        
+        stock_picking_type_out = self.env['stock.picking.type'].sudo().search(
+        [('code', '=', 'outgoing'), ('company_id', '=', dest_location.company_id.id)], limit=1)
+
+        if self.is_inter_district_transfer:
             if not (stock_picking_type_in):
                 raise ValidationError(f'System can not find any receipt picking type set for {dest_location.company_id.name}')
             
             if not (stock_picking_type_out):
                 raise ValidationError(f'System can not find any outgoing picking type set for {dest_location.company_id.name}')
-            
+                
             '''checks if an external move has be created earlier, if found and state is in draft and cancel, delete it and recreate'''
             ##########################################################
             existing_picking = False
+            '''Get external source location for inter company'''
+            vendor_source_loc_id = self.env['stock.location'].search([('usage','=', 'supplier'), ('company_id','=', dest_location.company_id.id)], limit=1)
+            if not vendor_source_loc_id:
+                raise ValidationError(f"To create external move for inter company transfer, ensure {dest_location.company_id.name} has location set as vendor location")
             
             if self.external_stock_picking_id and self.external_stock_picking_id.state in ['draft', 'cancel']:
                 self.sudo().external_stock_picking_id.unlink()
                 existing_picking = False
                 self.external_stock_picking_id = False
-                
+                    
             existing_picking = self.external_stock_picking_id
             if not existing_picking:
                 company_id = destination_loc_id.company_id
@@ -2998,8 +2745,8 @@ class Memo_Model(models.Model):
                     'location_id': vendor_source_loc_id.id,
                     'location_dest_id': destination_loc_id.id,
                     'branch_id': destination_loc_id.branch_id.id,
-                    'origin': f"INTER-CO/{self.code}",
-                    # 'memo_id': self.id,
+                    'origin': f"INTER-{self.code}/{self.source_location_id.name}",
+                    # 'memo_id': self.id
                     'company_id': company_id.id,
                     # 'partner_id': self.employee_id.user_id.partner_id.id,
                     'is_inter_district_transfer': True,
@@ -3008,7 +2755,7 @@ class Memo_Model(models.Model):
                                     'picking_type_id': stock_picking_type_out.id,
                                     'location_id': vendor_source_loc_id.id or stock_picking_type_out.default_location_src_id.id,
                                     'location_dest_id': dest_location.id,
-                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_id':  mm.sudo().product_id.id or self.generate_inter_move_product(mm.sudo().product_id, company_id),
                                     'product_uom_qty': mm.quantity_available,
                                     'quantity_done': mm.quantity_available,
                                     'date_deadline': self.date_deadline,
@@ -3022,11 +2769,10 @@ class Memo_Model(models.Model):
                     r.company_id = company_id.id
             else:
                 stock = existing_picking
-            self.external_stock_picking_id = stock.id 
-            
-            
-            ##########################################################
-            # this will also create internal stock transfer
+            self.external_stock_picking_id = stock.id  
+                
+                ##########################################################
+                # this will also create internal stock transfer
             '''generate internal stock transfer'''
             '''Get customer delivery location for inter company'''
             customer_destination_loc_id = self.env['stock.location'].search([('usage','=', 'customer'), ('company_id','=', self.source_location_id.company_id.id)], limit=1)
@@ -3036,7 +2782,7 @@ class Memo_Model(models.Model):
             if self.stock_picking_id and self.stock_picking_id.state in ['draft', 'cancel']:
                 self.sudo().stock_picking_id.unlink()
             existing_picking = self.stock_picking_id
-            
+                
             if not existing_picking:
                 company_id = self.source_location_id.company_id
                 vals = {
@@ -3055,7 +2801,7 @@ class Memo_Model(models.Model):
                                     'picking_type_id': stock_picking_type_out.id,
                                     'location_id': self.source_location_id.id,
                                     'location_dest_id': customer_destination_loc_id.id,
-                                    'product_id': self.generate_inter_move_product(mm.sudo().product_id, company_id),
+                                    'product_id': mm.sudo().product_id.id or self.generate_inter_move_product(mm.sudo().product_id, company_id),
                                     'product_uom_qty': mm.quantity_available,
                                     'quantity_done': mm.quantity_available,
                                     'date_deadline': self.date_deadline,
@@ -3070,37 +2816,11 @@ class Memo_Model(models.Model):
             else:
                 existing_picking = existing_picking
             self.stock_picking_id = existing_picking.id
-        
-         # this is internal or inter district transfer
-                
-        else:  #elif self.sudo().source_location_id.company_id.id == dest_location.company_id.id: # this is internal or inter district transfer
+        else:
+            # this is internal or inter district transfer
             
-            if self.sudo().source_location_id.branch_id.id != dest_location.branch_id.id:
-                '''this condition means that it probably is an inter district transfer'''
-                if self.sudo().picking_type_id.code not in ['outgoing']:
-                    raise ValidationError("Your picking type must be set as delivery orders ")
-                # if self.sudo().source_location_id.branch_id.id == dest_location.branch_id.id:
-                #     '''ensure the source branch is not the same as destination location branch'''
-                #     raise ValidationError("Source location district / branch and destination location  district / branch cannot be the same: This looks like an inter-district transfer")
-                if self.sudo().source_location_id.company_id.id != dest_location.company_id.id:
-                    '''ensure the source is the same as destination location'''
-                    raise ValidationError("""
-                        Source and destination location company must be the same: This looks like an inter-district transfer
-                        """)
+            self.checkout_operation_validation()
                 
-                if (self.sudo().picking_type_id.company_id.id not in [self.sudo().source_location_id.company_id.id, dest_location.company_id.id]):
-                    '''Ensure the picking type company is the same as source and destination company'''
-                    raise ValidationError("Your picking type company must be the same as source & destination location company ")
-                 
-            else:
-                if self.sudo().picking_type_id.code not in ['internal', 'outgoing']:
-                    raise ValidationError("Your picking type must be set as internal transfer, customer or supplier location")
-                # if self.sudo().source_location_id.usage != 'internal':
-                #     '''ensure source type is set as internal for internal transfer.'''
-                #     raise ValidationError("""
-                #         Source and destination must be internal location.
-                #         """)
-                    
             '''checks if an external move has be created earlier, if found and state is in draft and cancel, delete it and recreate'''
             existing_picking = False
             
@@ -3140,60 +2860,47 @@ class Memo_Model(models.Model):
                     r.company_id = company_id.id
             else:
                 stock = existing_picking
-            self.stock_picking_id = stock.id 
+            self.stock_picking_id = stock.id
+        self.update_memo_type_approver()
+        if body_msg:
+            self.mail_sending_direct(body_msg)
+        # self.confirm_memo(self.employee_id, f"Stock issuance for {self.code} is now at stage {self.stage_id.name}")
+        return self.open_stock_picking()
+
+    def open_stock_picking(self):
+        view_id = self.env.ref('stock.view_picking_form').id
+        ret = {
+            'name': "Stock Issuance",
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'stock.picking',
+            'res_id': self.stock_picking_id.id,
+            'type': 'ir.actions.act_window',
+            'domain': [],
+            'target': 'new',
+            # 'context': {
+            #     'default_destination_location_id': self.dest_location_id.id,
+            # }
+        }
+        return ret     
             
     def generate_stock_procurement_request(self, body_msg, body):
         """
         Check po record if already create, popup the wizard, 
         else create pO and pop up the wizard
         """
-        # stock_picking_type_in = self.env.ref('stock.picking_type_in')
-        # purchase_obj = self.env['purchase.order']
+         
         if not self.po_ids:
             raise ValidationError('''Please kindly click generate Purchase Order button from the purchase order tab
                 '''
                 )
-        # existing_po = purchase_obj.search([('memo_id', '=', self.id)])
-        # if not existing_po:
-
-        #     vals = {
-        #         'date_order': self.date,
-        #         # 'picking_type_id': stock_picking_type_in.id,
-        #         'origin': self.code,
-        #         'memo_id': self.id,
-        #         'partner_id': self.employee_id.user_id.partner_id.id,
-        #         'order_line': [(0, 0, {
-        #                         'product_id': mm.product_id.id,
-        #                         'name': mm.description or f'{mm.product_id.name} Requistion',
-        #                         'product_qty': mm.quantity_available,
-        #                         'price_unit': mm.amount_total,
-        #                         'date_planned': self.date,
-        #         }) for mm in self.product_ids]
-        #     }
-        #     po = purchase_obj.create(vals)
-        # else:
-        #     po = existing_po
+         
         self.update_memo_type_approver()
         self.mail_sending_direct(body_msg)
         is_config_approver = self.determine_if_user_is_config_approver()
         self.update_status_badge()
-        # if is_config_approver:
-        #     """Check if the user is enlisted as the approver for memo type"""
-        #     self.follower_messages(body)
-        #     view_id = self.env.ref('purchase.purchase_order_form').id
-        #     ret = {
-        #         'name': "Purchase Order",
-        #         'view_mode': 'form',
-        #         'view_id': view_id,
-        #         'view_type': 'form',
-        #         'res_model': 'purchase.order',
-        #         'res_id': po.id,
-        #         'type': 'ir.actions.act_window',
-        #         'domain': [],
-        #         'target': 'new'
-        #         }
-        #     return ret
-       
+         
     def generate_sale_request(self, body_msg, body):
         if not self.so_ids:
             raise ValidationError('''Please kindly click generate sale Order button from the sale order tab
@@ -3246,15 +2953,7 @@ class Memo_Model(models.Model):
                 if self.dest_location_id.id == self.source_location_id.id:
                     self.source_location_id = False
                     raise ValidationError("Destination location and source location cannot be the same")
-                # if self.is_inter_district_transfer:
-                #     if self.dest_location_id.company_id.id != self.company_id.id:
-                #         self.dest_location_id = False
-                #         raise ValidationError("Destination location company must be the same as company since this is an inter company transfer")
-                # else:
-                #     if self.dest_location_id.company_id.id != self.company_id.id:
-                #         self.dest_location_id = False
-                #         raise ValidationError("Destination location company must be the same as company since this is an internal transfer")
-            
+                 
             for des in self.product_ids:
                 des.dest_location_id = self.dest_location_id.id
                 
@@ -3314,36 +3013,7 @@ class Memo_Model(models.Model):
             'type': 'ir.actions.act_window',
             'target': 'new'
             }
-        
-    # def generate_leave_request(self, body_msg, body):
-    #     leave = self.env['hr.leave'].sudo()
-    #     vals = {
-    #         'employee_id': self.employee_id.id,
-    #         'request_date_from': self.leave_start_date,
-    #         'request_date_to': self.leave_end_date,
-    #         'date_from': self.leave_start_date,
-    #         'date_to': self.leave_end_date,
-    #         'name': BeautifulSoup(self.description or "Leave request", features="lxml").get_text(),
-    #         'holiday_status_id': self.leave_type_id.id,
-    #         'origin': self.code,
-    #         'memo_id': self.id,
-    #     }
-    #     leave_id = leave.with_context(
-    #                     tracking_disable=False,
-    #                     mail_activity_automation_skip=False,
-    #                     leave_fast_create=True,
-    #                     leave_skip_state_check=True
-    #                 ).create(vals)
-    #     leave_id.action_approve()
-    #     leave_id.action_validate()
-    #     # update memo stages where the applicant exists with reliever
-    #     self.set_reliever_to_act_as_employee_on_leave(
-    #         self.sudo().employee_id,
-    #         self.sudo().leave_Reliever,
-    #     )
-    #     self.state = 'Done'
-    #     self.mail_sending_direct(body_msg)
-    
+         
     def generate_leave_request(self, body_msg, body):
         leave = self.env['hr.leave'].sudo()
         
@@ -3449,11 +3119,7 @@ class Memo_Model(models.Model):
         '''pr: line'''
         account_id = None
         company_cash_advance_account_id = self.company_id.default_cash_advance_account_id
-        account_id = company_cash_advance_account_id
-            # else pr.product_id.property_account_expense_id \
-            # if pr.product_id.property_account_expense_id else pr.product_id.categ_id.property_account_expense_categ_id
-        # if journal_id and journal_id.default_account_id:
-        #     account_id = journal_id.default_account_id
+        account_id = company_cash_advance_account_id 
         if not account_id:
             raise ValidationError(f"No cash advance / asset account found for company {self.company_id.name} at {pr.product_id.name or pr.description} line . System admin should go to the company configuration and select the cash advance account...")
         return account_id
@@ -3498,73 +3164,7 @@ class Memo_Model(models.Model):
             raise ValidationError(f"No default cash advance found to use on credit lines for company {payment_company.name} . System admin should go to the company configuration and set the default cash advance account or set the journal default account...")
         return account_id
                     
-    # def generate_move_entries(self):
-    #     is_config_approver = self.determine_if_user_is_config_approver()
-    #     if is_config_approver:
-    #         """Check if the user is enlisted as the approver for memo type
-    #         if approver is an account officer, system generates move and open the exact record"""
-    #         view_id = self.env.ref('account.view_move_form').id
-    #         journal_id = self.env['account.journal'].sudo().search(
-    #          [('company_id', '=', self.company_id.id),
-    #         '|',('type', '=', 'purchase'),
-    #          ('code', '=', 'BILL'),
-    #          ], limit=1)
-    #         if not journal_id:
-    #             raise UserError(f"""
-    #                             You do have any journal set to the current company {self.company_id.name} 
-    #                             with type in 'purchase' or journal code set as 'BILL'
-    #                             """
-    #                             )
-    #         account_move = self.env['account.move'].sudo()
-    #         inv = account_move.search([('memo_id', '=', self.id)], limit=1)
-    #         if not inv:
-    #             partner_id = self.vendor_id or self.client_id or self.sudo().employee_id.user_id.partner_id or self.create_uid.partner_id
-    #             # partner_id = self.employee_id.user_id.partner_id
-    #             inv = account_move.create({ 
-    #                 'memo_id': self.id,
-    #                 'ref': self.code,
-    #                 'origin': self.code,
-    #                 'partner_id': partner_id.id,
-    #                 'company_id': self.company_id.id,
-    #                 'currency_id': self.company_id.currency_id.id,
-    #                 'branch_id': self.sudo().employee_id.user_id.branch_id and self.sudo().employee_id.user_id.branch_id.id,
-    #                 # Do not set default name to account move name, because it
-    #                 # is unique 
-    #                 'name': f"{self.id}/ {self.code}",
-    #                 'move_type': 'in_receipt',
-    #                 'invoice_date': fields.Date.today(),
-    #                 'invoice_date_due': fields.Date.today(),
-    #                 'date': fields.Date.today(),
-    #                 'journal_id': journal_id.id,
-	# 			    'branch_id': self.employee_id.branch_id.id,
-    #                 'invoice_line_ids': [(0, 0, {
-    #                         'name': pr.product_id.name if pr.product_id else pr.description,
-    #                         'ref': f'{self.code}: {pr.product_id.name or pr.description}',
-    #                         'account_id': self.get_move_line_expense_account(pr, journal_id).id, # or journal_id.default_account_id.id,
-    #                         # 'account_id': pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id else journal_id.default_account_id.id,
-    #                         # 'account_id': self.memo_setting_id.expense_account_id.id if self.memo_setting_id.expense_account_id else pr.product_id.property_account_expense_id.id or pr.product_id.categ_id.property_account_expense_categ_id.id if pr.product_id and pr.product_id.property_account_expense_id or pr.product_id.categ_id.property_account_expense_categ_id else journal_id.default_account_id.id,
-    #                         'price_unit': pr.amount_total,
-    #                         'quantity': pr.quantity_available,
-    #                         'discount': 0.0,
-    #                         'code': pr.code,
-    #                         'company_id': self.company_id.id,
-	# 			            'branch_id': self.employee_id.user_id.branch_id.id,
-    #                         'product_uom_id': pr.product_id.uom_id.id if pr.product_id else None,
-    #                         'product_id': pr.product_id.id if pr.product_id else None,
-    #                         'tax_ids': False,
-    #                         'lock_fields_from_memo': False,
-    #                 }) for pr in self.product_ids],
-    #             })
-    #         self.move_id = inv.id
-    #         return self.record_to_open(
-    #         "account.move", 
-    #         view_id,
-    #         inv.id,
-    #         f"Journal Entry - {inv.name}"
-    #         )
-    #     else:
-    #         raise ValidationError("Sorry! You are not allowed to validate cash advance payments. \n To resolve, go to the memo config and select the current user in the Employees to followup field")
-    
+     
     # TODO Take to easypayFix
     invoice_status = fields.Char(string="Account status", compute="compute_move_state")
     @api.depends('move_id')
@@ -3576,7 +3176,17 @@ class Memo_Model(models.Model):
                 rec.invoice_status = 'Not Posted'
                 
     def generate_move_entries(self): 
-        '''thi will generate cash advance move'''
+        '''thi will generate cash advance move''' 
+        if self.memo_type_key == 'cash_advance':
+            if self.stock_picking_id:
+                if self.stock_picking_id.state in ['done', 'cancel']:
+                    self.memo_cash_advance_procurement_status = False
+                else:
+                    self.memo_cash_advance_procurement_status = True
+
+            else:
+                self.memo_cash_advance_procurement_status = True
+
         is_config_approver = self.determine_if_user_is_config_approver()
         if is_config_approver:
             """Check if the user is enlisted as the approver for request type
@@ -3740,18 +3350,15 @@ class Memo_Model(models.Model):
         return_lines = []
         for line in self.product_ids:
             quantity_available = line.quantity_available or 0.0
-            used_qty = line.used_qty or 0.0
-            # User has used less than what was issued
-            if used_qty < quantity_available:
-                return_qty = quantity_available - used_qty
-                return_lines.append(
-                    (0, 0, {
-                        'product_id': line.product_id.id,
-                        'quantity_available': quantity_available,
-                        'used_qty': used_qty,
-                        'return_qty': return_qty,
-                    })
-                )
+            used_qty = line.used_qty or 0.0 
+            return_lines.append(
+                (0, 0, {
+                    'product_id': line.product_id.id,
+                    'quantity_available': quantity_available,
+                    'used_qty': quantity_available,
+                    'return_qty': quantity_available,
+                })
+            )
         if len(return_lines) > 1:
             self.to_return_item = True 
         return return_lines
@@ -3762,26 +3369,19 @@ class Memo_Model(models.Model):
         
     def action_return_unused_items(self):
         self.ensure_one()
-        return_lines = self.check_unsused_items()
-        # ---------------------------------------------------------
-        # NOTHING TO RETURN
-        # ---------------------------------------------------------
-        if not return_lines:
-            self.to_return_item = False 
-            raise UserError(
-                _('There are no unused items available for return.')
-            )
+        memo_reference = self.cash_advance_reference if self.memo_type_key == 'soe' else self
+        return_lines = memo_reference.check_unsused_items()
+         
         # ---------------------------------------------------------
         # CREATE WIZARD
         # ---------------------------------------------------------
         wizard = self.env['memo.return.wizard'].create({
-            'memo_id': self.id,
+            'memo_id': memo_reference.id,
             'line_ids': return_lines,
         })
         # ---------------------------------------------------------
         # OPEN MODAL
         # ---------------------------------------------------------
-
         return {
             'type': 'ir.actions.act_window',
             'name': _('Return Unused Items'),
@@ -3794,12 +3394,15 @@ class Memo_Model(models.Model):
     def generate_soe_entries(self):
         '''check for unused items and decides to return to store.
         if validated, it calls the function generate_soe_entry_function()'''
-        return_lines = self.check_unsused_items()
-        if return_lines:
-            return self.action_return_unused_items()
-        else:
-            memoObj = self.env['memo.model'].browse([self.id])
-            return self.generate_soe_entry_function(memoObj)
+         
+        self.cash_advance_reference.compute_procurement_cashadvance()
+        procurement_cashadvance = self.cash_advance_reference.procurement_cashadvance()
+        if procurement_cashadvance and self.cash_advance_reference.memo_cash_advance_procurement_status == True: 
+            """Store needs to receive this items first before retiring"""
+            raise ValidationError(f"""The items procured using this cash advance {self.cash_advance_reference.code} has never been returned to store. 
+            Contact store officer for {self.cash_advance_reference.branch_id.name} to receive the items first before posting this SOE""")
+        memoObj = self.env['memo.model'].browse([self.id])
+        return self.generate_soe_entry_function(memoObj)
         
     def generate_soe_entry_function(self, memoObj):
         SELF = memoObj
@@ -3986,11 +3589,6 @@ class Memo_Model(models.Model):
     def update_memo_type_approver(self):
         """update memo type approver"""
         memo_settings = self.memo_setting_id if not self.to_create_document else self.document_memo_config_id
-        # or self.env['memo.config'].sudo().search([
-        #         ('memo_type', '=', self.memo_type.id),
-        #         ('department_id', '=', self.employee_id.department_id.id)
-        #         ]) if not self.to_create_document else self.document_memo_config_id
-        
         memo_approver_ids = memo_settings.approver_ids
         for appr in memo_approver_ids:
             self.sudo().write({
@@ -4351,4 +3949,3 @@ class MemoActionHistory(models.Model):
             name = f"{action_label} by {rec.actor_id.name} on {rec.action_date.strftime('%Y-%m-%d %H:%M')}"
             result.append((rec.id, name))
         return result
-    

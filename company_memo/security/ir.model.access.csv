@@ -52,3 +52,4 @@ access_memo_stage_route_admin,memo.stage.route.admin,model_memo_stage_route,base
 access_memo_stage_route_user,memo.stage.route.user,model_memo_stage_route,base.group_user,1,0,0,0
 access_memo_return_wizard_user,memo_return_wizard.user,model_memo_return_wizard,base.group_user,1,1,1,1
 access_memo_return_wizard_line_user,memo_return_wizard_line.user,model_memo_return_wizard_line,base.group_user,1,1,1,1
+access_memo_approval_wizard_user,memo_memo_approval_wizard.user,model_memo_approval_wizard,base.group_user,1,1,1,1

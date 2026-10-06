@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class ImportAssetWizard(models.TransientModel):
     _name = 'import.asset.wizard'
+    _description = 'Asset tracking'
 
     data_file = fields.Binary(string="Upload File (.xls)", required=True)
     filename = fields.Char("Filename")

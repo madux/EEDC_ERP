@@ -280,21 +280,8 @@
                                                     <a t-att-id="req.id" class="record_id"/>
                                                     <small class="text-muted"><span t-field="req.code"/> </small>
                                                     <input type="text" class="form-control d-none" id="selectRequestOption" name="selectRequestOption" t-att-value="req.memo_type_key" labelfor=""/>
-
-                                                    <!-- <small class="text-muted"> User ID: #<t t-esc="current_user"/> </small> -->
-                                                    <!-- <small class="text-muted"> (#<span t-field="req.state"/>) </small>
-                                                    <small class="text-muted"> (#<t t-esc="current_user"/>) </small> -->
                                                 </h5>
                                             </div>
-
-                                            <!-- Column 2 -->
-                                            <!--<div class="col-md-4 text-truncate"> -->
-
-                                            <!--    <t t-if="req.state in ['Refuse', 'submit']">-->
-                                            <!--        <a id="req.id" class="resend_request btn btn-secondary btn-sm">Resend</a>-->
-                                            <!--    </t>-->
-                                            <!--</div>-->
-                                            <!-- Column 3 -->
                                             <div class="col-md-4 p-3">
                                                 <small class="text-end">Status:</small><br/>
                                                 <span t-field="req.stage_id.name" field_name="status" class="badge rounded-pill text-bg-info" title="Current stage of this request"/>
@@ -322,7 +309,15 @@
                                             <div class="row mb-4">
                                                 <strong class="col-md-4">Vendor</strong>:
                                                 <span class="col-md-6">
-                                                    <input type="text" class="vendor-cls form-control datepicker s_website_form_input" t-attf-value="{{req.vendor_id.name}}" field_name="vendor_id" t-attf-id="{{req.vendor_id.id}}" name="vendor_id_form" readonly="true" required="true" labelfor="Vendor"/>
+                                                    <input type="text" class="vendor-cls form-control datepicker s_website_form_input" 
+                                                    t-att-data-fieldtype="'many2one'" t-attf-value="{{req.vendor_id.name}}" 
+                                                    field_name="vendor_id" t-attf-id="{{req.vendor_id.id}}" 
+                                                    name="vendor_id_form" readonly="true" 
+                                                    required="true" labelfor="Vendor"
+                                                    data-api="/portal-request-get-vendors"
+                                                    t-att-data-rec-id="req.vendor_id.id"
+                                                    t-att-data-init-text="req.vendor_id.name"
+                                                    />
                                                 </span>
                                             </div> 
                                         </t>
@@ -459,7 +454,11 @@
                                                         class="Sourcelocation-cls form-control form-control-sm"
                                                         disable="true"
                                                         readonly="readonly"
-                                                        required="required"/>
+                                                        required="required"
+                                                        t-att-data-fieldtype="'many2one'"
+                                                        data-api="/get-stock-location/source"
+                                                        t-att-data-rec-id="req.source_location_id.id"
+                                                        t-att-data-init-text="req.source_location_id.name"/>
 
                                                     <!-- hidden source id -->
                                                     <input
@@ -475,6 +474,10 @@
                                                         t-att-value="req.dest_location_id.name"
                                                         t-att-id="req.dest_location_id.id"
                                                         t-att-relation="true"
+                                                        t-att-data-fieldtype="'many2one'"
+                                                        data-api="/get-stock-location/destination"
+                                                        t-att-data-rec-id="req.dest_location_id.id"
+                                                        t-att-data-init-text="req.dest_location_id.name"
                                                         name="destination_location_id"
                                                         class="destinationlocation-cls form-control form-control-sm"
                                                         disable="true"
@@ -498,7 +501,18 @@
                                                     <span class="s_website_form_label_content">Choose Followers</span>
                                                 </label>
                                                     <div class="col-sm">
-                                                    <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers"/>
+                                                    <input
+                                                        id="inputFollowers"
+                                                        class="form-control s_website_form_input"
+                                                        field_name="inputFollowers"
+                                                        name="inputFollowers"
+                                                        data-fieldtype="many2many"
+                                                        t-att-data-followers="json.dumps([
+                                                            {'id': employee.id, 'text': employee.name}
+                                                            for employee in req.users_followers
+                                                        ])"
+                                                    />
+                                                    <!-- <input id="inputFollowers" class="form-control s_website_form_input" field_name="inputFollowers" name="inputFollowers" t-att-fieldtype="many2many"/> -->
                                                 </div> 
                                             </div>
                                         </div> 
@@ -532,7 +546,8 @@
                                     <t t-set="total_amount" t-value="0"/>
                                     <t t-set="retire_total_amount" t-value="0"/>
                                     <div class="tableclass table-responsive" id="product_table_div">
-                                        <table width="100%" border="1" bordercolor="#FFFFFF" bgcolor="#F7F7EF" border-collapse="collapse" align="center" id="product_table" class="table table-bordered" style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                        <!-- <table width="100%" border="1" bordercolor="#FFFFFF" bgcolor="#F7F7EF" border-collapse="collapse" align="center" id="product_table" class="table table-bordered" style="height: 200px !important;overflow-y: scroll !important;display: block;"> -->
+                                        <table id="product_table" class="table table-bordered">
                                             <thead>
                                                 <tr class="heading">
                                                     <th width="5%">
@@ -582,120 +597,395 @@
                                             </thead>
                                             <tbody id="tbody_product" name="tbody_product">
                                                 <t t-foreach="req.product_ids" t-as="prod">
-                                                    <tr class="heading prod_row" t-att-id="prod.id" t-att-name="prod_row" t-att-row_count="prod.id">
-                                                        <th width="2%">
-                                                            <span>
-                                                                <input type="checkbox" disable="true" readonly="readonly" field_name= "checkbox" class="productchecked" checked="checked" t-att-id="prod.id" t-att-name="prod.quantity_available"/>
+                                                    <tr class="prod_row"
+                                                        t-att-id="'product_row_%s' % prod.id"
+                                                        t-att-name="'prod_row'"
+                                                        t-att-row_count="prod.id"
+                                                        t-att-request-line-id="prod.id">
+
+                                                        <!-- =====================================================
+                                                            CHECKBOX
+                                                            ===================================================== -->
+                                                        <td class="col-check text-center">
+
+                                                            <input type="checkbox"
+                                                                disabled="disabled"
+                                                                readonly="readonly"
+                                                                field_name="checkbox"
+                                                                class="productchecked"
+                                                                checked="checked"
+                                                                t-att-id="'product_check_%s' % prod.id"
+                                                                t-att-name="prod.quantity_available"
+                                                                t-att-data-product-id="prod.product_id.id"/>
+
+                                                        </td>
+
+
+                                                        <!-- =====================================================
+                                                            PRODUCT
+                                                            ===================================================== -->
+                                                        <td class="col-product">
+
+                                                            <input type="text"
+                                                                t-att-id="'product_%s' % prod.id"
+                                                                t-att-special_id="prod.id"
+                                                                field_name="product_id"
+                                                                disabled="disabled"
+                                                                readonly="readonly"
+                                                                class="form-control productitemrow"
+                                                                name="product_item_id"
+                                                                t-att-value="prod.product_id.name"
+
+                                                                t-att-data-product-id="prod.product_id.id"
+
+                                                                t-att-data-init-text="prod.product_id.name"/>
+
+                                                        </td>
+
+
+                                                        <!-- =====================================================
+                                                            DESCRIPTION
+                                                            ===================================================== -->
+                                                        <td class="col-description">
+
+                                                            <span class="input-container"
+                                                                t-att-id="'description_container_%s' % prod.id">
+
+                                                                <textarea
+                                                                    t-att-id="'description_%s' % prod.id"
+                                                                    t-att-special_id="prod.description"
+                                                                    field_name="product_description"
+                                                                    required="required"
+                                                                    disabled="disabled"
+                                                                    readonly="readonly"
+                                                                    class="form-control productitemrow scroll-textarea"
+                                                                    name="product_item_description"><t t-esc="prod.description"/></textarea>
+
+                                                                <button type="button"
+                                                                        class="expand-btn"
+                                                                        t-att-data-row-id="prod.id">
+                                                                    ↕
+                                                                </button>
+
                                                             </span>
-                                                        </th>
-                                                        
-                                                        <th width="30%">
-                                                            <span t-att-id="prod.id">
-                                                                <!-- <input t-att-id="prod.id" t-att-special_id="prod.id" field_name= "product_id" disable="true" readonly="readonly" class="form-control productitemrow" name="product_item_id" t-att-value="prod.product_id.name"/> -->
-                                                                 <input t-att-id="prod.id" 
-                                                                    t-att-special_id="prod.id" 
-                                                                    field_name="product_id" 
-                                                                    disable="true" 
-                                                                    readonly="readonly" 
-                                                                    class="form-control productitemrow" 
-                                                                    name="product_item_id" 
-                                                                    
-                                                                    t-att-value="prod.product_id.id" 
-                                                                    t-att-data-init-text="prod.product_id.name"/>
-                                                            </span>
-                                                        </th>
-                                                        <th width="35%">
-                                                            <!-- <span t-att-id="prod.id"> -->
-                                                            <span class="input-container" t-att-id="prod.id">
-                                                                <textarea t-att-id="prod.id" type="text" t-att-special_id="prod.description" field_name= "product_description" required="required" disable="true" readonly="readonly" 
-                                                                class="form-control productitemrow scroll-textarea" name="product_item_description">
-                                                                <t t-esc="prod.description"/>
-                                                                </textarea>
-                                                                <!-- t-att-value="prod.description"/> -->
-                                                                <button id="expandid" class="expand-btn">↕</button>
-                                                            </span>
-                                                        </th>
-                                                        <th width="5%">
-                                                            <input type="text" main_name = "quantity_available" field_name= "request_qty" t-att-name="prod.quantity_available" t-att-id="prod.id" disable="true" required="required" t-att-value="prod.quantity_available" t-att-class="'productinput form-control QTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                        </th>
+
+                                                        </td>
+
+
+                                                        <!-- =====================================================
+                                                            REQUEST QUANTITY
+                                                            ===================================================== -->
+                                                        <td class="col-qty">
+
+                                                            <input type="text"
+                                                                main_name="quantity_available"
+                                                                field_name="request_qty"
+
+                                                                t-att-name="prod.quantity_available"
+                                                                t-att-id="'qty_%s' % prod.id"
+
+                                                                disabled="disabled"
+                                                                required="required"
+
+                                                                t-att-value="prod.quantity_available"
+
+                                                                t-att-class="'productinput form-control QTY%s' % prod.id"
+
+                                                                t-att-row_count="prod.id"
+
+                                                                readonly="readonly"/>
+
+                                                        </td>
+
+
+                                                        <!-- =====================================================
+                                                            UNIT PRICE + SUBTOTAL
+                                                            ===================================================== -->
                                                         <t t-if="req.memo_type.memo_key not in ['material_request']">
-                                                            <th width="20%">
-                                                                <input type="text" main_name = "amount_total" field_name= "unit_price" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="prod.amount_total" disable="true" required="required" t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                                <!-- <input type="text" t-att-name="prod.amount_total" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.amount_total))" class="productinput form-control" readonly="readonly"/>  -->
-                                                            </th>
-                                                            <th width="20%">
-                                                                <span t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id" main_name = "sub_total_amount" t-att-name="prod.sub_total_amount" disable="true" id="sub_total_amount" t-att-value="prod.sub_total_amount"><t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/></span>
-                                                            </th>
+
+                                                            <!-- UNIT PRICE -->
+                                                            <td class="col-price">
+
+                                                                <input type="text"
+                                                                    main_name="amount_total"
+                                                                    field_name="unit_price"
+
+                                                                    t-att-name="prod.amount_total"
+                                                                    t-att-id="'amount_total_%s' % prod.id"
+
+                                                                    disabled="disabled"
+                                                                    required="required"
+
+                                                                    t-att-value="prod.amount_total"
+
+                                                                    t-att-class="'productinput form-control AmountTots AMTTOTAL%s' % prod.id"
+
+                                                                    t-att-row_count="prod.id"
+
+                                                                    readonly="readonly"/>
+
+                                                            </td>
+
+
+                                                            <!-- SUBTOTAL -->
+                                                            <td class="col-subtotal">
+
+                                                                <span
+                                                                    main_name="sub_total_amount"
+                                                                    t-att-name="prod.sub_total_amount"
+
+                                                                    t-att-id="'sub_total_amount_%s' % prod.id"
+
+                                                                    t-att-class="'productinput form-control sub_total_amount SUBTOTAL%s' % prod.id"
+
+                                                                    t-att-value="prod.sub_total_amount"
+
+                                                                    disabled="disabled">
+
+                                                                    <t t-esc="'{0:,}'.format(float(prod.sub_total_amount))"/>
+
+                                                                </span>
+
+                                                            </td>
+
                                                         </t>
+
+
+                                                        <!-- =====================================================
+                                                            SOE RETIREMENT
+                                                            ===================================================== -->
                                                         <t t-if="req.memo_type.memo_key in ['soe']">
-                                                            <th width="10%">
-                                                                <input type="text" main_name = "used_qty" field_name= "used_qty" t-att-name="prod.used_qty" t-att-id="prod.id" required="required" t-att-value="prod.used_qty" t-att-class="'productinput form-control USEDQTY%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            </th>
-                                                            <th width="10%">
-                                                                <input type="text" main_name = "used_amount" field_name= "used_amount" t-att-name="prod.used_amount" t-att-id="prod.id" t-att-value="prod.used_amount" required="required" t-att-class="'productinput form-control UsedAmountTots USEDAMTTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            </th>
-                                                            <th width="10%">
-                                                                <input type="text" main_name = "retire_sub_total_amount" disable="true" field_name= "retire_sub_total_amount" t-att-name="prod.retire_sub_total_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.retire_sub_total_amount))" required="required" t-att-class="'productinput form-control RTOTAL RTOTAL%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            </th>
-                                                            <th width="10%">
-                                                                <input type="text" main_name = "difference_in_amount" disable="true" field_name= "difference_in_amount" t-att-name="prod.difference_in_amount" t-att-id="prod.id" t-att-value="'{0:,}'.format(float(prod.difference_in_amount))" required="required" t-att-class="'productinput form-control DiffTotal DiffTotal%s' % prod.id" t-att-row_count="prod.id" readonly="readonly"/> 
-                                                            </th>
-                                                            <th width="10%">
+
+                                                            <!-- USED QTY -->
+                                                            <td class="col-used-qty">
+
+                                                                <input type="text"
+                                                                    main_name="used_qty"
+                                                                    field_name="used_qty"
+
+                                                                    t-att-name="prod.used_qty"
+                                                                    t-att-id="'used_qty_%s' % prod.id"
+
+                                                                    required="required"
+
+                                                                    t-att-value="prod.used_qty"
+
+                                                                    t-att-class="'productinput form-control USEDQTY%s' % prod.id"
+
+                                                                    t-att-row_count="prod.id"
+
+                                                                    readonly="readonly"/>
+
+                                                            </td>
+
+
+                                                            <!-- USED UNIT PRICE -->
+                                                            <td class="col-used-price">
+
+                                                                <input type="text"
+                                                                    main_name="used_amount"
+                                                                    field_name="used_amount"
+
+                                                                    t-att-name="prod.used_amount"
+                                                                    t-att-id="'used_amount_%s' % prod.id"
+
+                                                                    required="required"
+
+                                                                    t-att-value="prod.used_amount"
+
+                                                                    t-att-class="'productinput form-control UsedAmountTots USEDAMTTOTAL%s' % prod.id"
+
+                                                                    t-att-row_count="prod.id"
+
+                                                                    readonly="readonly"/>
+
+                                                            </td>
+
+
+                                                            <!-- RETIRE SUBTOTAL -->
+                                                            <td class="col-retire">
+
+                                                                <input type="text"
+                                                                    main_name="retire_sub_total_amount"
+                                                                    field_name="retire_sub_total_amount"
+
+                                                                    t-att-name="prod.retire_sub_total_amount"
+                                                                    t-att-id="'retire_sub_total_amount_%s' % prod.id"
+
+                                                                    disabled="disabled"
+                                                                    required="required"
+
+                                                                    t-att-value="'{0:,}'.format(float(prod.retire_sub_total_amount))"
+
+                                                                    t-att-class="'productinput form-control RTOTAL RTOTAL%s' % prod.id"
+
+                                                                    t-att-row_count="prod.id"
+
+                                                                    readonly="readonly"/>
+
+                                                            </td>
+
+
+                                                            <!-- DIFFERENCE -->
+                                                            <td class="col-difference">
+
+                                                                <input type="text"
+                                                                    main_name="difference_in_amount"
+                                                                    field_name="difference_in_amount"
+
+                                                                    t-att-name="prod.difference_in_amount"
+                                                                    t-att-id="'difference_in_amount_%s' % prod.id"
+
+                                                                    disabled="disabled"
+                                                                    required="required"
+
+                                                                    t-att-value="'{0:,}'.format(float(prod.difference_in_amount))"
+
+                                                                    t-att-class="'productinput form-control DiffTotal DiffTotal%s' % prod.id"
+
+                                                                    t-att-row_count="prod.id"
+
+                                                                    readonly="readonly"/>
+
+                                                            </td>
+
+
+                                                            <!-- RETIRED -->
+                                                            <td class="col-retired text-center">
+
                                                                 <t t-if="prod.retired">
-                                                                    <span>
+
+                                                                    <span class="retired-check">
                                                                         ✔
                                                                     </span>
+
                                                                 </t>
-                                                                <t t-else="">
-                                                                </t>
-                                                            </th>
+
+                                                            </td>
+
                                                         </t>
+
+
+                                                        <!-- =====================================================
+                                                            EXTRA EMPTY COLUMN FOR NON-SOE
+                                                            ===================================================== -->
                                                         <t t-else="">
-                                                            <th width="5%">
-                                                                <label></label>
-                                                            </th>
+
+                                                            <td class="col-extra"></td>
+
                                                         </t>
-                                                        
-                                                        <th width="5%">
-                                                            
-                                                        </th>
+
                                                     </tr>
-                                                    <t t-set="total_amount" t-value="total_amount + prod.sub_total_amount"/>
-                                                    <t t-set="retire_total_amount" t-value="retire_total_amount + prod.retire_sub_total_amount"/>
+
+
+                                                    <!-- =========================================================
+                                                        TOTAL CALCULATIONS
+                                                        ========================================================= -->
+
+                                                    <t t-set="total_amount"
+                                                    t-value="total_amount + prod.sub_total_amount"/>
+
+                                                    <t t-set="retire_total_amount"
+                                                    t-value="retire_total_amount + prod.retire_sub_total_amount"/>
+
                                                 </t>
+
                                             </tbody>
+
+
+                                            <!-- =============================================================
+                                                TOTAL ROW
+                                                ============================================================= -->
+
                                             <tbody id="total_amount_form">
-                                                <tr>
-                                                    <td width="2%">
-                                                    </td>
-                                                    <td width="10%">
-                                                    </td>
-                                                    <td width="5%">
-                                                    </td>
-                                                    <td width="5%">
-                                                    </td> 
-                                                    <td width="10%">
-                                                        <span style="font-size: 2em; font-weight: bold; white-space:nowrap;">Total: </span>
-                                                    </td>
-                                                    
-                                                     
-                                                    <td width="20%">
-                                                        <span name="all_total_amount" id="all_total_amount" style="font-size: 2em; font-weight: bold; white-space:nowrap;">
-                                                            <t t-esc="'{0:,}'.format(float(total_amount))"/>
-                                                        </span>
-                                                    </td>
-                                                    <t t-if="req.memo_type.memo_key in ['soe']">
-                                                        <td width="20%">
-                                                        </td>
-                                                        <td width="10%">
-                                                        </td> 
-                                                        <td width="10%">
-                                                            <span name="retire_total_amount_elm" id="retire_total_amount_elm" style="font-size: 2em; font-weight: bold; white-space:nowrap;">
-                                                                <t t-esc="'{0:,}'.format(float(retire_total_amount))"/>
+
+                                                <tr class="total-row">
+
+                                                    <!-- CHECKBOX -->
+                                                    <td class="col-check"></td>
+
+                                                    <!-- PRODUCT -->
+                                                    <td class="col-product"></td>
+
+                                                    <!-- DESCRIPTION -->
+                                                    <td class="col-description"></td>
+
+                                                    <!-- QUANTITY -->
+                                                    <td class="col-qty"></td>
+
+
+                                                    <!-- =====================================================
+                                                        NORMAL REQUEST TOTAL
+                                                        ===================================================== -->
+
+                                                    <t t-if="req.memo_type.memo_key not in ['material_request']">
+
+                                                        <td class="col-price total-label-cell">
+
+                                                            <span class="total-label">
+                                                                Total:
                                                             </span>
+
                                                         </td>
+
+                                                        <td class="col-subtotal total-value-cell">
+
+                                                            <span
+                                                                name="all_total_amount"
+                                                                id="all_total_amount"
+                                                                class="total-value">
+
+                                                                <t t-esc="'{0:,}'.format(float(total_amount))"/>
+
+                                                            </span>
+
+                                                        </td>
+
                                                     </t>
+
+
+                                                    <!-- =====================================================
+                                                        MATERIAL REQUEST
+                                                        ===================================================== -->
+
+                                                    <t t-if="req.memo_type.memo_key in ['material_request']">
+
+                                                        <td class="col-extra"></td>
+
+                                                    </t>
+
+
+                                                    <!-- =====================================================
+                                                        SOE TOTALS
+                                                        ===================================================== -->
+
+                                                    <t t-if="req.memo_type.memo_key in ['soe']">
+
+                                                        <td class="col-used-qty"></td>
+
+                                                        <td class="col-used-price"></td>
+
+                                                        <td class="col-retire total-value-cell">
+
+                                                            <span
+                                                                name="retire_total_amount_elm"
+                                                                id="retire_total_amount_elm"
+                                                                class="total-value">
+
+                                                                <t t-esc="'{0:,}'.format(float(retire_total_amount))"/>
+
+                                                            </span>
+
+                                                        </td>
+
+                                                        <td class="col-difference"></td>
+
+                                                        <td class="col-retired"></td>
+
+                                                    </t>
+
                                                 </tr>
+
                                             </tbody>
                                         </table>
                                     </div> 
@@ -712,7 +1002,8 @@
                                 <div class="form-row" id="emp_item_form_div">
                                     <h4 class="fs-title">Employee For Update</h4>
                                     <div class="tableclass table-responsive" id="emp_table_div">
-                                        <table width="100%" border="1" bordercolor="#FFFFFF" border-collapse="collapse" align="center" id="emp_table" class="table table-bordered" style="height: 200px !important;overflow-y: scroll !important;display: block;">
+                                        <table id="product_table" class="table table-bordered">
+                                            <!-- <table width="100%" border="1" bordercolor="#FFFFFF" border-collapse="collapse" align="center" id="emp_table" class="table table-bordered" style="height: 200px !important;overflow-y: scroll !important;display: block;"> -->
                                             <thead>
                                                 <tr class="heading">
                                                     <th width="30%">

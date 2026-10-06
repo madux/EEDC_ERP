@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_memo_approval_wizard_form" model="ir.ui.view">
+        <field name="name">memo.approval.wizard.form</field>
+        <field name="model">memo.approval.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Memo">
+
+                <group>
+
+                    <field name="memo_id" readonly="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                    <field name="dummy_source_location_ids" invisible="1" widget="many2many_tags"/>
+                    <field name="dummy_destination_location_ids" invisible="1"  widget="many2many_tags"/>
+                    <field name="no_destination_location_found" invisible="1"/>
+                    <field name="is_inter_district_transfer" invisible="1"/>
+                    <field name="dummy_operation_type_ids" invisible="1"/>
+
+
+                    <field name="source_location_id"
+                        domain="[('id', 'in', dummy_source_location_ids)]" required="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+
+                    <field name="destination_location_id"
+                        domain="[('id', 'in', dummy_destination_location_ids)]"  required="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+
+                    <field name="operation_type_id"
+                        domain="[('id', 'in', dummy_operation_type_ids)]"  required="1" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+
+                    <div class="text-danger" role="alert" attrs="{'invisible': [('no_destination_location_found', '=', False)]}">No destination location found for the selected transfer configuration.</div>
+
+                </group>
+
+                <footer>
+
+                    <button name="action_confirm"
+                            string="Confirm"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button string="Cancel"
+                            special="cancel"/>
+
+                </footer>
+
+            </form>
+        </field>
+    </record>
+</odoo>
