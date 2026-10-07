@@ -170,16 +170,18 @@ class APIControllers(http.Controller):
     @http.route(['/api/employee-info'], type='http', methods=['GET'], auth='none', csrf=False)
     def EmployeeData(self, **kwargs):
         expected_param = '''
-        {'params': {
-                'create_date': 12/12/2023,
+        {
+        'params': {
+                'create_date': 12/12/2023 or null,
                 'staff_number': '23450' or null,
-                'id': 560
+                'id': 560 or null, 
+                'district_code': 13277 or null, 
             }
         }'''
         employee_details = [] # e.g [{'name': 'Maduka Sopulu', 'phone': 0292900}, {}, {}, {}.........{}]
         data = request.params
-        staff_number, create_date, employee_id, end_date = self.data_validations(data)
-        domain = [('active', '=', True)] # gives you all records
+        staff_number, create_date, employee_id, end_date, district_code = self.data_validations(data)
+        domain = [('active', '=', True)] # gives you all records if no filter is provided
         if staff_number:
             domain = domain + [
                 ('employee_number', '=ilike', staff_number)
@@ -191,6 +193,10 @@ class APIControllers(http.Controller):
         if employee_id:
             domain = domain + [
                 ('id', '=', employee_id),
+            ]
+        if employee_id:
+            domain = domain + [
+                ('branch_id.code', '=ilike', district_code),
             ]
         _logger.info(f"What is domain {domain} == params == {data} ====={kwargs} ====")
         employees = request.env['hr.employee'].sudo().search(domain)
@@ -213,6 +219,7 @@ class APIControllers(http.Controller):
                     'department_name': emp.department_id.name,
                     'district_id': emp.branch_id.id,
                     'district_name': emp.branch_id.name,
+                    'district_code': emp.branch_id.code,
                     'manager_id': emp.parent_id.id,
                     'manager_name': emp.parent_id.name,
                     'supervisor_id': emp.administrative_supervisor_id.id,
@@ -238,7 +245,7 @@ class APIControllers(http.Controller):
     @http.route(['/employee-leave-info'], type='http', auth='none', csrf=False)
     def EmployeeLeaveData(self, **kwargs):
         employee_details = [] # e.g [{'name': 'Maduka Sopulu', 'phone': 0292900}, {}, {}, {}.........{}]
-        staff_number, create_date, employee_id, end_date = self.data_validations(kwargs)
+        staff_number, create_date, employee_id, end_date, district_code = self.data_validations(kwargs)
         domain = [('active', '=', True)] # gives you all records
         if staff_number:
             domain = domain + [
@@ -276,6 +283,7 @@ class APIControllers(http.Controller):
                     'department_name': emp.employee_id.department_id.name,
                     'district_id': emp.employee_id.branch_id.id,
                     'district_name': emp.employee_id.branch_id.name,
+                    'district_code': emp.employee_id.branch_id.code,
                     'description': emp.name,
                     'duration': emp.duration_display,
                     # 'start_date': emp.date_from,

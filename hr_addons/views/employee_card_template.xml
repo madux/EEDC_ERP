@@ -206,10 +206,10 @@
                             <span class="info-label">DEPT:</span>
                             <span><t t-esc="o.department_id.name or 'N/A'"/></span>
                         </div>
-                        <div class="info-row text-truncate">
+                        <!-- <div class="info-row text-truncate">
                             <span class="info-label">EMAIL:</span>
                             <span><t t-esc="o.work_email or 'N/A'"/></span>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
